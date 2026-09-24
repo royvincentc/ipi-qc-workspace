@@ -1,0 +1,35 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {allocate,currentMonth,googleId,latestCriteria,mappings,sectionRows,validateLayout,type Sheet} from '../server/domain.js';
+import {reportIssues,type Draft,type Specification,type Category} from '../shared/model.js';
+function sheet(name='September 2026',c:Category='FG'):Sheet {const m=mappings[c];const rows:unknown[][]=Array.from({length:20},()=>[]);rows[m.header-1]=Array.from({length:m.end+1},()=> '');m.headers.forEach((v,i)=>rows[m.header-1][m.start+i]=v);if(c==='EM')rows[0][0]='ENVIRONMENTAL MONITORING';else rows[1][m.start]=m.title;return {name,id:7,rows,rowCount:20,merges:[m.merge,...(c==='FG'?['R5:S5']:c==='SFG'?['D5:E5']:c==='EM'?['F4:G4']:[])]};}
+function record(s:Sheet,row:number,ml:string,c:Category='FG',name='Example sample',remarks=''){const m=mappings[c];s.rows[row-1][m.ml]=ml;s.rows[row-1][m.start+m.fields.name]=name;s.rows[row-1][m.start+m.fields.remarks]=remarks;}
+const now=new Date('2026-09-23T01:00:00Z');
+test('laboratory month changes at local midnight',()=>{assert.deepEqual(currentMonth(new Date('2026-09-30T16:00:00Z'),'Asia/Manila'),{year:2026,month:10});});
+test('never writes into a previous month',()=>assert.throws(()=>allocate([sheet('August 2026')],'FG',now,'Asia/Manila'),/current-month/));
+test('ML-only placeholders are not samples',()=>{const s=sheet();record(s,6,'ML-FG-26-9999','FG','');assert.equal(sectionRows(s,'FG')[0].occupied,false);});
+test('fills next placeholder after latest record, leaving earlier holes',()=>{const s=sheet();record(s,6,'ML-FG-26-0001','FG','');record(s,7,'ML-FG-26-0002');record(s,8,'ML-FG-26-0003','FG','');const a=allocate([s],'FG',now,'Asia/Manila');assert.equal(a.row,8);assert.equal(a.ml,'ML-FG-26-0003');assert.equal(a.range,'O8:AA8');});
+test('reserved rows count toward last row and sequence',()=>{const s=sheet();record(s,6,'ML-FG-26-0001');record(s,7,'ML-FG-26-0002','FG','','RESERVED');assert.equal(allocate([s],'FG',now,'Asia/Manila').row,8);assert.equal(allocate([s],'FG',now,'Asia/Manila').ml,'ML-FG-26-0003');});
+test('partially completed records cannot be overwritten',()=>{const s=sheet();record(s,6,'ML-FG-26-0001','FG','');s.rows[5][14]='2026-09-23';assert.equal(allocate([s],'FG',now,'Asia/Manila').row,7);});
+test('annual sequence includes prior months without appending to them',()=>{const previous=sheet('August 2026');record(previous,6,'ML-FG-26-0042');const current=sheet();const a=allocate([previous,current],'FG',now,'Asia/Manila');assert.equal(a.sheet.name,'September 2026');assert.equal(a.ml,'ML-FG-26-0043');assert.equal(a.row,6);});
+test('annual reset ignores prior year',()=>{const previous=sheet('December 2025');record(previous,6,'ML-FG-25-0999');const s=sheet('January 2026');assert.equal(allocate([previous,s],'FG',new Date('2026-01-01T01:00Z'),'Asia/Manila').ml,'ML-FG-26-0001');});
+test('placeholder disagreement requires reconciliation',()=>{const s=sheet();record(s,6,'ML-FG-26-0042','FG','');assert.throws(()=>allocate([s],'FG',now,'Asia/Manila'),/Placeholder/);});
+test('pending server reservations participate in numbering',()=>assert.equal(allocate([sheet()],'FG',now,'Asia/Manila',['ML-FG-26-0001']).ml,'ML-FG-26-0002'));
+test('old pending reservations do not block a new annual series',()=>assert.equal(allocate([sheet()],'FG',now,'Asia/Manila',['ML-FG-25-0999']).ml,'ML-FG-26-0001'));
+test('used duplicates stop numbering instead of silently merging',()=>{const s=sheet();record(s,6,'ML-FG-26-0001');record(s,7,'ML-FG-26-0001');assert.throws(()=>allocate([s],'FG',now,'Asia/Manila'),/Duplicate/);});
+test('neighboring categories are independent',()=>{const s=sheet();s.rows[12][0]='Unrelated SFG';s.rows[12][5]='ML-SFG-26-0999';assert.equal(allocate([s],'FG',now,'Asia/Manila').row,6);assert.equal(s.rows[12][0],'Unrelated SFG');});
+test('changed headers block reads and writes',()=>{const s=sheet();s.rows[4][19]='Renamed ML';assert.throws(()=>validateLayout(s,'FG'),/header/);});
+test('changed merged boundaries block reads and writes',()=>{const s=sheet();s.merges=[];assert.throws(()=>validateLayout(s,'FG'),/boundary/);});
+test('environmental summary is not a sample',()=>{const s=sheet('September(ENVI) 2026','EM');record(s,5,'ML-EM-26-0001','EM');s.rows[10][1]='REPORTS GENERATED';s.rows[15][3]='.';assert.equal(sectionRows(s,'EM').length,6);assert.equal(allocate([s],'EM',now,'Asia/Manila').row,6);});
+test('Google link parsing rejects foreign hosts',()=>{assert.throws(()=>googleId('https://evil.example/spreadsheets/d/abc'));assert.equal(googleId('https://docs.google.com/spreadsheets/d/abc_123/edit#gid=5'),'abc_123');});
+function spec(date:string,criterion:string,context='Routine'):Specification{return {id:date,product:'Example',category:'FG',context,source:'report',revision:date,issues:[],tests:[{test:'SPC',label:'SPC',type:'numeric',unit:'cfu/g',criterion,source:'report',sourceLocation:'cell',date,dateBasis:'release',revision:date}]};}
+test('latest criteria stay within exact product and context',()=>{const r=latestCriteria([spec('2025-01-01','Nmt 100'),spec('2026-01-01','Nmt 50'),spec('2026-09-01','Nmt 1','Accelerated')],'Example','FG','Routine',['SPC']);assert.equal(r[0].criterion,'Nmt 50');});
+test('equally dated conflicting criteria are blocked',()=>assert.throws(()=>latestCriteria([spec('2026-01-01','Nmt 50'),spec('2026-01-01','Nmt 100')],'Example','FG','Routine',['SPC']),/disagree/));
+test('missing dates block a specification match',()=>assert.throws(()=>latestCriteria([spec('','Nmt 50')],'Example','FG','Routine',['SPC']),/date/));
+test('missing applicable tests cannot silently disappear',()=>assert.throws(()=>latestCriteria([spec('2026-01-01','Nmt 50')],'Example','FG','Routine',['MY']),/date/));
+function draft():Draft{return {id:'d',sampleId:'s',sample:{} as any,templateId:'t',templateRevision:'1',revision:1,analyst:'A',updatedAt:'',specification:spec('2026-01-01','Nmt 50'),fields:{analysisDate:'2026-01-01',logbookReference:'MIC-1'},results:[{test:'SPC',state:'entered',value:'0',qualifier:'',unit:'cfu/g',reason:'',remarks:''}]};}
+test('actual zero is valid while missing value is not',()=>{const d=draft();assert.deepEqual(reportIssues(d),[]);d.results[0].value='';assert.match(reportIssues(d).join(),/number/);});
+test('not-tested result does not satisfy a required test',()=>{const d=draft();d.results[0].state='not_tested';d.results[0].reason='Insufficient sample';assert.match(reportIssues(d).join(),/required/);});
+test('numeric unit mismatch blocks generation',()=>{const d=draft();d.results[0].unit='cfu/mL';assert.match(reportIssues(d).join(),/unit/);});
+test('negative finding is distinct from not entered',()=>{const d=draft();d.specification.tests[0].type='finding';d.specification.tests[0].unit='';d.results[0].unit='';d.results[0].value='Negative';assert.deepEqual(reportIssues(d),[]);d.results[0].state='not_entered';assert.match(reportIssues(d).join(),/required/);});
+test('container instances each require their own observation',()=>{const d=draft();d.specification.tests.push({...d.specification.tests[0],location:'Bottle 2'});assert.match(reportIssues(d).join(),/Bottle 2/);});

@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS users (email text PRIMARY KEY, name text NOT NULL, role text NOT NULL CHECK(role IN ('administrator','analyst','viewer')), active boolean NOT NULL DEFAULT true);
+CREATE TABLE IF NOT EXISTS sessions (token_hash text PRIMARY KEY, email text REFERENCES users(email), expires_at timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS samples (id text PRIMARY KEY, source_key text UNIQUE, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS source_history (id text PRIMARY KEY, sample_id text NOT NULL REFERENCES samples(id), data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS submissions (id text PRIMARY KEY, payload_hash text NOT NULL, workbook text NOT NULL, category text NOT NULL, state text NOT NULL, ml text, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE UNIQUE INDEX IF NOT EXISTS submission_number ON submissions(workbook,ml) WHERE ml IS NOT NULL;
+CREATE TABLE IF NOT EXISTS specifications (id text PRIMARY KEY, data jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS templates (id text PRIMARY KEY, data jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS drafts (id text PRIMARY KEY, revision integer NOT NULL, data jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS draft_revisions (id text NOT NULL REFERENCES drafts(id), revision integer NOT NULL, data jsonb NOT NULL, PRIMARY KEY(id,revision));
+CREATE TABLE IF NOT EXISTS files (id text PRIMARY KEY, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS audit (id text PRIMARY KEY, actor text NOT NULL, action text NOT NULL, entity text NOT NULL, details jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS samples_ml ON samples ((data->>'ml'));
+CREATE INDEX IF NOT EXISTS samples_category ON samples ((data->>'category'));
+CREATE TABLE IF NOT EXISTS configuration (id integer PRIMARY KEY CHECK(id=1), revision integer NOT NULL, data jsonb NOT NULL, changed_at timestamptz NOT NULL, changed_by text NOT NULL);
+CREATE TABLE IF NOT EXISTS configuration_revisions (revision integer PRIMARY KEY, data jsonb NOT NULL, changed_at timestamptz NOT NULL, changed_by text NOT NULL);

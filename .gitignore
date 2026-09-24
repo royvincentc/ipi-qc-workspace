@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.data/
+private/
+__pycache__/
+*.pyc
+artifacts/
+playwright-report/
+.playwright-cli/
