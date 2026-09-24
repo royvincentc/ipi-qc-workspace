@@ -1,0 +1,3 @@
+export async function api<T=any>(path:string,method='GET',body?:unknown):Promise<T>{const response=await fetch(`/api${path}`,{method,credentials:'same-origin',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined});if(!response.ok){const data=await response.json().catch(()=>({error:'Connection failed'}));throw new Error(data.error||'Request failed');}return response.json();}
+export const natural=(a:string,b:string)=>a.localeCompare(b,undefined,{numeric:true});
+export function fileBase64(file:File){return new Promise<string>((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=reject;r.readAsDataURL(file);});}
