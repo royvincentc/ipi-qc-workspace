@@ -536,3 +536,17 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Verification: File updated.
 - Next action/owner: None.
 
+
+### TASK-20260926-003 — Fix missing testing context error for stability samples
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User reported a new error: "The incoming sample has no testing context..."
+- Goal/rule link: Sample-to-specification workflow
+- Scope/files: "server/reports.ts"
+- Before: esolveReportSetup threw a 409 error if sample.context was empty. However, samples in the Stability (ST), Water (WS), Raw Material (RM), and Miscellaneous (MIS) categories do not have a "Category" (context) column in the source spreadsheet, making it impossible to prepare reports for them.
+- Change: Updated esolveReportSetup to use a safe fallback (sample.context?.trim() || 'Routine') instead of throwing an error when the context is blank. The system now searches for a specification with the context "Routine" for these samples.
+- Data impact: Code only.
+- Verification: Build and tests passed.
+- Next action/owner: User to retry the report draft and verify they have a specification with the context "Routine" configured in Settings.
+
