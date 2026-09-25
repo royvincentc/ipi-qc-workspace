@@ -1,6 +1,6 @@
 import {useContext,useEffect,useState} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
-import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,FolderOpen} from 'lucide-react';
+import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,FolderOpen,Sparkles,Activity,Clock3,ShieldCheck} from 'lucide-react';
 import {api} from './api';
 import {useConfiguration,useUnsaved} from './configuration';
 import {PageTitle,Field,ErrorBox,Loading,Badge,Empty,Notice,Session,useLoad,useCanEdit,SampleList} from './ui';
@@ -13,39 +13,53 @@ export function Dashboard(){
   const {user}=useContext(Session);
   const edit=useCanEdit();
   const [activeTab, setActiveTab] = useState('active');
+  const [dashboardQuery,setDashboardQuery]=useState('');
+  const [dashboardType,setDashboardType]=useState('');
+  const [dashboardStatus,setDashboardStatus]=useState('');
 
   if(!data)return error?<ErrorBox message={error}/>:<Loading/>;
   
   const openDrafts = data.drafts.filter((d:any)=>!d.generated);
   const missing = openDrafts.filter((d:any)=>d.missing);
   const ready = openDrafts.filter((d:any)=>!d.missing);
+  const categories=[...new Set(data.recent.map((sample:any)=>sample.category).filter(Boolean))] as string[];
+  const statuses=[...new Set(data.recent.map((sample:any)=>sample.status||'Not recorded'))] as string[];
+  const visibleSamples=data.recent.filter((sample:any)=>{
+    const haystack=`${sample.ml||''} ${sample.name||''} ${sample.batch||''}`.toLowerCase();
+    return (!dashboardQuery||haystack.includes(dashboardQuery.toLowerCase()))&&(!dashboardType||sample.category===dashboardType)&&(!dashboardStatus||(sample.status||'Not recorded')===dashboardStatus);
+  });
   
   return (
-    <div className="dashboard-layout animate-entrance" style={{display: 'flex', gap: '32px'}}>
-      <div style={{flex: 1, minWidth: 0}}>
+    <div className="dashboard-layout animate-entrance">
+      <div className="dashboard-main">
         {/* Header / Hero */}
         <div className="hero-header stagger-1">
           <div className="hero-header-bg"></div>
+          <div className="hero-lab-mark" aria-hidden="true"><span/><span/><span/><FlaskConical/></div>
           <div className="hero-content">
-            <div className="hero-eyebrow">Microbiology Quality Control</div>
+            <div className="hero-eyebrow"><Sparkles size={13}/> Microbiology Quality Control</div>
             <h1>Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}, {user.name.split(' ')[0]}</h1>
-            <p>Keep today's samples moving.</p>
+            <p className="hero-typing">Keep today&apos;s samples moving with clarity.</p>
+            <div className="hero-pulse"><span/> Workspace synchronized · ready for focused work</div>
           </div>
         </div>
 
         {/* Metrics Strip */}
         <div className="metrics-strip stagger-2">
           <div className="metric-item">
+            <span className="metric-icon"><Activity size={15}/></span>
             <span className="metric-value">{data.loggedToday}</span>
             <span className="metric-label">Received today</span>
             <span className="metric-sub">Laboratory timezone</span>
           </div>
           <div className="metric-item">
+            <span className="metric-icon amber"><Clock3 size={15}/></span>
             <span className="metric-value">{missing.length}</span>
             <span className="metric-label">Awaiting results</span>
             <span className="metric-sub">In progress</span>
           </div>
           <div className="metric-item">
+            <span className="metric-icon blue"><ShieldCheck size={15}/></span>
             <span className="metric-value">{ready.length}</span>
             <span className="metric-label">Ready to generate</span>
             <span className="metric-sub">Reports</span>
@@ -67,17 +81,17 @@ export function Dashboard(){
           </button>
         </div>
         
-        <div className="filters-bar stagger-3" style={{borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)'}}>
-          <div className="search" style={{flex: 1, background: 'transparent'}}>
-            <Search size={14} style={{position: 'absolute', left: '10px', top: '10px'}}/>
-            <input placeholder="Search active samples..." style={{paddingLeft: '32px', background: 'transparent', border: 'none', height: '100%'}}/>
+        <div className="filters-bar stagger-3">
+          <div className="search dashboard-search">
+            <Search size={14}/>
+            <input aria-label="Search active samples" placeholder="Search active samples..." value={dashboardQuery} onChange={event=>setDashboardQuery(event.target.value)}/>
           </div>
-          <select style={{background: 'transparent', border: 'none'}}><option>All types</option></select>
-          <select style={{background: 'transparent', border: 'none'}}><option>All status</option></select>
+          <select aria-label="Filter dashboard by sample type" value={dashboardType} onChange={event=>setDashboardType(event.target.value)}><option value="">All types</option>{categories.map(category=><option key={category}>{category}</option>)}</select>
+          <select aria-label="Filter dashboard by status" value={dashboardStatus} onChange={event=>setDashboardStatus(event.target.value)}><option value="">All status</option>{statuses.map(status=><option key={status}>{status}</option>)}</select>
         </div>
 
         {/* Data Table */}
-        <div className="data-table-container stagger-3" style={{borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none'}}>
+        <div className="data-table-container dashboard-table stagger-3">
           <table className="data-table">
             <thead>
               <tr>
@@ -91,7 +105,7 @@ export function Dashboard(){
             </thead>
             <tbody>
               {activeTab === 'active' ? (
-                data.recent.length ? data.recent.slice(0, 8).map((s:any) => (
+                visibleSamples.length ? visibleSamples.slice(0, 8).map((s:any) => (
                   <tr key={s.id}>
                     <td className="td-id mono">{s.ml}</td>
                     <td><Link to={`/samples/${s.id}`}>{s.name || 'Incomplete record'}</Link></td>
@@ -131,7 +145,7 @@ export function Dashboard(){
       </div>
 
       {/* Right Intelligence Rail */}
-      <div className="right-rail stagger-3" style={{borderLeft: '1px solid var(--border)', paddingLeft: '32px', width: '280px', flexShrink: 0, background: 'transparent'}}>
+      <aside className="right-rail stagger-3" aria-label="Workspace intelligence">
         
         <div className="rail-section">
           <div className="rail-heading">Quick Actions</div>
@@ -158,12 +172,12 @@ export function Dashboard(){
           </div>
         </div>
         
-        <div className="rail-section" style={{marginTop: 'auto'}}>
+        <div className="rail-section rail-system">
           <div className="ascii-loader">
             {`> system active\n> db connected\n> sources synced\n_`}
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

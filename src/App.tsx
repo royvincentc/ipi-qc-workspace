@@ -2,7 +2,7 @@ import FileLibrary from './library';
 import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect} from 'react';
-import {Link,NavLink,Route,Routes} from 'react-router-dom';
+import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
 import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
@@ -11,6 +11,7 @@ import {Reports,ReportEditor} from './reports';
 import SettingsPage from './settings';
 import { AssistantPage } from './AssistantPage';
 import { FloatingAssistant } from './FloatingAssistant';
+import {AmbientBackdrop,CustomCursor,RouteExperience} from './Experience';
 const AdminCenter=lazy(()=>import('./admin'));
 
 const navigation=[
@@ -54,6 +55,7 @@ function Workspace({data}:{data:any}){
   const [mobileNav,setMobileNav]=useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [now,setNow]=useState(()=>new Date());
+  const location=useLocation();
 
   const notify=(text:string,error=false)=>{setNotice({text,error});};
 
@@ -74,6 +76,9 @@ function Workspace({data}:{data:any}){
     <Session.Provider value={data}>
       <Notice.Provider value={notify}>
         <div className="app">
+          <AmbientBackdrop/>
+          <CustomCursor/>
+          <RouteExperience/>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`}>
             <Link to="/" className="brand" title={config.value.general.appName}>
               <div className="brand-icon"><FlaskConical size={24}/></div>
@@ -110,7 +115,7 @@ function Workspace({data}:{data:any}){
                   <small>{data.user.role}</small>
                 </div>
                 {!data.demo && !collapsed && (
-                  <button className="icon-button" aria-label="Sign out" onClick={()=>api('/auth/logout','POST').then(()=>location.reload())} title="Sign Out" style={{marginLeft: 'auto'}}>
+                  <button className="icon-button" aria-label="Sign out" onClick={()=>api('/auth/logout','POST').then(()=>window.location.reload())} title="Sign Out" style={{marginLeft: 'auto'}}>
                     <LogOut size={16}/>
                   </button>
                 )}
@@ -149,8 +154,8 @@ function Workspace({data}:{data:any}){
               </div>
             )}
 
-            <div className="workspace-content animate-entrance">
-              <main>
+            <div className="workspace-content">
+              <main className="route-stage" key={location.pathname}>
                 <Routes>
                   <Route path="/" element={<Dashboard/>}/>
                   <Route path="/new" element={<Intake/>}/>
