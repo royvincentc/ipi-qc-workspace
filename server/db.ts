@@ -10,8 +10,9 @@ if(demo&&process.env.NODE_ENV==='production')throw new Error('Demo mode is prohi
 if(demo&&(process.env.GOOGLE_APPLICATION_CREDENTIALS||process.env.GOOGLE_CLIENT_SECRET))throw new Error('Do not combine demo mode with Google credentials');
 await mkdir('.data',{recursive:true});
 const embedded=demo?new PGlite(path.resolve(process.env.DEMO_DB_PATH||'.data/demo-db')):null;
+import dns from 'node:dns';
+dns.setDefaultResultOrder('ipv4first'); // Force IPv4 first to bypass Node.js Happy Eyeballs ENETUNREACH bug on Render free tier
 const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
-(pg.defaults as any).family = 4; // Force IPv4 to prevent Node.js Happy Eyeballs timeout bugs in environments without IPv6 (like Render free tier)
 const pool=demo?null:new pg.Pool({
   connectionString:process.env.DATABASE_URL, 
   ssl: isLocal ? false : { rejectUnauthorized: false },
