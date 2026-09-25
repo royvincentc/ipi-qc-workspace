@@ -147,3 +147,9 @@ When transferring work, replace the volatile sections above while preserving ver
 
 If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
 
+ 
+ # #   2 0 2 6 - 0 9 - 2 5   D a t a b a s e   F i x e s  
+ -   R e f a c t o r e d   a l i a s   m a t c h i n g   i n   r e p o r t s / s a m p l e s   t o   u s e   s t a r t s W i t h   ( T A S K - 0 1 8 )  
+ -   F o r c e d   I P v 4   g l o b a l l y   u s i n g   d n s . s e t D e f a u l t R e s u l t O r d e r   t o   f i x   N o d e . j s   H a p p y   E y e b a l l s   E N E T U N R E A C H   b u g   o n   R e n d e r   f r e e   t i e r   ( T A S K - 0 1 9 / 0 2 1 )  
+ -   R e f a c t o r e d   d b . t s   t o   i m p l e m e n t   m a n u a l   D N S   I P v 4   r e s o l u t i o n ,   p r e s e r v e   T L S   S N I ,   a d d   k e e p A l i v e ,   a n d   a d d   p o o l . o n ( ' e r r o r ' )   t o   p r e v e n t   N e o n   s e r v e r l e s s   c o n n e c t i o n   d r o p s   f r o m   c r a s h i n g   t h e   N o d e . j s   s e r v e r   ( T A S K - 0 2 0 )  
+ 
