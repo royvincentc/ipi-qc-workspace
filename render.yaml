@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ipi-qc-workspace
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: singapore # or oregon, frankfurt, ohio
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: APP_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: GOOGLE_APPLICATION_CREDENTIALS_BASE64
+        sync: false

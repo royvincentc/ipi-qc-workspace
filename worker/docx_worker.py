@@ -78,6 +78,11 @@ def prepare_template(data,output):
                     if len(cells)<4:continue
                     name,criterion=text(cells[0]),text(cells[1])
                     if not re.search(r'\bNmt\b|\bcfu\b|^Negative$|^Absent',criterion,re.I):continue
+                    # Incubation timing belongs to the method, not the report parameter
+                    # label. Remove only that paragraph so the test label keeps its style.
+                    for paragraph in list(cells[0].findall(W+'p')):
+                        if re.match(r'^\s*after\b.*\bincubation\s*:?\s*$',text(paragraph),re.I):cells[0].remove(paragraph)
+                    name=text(cells[0])
                     # Parent labels with subsequent per-container rows do not receive results.
                     next_cells=rows[ri+1].findall(W+'tc') if ri+1<len(rows) else []
                     next_label=text(next_cells[0]).strip() if next_cells else ''

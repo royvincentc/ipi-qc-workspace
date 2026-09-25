@@ -5,7 +5,7 @@ import path from 'node:path';
 const folder=await mkdtemp(path.resolve('.data/config-test-'));
 process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=folder;
 const {db,migrate,close}=await import('../server/db.js');
-const {getConfiguration,saveConfiguration}=await import('../server/configuration.js');
+const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('../server/configuration.js');
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
 const {submitSample}=await import('../server/samples.js');
@@ -50,4 +50,14 @@ test('draft pins template, criteria, manual empty results and configuration revi
 });
 test('viewer cannot administer configuration',()=>{
  const middleware=requireRole('administrator');assert.throws(()=>middleware({user:{role:'viewer'}} as any,{} as any,()=>{}),(e:any)=>e.status===403);
+});
+
+test('connection validation survives appearance edits and is invalidated by routing changes',async()=>{
+ let current=await getConfiguration();const incoming=connectionFingerprint(current.value,'incoming');const specifications=connectionFingerprint(current.value,'specifications');
+ await db.query("INSERT INTO settings(key,value) VALUES('connections',$1) ON CONFLICT(key) DO UPDATE SET value=$1",[JSON.stringify({incoming:'https://docs.google.com/spreadsheets/d/example/edit',environmental:'',specifications:'',folders:[],timezone:current.value.general.timezone,reservationsReconciled:true,manualIntakeCoordinated:true,writesEnabled:true})]);
+ await db.query("INSERT INTO settings(key,value) VALUES('connectionTests',$1) ON CONFLICT(key) DO UPDATE SET value=$1",[JSON.stringify({incoming:{url:'https://docs.google.com/spreadsheets/d/example/edit',fingerprint:incoming},specifications:{url:'https://docs.google.com/spreadsheets/d/spec/edit',fingerprint:specifications}})]);
+ const appearance=structuredClone(current.value);appearance.general.theme=appearance.general.theme==='dark'?'light':'dark';current=await saveConfiguration(appearance,current.revision,'admin@example.test');
+ assert.equal(connectionFingerprint(current.value,'incoming'),incoming);assert.equal((await db.query("SELECT value FROM settings WHERE key='connections'")).rows[0].value.writesEnabled,true);assert.ok((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.incoming);
+ const routing=structuredClone(current.value);routing.general.timezone='UTC';await saveConfiguration(routing,current.revision,'admin@example.test');
+ assert.equal((await db.query("SELECT value FROM settings WHERE key='connections'")).rows[0].value.writesEnabled,false);assert.equal((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.incoming,undefined);assert.ok((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.specifications);
 });
