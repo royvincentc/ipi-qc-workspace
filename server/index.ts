@@ -21,6 +21,7 @@ import {seed} from './seed.js';
 import fs from 'node:fs';
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64 && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   const dest = path.resolve('private/credentials.json');
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
   fs.writeFileSync(dest, Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, 'base64'));
   process.env.GOOGLE_APPLICATION_CREDENTIALS = dest;
 }
@@ -78,3 +79,4 @@ app.use(express.static(path.resolve('dist')));app.get('/{*path}',(_req,res)=>res
 app.use((err:any,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{const status=err instanceof Fault?err.status:err instanceof z.ZodError?400:500;console.error(status===500?err.message:'Request rejected',status);res.status(status).json({error:status===500?'The server could not complete this operation. Please try again or contact your administrator.':err instanceof z.ZodError?err.issues.map((i:any)=>i.message).join('; '):err.message});});
 const server=app.listen(Number(process.env.PORT||3001),demo?'127.0.0.1':'0.0.0.0',()=>console.log(`IPI API listening on ${process.env.PORT||3001}${demo?' (de-identified demo)':''}`));
 const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},300000);interval.unref();
+
