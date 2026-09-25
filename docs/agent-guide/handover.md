@@ -4,8 +4,8 @@
 |---|---|
 | Document ID | IPI-AI-HANDOVER |
 | Revision | 1.0 |
-| Last updated | 2026-09-25 13:00, Asia/Manila |
-| Prepared by | Codex (GPT-6), dashboard experience overhaul |
+| Last updated | 2026-09-25, Asia/Manila |
+| Prepared by | Codex (GPT-6), Gemini assistant production repair |
 | Repository | `C:\Users\Roy\Documents\ChatGPT\IPI` |
 
 This is the volatile transfer record. Update it whenever work pauses, finishes, changes direction, or transfers to another person/model. It supersedes older handoff notes as the current starting point; older files remain historical evidence and may contain inaccurate claims. Verify this file through [audit.md](audit.md), follow [goal.md](goal.md) and [rules.md](rules.md), and record all work in [tasks.md](tasks.md).
@@ -14,15 +14,15 @@ Do not put secrets, private keys, tokens, full connection strings, sensitive liv
 
 ## Current objective
 
-Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The dashboard experience has now received a complete responsive visual overhaul; the remaining release gates are operational controls, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
+Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The dashboard experience has received a complete responsive visual overhaul, and the production Gemini assistant history-order failure is repaired in code. The remaining release gates are credential rotation/deployment smoke testing, operational controls, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
 
 **Current phase:** integration, control hardening, and release validation. The development implementation spans the original Phases 1–10, while active work is concentrated in Phases 9–12. It is not yet a controlled live release.
 
 ## Repository state at transfer
 
 - Branch: `master`
-- Starting HEAD reviewed: `32ce716` (`docs: update handover.md for GEMINI.md addition`), matching `origin/master` at the start of this task.
-- Final state: the dashboard overhaul and this evidence update are committed; use `git log -1` for the resulting commit ID.
+- Starting HEAD reviewed for the assistant repair: `1d31adc` (`feat: overhaul responsive dashboard experience`), matching `origin/master` at the start of this task.
+- Final state: TASK-20260925-013 is committed and pushed after verification; use `git log -1` for the resulting commit ID and confirm the Render deployment record.
 - Working tree expected after finalization: clean.
 - UI files changed by TASK-20260925-012: `src/App.tsx`, `src/Experience.tsx`, `src/experience.css`, `src/workspace.tsx`, `src/AssistantPage.tsx`, `src/FloatingAssistant.tsx`, `src/ui.tsx`, and `src/main.tsx`.
 - Governance files changed: `docs/agent-guide/tasks.md` and this handover.
@@ -47,6 +47,8 @@ Move the audited development application toward a controlled first release in wh
 - Desktop/phone motion includes route arrival, viewport reveal, loading/typing feedback, ambient graphics, a fine-pointer custom cursor, and the animated assistant pet “Pip.” Coarse pointers and reduced-motion preferences receive appropriate fallbacks.
 - The right-side intelligence content moves below the dashboard at tablet/mobile widths rather than disappearing.
 - Assistant surfaces no longer depend on undefined color variables or an unstable draggable wrapper.
+- Production Render logs confirmed the assistant failure occurred before API-key authentication because Gemini history began with the UI's synthetic `model` greeting.
+- The server now removes only leading synthetic model messages, validates alternating history, uses the maintained `@google/genai` SDK and configurable current model, and exposes sanitized actionable error categories.
 
 ### Automated and browser checks
 
@@ -58,6 +60,8 @@ Move the audited development application toward a controlled first release in wh
 - The current archive-based sample PDF was rendered and visually compared with its reference layout. The incubation prefixes are absent; `Celeste P. Yandug — Assistant Head, Microbiology Laboratory` is present; PAGE and NUMPAGES fields remain automatic. The template still requires IPI approval and human review of inherited drawing objects.
 
 After TASK-20260925-012, the same 38 TypeScript/domain tests and 7 Python worker tests passed. TypeScript typecheck and the Vite production build passed. Final browser checks used a fresh session on the de-identified demo workspace at 390×844, 1024×768, and desktop/default viewports: no page overflow, filters and mobile navigation worked, Pip opened/closed, tablet rail content remained available, and the console contained no warnings or errors. The main bundle was `453.95 kB` (`136.53 kB` gzip).
+
+After TASK-20260925-013, all 41 Node/domain tests passed, including three assistant-history/error regressions. TypeScript typecheck and the Vite production build passed; `npm audit` reported zero vulnerabilities. The live Gemini endpoint was not invoked during verification because the screenshot exposed the configured key and it must be rotated first.
 
 These results describe the audited working tree on 2026-09-25. Rerun relevant checks after further edits; do not carry them forward as permanent proof.
 
@@ -81,6 +85,7 @@ The successful rerun in TASK-20260925-007 was not independently repeated during 
 - Historical reports provide useful criteria/layout evidence, but approved blank templates and a formally controlled criteria source/process still need IPI decisions.
 - Existing `docs/HANDOFF.md` and `docs/HANDOFF_GEMINI_TO_CHATGPT.md` contain claims that conflict with repository evidence. Preserve them as history; do not treat them as authority.
 - On this machine, the ordinary global `npm` launcher is unusable because its expected global npm CLI path is missing. Use the bundled Node/Python runtimes and direct local package binaries. A bundled `pnpm` attempt tried to relocate npm-managed dependencies before its network request failed; the packages were restored from `node_modules/.ignored`. Do not run `pnpm` against this existing dependency tree without an intentional package-manager migration.
+- The Gemini key displayed in the project-owner screenshot is compromised by disclosure. Revoke it in Google AI Studio, replace `GEMINI_API_KEY` in the active Render service, and redeploy before any live assistant smoke test.
 
 ## Decisions that must be preserved
 
@@ -98,7 +103,7 @@ The successful rerun in TASK-20260925-007 was not independently repeated during 
 
 ## Exact next actions
 
-1. Observe the automatic live deployment of the committed dashboard and perform a brief authenticated desktop/phone smoke test. Do not enable Google writes as part of that check.
+1. Revoke and replace the exposed Gemini key in the active Render service, confirm the TASK-20260925-013 deployment is live, and run one de-identified authenticated assistant smoke test. Do not enable Google writes as part of that check.
 2. Before an operational release gate, reproduce TASK-20260925-007’s recorded all-tabs-passing read-only connection verification; this dashboard task did not open live sources.
 3. Confirm the real PostgreSQL environment, Google OAuth client, administrator allowlist, and server-side service-account secret on the selected deployment platform. Test authentication and role enforcement without exposing credentials.
 4. Run a controlled read-only initial import; reconcile duplicate ML records, direct edits, color-only reservations, and numbering state. Produce a review report before enabling writes.

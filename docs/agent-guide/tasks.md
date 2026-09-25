@@ -291,3 +291,20 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Revert this task’s UI commit. No data migration or live-source rollback is needed.
 - Evidence: Production build output, automated test output, browser screenshots/DOM measurements from 2026-09-25, fresh-browser zero-error console check, and the focused Git commit created for this task
 - Next action/owner: Observe the automatic live deployment, then perform a brief authenticated smoke test on the deployed dashboard without enabling Google writes.
+
+### TASK-20260925-013 — Repair production Gemini assistant failure
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Codex (GPT-6), Render read-only service/log inspection
+- Authorization: Project-owner report that Smart Assistant failed despite a configured API key, followed by approval to inspect the connected Render workspace and deploy the correction
+- Goal/rule link: Read-only assistant behavior, actionable non-sensitive errors, server-side secrets, change controls
+- Scope/files: `server/ai.ts`, `server/ai-support.ts`, `tests/ai.test.ts`, `package.json`, `package-lock.json`, `.env.example`, `render.yaml`, this ledger, active handover
+- Before: The client included its synthetic assistant greeting as the first Gemini chat-history item. The legacy SDK rejected that request before contacting Gemini because history began with the `model` role. The endpoint also constructed the chat outside its error boundary, used the obsolete `gemini-1.5-flash` model and legacy `@google/generative-ai` package, and returned upstream error text to the client.
+- Change: Strip only leading synthetic model messages before creating Gemini history, enforce alternating user/model history and a final user message, migrate to maintained `@google/genai`, use configurable `GEMINI_MODEL` with `gemini-3.8-flash` as the current default, validate message/tool arguments, and return actionable sanitized error categories without logging credentials or upstream details. Added the Render Blueprint declarations for the Gemini key and model.
+- Data impact: Read-only production service/log inspection and application code/configuration only. No database, Google Sheet, laboratory record, Render secret, or live environment value was changed.
+- Verification: Active Render service `ipi-qc` logs reproduced `First content should be with role 'user', got model` for the reported failures. TypeScript typecheck passed. All 41 Node/domain tests passed, including three new assistant-history/error tests. Vite production build passed (`1623` modules, main JS `453.95 kB` / `136.53 kB` gzip). `npm audit` reported zero vulnerabilities after the SDK migration.
+- Problems/risks: The API key was visibly exposed in a user-provided screenshot. It must be revoked and replaced in Render; no credential value is recorded here. A real Gemini response should be smoke-tested only after rotation and successful deployment. The assistant remains a read-only aid and must not infer laboratory results or release decisions.
+- Rollback: Revert this task's focused commit and restore the previous dependency lockfile; that would also restore the production history-order failure and obsolete SDK/model.
+- Evidence: Render error logs dated 2026-09-25, regression test output, typecheck/build output, dependency audit, and this task's Git commit/deployment record
+- Next action/owner: Project owner rotates the exposed Gemini key. Confirm the automatic Render deployment is live, then send a de-identified assistant prompt and confirm a successful or specifically actionable response.
