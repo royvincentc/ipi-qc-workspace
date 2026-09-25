@@ -18,6 +18,7 @@ import {createDraft,saveDraft,generate,worker,privatePath,storage} from './repor
 import {validateBindings} from './template.js';
 import {categories,type Category,type Specification,type Template,type Sample,resultKey} from '../shared/model.js';
 import {seed} from './seed.js';
+import {aiRouter} from './ai.js';
 import fs from 'node:fs';
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64 && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   const dest = path.resolve('private/credentials.json');
@@ -32,6 +33,7 @@ app.get('/api/configuration',async(_req,res)=>res.json(await getConfiguration())
 app.put('/api/configuration',requireRole('administrator'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),value:z.unknown()}).parse(req.body);res.json(await saveConfiguration(b.value,b.revision,req.user.email));});
 app.get('/api/me',(req,res)=>res.json({user:req.user,demo}));app.post('/api/auth/logout',signOut);
 registerSearch(app);
+app.use('/api/ai', aiRouter);
 app.get('/api/overview',async(_req,res)=>{const samples=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>r.data);const drafts=(await db.query('SELECT data FROM drafts ORDER BY data->>\'updatedAt\' DESC LIMIT 5')).rows.map(r=>r.data);res.json({samples,drafts,count:Number((await db.query('SELECT count(*) FROM samples')).rows[0].count),draftCount:Number((await db.query('SELECT count(*) FROM drafts')).rows[0].count),sync:await setting('sync',{lastSuccess:null,error:null}),connections:await setting('connections',defaultConnections)});});
 app.get('/api/samples',async(req,res)=>{const q=String(req.query.q||'').toLowerCase(),category=String(req.query.category||''),status=String(req.query.status||''),from=String(req.query.from||''),to=String(req.query.to||'');const all=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC')).rows.map(x=>x.data as Sample);const counts=new Map<string,number>();all.forEach(s=>counts.set(s.ml,(counts.get(s.ml)||0)+1));res.json(all.filter(s=>(!q||[s.ml,s.name,s.batch,s.received].join(' ').toLowerCase().includes(q))&&(!category||s.category===category)&&(!status||s.status===status)&&(!from||s.received.slice(0,10)>=from)&&(!to||s.received.slice(0,10)<=to)).map(s=>({...s,duplicate:(counts.get(s.ml)||0)>1})));});
 app.get('/api/samples/:id',async(req,res)=>{const data=(await db.query('SELECT data FROM samples WHERE id=$1',[req.params.id])).rows[0]?.data;if(!data)throw new Fault(404,'Sample not found');res.json({sample:data,history:(await db.query('SELECT data,created_at FROM source_history WHERE sample_id=$1 ORDER BY created_at DESC',[req.params.id])).rows,drafts:(await db.query('SELECT data FROM drafts WHERE data->>\'sampleId\'=$1',[req.params.id])).rows.map(r=>r.data)});});
