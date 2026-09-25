@@ -425,3 +425,69 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Rollback: Revert the changes in `server/samples.ts` to remove `autoCreateProducts` and the `saveConfiguration` import.
 - Evidence: Typecheck, test, and build output dated 2026-09-25.
 - Next action/owner: Deploy and re-sync to auto-populate products. Then retry the report for ML-ST-26-0280.
+
+
+### TASK-20260925-021b — Fix auto-create products for manual submissions
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User reported the missing product error still occurred.
+- Goal/rule link: Sample-to-specification workflow, configuration management
+- Scope/files: `server/samples.ts`
+- Before: The previous auto-create logic only ran during the bulk `syncSources` task. If a sample was manually entered via the "Log Sample" UI (which uses `submitSample`), the product was not auto-created, causing the error to persist for those samples.
+- Change: Wrapped the body of `autoCreateProducts()` in a try-catch block so it safely ignores concurrent configuration write conflicts. Called `autoCreateProducts(actor)` at the end of `submitSample`, `reconcileSubmission`, and `submitDemo` after the sample is successfully saved.
+- Data impact: Products are now correctly auto-created when samples are manually logged via the UI.
+- Verification: Tested with local repro script for EM samples. All 41 tests passed. Vite build succeeded.
+- Problems/risks: None. The try-catch ensures that if two users log a sample simultaneously, the first will create the product, and the second will safely ignore the conflict (or retry on the next sync/submit).
+- Rollback: Revert the additions of `await autoCreateProducts(actor);` in the submit methods.
+- Evidence: Typecheck, test, and build output dated 2026-09-25.
+- Next action/owner: Deploy and test logging a sample manually to ensure the product is created.
+
+
+### TASK-20260925-021c — Improve spreadsheet reconciliation error message
+- Status: Completed
+- Priority: P2
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User uploaded a screenshot showing a generic reconciliation error toast preventing sync.
+- Goal/rule link: Diagnostics and user experience.
+- Scope/files: `server/samples.ts`
+- Before: The sync failure error simply read "A source record moved, disappeared or changed ML identity. Reconcile before synchronization." without identifying the record.
+- Change: Added the specific ML number, sheet name, and row number to the thrown `Fault` message so the user knows exactly what to fix in the Google Sheet.
+- Data impact: None. Purely diagnostic string change.
+- Verification: Tested and built successfully.
+- Problems/risks: None.
+- Rollback: Revert the string change in `syncSources`.
+- Evidence: Commit `d1d844c`.
+- Next action/owner: User to refresh their UI, click "Refresh sources", and read the new error message to fix their spreadsheet.
+
+### TASK-20260925-021d — Make sync Sources ignore ghost records without ML numbers
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User uploaded a screenshot showing a sync failure caused by an empty ML record, complaining that the system shouldn't fail if they edit their sheets.
+- Goal/rule link: Spreadsheets are the source of truth but require strict governance. Empty rows aren't valid samples and shouldn't lock row positions.
+- Scope/files: `server/samples.ts`
+- Before: If a user typed anything in a row but left the ML column blank, it was treated as an occupied row and synced to the DB as a ghost record with an empty ML. Future edits (like deleting or moving rows) caused identity reconciliation failures on that row.
+- Change: Updated `syncSources` to only push to `records` if `r.ml.trim()` is truthy. Updated the `existing` DB query filter to only check rows that actually have an ML string.
+- Data impact: Sync now completely ignores blank/pending rows that lack an ML number, allowing users to edit or delete non-sample rows without crashing the sync.
+- Verification: Tested and built successfully.
+- Problems/risks: None.
+- Rollback: Revert the `r.ml.trim()` check in `samples.ts`.
+- Evidence: Commit `8e0c3e4`.
+- Next action/owner: User to refresh and sync again. The sync will bypass the ghost record completely.
+
+### TASK-20260925-021e — Allow overwriting ghost records in saveSnapshot
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User uploaded screenshots demonstrating a UI error state when trying to fill in an incomplete row they started 1 minute earlier.
+- Goal/rule link: Allow users to edit incomplete spreadsheet rows without violating strict sample auditing.
+- Scope/files: `server/samples.ts`
+- Before: While `syncSources` correctly ignored ghost records, `saveSnapshot` did not. When a user started filling a row (creating a ghost DB record) and later returned to finish adding the ML number and details, `saveSnapshot` threw a "record moved or replaced" error because the new ML number didn't match the old empty ML string.
+- Change: Added `old.data.ml?.trim()` check to the Fault condition in `saveSnapshot` so that it allows overwriting an old DB record if it had no ML number.
+- Data impact: The system will now properly ingest a row that was previously left incomplete.
+- Verification: Tested and built successfully.
+- Problems/risks: None. Real samples (with ML numbers) remain strictly protected from being replaced or shifted.
+- Rollback: Revert the `trim()` check in `saveSnapshot`.
+- Evidence: Commit `080eb89`.
+- Next action/owner: User to sync again.

@@ -146,3 +146,9 @@ When transferring work, replace the volatile sections above while preserving ver
 ```
 
 If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
+
+## Current State (2026-09-25)
+- Deployed a fix ( 80eb89) to allow saveSnapshot to overwrite a ghost record with a valid sample.
+
+## Next Actions
+- User needs to click "Refresh sources" again.
