@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Search, RefreshCw, Sparkles } from 'lucide-react';
+import { Send, Clock, User, Search, RefreshCw, Sparkles } from 'lucide-react';
 import { api } from './api';
 
 export function AssistantPage() {
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello! I am your AI assistant. You can ask me to search for historical QC records, summarize recent out-of-specification results, or query audit logs.' }] }]);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hey y\'all! I\'m Miss Minutes! You can ask me to search for historical QC records, summarize recent out-of-specification results, or query audit logs. How can I help you keep the Timeline in order?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -36,7 +36,7 @@ export function AssistantPage() {
   };
 
   const clearChat = () => {
-    setMessages([{ role: 'model', parts: [{ text: 'Chat cleared. How can I help you?' }] }]);
+    setMessages([{ role: 'model', parts: [{ text: 'Chat cleared. We are back to a fresh Timeline! How can I help you?' }] }]);
   };
 
   return (
@@ -44,11 +44,11 @@ export function AssistantPage() {
       <div className="assistant-header">
         <div className="assistant-heading">
           <div className="assistant-avatar">
-            <Bot size={22} />
+            <Clock size={22} />
           </div>
           <div>
             <div className="eyebrow"><Sparkles size={12}/> Research companion</div>
-            <h2>Smart Assistant</h2>
+            <h2>Miss Minutes</h2>
             <small>Searches authorized QC records and audit history</small>
           </div>
         </div>
@@ -61,7 +61,7 @@ export function AssistantPage() {
         {messages.map((m, i) => (
           <div key={i} className={`assistant-message ${m.role}`}>
             <div className="assistant-message-avatar">
-              {m.role === 'user' ? <User size={18} /> : <Bot size={18} />}
+              {m.role === 'user' ? <User size={18} /> : <Clock size={18} />}
             </div>
             <div className="assistant-bubble">
               {m.parts.map(p => p.text).join('')}
@@ -71,7 +71,7 @@ export function AssistantPage() {
         {loading && (
           <div className="assistant-message model">
              <div className="assistant-message-avatar">
-              <Bot size={18} />
+              <Clock size={18} />
             </div>
             <div className="assistant-bubble assistant-thinking">
               <i/><i/><i/><span>Searching records</span>

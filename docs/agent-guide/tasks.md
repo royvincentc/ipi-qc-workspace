@@ -563,3 +563,20 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Verification: Build and tests passed.
 - Next action/owner: User to add an alias to the correct product in Settings.
 
+
+### TASK-20260926-001 — Update Smart Assistant to Miss Minutes persona
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Authorization: User requested to update the AI as Miss Minutes from Marvel, make it smaller, and make it interact with the user.
+- Goal/rule link: Project continuity, Smart Assistant integration
+- Scope/files: server/ai.ts, src/FloatingAssistant.tsx, src/AssistantPage.tsx, src/experience.css
+- Before: The AI assistant used a default generic "Pip" persona with a generic bot icon, standard text, and a relatively large floating chat window.
+- Change: Replaced "Pip" with "Miss Minutes". Modified the system prompt in server/ai.ts to instruct the AI to speak with a Southern drawl, use TVA terminology ("Sacred Timeline"), and proactively ask follow-up questions to interact with the user, while strictly adhering to the read-only laboratory rules. Updated the floating widget and assistant page UI to use a Clock icon from lucide-react. Reduced the dimensions of the .floating-chat container in src/experience.css from 390x560 to 320x440. Added a .miss-minutes-face centering class for the widget icon.
+- Data impact: Code and UI only. No data was modified.
+- Verification: Source code inspection of modified files and Vite build pass.
+- Problems/risks: None
+- Rollback: Revert changes in server/ai.ts, src/FloatingAssistant.tsx, src/AssistantPage.tsx, and src/experience.css
+- Evidence: Modified files and successful build output.
+- Next action/owner: User to review changes on the dashboard and chat with Miss Minutes.
