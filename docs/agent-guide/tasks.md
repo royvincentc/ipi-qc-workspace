@@ -1,4 +1,4 @@
-# IPI QC Microbiology Workspace Ã¢â‚¬â€� Task and Change Ledger
+﻿# IPI QC Microbiology Workspace Ã¢â‚¬â€� Task and Change Ledger
 
 | Document control | Value |
 |---|---|
@@ -408,5 +408,20 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Rollback: Revert changes in src/experience.css, src/workspace.tsx, src/reports.tsx
 - Evidence: Modified files
 - Next action/owner: User to review changes on dashboard.
-T A S K - 2 0 2 6 0 9 2 5 - 0 2 0 :   C o n f i g u r e d   p g . P o o l   t o   c a t c h   i d l e   c o n n e c t i o n   e r r o r s ,   u s e   k e e p A l i v e ,   a n d   m a n u a l l y   r e s o l v e   I P v 4   a d d r e s s e s   t o   b y p a s s   N o d e . j s   H a p p y   E y e b a l l s   E N E T U N R E A C H   b u g   o n   R e n d e r  
- 
+
+
+### TASK-20260925-021 — Auto-create managed products from synced samples
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Claude Opus 4.6)
+- Authorization: User requested automatic product creation so samples never fail report setup with "No active managed product matches"
+- Goal/rule link: Sample-to-specification workflow, configuration management
+- Scope/files: `server/samples.ts`
+- Before: After sync, samples whose names didn't match any configured managed product would fail with "No active managed product matches the sample name from the incoming logger" when preparing a report. Products had to be manually added through Settings.
+- Change: Added `autoCreateProducts()` function called at the end of `syncSources()`. After all samples are saved, it queries all distinct sample name+category pairs, checks each against existing managed products using the same startsWith prefix matching logic as report setup, and adds missing products to the configuration automatically via `saveConfiguration()`. The audit trail records how many products were auto-created per sync. Each auto-created product uses the full sample name, an empty aliases array, and active=true.
+- Data impact: Configuration products list is extended with auto-created entries. No live source or laboratory records changed.
+- Verification: TypeScript typecheck passed. All 41 domain tests passed. Vite production build passed (452.58 kB / 136.18 kB gzip).
+- Problems/risks: Each unique sample name creates a separate product entry. Products with batch-specific suffixes will each get their own product. The prefix matching in report setup handles this correctly.
+- Rollback: Revert the changes in `server/samples.ts` to remove `autoCreateProducts` and the `saveConfiguration` import.
+- Evidence: Typecheck, test, and build output dated 2026-09-25.
+- Next action/owner: Deploy and re-sync to auto-populate products. Then retry the report for ML-ST-26-0280.

@@ -1,4 +1,4 @@
-import {getConfiguration,sourceTypes} from './configuration.js';
+import {getConfiguration,saveConfiguration,sourceTypes} from './configuration.js';
 import {type SampleType,formatNumber,validateIntake} from '../shared/configuration.js';
 import {randomUUID} from 'node:crypto';
 import {db,locked,setting,setSetting,audit,demo} from './db.js';
@@ -9,6 +9,26 @@ export interface Connections {incoming:string;environmental:string;specification
 export const defaultConnections:Connections={incoming:'',environmental:'',specifications:'',folders:[],timezone:'Asia/Manila',reservationsReconciled:false,manualIntakeCoordinated:false,writesEnabled:false};
 export function sourceSample(book:string,sheet:Sheet,c:Category,row:number,values:unknown[],type?:SampleType,revision?:number):Sample{const m=type?.layout||mappings[c],fields=Object.fromEntries(Object.entries(m.fields).map(([name,i])=>[name,String(values[i]??'')]));const range=`${column(m.start)}${row}:${column(m.end)}${row}`;const source:Source={spreadsheetId:book,sheetId:sheet.id,sheet:sheet.name,section:type?.name||categories[c],row,range,fingerprint:hash(values),observedAt:new Date().toISOString(),url:`https://docs.google.com/spreadsheets/d/${book}/edit#gid=${sheet.id}&range=${range}`,mappingRevision:revision?String(revision):'ipi-2026-v1',raw:values,active:true};return {id:randomUUID(),configurationRevision:revision,categoryLabel:type?.name||categories[c],category:c,ml:fields.ml,name:fields.name,batch:fields.batch,received:fields.received,status:fields.status,remarks:fields.remarks,context:fields.context||'',fields,source};}
 async function saveSnapshot(s:Sample){const key=[s.source.spreadsheetId,s.source.sheetId,s.category,s.source.row].join(':');const old=(await db.query('SELECT id,data FROM samples WHERE source_key=$1',[key])).rows[0];if(old&&old.data.ml!==s.ml)throw new Fault(409,`${s.source.sheet} row ${s.source.row}: record moved or replaced; reconcile source identity`);if(old){s.id=old.id;s.fields={...old.data.fields,...s.fields};if(old.data.source.fingerprint!==s.source.fingerprint)await db.query('INSERT INTO source_history(id,sample_id,data) VALUES($1,$2,$3)',[randomUUID(),s.id,JSON.stringify(old.data.source)]);}await db.query('INSERT INTO samples(id,source_key,data) VALUES($1,$2,$3) ON CONFLICT(source_key) DO UPDATE SET data=$3,updated_at=now()',[s.id,key,JSON.stringify(s)]);return s;}
+const normalized=(value:string)=>value.trim().toLocaleLowerCase();
+async function autoCreateProducts(actor:string){
+ const current=await getConfiguration();const products=[...current.value.products];
+ const allSamples=(await db.query('SELECT DISTINCT data->>\'name\' AS name, data->>\'category\' AS category FROM samples')).rows as {name:string;category:string}[];
+ let added=0;
+ for(const {name,category} of allSamples){
+  if(!name?.trim()||!category)continue;
+  const already=products.some(p=>p.active&&p.category===category&&[p.name,...p.aliases].some(n=>normalized(name).startsWith(normalized(n))));
+  if(already)continue;
+  // Use the full sample name as the product name (it may include batch suffixes — the prefix matching in reports will still work)
+  const id='product-'+randomUUID().replace(/-/g,'').slice(0,16);
+  products.push({id,name:name.trim(),code:'',category,aliases:[],active:true});
+  added++;
+ }
+ if(added>0){
+  const updated=structuredClone(current.value);updated.products=products;
+  await saveConfiguration(updated,current.revision,actor);
+ }
+ return added;
+}
 export async function syncSources(actor:string){if(demo)return {count:0,message:'De-identified demo; live synchronization is disabled'};const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;
  for(const [url,cs] of [[config.incoming,sourceCatalog.filter(t=>t.register==='incoming').map(t=>t.id)],[config.environmental,sourceCatalog.filter(t=>t.register==='environmental').map(t=>t.id)]] as [string,Category[]][]){if(!url)continue;const book=await readWorkbook(url);await locked(book.id,async()=>{const records:Sample[]=[];for(const sheet of book.sheets)for(const c of cs){const type=managed.value.sampleTypes.find(t=>t.id===c)!;validateLayout(sheet,c,type);for(const r of sectionRows(sheet,c,type))if(r.occupied&&!r.reserved)records.push(sourceSample(book.id,sheet,c,r.row,r.values,type,managed.revision));}
   // Validate identity for the entire import before persisting any changed rows.
@@ -17,7 +37,9 @@ export async function syncSources(actor:string){if(demo)return {count:0,message:
   for(const record of records){await saveSnapshot(record);count++;}
  });}
  if(config.specifications)await setSetting('applicability',await readApplicability(config.specifications));
- await setSetting('sync',{lastSuccess:new Date().toISOString(),count,error:null});await audit(actor,'synchronize','sources',{count});return {count};
+ // Auto-create managed products for any sample names without a matching product entry
+ const added=await autoCreateProducts(actor);
+ await setSetting('sync',{lastSuccess:new Date().toISOString(),count,error:null});await audit(actor,'synchronize','sources',{count,productsAutoCreated:added});return {count,productsAutoCreated:added};
 }
 export async function submitSample(actor:string,input:{submissionId:string;category:Category;fields:Record<string,string>}){const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===input.category);if(!type?.active)throw new Fault(400,'Choose an active sample type');const issues=validateIntake(type,input.fields,managed.value);if(issues.length)throw new Fault(400,issues.join('; '));if(demo)return submitDemo(actor,input,type,managed.revision,managed.value.general.timezone);const config=await setting('connections',defaultConnections);if(!config.writesEnabled||!config.reservationsReconciled||!config.manualIntakeCoordinated)throw new Fault(409,'An administrator must validate connections, reconcile reservations and coordinate manual intake before enabling writes');const url=type.register==='environmental'?config.environmental:config.incoming;if(!url)throw new Fault(409,'Configure the logbook connection first');const payloadHash=hash(input);const book=await readWorkbook(url);
  return locked(book.id,async()=>{const old=(await db.query('SELECT * FROM submissions WHERE id=$1',[input.submissionId])).rows[0];if(old){if(old.payload_hash!==payloadHash)throw new Fault(409,'Submission ID was already used with different values');if(old.state==='complete')return old.data.sample;throw new Fault(409,'This submission requires reconciliation; it will not be sent again automatically');}
