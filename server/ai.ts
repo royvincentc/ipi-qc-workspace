@@ -64,8 +64,9 @@ aiRouter.post('/chat', async (req, res) => {
   let response = await chat.sendMessage(lastMessage.parts);
 
   // Simple function calling loop (1 iteration)
-  if (response.response.functionCalls && response.response.functionCalls.length > 0) {
-    const call = response.response.functionCalls[0];
+  const calls = response.response.functionCalls();
+  if (calls && calls.length > 0) {
+    const call = calls[0];
     let functionResponseData = {};
 
     try {
@@ -100,9 +101,6 @@ aiRouter.post('/chat', async (req, res) => {
 
   res.json({
     role: 'model',
-    parts: response.response.parts.map(p => {
-      if (p.text) return { text: p.text };
-      return p; // fallback
-    }).filter(p => p.text)
+    parts: [{ text: response.response.text() }]
   });
 });
