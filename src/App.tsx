@@ -11,7 +11,7 @@ import {Reports,ReportEditor} from './reports';
 import SettingsPage from './settings';
 import { AssistantPage } from './AssistantPage';
 import { FloatingAssistant } from './FloatingAssistant';
-import {AmbientBackdrop,CustomCursor,RouteExperience} from './Experience';
+import {AmbientBackdrop,RouteExperience} from './Experience';
 const AdminCenter=lazy(()=>import('./admin'));
 
 const navigation=[
@@ -77,7 +77,6 @@ function Workspace({data}:{data:any}){
       <Notice.Provider value={notify}>
         <div className="app">
           <AmbientBackdrop/>
-          <CustomCursor/>
           <RouteExperience/>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`}>
             <Link to="/" className="brand" title={config.value.general.appName}>
