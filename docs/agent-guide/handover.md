@@ -16,7 +16,7 @@ Do not put secrets, private keys, tokens, full connection strings, sensitive liv
 
 Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The dashboard experience has received a complete responsive visual overhaul, and the production Gemini assistant history-order failure is repaired in code. The remaining release gates are credential rotation/deployment smoke testing, operational controls, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
 
-**Current phase:** integration, control hardening, and release validation. The development implementation spans the original Phases 1–10, while active work is concentrated in Phases 9–12. It is not yet a controlled live release.
+**Current phase:** integration, control hardening, and release validation. TASK-20260925-016 repairs the sample-to-report setup path in code, but production still needs controlled product/context criteria and approved template configuration. The development implementation spans the original Phases 1–10, while active work is concentrated in Phases 9–12. It is not yet a controlled live release.
 
 ## Repository state at transfer
 
@@ -50,6 +50,7 @@ Move the audited development application toward a controlled first release in wh
 - Production Render logs confirmed the assistant failure occurred before API-key authentication because Gemini history began with the UI's synthetic `model` greeting.
 - The server now removes only leading synthetic model messages, validates alternating history, uses the maintained `@google/genai` SDK and configurable current model, and exposes sanitized actionable error categories.
 - The fine-pointer custom cursor is now a static native CSS/SVG cursor with no JavaScript tracking, animation frame, React component, dataset mutation, or moving DOM layer. Editable fields retain the native text cursor, and unsupported browsers fall back to their standard zero-lag cursors.
+- Report preparation now resolves the selected logger sample's managed product/alias, exact testing context, QC Micro Products Specifications checklist row, dated criteria, and compatible verified layout automatically. Repeating-row layouts derive their parameter table from checklist applicability. Safe template metadata can be prefilled from the pinned sample snapshot, while actual results and controlled dates/personnel/approval fields remain blank/manual. Generated reports expose both audited PDF and DOCX downloads.
 
 ### Automated and browser checks
 
@@ -67,6 +68,8 @@ After TASK-20260925-013, all 41 Node/domain tests passed, including three assist
 After TASK-20260925-014, all 41 Node/domain tests, TypeScript typecheck, and the Vite production build passed. The cursor continues to respect reduced-motion and coarse-pointer fallbacks; its subjective feel should be confirmed on the project owner's live desktop after deployment.
 
 TASK-20260925-015 supersedes TASK-20260925-014's animated cursor after the project owner still perceived lag. All 41 Node/domain tests, TypeScript typecheck, and the Vite production build passed. The native cursor assets were included in the production output, and the main bundle decreased to `452.86 kB` (`136.23 kB` gzip).
+
+After TASK-20260925-016, all 41 Node/domain tests and 7 Python DOCX worker tests passed; TypeScript typecheck and the Vite production build passed (`452.56 kB` / `136.19 kB` gzip main JS). A fresh de-identified browser flow automatically resolved the demo Finished Goods sample to SPC and Molds/Yeast plus the verified two-test layout, then created a draft with exactly two blank manual result rows. No live source or production environment was accessed.
 
 These results describe the audited working tree on 2026-09-25. Rerun relevant checks after further edits; do not carry them forward as permanent proof.
 
@@ -87,7 +90,7 @@ The successful rerun in TASK-20260925-007 was not independently repeated during 
 - The configured live PostgreSQL target is a placeholder/unreachable in the inspected environment.
 - Google OAuth client configuration, initial admin allowlist, and deploy-time service-account credential configuration are not complete in the application environment.
 - Google write operations remain disabled and are not authorized by the successful read-only test.
-- Historical reports provide useful criteria/layout evidence, but approved blank templates and a formally controlled criteria source/process still need IPI decisions.
+- Historical reports provide useful criteria/layout evidence, but approved blank templates and a formally controlled criteria source/process still need IPI decisions. Automatic report setup now reports this as a specific blocking configuration error rather than exposing empty internal selectors.
 - Existing `docs/HANDOFF.md` and `docs/HANDOFF_GEMINI_TO_CHATGPT.md` contain claims that conflict with repository evidence. Preserve them as history; do not treat them as authority.
 - On this machine, the ordinary global `npm` launcher is unusable because its expected global npm CLI path is missing. Use the bundled Node/Python runtimes and direct local package binaries. A bundled `pnpm` attempt tried to relocate npm-managed dependencies before its network request failed; the packages were restored from `node_modules/.ignored`. Do not run `pnpm` against this existing dependency tree without an intentional package-manager migration.
 - The Gemini key displayed in the project-owner screenshot is compromised by disclosure. Revoke it in Google AI Studio, replace `GEMINI_API_KEY` in the active Render service, and redeploy before any live assistant smoke test.
@@ -112,8 +115,8 @@ The successful rerun in TASK-20260925-007 was not independently repeated during 
 2. Before an operational release gate, reproduce TASK-20260925-007’s recorded all-tabs-passing read-only connection verification; this dashboard task did not open live sources.
 3. Confirm the real PostgreSQL environment, Google OAuth client, administrator allowlist, and server-side service-account secret on the selected deployment platform. Test authentication and role enforcement without exposing credentials.
 4. Run a controlled read-only initial import; reconcile duplicate ML records, direct edits, color-only reservations, and numbering state. Produce a review report before enabling writes.
-5. Designate the first approved blank report template and authoritative criteria decision process. Render and visually compare a generated sample PDF/DOCX against the approved format.
-6. Exercise the full de-identified sample → applicable specification → manual results → review → DOCX workflow on desktop and phone.
+5. Register each real product name/alias and exact logger testing context, designate the authoritative dated criteria process, and designate one approved repeating-row or uniquely compatible report layout per category.
+6. Exercise the full de-identified sample → automatic checklist parameters/layout → manual results → review → PDF/DOCX workflow on desktop and phone, then visually compare both outputs against the approved format.
 7. Enabling live Google writes remains a separate controlled decision after all required controls pass.
 
 ## Starting checklist for the next agent

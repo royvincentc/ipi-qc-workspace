@@ -10,6 +10,7 @@ export interface Specification {active?:boolean;previousId?:string;id:string;pro
 export interface Result {test:string;location?:string;stage?:string;replicate?:string;state:'not_entered'|'not_tested'|'entered';value:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
 export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];fields:Record<string,string>;updatedAt:string;analyst:string}
 export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:Record<string,unknown>;verified:boolean;demo?:boolean}
+export interface ReportSetup {sample:Sample;specification:Specification;template:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>}
 export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P. aeruginosa',SA:'S. aureus',CA:'C. albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'>){return [r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function reportIssues(d:Draft):string[]{

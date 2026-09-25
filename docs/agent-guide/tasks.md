@@ -342,3 +342,20 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Revert this task's focused commit to restore the compositor-layer cursor from TASK-20260925-014.
 - Evidence: Focused source/assets diff and verification output dated 2026-09-25
 - Next action/owner: Hard-refresh the live dashboard after deployment and confirm cursor visibility, tracking, interactive-state shape, and text-field cursor behavior on the laptop and one representative older office PC.
+
+### TASK-20260925-016 — Automate checklist-driven report setup and PDF delivery
+
+- Status: Completed in code; production configuration and deployment verification remain
+- Priority: P0
+- Actor/tool: Codex (GPT-6), TypeScript/React, DOCX worker regression suite, Playwright CLI
+- Authorization: Project-owner report that file generation was nonfunctional and expectation that QC Micro Products Specifications selects parameters while the incoming sample logger supplies report data
+- Goal/rule link: Sample-to-applicable-specification workflow, standardized report generation, source traceability, manual actual results, no automatic release/pass-fail
+- Scope/files: `server/reports.ts`, `server/index.ts`, `shared/model.ts`, `src/reports.tsx`, `tests/configuration.test.ts`, this ledger, active handover
+- Before: Analysts had to manually choose a category-wide specification reference and template. The UI did not resolve the selected logger record's exact managed product/alias and testing context, did not explain checklist/template incompatibilities precisely, and did not prefill safe template metadata from the sample snapshot. Generated PDFs were preview-only rather than directly downloadable.
+- Change: Added server-authoritative automatic report setup that matches the selected sample to one active managed product/alias, exact testing context, one QC Micro Products Specifications applicability row, dated traceable criteria, and one compatible verified report layout. Repeating-row templates are preferred so the checklist controls table rows; compatible fixed layouts remain supported. Draft creation now accepts only the sample ID. Safe required template fields are copied from the incoming logger snapshot, while actual results, analysis/release dates, status, personnel/signature fields, remarks, and approval data remain manual or blank. The UI shows the resolved tests/layout and actionable blockers instead of internal selectors. Added an audited PDF download alongside DOCX.
+- Data impact: Code, disposable de-identified demo database, and local browser artifacts only. No live Google source, production database, deployment, credentials, or laboratory record was read or changed.
+- Verification: 41 TypeScript/domain tests passed, including automatic setup and protected-field-prefill assertions; 7 DOCX worker tests passed; TypeScript typecheck passed; Vite production build passed (`1623` modules, main JS `452.56 kB` / `136.19 kB` gzip). A fresh de-identified browser flow selected `ML-FG-26-0001`, resolved SPC and Molds/Yeast plus the verified two-test layout automatically, and created a revision-1 draft containing exactly those two blank manual result rows.
+- Problems/risks: Automatic generation intentionally blocks when the logger lacks testing context, the product/alias is not controlled, checklist applicability is missing/ambiguous, dated criteria are unresolved, or zero/multiple compatible layouts exist. Real IPI criteria and approved templates remain a release prerequisite; this task does not infer acceptance limits from checklist booleans and does not make historical templates approved.
+- Rollback: Revert this task's focused code changes. Existing drafts/files are immutable snapshots and require no data rollback.
+- Evidence: Test/build output and de-identified Playwright snapshots dated 2026-09-25; no live-data evidence used
+- Next action/owner: Administrator/authorized IPI owner registers the exact real products/aliases, testing contexts, dated criteria, and one approved repeating-row or uniquely compatible layout per category, then performs a controlled de-identified production smoke test.
