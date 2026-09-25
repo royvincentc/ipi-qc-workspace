@@ -325,3 +325,20 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Revert this task's focused commit to restore the root-variable cursor implementation.
 - Evidence: Focused source diff and verification output dated 2026-09-25
 - Next action/owner: Confirm cursor tracking and link/button hover expansion on the live desktop after Render deploys this commit.
+
+### TASK-20260925-015 — Replace animated cursor with zero-JavaScript native cursor
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Codex (GPT-6)
+- Authorization: Project-owner reported that the optimized animated cursor still lagged and requested an implementation suitable for substantially older office PCs
+- Goal/rule link: Desktop performance, restrained visual personality, progressive enhancement, accessibility
+- Scope/files: `src/App.tsx`, `src/Experience.tsx`, `src/experience.css`, `public/cursor-lab.svg`, `public/cursor-lab-action.svg`, this ledger, active handover
+- Before: TASK-20260925-014 reduced layout work, but a JavaScript/DOM cursor still necessarily followed the hardware pointer on a later rendered frame. That perceptual delay remained visible on the project owner's current laptop and would be less suitable for older office hardware.
+- Change: Removed the rendered cursor component, pointer event listeners, animation-frame loop, dataset mutations, and moving DOM layer. Added compact static SVG cursor assets applied through native CSS cursor handling, with separate default and interactive treatments, native text cursors for editable fields, and browser fallbacks to standard default/pointer cursors.
+- Data impact: Presentation behavior and static assets only; no application data, server, source record, or environment configuration changed.
+- Verification: All 41 Node/domain tests passed; TypeScript typecheck passed; Vite production build passed (`1623` modules, main JS reduced to `452.86 kB` / `136.23 kB` gzip); both SVG cursor assets were present in the production output; `git diff --check` passed apart from Git line-ending notices.
+- Problems/risks: SVG cursor rendering varies slightly by browser and Windows scaling level. Unsupported browsers automatically use their native cursor, preserving zero-lag operation and usability.
+- Rollback: Revert this task's focused commit to restore the compositor-layer cursor from TASK-20260925-014.
+- Evidence: Focused source/assets diff and verification output dated 2026-09-25
+- Next action/owner: Hard-refresh the live dashboard after deployment and confirm cursor visibility, tracking, interactive-state shape, and text-field cursor behavior on the laptop and one representative older office PC.
