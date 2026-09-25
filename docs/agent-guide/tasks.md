@@ -274,3 +274,20 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Delete `GEMINI.md`.
 - Evidence: `GEMINI.md` file present in the repo.
 - Next action/owner: Commit and push `GEMINI.md`.
+
+### TASK-20260925-012 — Responsive dashboard experience overhaul
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Codex (GPT-6), React/Vite, browser-control visual QA
+- Authorization: Project-owner request to completely overhaul the dashboard UX/UI for desktop and mobile, add restrained motion and personality, correct visual defects, and commit the result
+- Goal/rule link: Phone-friendly workspace, non-technical dashboard utility, accessibility/responsive verification, real data only, change controls
+- Scope/files: `src/App.tsx`, `src/Experience.tsx`, `src/experience.css`, `src/workspace.tsx`, `src/AssistantPage.tsx`, `src/FloatingAssistant.tsx`, `src/ui.tsx`, `src/main.tsx`, this ledger, active handover
+- Before: The working tree was clean at `32ce716`. Recent work added Render deployment, connection/migration evidence, governance documents, and a Gemini assistant. Visual inspection found competing generations of shell CSS, assistant panels using nonexistent color variables, heavy inline layout, hidden tablet intelligence content, visually present but nonfunctional dashboard filters, inconsistent panel opacity/edges/spacing, a generic loader, and no cohesive page/scroll/interaction motion system.
+- Change: Introduced a cohesive dark/light “living laboratory” visual layer with restrained teal, amber, and blue accents; rebuilt the responsive dashboard layout, hero, metrics, filters, data table, rail, forms, panels, and assistant surfaces; made dashboard text/type/status filters functional against loaded records; added reduced-motion-aware route/scroll/loading/typing/ambient motion, a precise-pointer custom cursor, and the interactive animated assistant pet “Pip”; converted the phone dashboard table to readable cards and moved the intelligence rail below content on tablet/mobile instead of hiding it. Removed the rendered `react-draggable` path after browser QA exposed an unstable drag-start handler, reducing the main production bundle by approximately 15 KB.
+- Data impact: Presentation and client-side filtering only; no schema, source record, Google connection, live data, or scientific behavior changed. Browser checks used the isolated de-identified demo database.
+- Verification: 38 TypeScript/domain tests passed; 7 DOCX worker tests passed; TypeScript typecheck passed; Vite production build passed (`1623` modules, main JS `453.95 kB` / `136.53 kB` gzip); `git diff --check` passed apart from Git line-ending notices. Fresh-browser checks at phone (390×844), tablet (1024×768), and desktop/default viewports found no page-level horizontal overflow, functional mobile navigation and dashboard filtering, visible tablet intelligence panels, reliable Pip open/close behavior, an opaque edge-aligned phone chat panel, and no console warnings/errors in the final bundle. Reduced-motion fallbacks and coarse-pointer cursor suppression are encoded in CSS.
+- Problems/risks: The broken global npm launcher remains an environment issue; direct local/bundled Node and Python runtimes were used. The live deployment still requires its existing production environment controls and is not made production-valid by a visual overhaul. Browser QA used de-identified demo data; no live connections were opened.
+- Rollback: Revert this task’s UI commit. No data migration or live-source rollback is needed.
+- Evidence: Production build output, automated test output, browser screenshots/DOM measurements from 2026-09-25, fresh-browser zero-error console check, and the focused Git commit created for this task
+- Next action/owner: Observe the automatic live deployment, then perform a brief authenticated smoke test on the deployed dashboard without enabling Google writes.

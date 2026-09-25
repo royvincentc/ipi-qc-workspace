@@ -4,8 +4,8 @@
 |---|---|
 | Document ID | IPI-AI-HANDOVER |
 | Revision | 1.0 |
-| Last updated | 2026-09-25, Asia/Manila |
-| Prepared by | Codex (GPT-6) |
+| Last updated | 2026-09-25 13:00, Asia/Manila |
+| Prepared by | Codex (GPT-6), dashboard experience overhaul |
 | Repository | `C:\Users\Roy\Documents\ChatGPT\IPI` |
 
 This is the volatile transfer record. Update it whenever work pauses, finishes, changes direction, or transfers to another person/model. It supersedes older handoff notes as the current starting point; older files remain historical evidence and may contain inaccurate claims. Verify this file through [audit.md](audit.md), follow [goal.md](goal.md) and [rules.md](rules.md), and record all work in [tasks.md](tasks.md).
@@ -14,35 +14,19 @@ Do not put secrets, private keys, tokens, full connection strings, sensitive liv
 
 ## Current objective
 
-Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The immediate gates are live environment configuration, resolution of one Environmental Monitoring layout mismatch, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
+Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The dashboard experience has now received a complete responsive visual overhaul; the remaining release gates are operational controls, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
 
 **Current phase:** integration, control hardening, and release validation. The development implementation spans the original Phases 1–10, while active work is concentrated in Phases 9–12. It is not yet a controlled live release.
 
 ## Repository state at transfer
 
 - Branch: `master`
-- HEAD: `7707415` (`chore: add GEMINI.md project rule to enforce agent guide`)
-- Working tree: clean.
-- Modified tracked files since initial handoff:
-  - `GEMINI.md`
-  - `package.json`
-  - `server/index.ts`
-  - `server/ai.ts`
-  - `src/App.tsx`
-  - `src/AssistantPage.tsx`
-  - `src/FloatingAssistant.tsx`
-  - `.env.example`
-  - `scripts/validate-migrations.ts`
-- Untracked files: none
-- Added by this documentation task:
-  - `docs/agent-guide/goal.md`
-  - `docs/agent-guide/tasks.md`
-  - `docs/agent-guide/rules.md`
-  - `docs/agent-guide/audit.md`
-  - `docs/agent-guide/handover.md`
-  - `docs/agent-guide/prompt.md`
-
-Inspect the current diff before editing. Some files contain corrections made after the Gemini handoff and are not represented by HEAD alone.
+- Starting HEAD reviewed: `32ce716` (`docs: update handover.md for GEMINI.md addition`), matching `origin/master` at the start of this task.
+- Final state: the dashboard overhaul and this evidence update are committed; use `git log -1` for the resulting commit ID.
+- Working tree expected after finalization: clean.
+- UI files changed by TASK-20260925-012: `src/App.tsx`, `src/Experience.tsx`, `src/experience.css`, `src/workspace.tsx`, `src/AssistantPage.tsx`, `src/FloatingAssistant.tsx`, `src/ui.tsx`, and `src/main.tsx`.
+- Governance files changed: `docs/agent-guide/tasks.md` and this handover.
+- No schema, server business rules, Google mappings, report worker logic, or live-source data changed in the dashboard task.
 
 ## What has been verified
 
@@ -59,6 +43,10 @@ Inspect the current diff before editing. Some files contain corrections made aft
 - Newly prepared report templates remove standalone `After ... incubation:` parameter paragraphs while preserving the remaining test label’s original formatting.
 
 - AI Assistant backend securely queries local samples and audit tables; returns 400 Fault if `GEMINI_API_KEY` is not present, avoiding obscuring errors through a generic 500 response.
+- Dashboard and application shell now use one coherent responsive visual layer with readable surfaces, consistent edges/spacing, functional dashboard filters, and retained data-backed metrics.
+- Desktop/phone motion includes route arrival, viewport reveal, loading/typing feedback, ambient graphics, a fine-pointer custom cursor, and the animated assistant pet “Pip.” Coarse pointers and reduced-motion preferences receive appropriate fallbacks.
+- The right-side intelligence content moves below the dashboard at tablet/mobile widths rather than disappearing.
+- Assistant surfaces no longer depend on undefined color variables or an unstable draggable wrapper.
 
 ### Automated and browser checks
 
@@ -69,6 +57,8 @@ Inspect the current diff before editing. Some files contain corrections made aft
 - Desktop and phone browser checks confirmed working search and Settings, no console warnings/errors observed, and no phone page-level horizontal overflow.
 - The current archive-based sample PDF was rendered and visually compared with its reference layout. The incubation prefixes are absent; `Celeste P. Yandug — Assistant Head, Microbiology Laboratory` is present; PAGE and NUMPAGES fields remain automatic. The template still requires IPI approval and human review of inherited drawing objects.
 
+After TASK-20260925-012, the same 38 TypeScript/domain tests and 7 Python worker tests passed. TypeScript typecheck and the Vite production build passed. Final browser checks used a fresh session on the de-identified demo workspace at 390×844, 1024×768, and desktop/default viewports: no page overflow, filters and mobile navigation worked, Pip opened/closed, tablet rail content remained available, and the console contained no warnings or errors. The main bundle was `453.95 kB` (`136.53 kB` gzip).
+
 These results describe the audited working tree on 2026-09-25. Rerun relevant checks after further edits; do not carry them forward as permanent proof.
 
 ### Google connections
@@ -77,11 +67,10 @@ Authentication succeeded using the shared service-account identity `sample-logge
 
 - Incoming Logbook: passed 9 monthly tabs and 54 category-section layouts.
 - Product Specifications: passed 2 tabs and 92 product rows.
-- Environmental Monitoring: 8 of 9 monthly tabs passed.
-- Blocked tab: `JUNE (ENVI) 2026`; expected `ENVIRONMENTAL MONITORING` was absent/blank in A1:R3 during validation.
+- Environmental Monitoring: the original audit passed 8 of 9 monthly tabs and blocked `JUNE (ENVI) 2026`. TASK-20260925-007 later records that IPI corrected the title and a read-only rerun passed all tabs.
 - No Google cells or permissions were changed.
 
-Keep the June tab blocked until IPI reviews whether the sheet should be corrected or a new layout revision should be explicitly approved. Do not weaken validation globally to make the test green.
+The successful rerun in TASK-20260925-007 was not independently repeated during the dashboard-only task. Reverify before relying on it for an operational gate; do not weaken validation globally.
 
 ## Known environment and readiness limits
 
@@ -109,14 +98,13 @@ Keep the June tab blocked until IPI reviews whether the sheet should be correcte
 
 ## Exact next actions
 
-1. Run the audit procedure against the full working-tree diff and confirm that this handover still matches the repository.
-2. Have the project owner or authorized laboratory owner review `JUNE (ENVI) 2026`; document the decision and rerun the read-only verifier.
-3. Configure a real PostgreSQL environment, Google OAuth client, administrator allowlist, and server-side service-account secret through the chosen deployment platform. Test authentication and role enforcement without exposing credentials.
-4. Back up and use a disposable copy to validate migrations and configuration seeding before touching live application data.
-5. Run a read-only initial import; reconcile duplicate ML records, direct edits, color-only reservations, and numbering state. Produce a review report before enabling writes.
-6. Designate the first approved blank report template and authoritative criteria decision process. Render and visually compare a generated sample PDF/DOCX against the approved format.
-7. Exercise the full de-identified sample → applicable specification → manual results → review → DOCX workflow on desktop and phone.
-8. Only after the above controls pass, prepare a focused reviewed commit/PR with ledger evidence. Enabling live writes is a separate controlled decision.
+1. Observe the automatic live deployment of the committed dashboard and perform a brief authenticated desktop/phone smoke test. Do not enable Google writes as part of that check.
+2. Before an operational release gate, reproduce TASK-20260925-007’s recorded all-tabs-passing read-only connection verification; this dashboard task did not open live sources.
+3. Confirm the real PostgreSQL environment, Google OAuth client, administrator allowlist, and server-side service-account secret on the selected deployment platform. Test authentication and role enforcement without exposing credentials.
+4. Run a controlled read-only initial import; reconcile duplicate ML records, direct edits, color-only reservations, and numbering state. Produce a review report before enabling writes.
+5. Designate the first approved blank report template and authoritative criteria decision process. Render and visually compare a generated sample PDF/DOCX against the approved format.
+6. Exercise the full de-identified sample → applicable specification → manual results → review → DOCX workflow on desktop and phone.
+7. Enabling live Google writes remains a separate controlled decision after all required controls pass.
 
 ## Starting checklist for the next agent
 
