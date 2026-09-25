@@ -3,12 +3,14 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect} from 'react';
 import {Link,NavLink,Route,Routes} from 'react-router-dom';
-import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X} from 'lucide-react';
+import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
 import {SampleDetail} from './pages';
 import {Reports,ReportEditor} from './reports';
 import SettingsPage from './settings';
+import { AssistantPage } from './AssistantPage';
+import { FloatingAssistant } from './FloatingAssistant';
 const AdminCenter=lazy(()=>import('./admin'));
 
 const navigation=[
@@ -16,7 +18,8 @@ const navigation=[
   ['/new','Log Sample',Plus],
   ['/samples','Samples',Search],
   ['/reports','Results & Reports',FileText],
-  ['/library','File Library',FolderOpen]
+  ['/library','File Library',FolderOpen],
+  ['/assistant','Smart Assistant',Bot]
 ] as const;
 
 function CommandPalette({open, onClose}: {open: boolean, onClose: () => void}) {
@@ -156,6 +159,7 @@ function Workspace({data}:{data:any}){
                   <Route path="/reports" element={<Reports/>}/>
                   <Route path="/reports/:id" element={<ReportEditor/>}/>
                   <Route path="/library" element={<FileLibrary/>}/>
+                  <Route path="/assistant" element={<AssistantPage/>}/>
                   <Route path="/settings" element={data.user.role==='administrator'?<Suspense fallback={<Loading/>}><AdminCenter/></Suspense>:<ErrorBox message="Administrator access required"/>}/>
                   <Route path="*" element={<ErrorBox message="Page not found"/>}/>
                 </Routes>
@@ -166,6 +170,7 @@ function Workspace({data}:{data:any}){
           {mobileNav?<button className="mobile-nav-backdrop" aria-label="Close navigation" onClick={()=>setMobileNav(false)}/>:null}
 
           <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
+          <FloatingAssistant />
 
           {notice && (
             <div className={`toast ${notice.error?'bad':''}`} role="status">
