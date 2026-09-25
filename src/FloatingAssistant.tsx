@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { X, Send, Bot, User, Sparkles, Clock } from 'lucide-react';
 import { api } from './api';
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello! I am your AI assistant. How can I help you with QC records today?' }] }]);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hey y\'all! I\'m Miss Minutes! How can I help you keep the laboratory Timeline in perfect order today, hun?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -39,11 +39,11 @@ export function FloatingAssistant() {
   if (!open) {
     return (
       <button
-        className="lab-pet"
+        className="lab-pet miss-minutes"
         onClick={() => setOpen(true)}
-        aria-label="Open AI Assistant"
+        aria-label="Open Miss Minutes Assistant"
       >
-        <span className="pet-antenna"><i/></span><span className="pet-face"><i/><i/><b/></span><span className="pet-label">Ask Pip</span>
+        <span className="pet-face miss-minutes-face"><Clock size={28} color="#06221c" /></span><span className="pet-label">Miss Minutes</span>
       </button>
     );
   }
@@ -52,7 +52,7 @@ export function FloatingAssistant() {
     <div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
-            <span className="chat-pet"><Bot size={17}/></span><span><strong>Pip</strong><small><i/> Smart assistant</small></span>
+            <span className="chat-pet"><Clock size={17}/></span><span><strong>Miss Minutes</strong><small><i/> Smart assistant</small></span>
           </div>
           <button className="icon-button" onClick={() => setOpen(false)} aria-label="Close assistant"><X size={18} /></button>
         </div>
@@ -60,7 +60,7 @@ export function FloatingAssistant() {
           {messages.map((m, i) => (
             <div key={i} className={`floating-message ${m.role}`}>
               <div className="floating-message-label">
-                {m.role === 'user' ? <><User size={12}/> You</> : <><Bot size={12}/> Assistant</>}
+                {m.role === 'user' ? <><User size={12}/> You</> : <><Clock size={12}/> Miss Minutes</>}
               </div>
               <div className="floating-bubble">
                 {m.parts.map(p => p.text).join('')}

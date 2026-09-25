@@ -153,7 +153,9 @@ If work is complete, say what acceptance evidence proves completion and list any
 - Deployed a fix in `server/reports.ts` to allow report generation for samples that do not have a testing context column in their source spreadsheet (like Stability, Water, Raw Material). These samples now safely fall back to searching for a specification with the context `"Routine"` (or automatically use the product's only specification context) instead of immediately throwing an error.
 - Improved the missing specification error message to guide users on how to use aliases to correct the fuzzy matcher if it maps a sample to a sibling product.
 - Added Section 12 to `rules.md` requiring agents to push to origin after committing so the live server updates automatically.
+- Updated the AI Assistant persona to "Miss Minutes" (from the Marvel Universe) across `server/ai.ts`, `src/FloatingAssistant.tsx`, and `src/AssistantPage.tsx`. The floating chat widget has also been made noticeably smaller in `src/experience.css` and the initial greetings have been updated to proactively interact with the user and offer assistance with the Timeline.
 - Build and tests pass successfully.
 
 ## Next Actions
+- Commit changes and push to origin so that Render redeploys with the updated Miss Minutes AI.
 - User needs to go to **Settings > Products / materials**, edit the `Omega Pain Killer Liniment- Pro` product, and add the full sample name as an alias so the system maps it correctly instead of mapping it to the non-Pro version. Then, select the stability sample `ML-ST-26-0280` again in the dashboard.
