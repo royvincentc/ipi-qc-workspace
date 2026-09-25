@@ -258,3 +258,19 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Revert commits `e4a9c06` and `5be10b0`.
 - Evidence: UI screenshots (provided by user) and successful local build.
 - Next action/owner: User to add `GEMINI_API_KEY` to the deployment environment secrets and test the AI capabilities.
+
+### TASK-20260925-011 - Enforce agent-guide via GEMINI.md
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Authorization: User requested to add a skill forcing agents to read the `agent-guide` in new conversations.
+- Scope/files: `GEMINI.md`
+- Before: No automatic mechanism to enforce reading `agent-guide/` in new conversations.
+- Change: Created `GEMINI.md` project rule file at the root. Antigravity agents automatically discover and load `GEMINI.md` on startup, which explicitly instructs them to read the `docs/agent-guide` files.
+- Data impact: None.
+- Verification: Visual verification of the newly created `GEMINI.md`.
+- Problems/risks: None.
+- Rollback: Delete `GEMINI.md`.
+- Evidence: `GEMINI.md` file present in the repo.
+- Next action/owner: Commit and push `GEMINI.md`.
