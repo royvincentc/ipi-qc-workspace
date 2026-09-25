@@ -139,3 +139,9 @@ This is the project’s engineering interpretation of 6S and does not replace a 
 ## 11. Regulatory basis and limitation
 
 These rules are informed by official sources, including FDA’s [Data Integrity and Compliance With Drug CGMP Questions and Answers](https://www.fda.gov/regulatory-information/search-fda-guidance-documents/data-integrity-and-compliance-drug-cgmp-questions-and-answers), [21 CFR Part 11](https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-11), the closed-system controls in [21 CFR 11.10](https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-11/section-11.10), and laboratory-record requirements in [21 CFR 211.194](https://www.ecfr.gov/current/title-21/chapter-I/subchapter-C/part-211/subpart-J/section-211.194). Applicability depends on IPI’s products, regulated activities, intended use, and record decisions. Agents must use current official sources for regulatory changes and must not provide or imply legal certification.
+
+
+## 12. Deployment and Live Testing
+
+1. The user is actively testing the live server (deployed via Render from GitHub).
+2. After completing a task and committing the changes, you MUST always run `git push origin master` (or the appropriate default branch) to ensure the live server receives the updates.
