@@ -9,7 +9,7 @@ const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('.
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
 const {submitSample}=await import('../server/samples.js');
-const {createDraft}=await import('../server/reports.js');
+const {createDraft,createAutomaticDraft,resolveReportSetup}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
 await migrate();after(close);
 
@@ -40,10 +40,12 @@ test('simultaneous demo intake and retry preserve unique numbers and one record 
 });
 test('draft pins template, criteria, manual empty results and configuration revision',async()=>{
  let current=await getConfiguration();const value=structuredClone(current.value);value.sampleTypes.find(t=>t.id==='FG')!.applicability='managed';value.products.push({id:'example-product',name:'Example',category:'FG',code:'',aliases:[],active:true});current=await saveConfiguration(value,current.revision,'admin@example.test');
- const sample=(await db.query('SELECT id FROM samples LIMIT 1')).rows[0].id;
+ const sampleRow=(await db.query('SELECT id,data FROM samples LIMIT 1')).rows[0];const sample=sampleRow.id;await db.query('UPDATE samples SET data=$1 WHERE id=$2',[JSON.stringify({...sampleRow.data,context:'Routine',fields:{...sampleRow.data.fields,context:'Routine',manufactureDate:'2026-09-01',analysisDate:'2026-09-24',status:'RELEASED'}}),sample]);
  const criterion={test:'SPC',label:'Standard Plate Count',type:'numeric',unit:'cfu/g',criterion:'Nmt 50 cfu/g',source:'fixture',sourceLocation:'Table 1',date:'2026-09-01',dateBasis:'release',revision:'1'};
  await db.query('INSERT INTO specifications(id,data) VALUES($1,$2)',['spec',JSON.stringify({id:'spec',product:'Example',category:'FG',context:'Routine',revision:'1',tests:[criterion],issues:[],source:'fixture'})]);
- await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['template',JSON.stringify({id:'template',name:'Fixture',category:'FG',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{}})]);
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['template',JSON.stringify({id:'template',name:'Fixture',category:'FG',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{requiredFields:['manufactureDate','analysisDate']}})]);
+ const setup=await resolveReportSetup(sample);assert.deepEqual(setup.applicableTests,['Standard Plate Count']);assert.equal(setup.template.id,'template');assert.equal(setup.prefilledFields.manufactureDate,'2026-09-01');assert.equal(setup.prefilledFields.analysisDate,undefined);
+ const automatic=await createAutomaticDraft(sample,{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(automatic.templateId,'template');assert.equal(automatic.fields.manufactureDate,'2026-09-01');assert.equal(automatic.fields.analysisDate,'');assert.equal(automatic.results[0].state,'not_entered');
  const draft=await createDraft(sample,'spec','template',{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(draft.results[0].state,'not_entered');assert.equal(draft.results[0].value,'');assert.equal(draft.templateSnapshot?.revision,'1');
  const changed=structuredClone(current.value);changed.reports.notedBy='Changed person';await saveConfiguration(changed,current.revision,'admin@example.test');
  const reopened=(await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data;assert.equal(reopened.configurationSnapshot.reports.notedBy,'Celeste P. Yandug');assert.equal(reopened.specification.tests[0].criterion,'Nmt 50 cfu/g');
