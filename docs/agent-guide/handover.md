@@ -16,13 +16,13 @@ Do not put secrets, private keys, tokens, full connection strings, sensitive liv
 
 Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The dashboard experience has received a complete responsive visual overhaul, and the production Gemini assistant history-order failure is repaired in code. The remaining release gates are credential rotation/deployment smoke testing, operational controls, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
 
-**Current phase:** integration, control hardening, and release validation. TASK-20260925-018 relaxes product matching to prefix matching to support batch-specific suffixes (e.g. from Stability logger) while retaining strict uniqueness mapping.
+**Current phase:** integration, control hardening, and release validation. TASK-20260925-019 configures `pg.Pool` to gracefully use SSL for remote connections, solving potential timeouts when connecting to Supabase or Neon.
 
 ## Repository state at transfer
 
 - Branch: `master`
-- Final state: TASK-20260925-018 modified `server/reports.ts` to support prefix alias matching.
-- Working tree expected after finalization: `server/reports.ts`, `docs/agent-guide/tasks.md`, and this handover are modified.
+- Final state: TASK-20260925-019 modified `server/db.ts` to add default SSL configuration for remote `DATABASE_URL` connections.
+- Working tree expected after finalization: `server/db.ts`, `docs/agent-guide/tasks.md`, and this handover are modified.
 - Governance files changed: `docs/agent-guide/tasks.md` and this handover.
 - No live-source data or database records changed.
 

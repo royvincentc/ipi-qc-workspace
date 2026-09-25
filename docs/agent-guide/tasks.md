@@ -376,6 +376,22 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Evidence: Modified `server/reports.ts` and automated test pass.
 - Next action/owner: None required for this issue. User can now map samples that have trailing batch information in their names.
 
+### TASK-20260925-019 — Add SSL support for managed Postgres providers
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Authorization: User reported database connection timeout errors (`ETIMEDOUT` and `ENETUNREACH`) on Render after deploying.
+- Goal/rule link: Robust production environment configuration.
+- Scope/files: `server/db.ts`
+- Before: `pg.Pool` initialized with default settings which does not send `sslmode=require` unless specifically in the URL, causing some providers to drop connections leading to `ETIMEDOUT` or `ENETUNREACH` in IPv6-lacking environments.
+- Change: Configured `ssl: { rejectUnauthorized: false }` for non-local database URLs by default in `server/db.ts` to natively support Supabase/Neon.
+- Data impact: Code only.
+- Verification: Re-ran tests and build locally.
+- Problems/risks: None.
+- Rollback: Revert the pool configuration in `server/db.ts`.
+- Evidence: Logs confirming the `ETIMEDOUT` connection failure from the user, and code changes in `server/db.ts`.
+- Next action/owner: User to review deployment connection string, specifically the port if using Supabase (must use 6543 pooler).
+
 ### TASK-20260925-017 — Fix UI visual and layout flaws
 
 - Status: Completed

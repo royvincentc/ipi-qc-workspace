@@ -10,7 +10,8 @@ if(demo&&process.env.NODE_ENV==='production')throw new Error('Demo mode is prohi
 if(demo&&(process.env.GOOGLE_APPLICATION_CREDENTIALS||process.env.GOOGLE_CLIENT_SECRET))throw new Error('Do not combine demo mode with Google credentials');
 await mkdir('.data',{recursive:true});
 const embedded=demo?new PGlite(path.resolve(process.env.DEMO_DB_PATH||'.data/demo-db')):null;
-const pool=demo?null:new pg.Pool({connectionString:process.env.DATABASE_URL});
+const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
+const pool=demo?null:new pg.Pool({connectionString:process.env.DATABASE_URL, ssl: isLocal ? false : { rejectUnauthorized: false }});
 export const db:DB=embedded?{query:async(sql,args)=>embedded.query(sql,args)}:pool!;
 let demoLock=Promise.resolve();
 export async function locked<T>(key:string,fn:(tx:DB)=>Promise<T>):Promise<T>{
