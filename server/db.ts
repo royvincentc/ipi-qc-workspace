@@ -12,7 +12,14 @@ await mkdir('.data',{recursive:true});
 const embedded=demo?new PGlite(path.resolve(process.env.DEMO_DB_PATH||'.data/demo-db')):null;
 const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
 (pg.defaults as any).family = 4; // Force IPv4 to prevent Node.js Happy Eyeballs timeout bugs in environments without IPv6 (like Render free tier)
-const pool=demo?null:new pg.Pool({connectionString:process.env.DATABASE_URL, ssl: isLocal ? false : { rejectUnauthorized: false }});
+const pool=demo?null:new pg.Pool({
+  connectionString:process.env.DATABASE_URL, 
+  ssl: isLocal ? false : { rejectUnauthorized: false },
+  keepAlive: true,
+  idleTimeoutMillis: 15000,
+  connectionTimeoutMillis: 10000,
+  max: 15
+});
 if(pool)pool.on('error',err=>console.error('Unexpected error on idle client',err));
 export const db:DB=embedded?{query:async(sql,args)=>embedded.query(sql,args)}:pool!;
 let demoLock=Promise.resolve();
