@@ -1,4 +1,4 @@
-import {getConfiguration,saveConfiguration,sourceTypes} from './configuration.js';
+﻿import {getConfiguration,saveConfiguration,sourceTypes} from './configuration.js';
 import {type SampleType,formatNumber,validateIntake} from '../shared/configuration.js';
 import {randomUUID} from 'node:crypto';
 import {db,locked,setting,setSetting,audit,demo} from './db.js';
@@ -17,7 +17,18 @@ async function autoCreateProducts(actor:string){
   let added=0;
   for(const {name,category} of allSamples){
    if(!name?.trim()||!category)continue;
-   const already=products.some(p=>p.active&&p.category===category&&[p.name,...p.aliases].some(n=>normalized(name).startsWith(normalized(n))));
+   const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
+    const matchScore = (sampleName:string, productName:string) => {
+      const sampleTokens = tokenize(sampleName);
+      const productTokens = tokenize(productName);
+      for (const t of productTokens) {
+        const idx = sampleTokens.indexOf(t);
+        if (idx === -1) return 0;
+        sampleTokens.splice(idx, 1);
+      }
+      return productTokens.length;
+    };
+    const already=products.some(p=>p.active&&p.category===category&&[p.name,...p.aliases].some(n=>matchScore(name, n) > 0));
    if(already)continue;
    // Use the full sample name as the product name (it may include batch suffixes — the prefix matching in reports will still work)
    const id='product-'+randomUUID().replace(/-/g,'').slice(0,16);
