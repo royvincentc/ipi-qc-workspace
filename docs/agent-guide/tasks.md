@@ -507,3 +507,19 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Rollback: Revert the `matchScore` function back to `startsWith` in `resolveReportSetup`.
 - Evidence: Commit `df561e5`.
 - Next action/owner: User to select the sample again on the Results & Reports page.
+### TASK-20260926-001 — Fix duplicate alias error in report setup
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User requested help to fix "More than one managed product matches this sample name. Remove the duplicate alias in Settings."
+- Goal/rule link: Sample-to-specification workflow, fuzzy matching stability
+- Scope/files: "server/reports.ts"
+- Before: Token-based fuzzy matching (from df561e5) assigned the same score to products with identical token sets (e.g. punctuation variants like "Liniment- Pro" vs "Liniment Pro"). This caused a tie, triggering a conflict error that blocked report generation.
+- Change: Modified "matchScore" in "server/reports.ts" to return a score that incorporates the exact string length as a tie-breaker ("productTokens.length * 10000 + productName.length"). This ensures that between two products with the same matching tokens, the one with the longest exact string match (e.g., retaining punctuation) wins. Also improved the conflict error message to list the conflicting product names in case a genuine tie still occurs.
+- Data impact: Code only.
+- Verification: Build and tests succeeded.
+- Problems/risks: None.
+- Rollback: Revert the tie-breaker change in "server/reports.ts" and the error message string.
+- Evidence: Modified "server/reports.ts" and successful build.
+- Next action/owner: User to retry creating the report draft for ML-ST-26-0280.
+

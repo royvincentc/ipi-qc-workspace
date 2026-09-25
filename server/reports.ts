@@ -1,4 +1,4 @@
-﻿import {getConfiguration} from './configuration.js';
+import {getConfiguration} from './configuration.js';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile,access} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
@@ -42,7 +42,7 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
    if (idx === -1) return 0;
    sampleTokens.splice(idx, 1);
   }
-  return productTokens.length;
+  return productTokens.length > 0 ? (productTokens.length * 10000 + productName.length) : 0;
  };
 
  const candidates = managed.value.products.filter(p=>p.active&&p.category===sample.category);
@@ -62,7 +62,7 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
   }
  }
 
- if(products.length!==1)throw new Fault(409,products.length?'More than one managed product matches this sample name. Remove the duplicate alias in Settings.':'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
+ if(products.length!==1)throw new Fault(409,products.length?`More than one managed product matches this sample name (${products.map(p=>p.name).join(', ')}). Remove the duplicate alias in Settings.`:'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
  const product=products[0];
  if(!sample.context.trim())throw new Fault(409,'The incoming sample has no testing context. Record its category/context in the source logger before preparing a report.');
  const specifications=(await db.query('SELECT data FROM specifications')).rows.map(row=>row.data as Specification).filter(s=>s.active!==false);

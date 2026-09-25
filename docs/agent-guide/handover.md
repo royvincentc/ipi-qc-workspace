@@ -1,4 +1,4 @@
-﻿# IPI QC Microbiology Workspace — Active Handover
+# IPI QC Microbiology Workspace — Active Handover
 
 | Document control | Value |
 |---|---|
@@ -147,8 +147,10 @@ When transferring work, replace the volatile sections above while preserving ver
 
 If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
 
-## Current State (2026-09-25)
-- Deployed a fix (df561e5) to implement token-based fuzzy matching for product/sample linking, replacing the strict prefix startsWith check.
+## Current State (2026-09-26)
+- Deployed a fix in `server/reports.ts` to add a string-length tie-breaker to the token-based fuzzy matching algorithm. This resolves false-positive ties between products with identical token sets but different punctuation (e.g. "Liniment- Pro" vs "Liniment Pro"). 
+- Improved the conflict error message in `server/reports.ts` to list the actual conflicting product names when a genuine tie occurs, aiding the user in identifying duplicates in Settings.
+- Build and tests pass successfully.
 
 ## Next Actions
-- User needs to select the stability sample again in the dashboard.
+- User needs to select the stability sample `ML-ST-26-0280` again in the dashboard to prepare the report, which should now resolve the product automatically without a duplicate alias conflict error.
