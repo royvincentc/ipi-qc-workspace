@@ -64,10 +64,10 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
 
  if(products.length!==1)throw new Fault(409,products.length?`More than one managed product matches this sample name (${products.map(p=>p.name).join(', ')}). Remove the duplicate alias in Settings.`:'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
  const product=products[0];
- if(!sample.context.trim())throw new Fault(409,'The incoming sample has no testing context. Record its category/context in the source logger before preparing a report.');
+ const safeContext = sample.context?.trim() || 'Routine';
  const specifications=(await db.query('SELECT data FROM specifications')).rows.map(row=>row.data as Specification).filter(s=>s.active!==false);
- const exact=specifications.filter(s=>s.product===product.name&&s.category===sample.category&&normalized(s.context)===normalized(sample.context));
- if(!exact.length)throw new Fault(409,`No controlled specification matches ${product.name} · ${sample.context}. Add or approve that exact product/context in Settings.`);
+ const exact=specifications.filter(s=>s.product===product.name&&s.category===sample.category&&normalized(s.context)===normalized(safeContext));
+ if(!exact.length)throw new Fault(409,`No controlled specification matches ${product.name} · ${safeContext}. Add or approve that exact product/context in Settings.`);
  const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];
  const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:applicability.filter(x=>x.product===product.name&&x.sheet===type.applicabilitySheet);
  if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'The QC Micro Products Specifications checklist has no single applicable-test row for this product, or every test is unchecked.');

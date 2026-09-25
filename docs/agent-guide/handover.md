@@ -150,8 +150,9 @@ If work is complete, say what acceptance evidence proves completion and list any
 ## Current State (2026-09-26)
 - Deployed a fix in `server/reports.ts` to add a string-length tie-breaker to the token-based fuzzy matching algorithm. This resolves false-positive ties between products with identical token sets but different punctuation (e.g. "Liniment- Pro" vs "Liniment Pro"). 
 - Improved the conflict error message in `server/reports.ts` to list the actual conflicting product names when a genuine tie occurs, aiding the user in identifying duplicates in Settings.
+- Deployed a fix in `server/reports.ts` to allow report generation for samples that do not have a testing context column in their source spreadsheet (like Stability, Water, Raw Material). These samples now safely fall back to searching for a specification with the context `"Routine"` instead of immediately throwing an error.
 - Added Section 12 to `rules.md` requiring agents to push to origin after committing so the live server updates automatically.
 - Build and tests pass successfully.
 
 ## Next Actions
-- User needs to select the stability sample `ML-ST-26-0280` again in the dashboard to prepare the report, which should now resolve the product automatically without a duplicate alias conflict error.
+- User needs to select the stability sample `ML-ST-26-0280` again in the dashboard. The system will now look for a specification for this product with the context `"Routine"`. User may need to ensure this specification exists and is approved in Settings.
