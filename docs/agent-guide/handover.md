@@ -21,9 +21,10 @@ Move the audited development application toward a controlled first release in wh
 ## Repository state at transfer
 
 - Branch: `master`
-- HEAD: `5be10b0` (`fix: improve error visibility for Gemini integration`)
+- HEAD: `7707415` (`chore: add GEMINI.md project rule to enforce agent guide`)
 - Working tree: clean.
 - Modified tracked files since initial handoff:
+  - `GEMINI.md`
   - `package.json`
   - `server/index.ts`
   - `server/ai.ts`
