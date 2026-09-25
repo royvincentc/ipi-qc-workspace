@@ -33,8 +33,8 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  if(!sample)throw new Fault(404,'Sample not found');
  const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category&&t.active);
  if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
- const products=managed.value.products.filter(p=>p.active&&p.category===sample.category&&[p.name,...p.aliases].some(name=>normalized(name)===normalized(sample.name)));
- if(products.length!==1)throw new Fault(409,products.length?'More than one managed product matches this sample name. Remove the duplicate alias in Settings.':'No active managed product matches the sample name from the incoming logger. Add the product or an exact alias in Settings.');
+ const products=managed.value.products.filter(p=>p.active&&p.category===sample.category&&[p.name,...p.aliases].some(name=>normalized(sample.name).startsWith(normalized(name))));
+ if(products.length!==1)throw new Fault(409,products.length?'More than one managed product matches this sample name. Remove the duplicate alias in Settings.':'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
  const product=products[0];
  if(!sample.context.trim())throw new Fault(409,'The incoming sample has no testing context. Record its category/context in the source logger before preparing a report.');
  const specifications=(await db.query('SELECT data FROM specifications')).rows.map(row=>row.data as Specification).filter(s=>s.active!==false);

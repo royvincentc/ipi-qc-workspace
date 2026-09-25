@@ -1,4 +1,4 @@
-# IPI QC Microbiology Workspace â€” Task and Change Ledger
+# IPI QC Microbiology Workspace Ã¢â‚¬â€� Task and Change Ledger
 
 | Document control | Value |
 |---|---|
@@ -18,7 +18,7 @@ Use ISO 8601 dates/times and the laboratory timezone (`Asia/Manila`) unless a so
 ### Required entry template
 
 ```markdown
-### TASK-YYYYMMDD-NNN â€” Short title
+### TASK-YYYYMMDD-NNN Ã¢â‚¬â€� Short title
 
 - Status: Proposed | Authorized | In progress | Blocked | Completed | Reverted
 - Priority: P0 | P1 | P2 | P3
@@ -38,34 +38,34 @@ Use ISO 8601 dates/times and the laboratory timezone (`Asia/Manila`) unless a so
 
 ## Current workboard
 
-### Current phase â€” integration, control hardening, and release validation
+### Current phase Ã¢â‚¬â€� integration, control hardening, and release validation
 
-The repository has substantial implementation across the original Phases 1â€“10: the architecture and UX audit, design system, navigation/dashboard, search/tables, sample forms, managed configuration, Settings Center, specification management, report integration, and audit/versioning foundations all exist in development form. They are not all accepted as production-complete.
+The repository has substantial implementation across the original Phases 1Ã¢â‚¬â€œ10: the architecture and UX audit, design system, navigation/dashboard, search/tables, sample forms, managed configuration, Settings Center, specification management, report integration, and audit/versioning foundations all exist in development form. They are not all accepted as production-complete.
 
-Active work is concentrated in Phases 9â€“12: approved-report integration, historical-integrity/audit control hardening, responsive/accessibility verification, and end-to-end regression testing. The controlled first release remains blocked by the P0 items below. Passing development tests does not authorize live Google writes.
+Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report integration, historical-integrity/audit control hardening, responsive/accessibility verification, and end-to-end regression testing. The controlled first release remains blocked by the P0 items below. Passing development tests does not authorize live Google writes.
 
-### P0 â€” required before live operation
+### P0 Ã¢â‚¬â€� required before live operation
 
 - Resolve the missing/changed Environmental Monitoring title in `JUNE (ENVI) 2026`. That tab failed the validated A1:R3 title check and must remain blocked until IPI confirms its intended layout.
 - Configure and verify a real application database, Google OAuth client, initial administrator allowlist, and server-side service-account credential deployment. The current environment is not ready for authenticated live operation.
 - Designate approved blank DOCX templates and confirm the authoritative acceptance-criteria process. Historical reports remain evidence rather than approved templates.
 - Perform a controlled, read-only initial import and reconciliation, including existing color-only reservations, before enabling Google Sheets writes.
 
-### P1 â€” first-release completion
+### P1 Ã¢â‚¬â€� first-release completion
 
 - Verify each supported report family against its approved template with long names, repeated rows, page breaks, automatic `Page X of Y`, editable logbook/page references, and blank historical result/signature fields.
 - Complete end-to-end tests for each Incoming category and Environmental Monitoring with category-specific forms and source provenance.
 - Validate configuration versioning, historical snapshots, role enforcement, audit-event readability, backup/restore, and concurrency behavior.
 - Complete representative desktop, tablet, and mobile accessibility and regression testing.
 
-### P2 â€” after first release is controlled
+### P2 Ã¢â‚¬â€� after first release is controlled
 
 - Add further report families only when a matching approved reference exists.
 - Consider offline intake only after online allocation, idempotency, and reconciliation are proven.
 
 ## Change history
 
-### TASK-20260923-001 â€” Evidence review and grounded implementation plan
+### TASK-20260923-001 Ã¢â‚¬â€� Evidence review and grounded implementation plan
 
 - Status: Completed
 - Priority: P0
@@ -81,7 +81,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Project conversation and source files supplied by the project owner
 - Next action/owner: Preserve these decisions in implementation and obtain controlled templates/criteria.
 
-### TASK-20260924-001 â€” Application foundation and configuration-oriented overhaul
+### TASK-20260924-001 Ã¢â‚¬â€� Application foundation and configuration-oriented overhaul
 
 - Status: In progress
 - Priority: P0
@@ -97,7 +97,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Repository history, working tree, `docs/HANDOFF.md`, and `docs/HANDOFF_GEMINI_TO_CHATGPT.md`
 - Next action/owner: Continue using this guide set and independently verify every inherited claim.
 
-### TASK-20260925-001 â€” Gemini handoff audit and UI/business-rule corrections
+### TASK-20260925-001 Ã¢â‚¬â€� Gemini handoff audit and UI/business-rule corrections
 
 - Status: Completed
 - Priority: P0
@@ -114,7 +114,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Current working-tree diff and test output; HEAD `5d866cc`
 - Next action/owner: Resolve live-readiness blockers, then commit a reviewed change set.
 
-### TASK-20260925-002 â€” Read-only Google Sheets connection verification
+### TASK-20260925-002 Ã¢â‚¬â€� Read-only Google Sheets connection verification
 
 - Status: Completed with one blocked layout
 - Priority: P0
@@ -131,7 +131,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Verifier script and execution output from 2026-09-25
 - Next action/owner: IPI reviews June; rerun validation after correction or an explicitly approved mapping revision.
 
-### TASK-20260925-003 â€” Portable agent governance guide
+### TASK-20260925-003 Ã¢â‚¬â€� Portable agent governance guide
 
 - Status: Completed
 - Priority: P0
@@ -148,7 +148,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: This directory at revision 1.0
 - Next action/owner: Every future agent reads all five files first and maintains `tasks.md` and `handover.md` during work.
 
-### TASK-20260925-004 â€” Bind connection validation to routing configuration
+### TASK-20260925-004 Ã¢â‚¬â€� Bind connection validation to routing configuration
 
 - Status: Completed
 - Priority: P0
@@ -160,12 +160,12 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Change: Added canonical validation fingerprints for Incoming, Environmental Monitoring, and Specifications. Connection tests now record the applicable fingerprint and configuration revision. Enabling writes requires the current Incoming/Environmental fingerprint. Routing-sensitive changes disable writes and invalidate only affected tests; appearance-only settings retain valid tests.
 - Data impact: Code and disposable test database only; no live Google access or writes
 - Verification: 38 TypeScript/domain tests passed, including the new invalidation test; 6 DOCX worker tests passed; TypeScript typecheck and Vite production build passed.
-- Problems/risks: The machineâ€™s global `npm` launcher remains broken. An attempted bundled `pnpm` invocation moved npm-managed packages into `node_modules/.ignored`; the dependency folders were restored without changing source or lockfiles. Direct bundled Node/Python commands were used for reproducible verification.
+- Problems/risks: The machineÃ¢â‚¬â„¢s global `npm` launcher remains broken. An attempted bundled `pnpm` invocation moved npm-managed packages into `node_modules/.ignored`; the dependency folders were restored without changing source or lockfiles. Direct bundled Node/Python commands were used for reproducible verification.
 - Rollback: Revert the three implementation/test files together; doing so would restore the stale-validation risk.
 - Evidence: Current working-tree diff and test output dated 2026-09-25
 - Next action/owner: Continue end-to-end API/browser validation and resolve the P0 live environment, June Environmental layout, reconciliation, and approved-template gates.
 
-### TASK-20260925-005 â€” Enforce incubation-free report parameter labels
+### TASK-20260925-005 Ã¢â‚¬â€� Enforce incubation-free report parameter labels
 
 - Status: Completed
 - Priority: P0
@@ -174,7 +174,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Goal/rule link: Standardized report generation and controlled parameter labels
 - Scope/files: `worker/docx_worker.py`, `worker/test_docx_worker.py`, this ledger, active handover
 - Before: The currently demonstrated report template had been manually corrected, but preparing another historical layout could retain a separate `After ... incubation:` paragraph and reintroduce the unwanted label.
-- Change: The DOCX preparation worker now removes a parameter cell paragraph only when the entire paragraph is an `After ... incubation:` instruction. It then records the remaining test label and preserves that labelâ€™s original run formatting, including bold text.
+- Change: The DOCX preparation worker now removes a parameter cell paragraph only when the entire paragraph is an `After ... incubation:` instruction. It then records the remaining test label and preserves that labelÃ¢â‚¬â„¢s original run formatting, including bold text.
 - Data impact: Code and temporary test documents only; no source DOCX, generated report, or live laboratory record was modified.
 - Verification: Added a regression document with a normal incubation paragraph and a separate bold test label. All 7 DOCX worker tests pass. The existing sample PDF was also rendered and visually compared with the archive-layout reference; geometry and sections were retained, both incubation prefixes were absent, the fixed Noted-by name/role was present, and automatic PAGE/NUMPAGES fields remained in the DOCX.
 - Problems/risks: The inspected template still reports six drawings requiring human sanitization/layout review, which is expected for the inherited form artwork. It remains a development/historical template until IPI approves it.
@@ -182,7 +182,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Current diff, worker test output, rendered `preview/IPI-Sample-Analysis-Report-Noted-By.pdf`, and its DOCX field inspection
 - Next action/owner: Apply the preparation/visual-review workflow to the first IPI-approved blank template when designated.
 
-### TASK-20260925-006 â€” Add the agent continuation prompt
+### TASK-20260925-006 Ã¢â‚¬â€� Add the agent continuation prompt
 
 - Status: Completed
 - Priority: P0
@@ -199,7 +199,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: `docs/agent-guide/prompt.md` revision 1.0
 - Next action/owner: Use `prompt.md` as the first item copied to any future agent, together with the complete six-file folder and repository access.
 
-### TASK-20260925-007 — June ENVI tab validation and credentials discovery
+### TASK-20260925-007 â€” June ENVI tab validation and credentials discovery
 
 - Status: Completed
 - Priority: P0
@@ -215,7 +215,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Verifier script output showing 0 issues.
 - Next action/owner: Configure production PostgreSQL and OAuth, or proceed with import/reconciliation.
 
-### TASK-20260925-008 — Render Deployment Blueprint
+### TASK-20260925-008 â€” Render Deployment Blueprint
 
 - Status: Completed
 - Priority: P1
@@ -231,7 +231,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: ender.yaml file present.
 - Next action/owner: User to deploy to Render or configure local .env with Neon credentials to proceed to data reconciliation.
 
-### TASK-20260925-009 — Validate migrations and configuration seeding (Step 4)
+### TASK-20260925-009 â€” Validate migrations and configuration seeding (Step 4)
 
 - Status: Completed
 - Priority: P1
@@ -275,7 +275,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: `GEMINI.md` file present in the repo.
 - Next action/owner: Commit and push `GEMINI.md`.
 
-### TASK-20260925-012 — Responsive dashboard experience overhaul
+### TASK-20260925-012 â€” Responsive dashboard experience overhaul
 
 - Status: Completed
 - Priority: P1
@@ -284,15 +284,15 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Goal/rule link: Phone-friendly workspace, non-technical dashboard utility, accessibility/responsive verification, real data only, change controls
 - Scope/files: `src/App.tsx`, `src/Experience.tsx`, `src/experience.css`, `src/workspace.tsx`, `src/AssistantPage.tsx`, `src/FloatingAssistant.tsx`, `src/ui.tsx`, `src/main.tsx`, this ledger, active handover
 - Before: The working tree was clean at `32ce716`. Recent work added Render deployment, connection/migration evidence, governance documents, and a Gemini assistant. Visual inspection found competing generations of shell CSS, assistant panels using nonexistent color variables, heavy inline layout, hidden tablet intelligence content, visually present but nonfunctional dashboard filters, inconsistent panel opacity/edges/spacing, a generic loader, and no cohesive page/scroll/interaction motion system.
-- Change: Introduced a cohesive dark/light “living laboratory” visual layer with restrained teal, amber, and blue accents; rebuilt the responsive dashboard layout, hero, metrics, filters, data table, rail, forms, panels, and assistant surfaces; made dashboard text/type/status filters functional against loaded records; added reduced-motion-aware route/scroll/loading/typing/ambient motion, a precise-pointer custom cursor, and the interactive animated assistant pet “Pip”; converted the phone dashboard table to readable cards and moved the intelligence rail below content on tablet/mobile instead of hiding it. Removed the rendered `react-draggable` path after browser QA exposed an unstable drag-start handler, reducing the main production bundle by approximately 15 KB.
+- Change: Introduced a cohesive dark/light â€œliving laboratoryâ€� visual layer with restrained teal, amber, and blue accents; rebuilt the responsive dashboard layout, hero, metrics, filters, data table, rail, forms, panels, and assistant surfaces; made dashboard text/type/status filters functional against loaded records; added reduced-motion-aware route/scroll/loading/typing/ambient motion, a precise-pointer custom cursor, and the interactive animated assistant pet â€œPipâ€�; converted the phone dashboard table to readable cards and moved the intelligence rail below content on tablet/mobile instead of hiding it. Removed the rendered `react-draggable` path after browser QA exposed an unstable drag-start handler, reducing the main production bundle by approximately 15 KB.
 - Data impact: Presentation and client-side filtering only; no schema, source record, Google connection, live data, or scientific behavior changed. Browser checks used the isolated de-identified demo database.
-- Verification: 38 TypeScript/domain tests passed; 7 DOCX worker tests passed; TypeScript typecheck passed; Vite production build passed (`1623` modules, main JS `453.95 kB` / `136.53 kB` gzip); `git diff --check` passed apart from Git line-ending notices. Fresh-browser checks at phone (390×844), tablet (1024×768), and desktop/default viewports found no page-level horizontal overflow, functional mobile navigation and dashboard filtering, visible tablet intelligence panels, reliable Pip open/close behavior, an opaque edge-aligned phone chat panel, and no console warnings/errors in the final bundle. Reduced-motion fallbacks and coarse-pointer cursor suppression are encoded in CSS.
+- Verification: 38 TypeScript/domain tests passed; 7 DOCX worker tests passed; TypeScript typecheck passed; Vite production build passed (`1623` modules, main JS `453.95 kB` / `136.53 kB` gzip); `git diff --check` passed apart from Git line-ending notices. Fresh-browser checks at phone (390Ã—844), tablet (1024Ã—768), and desktop/default viewports found no page-level horizontal overflow, functional mobile navigation and dashboard filtering, visible tablet intelligence panels, reliable Pip open/close behavior, an opaque edge-aligned phone chat panel, and no console warnings/errors in the final bundle. Reduced-motion fallbacks and coarse-pointer cursor suppression are encoded in CSS.
 - Problems/risks: The broken global npm launcher remains an environment issue; direct local/bundled Node and Python runtimes were used. The live deployment still requires its existing production environment controls and is not made production-valid by a visual overhaul. Browser QA used de-identified demo data; no live connections were opened.
-- Rollback: Revert this task’s UI commit. No data migration or live-source rollback is needed.
+- Rollback: Revert this taskâ€™s UI commit. No data migration or live-source rollback is needed.
 - Evidence: Production build output, automated test output, browser screenshots/DOM measurements from 2026-09-25, fresh-browser zero-error console check, and the focused Git commit created for this task
 - Next action/owner: Observe the automatic live deployment, then perform a brief authenticated smoke test on the deployed dashboard without enabling Google writes.
 
-### TASK-20260925-013 — Repair production Gemini assistant failure
+### TASK-20260925-013 â€” Repair production Gemini assistant failure
 
 - Status: Completed
 - Priority: P1
@@ -309,7 +309,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Render error logs dated 2026-09-25, regression test output, typecheck/build output, dependency audit, and this task's Git commit/deployment record
 - Next action/owner: Project owner rotates the exposed Gemini key. Confirm the automatic Render deployment is live, then send a de-identified assistant prompt and confirm a successful or specifically actionable response.
 
-### TASK-20260925-014 — Remove custom-cursor navigation lag
+### TASK-20260925-014 â€” Remove custom-cursor navigation lag
 
 - Status: Completed
 - Priority: P2
@@ -326,7 +326,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Focused source diff and verification output dated 2026-09-25
 - Next action/owner: Confirm cursor tracking and link/button hover expansion on the live desktop after Render deploys this commit.
 
-### TASK-20260925-015 — Replace animated cursor with zero-JavaScript native cursor
+### TASK-20260925-015 â€” Replace animated cursor with zero-JavaScript native cursor
 
 - Status: Completed
 - Priority: P1
@@ -343,7 +343,7 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Evidence: Focused source/assets diff and verification output dated 2026-09-25
 - Next action/owner: Hard-refresh the live dashboard after deployment and confirm cursor visibility, tracking, interactive-state shape, and text-field cursor behavior on the laptop and one representative older office PC.
 
-### TASK-20260925-016 — Automate checklist-driven report setup and PDF delivery
+### TASK-20260925-016 â€” Automate checklist-driven report setup and PDF delivery
 
 - Status: Completed in code; production configuration and deployment verification remain
 - Priority: P0
@@ -359,3 +359,36 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Revert this task's focused code changes. Existing drafts/files are immutable snapshots and require no data rollback.
 - Evidence: Test/build output and de-identified Playwright snapshots dated 2026-09-25; no live-data evidence used
 - Next action/owner: Administrator/authorized IPI owner registers the exact real products/aliases, testing contexts, dated criteria, and one approved repeating-row or uniquely compatible layout per category, then performs a controlled de-identified production smoke test.
+
+### TASK-20260925-018 — Relax exact alias matching to prefix matching
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Authorization: User requested to fix product matching failure for incoming logger samples with batch-specific suffixes
+- Goal/rule link: Resolve ambiguous product matches safely without breaking exact mapping rules
+- Scope/files: `server/reports.ts`
+- Before: Product/alias matching required exact equality (`normalized(name) === normalized(sample.name)`), causing samples with lot/withdrawal suffixes in their name to fail with "No active managed product matches...".
+- Change: Changed product/alias matching to use `startsWith` (`normalized(sample.name).startsWith(normalized(name))`), allowing batch-specific suffixes like "(5th withdrawal - New Specs)" while continuing to enforce uniqueness. If multiple products match, the system safely throws a conflict error, adhering to the ambiguity-blocking rule. Updated the UI error text to say "exact or prefix alias".
+- Data impact: Code only; no live data touched.
+- Verification: Ran `npm test` and all 41 assertions passed. Ran `npm run build` successfully.
+- Problems/risks: None. Ambiguous multiple prefix matches will correctly throw.
+- Rollback: Revert the matching logic in `server/reports.ts` to strict equality.
+- Evidence: Modified `server/reports.ts` and automated test pass.
+- Next action/owner: None required for this issue. User can now map samples that have trailing batch information in their names.
+
+### TASK-20260925-017 — Fix UI visual and layout flaws
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Authorization: User request to fix visual/design flaws from screenshots
+- Goal/rule link: Phone-friendly workspace, non-technical dashboard utility, real data only
+- Scope/files: src/experience.css, src/workspace.tsx, src/reports.tsx
+- Before: + Log sample button icon and text misaligned. Samples & history table columns squeezed because of a long un-wrappable name+ML string, and missing CSS class. Saved drafts panel missing padding causing empty state to hug the edges. User chat bubbles had excessive bottom padding and the "You" label was on the wrong side.
+- Change: Added display: inline-flex; align-items: center to .button in CSS. Renamed ecords-table to data-table in workspace.tsx and added a <br /> between sample name and ML number. Added padded class to Saved drafts panel in eports.tsx. Fixed chat bubble line-height, padding, and added lex-direction: row-reverse for user message labels.
+- Data impact: UI styles and layout only. No database or source changes.
+- Verification: Source code inspection of modified files.
+- Problems/risks: None
+- Rollback: Revert changes in src/experience.css, src/workspace.tsx, src/reports.tsx
+- Evidence: Modified files
+- Next action/owner: User to review changes on dashboard.

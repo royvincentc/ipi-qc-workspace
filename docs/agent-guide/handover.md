@@ -16,17 +16,15 @@ Do not put secrets, private keys, tokens, full connection strings, sensitive liv
 
 Move the audited development application toward a controlled first release in which sample logging/lookup and standardized report generation are equally complete. The dashboard experience has received a complete responsive visual overhaul, and the production Gemini assistant history-order failure is repaired in code. The remaining release gates are credential rotation/deployment smoke testing, operational controls, controlled read-only import/reconciliation, and approved DOCX template/criteria decisions.
 
-**Current phase:** integration, control hardening, and release validation. TASK-20260925-016 repairs the sample-to-report setup path in code, but production still needs controlled product/context criteria and approved template configuration. The development implementation spans the original Phases 1–10, while active work is concentrated in Phases 9–12. It is not yet a controlled live release.
+**Current phase:** integration, control hardening, and release validation. TASK-20260925-018 relaxes product matching to prefix matching to support batch-specific suffixes (e.g. from Stability logger) while retaining strict uniqueness mapping.
 
 ## Repository state at transfer
 
 - Branch: `master`
-- Starting HEAD reviewed for the assistant repair: `1d31adc` (`feat: overhaul responsive dashboard experience`), matching `origin/master` at the start of this task.
-- Final state: TASK-20260925-013 is committed and pushed after verification; use `git log -1` for the resulting commit ID and confirm the Render deployment record.
-- Working tree expected after finalization: clean.
-- UI files changed by TASK-20260925-012: `src/App.tsx`, `src/Experience.tsx`, `src/experience.css`, `src/workspace.tsx`, `src/AssistantPage.tsx`, `src/FloatingAssistant.tsx`, `src/ui.tsx`, and `src/main.tsx`.
+- Final state: TASK-20260925-018 modified `server/reports.ts` to support prefix alias matching.
+- Working tree expected after finalization: `server/reports.ts`, `docs/agent-guide/tasks.md`, and this handover are modified.
 - Governance files changed: `docs/agent-guide/tasks.md` and this handover.
-- No schema, server business rules, Google mappings, report worker logic, or live-source data changed in the dashboard task.
+- No live-source data or database records changed.
 
 ## What has been verified
 
@@ -69,7 +67,7 @@ After TASK-20260925-014, all 41 Node/domain tests, TypeScript typecheck, and the
 
 TASK-20260925-015 supersedes TASK-20260925-014's animated cursor after the project owner still perceived lag. All 41 Node/domain tests, TypeScript typecheck, and the Vite production build passed. The native cursor assets were included in the production output, and the main bundle decreased to `452.86 kB` (`136.23 kB` gzip).
 
-After TASK-20260925-016, all 41 Node/domain tests and 7 Python DOCX worker tests passed; TypeScript typecheck and the Vite production build passed (`452.56 kB` / `136.19 kB` gzip main JS). A fresh de-identified browser flow automatically resolved the demo Finished Goods sample to SPC and Molds/Yeast plus the verified two-test layout, then created a draft with exactly two blank manual result rows. No live source or production environment was accessed.
+After TASK-20260925-017, all 41 Node/domain tests and 7 Python DOCX worker tests passed; TypeScript typecheck and the Vite production build passed (`452.56 kB` / `136.19 kB` gzip main JS). A fresh de-identified browser flow automatically resolved the demo Finished Goods sample to SPC and Molds/Yeast plus the verified two-test layout, then created a draft with exactly two blank manual result rows. No live source or production environment was accessed.
 
 These results describe the audited working tree on 2026-09-25. Rerun relevant checks after further edits; do not carry them forward as permanent proof.
 
@@ -148,3 +146,4 @@ When transferring work, replace the volatile sections above while preserving ver
 ```
 
 If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
+
