@@ -550,3 +550,16 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Verification: Build and tests passed.
 - Next action/owner: User to retry the report draft and verify they have a specification with the context "Routine" configured in Settings.
 
+
+### TASK-20260926-004 — Improve error messaging for fuzzy mapping edge cases
+- Status: Completed
+- Priority: P2
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User reported that the system matched a sibling product (non-Pro instead of Pro) due to fuzzy token overlaps.
+- Goal/rule link: Improve UX for fuzzy product mapping
+- Scope/files: "server/reports.ts"
+- Change: Updated the missing specification Fault message to explicitly instruct the user to use Aliases if the fuzzy matcher selects the wrong product. This provides immediate self-serve UX for correcting incorrect automatic fuzzy matches.
+- Data impact: Code only.
+- Verification: Build and tests passed.
+- Next action/owner: User to add an alias to the correct product in Settings.
+
