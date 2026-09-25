@@ -150,6 +150,7 @@ If work is complete, say what acceptance evidence proves completion and list any
 ## Current State (2026-09-26)
 - Deployed a fix in `server/reports.ts` to add a string-length tie-breaker to the token-based fuzzy matching algorithm. This resolves false-positive ties between products with identical token sets but different punctuation (e.g. "Liniment- Pro" vs "Liniment Pro"). 
 - Improved the conflict error message in `server/reports.ts` to list the actual conflicting product names when a genuine tie occurs, aiding the user in identifying duplicates in Settings.
+- Added Section 12 to `rules.md` requiring agents to push to origin after committing so the live server updates automatically.
 - Build and tests pass successfully.
 
 ## Next Actions

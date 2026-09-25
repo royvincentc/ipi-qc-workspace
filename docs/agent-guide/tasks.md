@@ -523,3 +523,16 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Evidence: Modified "server/reports.ts" and successful build.
 - Next action/owner: User to retry creating the report draft for ML-ST-26-0280.
 
+
+### TASK-20260926-002 — Add deployment push rule to governance
+- Status: Completed
+- Priority: P2
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User requested to always commit to origin because they are testing the live server.
+- Goal/rule link: Development workflow, live testing
+- Scope/files: "docs/agent-guide/rules.md"
+- Change: Added Section 12 to "rules.md" stipulating that agents must push to origin after committing so that the live Render environment receives the updates.
+- Data impact: Documentation only.
+- Verification: File updated.
+- Next action/owner: None.
+
