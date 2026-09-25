@@ -21,24 +21,18 @@ Move the audited development application toward a controlled first release in wh
 ## Repository state at transfer
 
 - Branch: `master`
-- HEAD: `5d866cc` (`chore: establish Plan IQC workspace baseline and UI redesign`)
-- Working tree: intentionally dirty; do not reset or discard it.
-- Modified tracked files:
+- HEAD: `5be10b0` (`fix: improve error visibility for Gemini integration`)
+- Working tree: clean.
+- Modified tracked files since initial handoff:
   - `package.json`
-  - `server/configuration.ts`
-  - `server/domain.ts`
-  - `server/seed.ts`
-  - `shared/configuration.ts`
+  - `server/index.ts`
+  - `server/ai.ts`
   - `src/App.tsx`
-  - `src/admin.tsx`
-  - `src/overhaul.css`
-  - `src/styles.css`
-  - `tests/domain.test.ts`
-  - `worker/docx_worker.py`
-  - `worker/test_docx_worker.py`
-- Untracked before this guide was created:
-  - `docs/HANDOFF_GEMINI_TO_CHATGPT.md`
-  - `scripts/verify-google-connections.mjs`
+  - `src/AssistantPage.tsx`
+  - `src/FloatingAssistant.tsx`
+  - `.env.example`
+  - `scripts/validate-migrations.ts`
+- Untracked files: none
 - Added by this documentation task:
   - `docs/agent-guide/goal.md`
   - `docs/agent-guide/tasks.md`
@@ -62,6 +56,8 @@ Inspect the current diff before editing. Some files contain corrections made aft
 - A repeatable read-only Google connection verifier exists.
 - Connection test results are now cryptographically bound to a canonical fingerprint of the routing/layout configuration they validated. Relevant configuration changes invalidate the affected test, and Incoming/Environmental changes automatically disable writes.
 - Newly prepared report templates remove standalone `After ... incubation:` parameter paragraphs while preserving the remaining test label’s original formatting.
+
+- AI Assistant backend securely queries local samples and audit tables; returns 400 Fault if `GEMINI_API_KEY` is not present, avoiding obscuring errors through a generic 500 response.
 
 ### Automated and browser checks
 

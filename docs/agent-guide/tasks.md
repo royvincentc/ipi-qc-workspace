@@ -1,4 +1,4 @@
-# IPI QC Microbiology Workspace — Task and Change Ledger
+# IPI QC Microbiology Workspace â€” Task and Change Ledger
 
 | Document control | Value |
 |---|---|
@@ -18,7 +18,7 @@ Use ISO 8601 dates/times and the laboratory timezone (`Asia/Manila`) unless a so
 ### Required entry template
 
 ```markdown
-### TASK-YYYYMMDD-NNN — Short title
+### TASK-YYYYMMDD-NNN â€” Short title
 
 - Status: Proposed | Authorized | In progress | Blocked | Completed | Reverted
 - Priority: P0 | P1 | P2 | P3
@@ -38,34 +38,34 @@ Use ISO 8601 dates/times and the laboratory timezone (`Asia/Manila`) unless a so
 
 ## Current workboard
 
-### Current phase — integration, control hardening, and release validation
+### Current phase â€” integration, control hardening, and release validation
 
-The repository has substantial implementation across the original Phases 1–10: the architecture and UX audit, design system, navigation/dashboard, search/tables, sample forms, managed configuration, Settings Center, specification management, report integration, and audit/versioning foundations all exist in development form. They are not all accepted as production-complete.
+The repository has substantial implementation across the original Phases 1â€“10: the architecture and UX audit, design system, navigation/dashboard, search/tables, sample forms, managed configuration, Settings Center, specification management, report integration, and audit/versioning foundations all exist in development form. They are not all accepted as production-complete.
 
-Active work is concentrated in Phases 9–12: approved-report integration, historical-integrity/audit control hardening, responsive/accessibility verification, and end-to-end regression testing. The controlled first release remains blocked by the P0 items below. Passing development tests does not authorize live Google writes.
+Active work is concentrated in Phases 9â€“12: approved-report integration, historical-integrity/audit control hardening, responsive/accessibility verification, and end-to-end regression testing. The controlled first release remains blocked by the P0 items below. Passing development tests does not authorize live Google writes.
 
-### P0 — required before live operation
+### P0 â€” required before live operation
 
 - Resolve the missing/changed Environmental Monitoring title in `JUNE (ENVI) 2026`. That tab failed the validated A1:R3 title check and must remain blocked until IPI confirms its intended layout.
 - Configure and verify a real application database, Google OAuth client, initial administrator allowlist, and server-side service-account credential deployment. The current environment is not ready for authenticated live operation.
 - Designate approved blank DOCX templates and confirm the authoritative acceptance-criteria process. Historical reports remain evidence rather than approved templates.
 - Perform a controlled, read-only initial import and reconciliation, including existing color-only reservations, before enabling Google Sheets writes.
 
-### P1 — first-release completion
+### P1 â€” first-release completion
 
 - Verify each supported report family against its approved template with long names, repeated rows, page breaks, automatic `Page X of Y`, editable logbook/page references, and blank historical result/signature fields.
 - Complete end-to-end tests for each Incoming category and Environmental Monitoring with category-specific forms and source provenance.
 - Validate configuration versioning, historical snapshots, role enforcement, audit-event readability, backup/restore, and concurrency behavior.
 - Complete representative desktop, tablet, and mobile accessibility and regression testing.
 
-### P2 — after first release is controlled
+### P2 â€” after first release is controlled
 
 - Add further report families only when a matching approved reference exists.
 - Consider offline intake only after online allocation, idempotency, and reconciliation are proven.
 
 ## Change history
 
-### TASK-20260923-001 — Evidence review and grounded implementation plan
+### TASK-20260923-001 â€” Evidence review and grounded implementation plan
 
 - Status: Completed
 - Priority: P0
@@ -81,7 +81,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: Project conversation and source files supplied by the project owner
 - Next action/owner: Preserve these decisions in implementation and obtain controlled templates/criteria.
 
-### TASK-20260924-001 — Application foundation and configuration-oriented overhaul
+### TASK-20260924-001 â€” Application foundation and configuration-oriented overhaul
 
 - Status: In progress
 - Priority: P0
@@ -97,7 +97,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: Repository history, working tree, `docs/HANDOFF.md`, and `docs/HANDOFF_GEMINI_TO_CHATGPT.md`
 - Next action/owner: Continue using this guide set and independently verify every inherited claim.
 
-### TASK-20260925-001 — Gemini handoff audit and UI/business-rule corrections
+### TASK-20260925-001 â€” Gemini handoff audit and UI/business-rule corrections
 
 - Status: Completed
 - Priority: P0
@@ -114,7 +114,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: Current working-tree diff and test output; HEAD `5d866cc`
 - Next action/owner: Resolve live-readiness blockers, then commit a reviewed change set.
 
-### TASK-20260925-002 — Read-only Google Sheets connection verification
+### TASK-20260925-002 â€” Read-only Google Sheets connection verification
 
 - Status: Completed with one blocked layout
 - Priority: P0
@@ -131,7 +131,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: Verifier script and execution output from 2026-09-25
 - Next action/owner: IPI reviews June; rerun validation after correction or an explicitly approved mapping revision.
 
-### TASK-20260925-003 — Portable agent governance guide
+### TASK-20260925-003 â€” Portable agent governance guide
 
 - Status: Completed
 - Priority: P0
@@ -148,7 +148,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: This directory at revision 1.0
 - Next action/owner: Every future agent reads all five files first and maintains `tasks.md` and `handover.md` during work.
 
-### TASK-20260925-004 — Bind connection validation to routing configuration
+### TASK-20260925-004 â€” Bind connection validation to routing configuration
 
 - Status: Completed
 - Priority: P0
@@ -160,12 +160,12 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Change: Added canonical validation fingerprints for Incoming, Environmental Monitoring, and Specifications. Connection tests now record the applicable fingerprint and configuration revision. Enabling writes requires the current Incoming/Environmental fingerprint. Routing-sensitive changes disable writes and invalidate only affected tests; appearance-only settings retain valid tests.
 - Data impact: Code and disposable test database only; no live Google access or writes
 - Verification: 38 TypeScript/domain tests passed, including the new invalidation test; 6 DOCX worker tests passed; TypeScript typecheck and Vite production build passed.
-- Problems/risks: The machine’s global `npm` launcher remains broken. An attempted bundled `pnpm` invocation moved npm-managed packages into `node_modules/.ignored`; the dependency folders were restored without changing source or lockfiles. Direct bundled Node/Python commands were used for reproducible verification.
+- Problems/risks: The machineâ€™s global `npm` launcher remains broken. An attempted bundled `pnpm` invocation moved npm-managed packages into `node_modules/.ignored`; the dependency folders were restored without changing source or lockfiles. Direct bundled Node/Python commands were used for reproducible verification.
 - Rollback: Revert the three implementation/test files together; doing so would restore the stale-validation risk.
 - Evidence: Current working-tree diff and test output dated 2026-09-25
 - Next action/owner: Continue end-to-end API/browser validation and resolve the P0 live environment, June Environmental layout, reconciliation, and approved-template gates.
 
-### TASK-20260925-005 — Enforce incubation-free report parameter labels
+### TASK-20260925-005 â€” Enforce incubation-free report parameter labels
 
 - Status: Completed
 - Priority: P0
@@ -174,7 +174,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Goal/rule link: Standardized report generation and controlled parameter labels
 - Scope/files: `worker/docx_worker.py`, `worker/test_docx_worker.py`, this ledger, active handover
 - Before: The currently demonstrated report template had been manually corrected, but preparing another historical layout could retain a separate `After ... incubation:` paragraph and reintroduce the unwanted label.
-- Change: The DOCX preparation worker now removes a parameter cell paragraph only when the entire paragraph is an `After ... incubation:` instruction. It then records the remaining test label and preserves that label’s original run formatting, including bold text.
+- Change: The DOCX preparation worker now removes a parameter cell paragraph only when the entire paragraph is an `After ... incubation:` instruction. It then records the remaining test label and preserves that labelâ€™s original run formatting, including bold text.
 - Data impact: Code and temporary test documents only; no source DOCX, generated report, or live laboratory record was modified.
 - Verification: Added a regression document with a normal incubation paragraph and a separate bold test label. All 7 DOCX worker tests pass. The existing sample PDF was also rendered and visually compared with the archive-layout reference; geometry and sections were retained, both incubation prefixes were absent, the fixed Noted-by name/role was present, and automatic PAGE/NUMPAGES fields remained in the DOCX.
 - Problems/risks: The inspected template still reports six drawings requiring human sanitization/layout review, which is expected for the inherited form artwork. It remains a development/historical template until IPI approves it.
@@ -182,7 +182,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: Current diff, worker test output, rendered `preview/IPI-Sample-Analysis-Report-Noted-By.pdf`, and its DOCX field inspection
 - Next action/owner: Apply the preparation/visual-review workflow to the first IPI-approved blank template when designated.
 
-### TASK-20260925-006 — Add the agent continuation prompt
+### TASK-20260925-006 â€” Add the agent continuation prompt
 
 - Status: Completed
 - Priority: P0
@@ -199,7 +199,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: `docs/agent-guide/prompt.md` revision 1.0
 - Next action/owner: Use `prompt.md` as the first item copied to any future agent, together with the complete six-file folder and repository access.
 
-### TASK-20260925-007 � June ENVI tab validation and credentials discovery
+### TASK-20260925-007 — June ENVI tab validation and credentials discovery
 
 - Status: Completed
 - Priority: P0
@@ -215,7 +215,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: Verifier script output showing 0 issues.
 - Next action/owner: Configure production PostgreSQL and OAuth, or proceed with import/reconciliation.
 
-### TASK-20260925-008 � Render Deployment Blueprint
+### TASK-20260925-008 — Render Deployment Blueprint
 
 - Status: Completed
 - Priority: P1
@@ -231,7 +231,7 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Evidence: ender.yaml file present.
 - Next action/owner: User to deploy to Render or configure local .env with Neon credentials to proceed to data reconciliation.
 
-### TASK-20260925-009 � Validate migrations and configuration seeding (Step 4)
+### TASK-20260925-009 — Validate migrations and configuration seeding (Step 4)
 
 - Status: Completed
 - Priority: P1
@@ -242,3 +242,19 @@ Active work is concentrated in Phases 9–12: approved-report integration, histo
 - Data impact: Isolated to disposable local test database. No live data touched.
 - Verification: Validated that migrate() creates tables successfully and getConfiguration() seeds 7 sample types and 9 test parameters.
 - Next action/owner: Step 5 - Run read-only initial import and reconcile ML records.
+
+### TASK-20260925-010 - Smart AI Assistant Integration
+
+- Status: Completed
+- Priority: P2
+- Actor/tool: Antigravity
+- Authorization: User requested to implement AI integration towards the dashboard, focusing on "Smart Search & Assistant" using Google Gemini.
+- Scope/files: `server/ai.ts`, `server/index.ts`, `src/App.tsx`, `src/FloatingAssistant.tsx`, `src/AssistantPage.tsx`, `.env.example`, `package.json`
+- Before: No AI or smart search capabilities existed.
+- Change: Added a `/api/ai/chat` backend endpoint using `@google/generative-ai` with Function Calling to query `samples` and `audit` records. Created a floating widget (`FloatingAssistant.tsx`) and a dedicated page (`AssistantPage.tsx`) for the UI. Resolved a TypeScript error in the build caused by incorrect Gemini API SDK syntax (`functionCalls()` vs `functionCalls`).
+- Data impact: AI assistant has read-only capability to query samples and audit logs based on user prompts.
+- Verification: Built the app successfully using `npm run build`. Fixed the 500 error forwarding to 400 Fault so missing API keys produce visible errors in the UI.
+- Problems/risks: The `GEMINI_API_KEY` must be configured in the live server environment; otherwise, the AI features return a 400 error.
+- Rollback: Revert commits `e4a9c06` and `5be10b0`.
+- Evidence: UI screenshots (provided by user) and successful local build.
+- Next action/owner: User to add `GEMINI_API_KEY` to the deployment environment secrets and test the AI capabilities.
