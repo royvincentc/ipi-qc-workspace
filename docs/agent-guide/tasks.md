@@ -230,3 +230,15 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, histo
 - Rollback: Revert ender.yaml, Dockerfile, and the few lines in server/index.ts.
 - Evidence: ender.yaml file present.
 - Next action/owner: User to deploy to Render or configure local .env with Neon credentials to proceed to data reconciliation.
+
+### TASK-20260925-009 — Validate migrations and configuration seeding (Step 4)
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Scope/files: scripts/validate-migrations.ts
+- Before: Step 4 pending in Handover.
+- Change: Ran database schema migrations and initial configuration seed against a disposable local PGLite instance (.data/migration-test-db).
+- Data impact: Isolated to disposable local test database. No live data touched.
+- Verification: Validated that migrate() creates tables successfully and getConfiguration() seeds 7 sample types and 9 test parameters.
+- Next action/owner: Step 5 - Run read-only initial import and reconcile ML records.
