@@ -5,7 +5,7 @@
 | Document ID | IPI-AI-HANDOVER |
 | Revision | 1.0 |
 | Last updated | 2026-09-25, Asia/Manila |
-| Prepared by | Codex (GPT-6), Gemini assistant production repair |
+| Prepared by | Codex (GPT-6), custom-cursor performance repair |
 | Repository | `C:\Users\Roy\Documents\ChatGPT\IPI` |
 
 This is the volatile transfer record. Update it whenever work pauses, finishes, changes direction, or transfers to another person/model. It supersedes older handoff notes as the current starting point; older files remain historical evidence and may contain inaccurate claims. Verify this file through [audit.md](audit.md), follow [goal.md](goal.md) and [rules.md](rules.md), and record all work in [tasks.md](tasks.md).
@@ -49,6 +49,7 @@ Move the audited development application toward a controlled first release in wh
 - Assistant surfaces no longer depend on undefined color variables or an unstable draggable wrapper.
 - Production Render logs confirmed the assistant failure occurred before API-key authentication because Gemini history began with the UI's synthetic `model` greeting.
 - The server now removes only leading synthetic model messages, validates alternating history, uses the maintained `@google/genai` SDK and configurable current model, and exposes sanitized actionable error categories.
+- The fine-pointer custom cursor now moves a single compositor layer using the latest pointer coordinates; it no longer changes root CSS variables or performs `left`/`top` positioning on every frame.
 
 ### Automated and browser checks
 
@@ -62,6 +63,8 @@ Move the audited development application toward a controlled first release in wh
 After TASK-20260925-012, the same 38 TypeScript/domain tests and 7 Python worker tests passed. TypeScript typecheck and the Vite production build passed. Final browser checks used a fresh session on the de-identified demo workspace at 390×844, 1024×768, and desktop/default viewports: no page overflow, filters and mobile navigation worked, Pip opened/closed, tablet rail content remained available, and the console contained no warnings or errors. The main bundle was `453.95 kB` (`136.53 kB` gzip).
 
 After TASK-20260925-013, all 41 Node/domain tests passed, including three assistant-history/error regressions. TypeScript typecheck and the Vite production build passed; `npm audit` reported zero vulnerabilities. The live Gemini endpoint was not invoked during verification because the screenshot exposed the configured key and it must be rotated first.
+
+After TASK-20260925-014, all 41 Node/domain tests, TypeScript typecheck, and the Vite production build passed. The cursor continues to respect reduced-motion and coarse-pointer fallbacks; its subjective feel should be confirmed on the project owner's live desktop after deployment.
 
 These results describe the audited working tree on 2026-09-25. Rerun relevant checks after further edits; do not carry them forward as permanent proof.
 

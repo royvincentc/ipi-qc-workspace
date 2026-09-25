@@ -308,3 +308,20 @@ Active work is concentrated in Phases 9â€“12: approved-report integration, 
 - Rollback: Revert this task's focused commit and restore the previous dependency lockfile; that would also restore the production history-order failure and obsolete SDK/model.
 - Evidence: Render error logs dated 2026-09-25, regression test output, typecheck/build output, dependency audit, and this task's Git commit/deployment record
 - Next action/owner: Project owner rotates the exposed Gemini key. Confirm the automatic Render deployment is live, then send a de-identified assistant prompt and confirm a successful or specifically actionable response.
+
+### TASK-20260925-014 — Remove custom-cursor navigation lag
+
+- Status: Completed
+- Priority: P2
+- Actor/tool: Codex (GPT-6)
+- Authorization: Project-owner report that the custom cursor felt laggy while navigating
+- Goal/rule link: Responsive desktop experience, restrained motion, performance, accessibility
+- Scope/files: `src/Experience.tsx`, `src/experience.css`, this ledger, active handover
+- Before: Every pointer animation frame changed two CSS custom properties on the root document, then positioned two cursor elements with `left` and `top`. The frame also used the first pointer event received instead of the latest coordinates, increasing perceived delay during rapid navigation.
+- Change: The pointer handler now keeps the latest coordinates and moves one zero-size cursor wrapper through a GPU-composited `translate3d` transform. Visibility and interactive-target attributes update only when their state changes; the dot and ring are positioned locally inside the wrapper. Coarse-pointer and reduced-motion fallbacks remain unchanged.
+- Data impact: Presentation behavior only; no application data, server, source record, or environment configuration changed.
+- Verification: TypeScript typecheck passed; all 41 Node/domain tests passed; Vite production build passed (`1623` modules, main JS `454.02 kB` / `136.58 kB` gzip); `git diff --check` passed apart from Git line-ending notices.
+- Problems/risks: Pointer responsiveness is hardware/browser dependent, so the project owner should confirm the subjective feel on the live desktop after deployment. Native cursors remain in use for coarse pointers and reduced-motion users.
+- Rollback: Revert this task's focused commit to restore the root-variable cursor implementation.
+- Evidence: Focused source diff and verification output dated 2026-09-25
+- Next action/owner: Confirm cursor tracking and link/button hover expansion on the live desktop after Render deploys this commit.

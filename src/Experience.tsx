@@ -1,4 +1,4 @@
-import {useEffect} from 'react';
+import {useEffect,useRef} from 'react';
 import {useLocation} from 'react-router-dom';
 
 export function AmbientBackdrop(){
@@ -6,24 +6,41 @@ export function AmbientBackdrop(){
 }
 
 export function CustomCursor(){
+  const cursorRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     if(!window.matchMedia('(pointer: fine)').matches||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
     const root=document.documentElement;
+    const cursor=cursorRef.current;
+    if(!cursor)return;
     let frame=0;
+    let nextX=0;
+    let nextY=0;
+    let visible=false;
+    let action=false;
     const move=(event:PointerEvent)=>{
+      nextX=event.clientX;
+      nextY=event.clientY;
       if(frame)return;
       frame=requestAnimationFrame(()=>{
-        root.style.setProperty('--cursor-x',`${event.clientX}px`);
-        root.style.setProperty('--cursor-y',`${event.clientY}px`);
-        root.dataset.cursorVisible='true';
+        cursor.style.transform=`translate3d(${nextX}px,${nextY}px,0)`;
+        if(!visible){
+          root.dataset.cursorVisible='true';
+          visible=true;
+        }
         frame=0;
       });
     };
     const over=(event:PointerEvent)=>{
       const target=event.target as HTMLElement;
-      root.dataset.cursorAction=target.closest('a,button,input,select,textarea,[role="button"]')?'true':'false';
+      const nextAction=Boolean(target.closest('a,button,input,select,textarea,[role="button"]'));
+      if(nextAction===action)return;
+      action=nextAction;
+      root.dataset.cursorAction=String(action);
     };
-    const leave=()=>{root.dataset.cursorVisible='false';};
+    const leave=()=>{
+      root.dataset.cursorVisible='false';
+      visible=false;
+    };
     window.addEventListener('pointermove',move,{passive:true});
     document.addEventListener('pointerover',over,{passive:true});
     document.documentElement.addEventListener('mouseleave',leave);
@@ -36,7 +53,7 @@ export function CustomCursor(){
       delete root.dataset.cursorAction;
     };
   },[]);
-  return <div className="custom-cursor" aria-hidden="true"><span/><i/></div>;
+  return <div ref={cursorRef} className="custom-cursor" aria-hidden="true"><span/><i/></div>;
 }
 
 export function RouteExperience(){
