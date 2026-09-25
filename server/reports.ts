@@ -1,4 +1,4 @@
-import {getConfiguration} from './configuration.js';
+﻿import {getConfiguration} from './configuration.js';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir,writeFile,readFile,access} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
@@ -33,7 +33,35 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  if(!sample)throw new Fault(404,'Sample not found');
  const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category&&t.active);
  if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
- const products=managed.value.products.filter(p=>p.active&&p.category===sample.category&&[p.name,...p.aliases].some(name=>normalized(sample.name).startsWith(normalized(name))));
+ const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
+ const matchScore = (sampleName:string, productName:string) => {
+  const sampleTokens = tokenize(sampleName);
+  const productTokens = tokenize(productName);
+  for (const t of productTokens) {
+   const idx = sampleTokens.indexOf(t);
+   if (idx === -1) return 0;
+   sampleTokens.splice(idx, 1);
+  }
+  return productTokens.length;
+ };
+
+ const candidates = managed.value.products.filter(p=>p.active&&p.category===sample.category);
+ let bestScore = 0;
+ let products:typeof candidates = [];
+ for (const p of candidates) {
+  for (const name of [p.name, ...p.aliases]) {
+   const score = matchScore(sample.name, name);
+   if (score > 0) {
+    if (score > bestScore) {
+     bestScore = score;
+     products = [p];
+    } else if (score === bestScore && !products.includes(p)) {
+     products.push(p);
+    }
+   }
+  }
+ }
+
  if(products.length!==1)throw new Fault(409,products.length?'More than one managed product matches this sample name. Remove the duplicate alias in Settings.':'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
  const product=products[0];
  if(!sample.context.trim())throw new Fault(409,'The incoming sample has no testing context. Record its category/context in the source logger before preparing a report.');
