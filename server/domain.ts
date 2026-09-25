@@ -17,7 +17,8 @@ export function currentMonth(now:Date,zone:string){const parts=new Intl.DateTime
 export function validateLayout(s:Sheet,category:Category,type?:SampleType){const m=type?.layout||mappings[category];const row=s.rows[m.header-1]||[];
  for(let i=0;i<m.headers.length;i++)if(normalized(row[m.start+i])!==normalized(m.headers[i]))throw new Fault(409,`${s.name}: ${column(m.start+i)}${m.header} does not match the approved ${type?.name||categories[category]} header`);
  if(!s.merges.includes(m.merge))throw new Fault(409,`${s.name}: section boundary ${m.merge} has changed`);
- if((type?.register|| (category==='EM'?'environmental':'incoming'))!=='environmental'&&normalized(s.rows[1]?.[m.start])!==normalized(m.title))throw new Fault(409,`${s.name}: section title has changed`);
+ const acceptedTitles=[m.title,...(type?.layout.acceptedTitles||[])].map(normalized);
+ if((type?.register|| (category==='EM'?'environmental':'incoming'))!=='environmental'&&!acceptedTitles.includes(normalized(s.rows[1]?.[m.start])))throw new Fault(409,`${s.name}: section title has changed`);
  if((type?.register|| (category==='EM'?'environmental':'incoming'))==='environmental'&&!String(s.rows[0]?.[0]||'').includes(m.title))throw new Fault(409,`${s.name}: environmental title missing`);
  if((type?type.layout.extraMerges:category==='SFG'?['D5:E5']:category==='FG'?['R5:S5']:category==='EM'?['F4:G4']:[]).some(x=>!s.merges.includes(x)))throw new Fault(409,`${s.name}: category boundary changed`);
  // Body merges can join two source records. They need a separate reviewed mapping.

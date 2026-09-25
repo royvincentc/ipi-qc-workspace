@@ -397,6 +397,28 @@
   color: var(--text-primary);
 }
 
+.cmd-input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-tertiary);
+}
+
+.cmd-input-row .cmd-input {
+  flex: 1;
+  border: 0;
+  min-width: 0;
+}
+
+.cmd-results { padding: 8px; max-height: min(420px, 60vh); overflow-y: auto; }
+.cmd-results > p { padding: 14px 12px; margin: 0; }
+.cmd-results > a { display: grid; gap: 2px; padding: 11px 12px; border-radius: var(--radius-sm); color: var(--text-primary); }
+.cmd-results > a:hover, .cmd-results > a:focus-visible { background: var(--bg-surface-hover); outline: none; }
+.cmd-results > a span, .cmd-results > a small { color: var(--text-secondary); }
+.cmd-results .cmd-all-results { display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin-top: 6px; color: var(--accent); border-top: 1px solid var(--border); border-radius: 0; }
+
 .cmd-input:focus {
   outline: none;
 }
@@ -424,4 +446,11 @@
     width: 100%;
     padding: 12px 0;
   }
+  .cmd-palette-backdrop { padding: 8vh 12px 0; }
+  .cmd-palette { max-width: none; }
+  .dashboard-layout, .dashboard-layout > div { display: block !important; width: 100%; max-width: 100%; min-width: 0; }
+  .filters-bar { flex-wrap: wrap; }
+  .filters-bar .search { flex: 1 0 100% !important; min-width: 0; }
+  .filters-bar input { min-width: 0; width: 100%; }
+  .filters-bar select { flex: 1 1 130px; min-width: 0; }
 }

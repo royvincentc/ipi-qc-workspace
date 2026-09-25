@@ -41,4 +41,16 @@ class DocumentTests(unittest.TestCase):
         self.assertEqual(value.xpath('./w:pPr/w:numPr',namespaces=NS),[])
         from lxml import etree as E
         self.assertEqual(len(E.fromstring(parts['docProps/core.xml'])),0)
+    def test_preparation_removes_incubation_instruction_but_keeps_parameter_style(self):
+        from docx import Document
+        d=Document();table=d.add_table(rows=2,cols=4)
+        for cell,label in zip(table.rows[0].cells,['PARAMETERS','SPECIFICATIONS','ACTUAL RESULTS','Remarks']):cell.text=label
+        parameter=table.rows[1].cells[0];parameter.paragraphs[0].text='After 48 hrs. of incubation:';label=parameter.add_paragraph();label.add_run('Standard Plate Count (SPC)').bold=True
+        table.rows[1].cells[1].text='Nmt 50 cfu/g';table.rows[1].cells[2].text='Historical result';table.rows[1].cells[3].text='Passed'
+        source=self.folder/'historical-incubation.docx';output=self.folder/'prepared-incubation.docx';d.save(source)
+        prepared=prepare_template(source.read_bytes(),output);self.assertEqual(prepared['instances'][0]['label'],'Standard Plate Count (SPC)')
+        document=roots(package(output.read_bytes()))['word/document.xml'];cell=document.xpath('.//w:body/w:tbl/w:tr[2]/w:tc[1]',namespaces=NS)[0]
+        self.assertNotIn('incubation',text(cell).lower());self.assertEqual(text(cell),'Standard Plate Count (SPC)')
+        label_run=cell.xpath('.//w:r[w:t[contains(.,"Standard Plate Count")]]',namespaces=NS)[0]
+        self.assertTrue(label_run.xpath('./w:rPr/w:b',namespaces=NS))
 if __name__=='__main__':unittest.main()

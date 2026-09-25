@@ -58,6 +58,39 @@
   color-scheme: dark;
 }
 
+:root[data-theme="light"] {
+  --bg-app: #f4f7f8;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #eaf0f2;
+  --bg-surface-hover: #e1eaed;
+  --border: rgba(10, 36, 44, 0.14);
+  --border-subtle: rgba(10, 36, 44, 0.08);
+  --border-strong: rgba(10, 36, 44, 0.24);
+  --text-primary: #10252d;
+  --text-secondary: #425861;
+  --text-tertiary: #6d7f87;
+  --accent: #087d72;
+  --accent-hover: #05675f;
+  --accent-soft: rgba(8, 125, 114, 0.1);
+  --color-success: #087d55;
+  --color-success-bg: rgba(8, 125, 85, 0.1);
+  --color-warning: #9a6600;
+  --color-warning-bg: rgba(154, 102, 0, 0.1);
+  --color-critical: #b42318;
+  --color-critical-bg: rgba(180, 35, 24, 0.1);
+  --color-info: #175cd3;
+  --color-info-bg: rgba(23, 92, 211, 0.1);
+  color-scheme: light;
+}
+
+:root[data-density="compact"] {
+  --space-3: 9px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 20px;
+  --space-8: 26px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -430,6 +463,7 @@ input[type="checkbox"] {
 /* Main Layout */
 .main-wrapper {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   margin-left: var(--sidebar-expanded);
@@ -534,9 +568,10 @@ main {
   animation: fadeIn 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.stagger-1 { animation-delay: 40ms; opacity: 0; }
-.stagger-2 { animation-delay: 90ms; opacity: 0; }
-.stagger-3 { animation-delay: 140ms; opacity: 0; }
+.stagger-1, .stagger-2, .stagger-3 { animation-name: fadeIn; animation-duration: 300ms; animation-fill-mode: forwards; opacity: 0; }
+.stagger-1 { animation-delay: 40ms; }
+.stagger-2 { animation-delay: 90ms; }
+.stagger-3 { animation-delay: 140ms; }
 
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -567,3 +602,36 @@ main {
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 .ascii-loader::after { content: '_'; animation: blink 1s step-end infinite; }
 
+
+
+/* Topbar & Sidebar updates */
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--bg-surface); }
+.global-search { display: flex; align-items: center; gap: 12px; background: var(--bg-app); border: 1px solid var(--border); padding: 8px 16px; border-radius: var(--radius-md); width: 100%; max-width: 600px; color: var(--text-tertiary); font-size: 14px; cursor: pointer; transition: border-color var(--transition-fast); }
+.global-search:hover { border-color: var(--border-strong); }
+.topbar-divider { width: 1px; height: 24px; background: var(--border); margin: 0 16px; }
+.topbar-date { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
+.topbar-date small { font-size: 11px; color: var(--text-tertiary); }
+.topbar-date strong { font-size: 13px; color: var(--text-primary); }
+.sidebar-collapsed .brand-text, .sidebar-collapsed .user-text { display: none; }
+.collapse-btn { width: 100%; justify-content: center; }
+.brand-text { min-width: 0; }
+.brand-text span { display: block; font-size: 10px; color: var(--text-tertiary); }
+.user-text { display: flex; flex-direction: column; min-width: 0; }
+.mobile-menu-button, .mobile-nav-backdrop { display: none; }
+
+@media (max-width: 768px) {
+  .mobile-menu-button { display: inline-flex; flex-shrink: 0; }
+  .sidebar.mobile-open { transform: translateX(0); width: min(84vw, 300px); z-index: 120; box-shadow: 12px 0 36px rgba(0,0,0,.35); }
+  .sidebar.mobile-open .brand-text, .sidebar.mobile-open .user-text, .sidebar.mobile-open nav a span, .sidebar.mobile-open .nav-label { display: initial; opacity: 1; visibility: visible; width: auto; height: auto; }
+  .sidebar.mobile-open .user-text { display: flex; }
+  .mobile-nav-backdrop { display: block; position: fixed; inset: 0; z-index: 110; width: 100%; border-radius: 0; background: rgba(3,12,16,.62); }
+  .topbar { padding: 10px 12px; gap: 8px; }
+  .topbar .global-search { min-width: 0; padding: 8px 10px; }
+  .topbar .global-search kbd, .topbar-date, .topbar-divider { display: none; }
+  .topbar-right { gap: 8px; white-space: nowrap; }
+  .topbar-right > div:first-child { font-size: 0; margin-right: 0 !important; }
+  main { padding: 18px 14px; min-width: 0; }
+  .workspace-content { min-width: 0; width: 100%; }
+  .main-wrapper { width: 100%; max-width: 100%; }
+  .data-table-container, .panel { overflow-x: auto; }
+}
