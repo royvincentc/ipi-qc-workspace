@@ -384,9 +384,9 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Goal/rule link: Robust production environment configuration.
 - Scope/files: `server/db.ts`
 - Before: `pg.Pool` initialized with default settings which does not send `sslmode=require` unless specifically in the URL, causing some providers to drop connections leading to `ETIMEDOUT` or `ENETUNREACH` in IPv6-lacking environments.
-- Change: Configured `ssl: { rejectUnauthorized: false }` for non-local database URLs by default in `server/db.ts` to natively support Supabase/Neon.
+- Change: Configured `ssl: { rejectUnauthorized: false }` for non-local database URLs by default in `server/db.ts` to natively support Supabase/Neon. Additionally, forced `(pg.defaults as any).family = 4` to bypass a Node.js Happy Eyeballs routing bug on Render's IPv4-only free tier.
 - Data impact: Code only.
-- Verification: Re-ran tests and build locally.
+- Verification: Re-ran tests and `tsc --noEmit` locally. Build passed.
 - Problems/risks: None.
 - Rollback: Revert the pool configuration in `server/db.ts`.
 - Evidence: Logs confirming the `ETIMEDOUT` connection failure from the user, and code changes in `server/db.ts`.
