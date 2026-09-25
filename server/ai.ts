@@ -10,7 +10,7 @@ export const aiRouter = express.Router();
 
 aiRouter.post('/chat', async (req, res) => {
   if (!process.env.GEMINI_API_KEY) {
-    throw new Fault(500, 'GEMINI_API_KEY is not configured in the server.');
+    throw new Fault(400, 'GEMINI_API_KEY is not configured in the server environment.');
   }
 
   const input = z.object({
@@ -61,46 +61,51 @@ aiRouter.post('/chat', async (req, res) => {
   });
 
   const lastMessage = input.messages[input.messages.length - 1];
-  let response = await chat.sendMessage(lastMessage.parts);
+  
+  try {
+    let response = await chat.sendMessage(lastMessage.parts);
 
-  // Simple function calling loop (1 iteration)
-  const calls = response.response.functionCalls();
-  if (calls && calls.length > 0) {
-    const call = calls[0];
-    let functionResponseData = {};
+    // Simple function calling loop (1 iteration)
+    const calls = response.response.functionCalls();
+    if (calls && calls.length > 0) {
+      const call = calls[0];
+      let functionResponseData = {};
 
-    try {
-      if (call.name === 'query_samples') {
-        const { q, category, limit = 50 } = call.args as any;
-        const all = (await db.query('SELECT data FROM samples ORDER BY updated_at DESC')).rows.map(x => x.data as any);
-        const filtered = all.filter(s => {
-          const matchQ = !q || [s.ml, s.name, s.batch, s.received].join(' ').toLowerCase().includes(q.toLowerCase());
-          const matchCat = !category || s.category === category;
-          return matchQ && matchCat;
-        }).slice(0, limit);
-        functionResponseData = { samples: filtered };
-      } else if (call.name === 'query_audit_logs') {
-         const { q, limit = 50 } = call.args as any;
-         let qStr = q ? `%${q.toLowerCase()}%` : '%';
-         const items = (await db.query(`SELECT id,actor,action,created_at FROM audit WHERE concat_ws(' ',actor,action) ILIKE $1 ORDER BY created_at DESC LIMIT $2`, [qStr, limit])).rows;
-         functionResponseData = { logs: items };
-      } else {
-        functionResponseData = { error: 'Unknown function' };
+      try {
+        if (call.name === 'query_samples') {
+          const { q, category, limit = 50 } = call.args as any;
+          const all = (await db.query('SELECT data FROM samples ORDER BY updated_at DESC')).rows.map(x => x.data as any);
+          const filtered = all.filter(s => {
+            const matchQ = !q || [s.ml, s.name, s.batch, s.received].join(' ').toLowerCase().includes(q.toLowerCase());
+            const matchCat = !category || s.category === category;
+            return matchQ && matchCat;
+          }).slice(0, limit);
+          functionResponseData = { samples: filtered };
+        } else if (call.name === 'query_audit_logs') {
+           const { q, limit = 50 } = call.args as any;
+           let qStr = q ? `%${q.toLowerCase()}%` : '%';
+           const items = (await db.query(`SELECT id,actor,action,created_at FROM audit WHERE concat_ws(' ',actor,action) ILIKE $1 ORDER BY created_at DESC LIMIT $2`, [qStr, limit])).rows;
+           functionResponseData = { logs: items };
+        } else {
+          functionResponseData = { error: 'Unknown function' };
+        }
+      } catch (e: any) {
+        functionResponseData = { error: e.message };
       }
-    } catch (e: any) {
-      functionResponseData = { error: e.message };
+
+      response = await chat.sendMessage([{
+        functionResponse: {
+          name: call.name,
+          response: functionResponseData
+        }
+      }]);
     }
 
-    response = await chat.sendMessage([{
-      functionResponse: {
-        name: call.name,
-        response: functionResponseData
-      }
-    }]);
+    res.json({
+      role: 'model',
+      parts: [{ text: response.response.text() }]
+    });
+  } catch (error: any) {
+    throw new Fault(400, `AI Error: ${error.message || 'Unknown error occurred'}`);
   }
-
-  res.json({
-    role: 'model',
-    parts: [{ text: response.response.text() }]
-  });
 });
