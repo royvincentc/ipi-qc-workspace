@@ -148,7 +148,7 @@ When transferring work, replace the volatile sections above while preserving ver
 If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
 
 ## Current State (2026-09-25)
-- Deployed a fix ( 80eb89) to allow saveSnapshot to overwrite a ghost record with a valid sample.
+- Deployed a fix (df561e5) to implement token-based fuzzy matching for product/sample linking, replacing the strict prefix startsWith check.
 
 ## Next Actions
-- User needs to click "Refresh sources" again.
+- User needs to select the stability sample again in the dashboard.

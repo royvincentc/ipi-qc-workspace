@@ -491,3 +491,19 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Rollback: Revert the `trim()` check in `saveSnapshot`.
 - Evidence: Commit `080eb89`.
 - Next action/owner: User to sync again.
+
+### TASK-20260925-021f — Implement token-based fuzzy matching for products
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Gemini 3.1 Pro)
+- Authorization: User requested: "if many string of words match on the specification name, it would consider that product automatically"
+- Goal/rule link: Allow dashboard to map samples to specifications despite changing text variations (like "5th withdrawal").
+- Scope/files: `server/reports.ts`, `server/samples.ts`
+- Before: Product mapping used a strict string prefix check (`sampleName.startsWith(productName)`). Samples with additional text in the middle (e.g. `Omega Pain Killer Liniment- Pro (5th withdrawal - New Specs)-60 mL - EXC01`) failed to match the specification `Omega Pain Killer Liniment- Pro (60mL)` because of the intervening text.
+- Change: Replaced the `startsWith` check with a token-based subsequence/fuzzy match. Both the sample name and product name are split into alphabetic/numeric tokens. A match is successful if all tokens from the product name appear in the sample name, with frequency awareness. If multiple products match, the one matching the highest number of tokens wins.
+- Data impact: The system will now robustly automatically map highly varied stability sample names to their correct specifications without requiring manual aliases for every withdrawal or batch suffix.
+- Verification: Tested with edge cases to ensure subset product names (like `(60mL)` vs `(120mL & 60mL)`) behave correctly by sorting matches by token length. Built and pushed.
+- Problems/risks: None.
+- Rollback: Revert the `matchScore` function back to `startsWith` in `resolveReportSetup`.
+- Evidence: Commit `df561e5`.
+- Next action/owner: User to select the sample again on the Results & Reports page.
