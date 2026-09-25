@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: ipi-qc-workspace
+    name: ipi-qc
     env: docker
     dockerfilePath: ./Dockerfile
     region: singapore # or oregon, frankfurt, ohio
