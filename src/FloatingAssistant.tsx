@@ -43,7 +43,7 @@ export function FloatingAssistant() {
         onClick={() => setOpen(true)}
         aria-label="Open Miss Minutes Assistant"
       >
-        <span className="pet-face miss-minutes-face"><Clock size={28} color="#06221c" /></span><span className="pet-label">Miss Minutes</span>
+        <span className="pet-face miss-minutes-face"><img src="/miss-minutes.png" alt="Miss Minutes" className="miss-minutes-avatar" /></span><span className="pet-label">Miss Minutes</span>
       </button>
     );
   }
@@ -52,7 +52,7 @@ export function FloatingAssistant() {
     <div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
-            <span className="chat-pet"><Clock size={17}/></span><span><strong>Miss Minutes</strong><small><i/> Smart assistant</small></span>
+            <span className="chat-pet"><img src="/miss-minutes.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{width:"130%",height:"130%",objectFit:"cover",objectPosition:"25% 50%"}} /></span><span><strong>Miss Minutes</strong><small><i/> Smart assistant</small></span>
           </div>
           <button className="icon-button" onClick={() => setOpen(false)} aria-label="Close assistant"><X size={18} /></button>
         </div>
@@ -60,7 +60,7 @@ export function FloatingAssistant() {
           {messages.map((m, i) => (
             <div key={i} className={`floating-message ${m.role}`}>
               <div className="floating-message-label">
-                {m.role === 'user' ? <><User size={12}/> You</> : <><Clock size={12}/> Miss Minutes</>}
+                {m.role === 'user' ? <><User size={12}/> You</> : <><img src="/miss-minutes.png" alt="" style={{width: "16px", height: "16px", objectFit: "cover", objectPosition: "25% 50%", borderRadius: "50%", display: "inline-block", verticalAlign: "middle"}}/> Miss Minutes</>}
               </div>
               <div className="floating-bubble">
                 {m.parts.map(p => p.text).join('')}
