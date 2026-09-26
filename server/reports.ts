@@ -38,18 +38,28 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  // and standalone 'New Specs' / 'Old Specs' are cosmetic qualifiers that do not represent
  // a distinct managed product — strip them so the matcher resolves to the base product.
  const normalizeSampleName = (name: string): string => {
-  // "New Specs" and withdrawal ordinals identify the base product.
-  // "(Nth withdrawal - Old Specs)" and standalone "Old Specs" identify the Old Specs product.
-  // The withdrawal parenthetical that contains "Old Specs" is replaced with " Old Specs"
-  // so the fuzzy matcher can route it correctly via an alias in Settings.
+  // Stability qualifier rules before fuzzy product matching:
+  //
+  // NEW SPECS (= base product "Omega Pain Killer Liniment- Pro"):
+  //   (Nth withdrawal - New Specs)  -> strip whole bracket
+  //   (Nth withdrawal) New Specs    -> strip bracket + standalone label
+  //   (Nth withdrawal)              -> strip whole bracket
+  //   (T,14,15) / (T,6,12,18,...)  -> strip stability timepoint bracket
+  //   Standalone "New Specs"        -> strip
+  //
+  // OLD SPECS (= distinct product "Omega Pain Killer Liniment- Pro (60mL...) Old Specs"):
+  //   (Nth withdrawal - Old Specs)  -> replace bracket with " Old Specs" (preserved)
+  //   (Nth withdrawal) Old Specs    -> strip bracket, keep standalone "Old Specs"
   let n = name
-   // Withdrawal bracket with Old Specs inside -> replace bracket with " Old Specs"
+   // Withdrawal bracket with Old Specs inside -> replace with " Old Specs"
    .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal\s*[-\u2013]\s*old\s+specs\)/gi, ' Old Specs')
    // Withdrawal bracket with New Specs inside, or bare withdrawal -> strip entirely
    .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal(?:\s*[-\u2013]\s*new\s+specs)?\)/gi, '')
+   // Stability timepoint bracket e.g. (T,14,15), (T,6,12,18,24) -> strip (= New Specs / base product)
+   .replace(/\s*\(T(?:,\s*\d+)+\)/gi, '')
    // Standalone "New Specs" outside brackets -> strip
    .replace(/\bNew\s+Specs\b/gi, '');
-  // Standalone "Old Specs" that remains is intentional - do not remove it
+  // Standalone "Old Specs" that remains is intentional — do not remove it
   return n.trim().replace(/\s{2,}/g, ' ');
  };
  const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
