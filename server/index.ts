@@ -30,6 +30,7 @@ await migrate();await mkdir(storage,{recursive:true});await seed();
 if (Number((await db.query('SELECT count(*) FROM templates')).rows[0].count) === 0) {
   try {
     const p = 'templates/demo-standardized.docx';
+    await worker(['demo', '--output', privatePath(p)]);
     const content = await readFile(privatePath(p));
     const validation = await worker(['validate', '--input', privatePath(p)]);
     const template = {
