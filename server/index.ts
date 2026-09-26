@@ -26,7 +26,28 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64 && !process.env.GOOGLE_APP
   fs.writeFileSync(dest, Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, 'base64'));
   process.env.GOOGLE_APPLICATION_CREDENTIALS = dest;
 }
-await migrate();await mkdir(storage,{recursive:true});await seed();await getConfiguration();await migrateConfigurationColumns();
+await migrate();await mkdir(storage,{recursive:true});await seed();
+if (Number((await db.query('SELECT count(*) FROM templates')).rows[0].count) === 0) {
+  try {
+    const p = 'templates/demo-standardized.docx';
+    const content = await readFile(privatePath(p));
+    const validation = await worker(['validate', '--input', privatePath(p)]);
+    const template = {
+      id: randomUUID(),
+      name: 'IPI Standardized Micro Layout',
+      family: 'standard',
+      category: 'Routine', // fallback handles other categories
+      revision: hash(content.toString('base64')),
+      path: p,
+      verified: true,
+      manifest: { ...validation, requiredFields: [] }
+    };
+    await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [template.id, JSON.stringify(template)]);
+    console.log('Seeded demo-standardized.docx as default template for empty live workspace.');
+  } catch (e) {
+    console.error('Failed to auto-seed template', e);
+  }
+}await getConfiguration();await migrateConfigurationColumns();
 export const app=express();app.disable('x-powered-by');app.use(helmet({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'",'data:'],frameSrc:["'self'"],objectSrc:["'none'"]},},crossOriginEmbedderPolicy:false}));app.use(express.json({limit:'18mb'}));app.use(cookieParser());app.use('/api',sameOrigin);
 app.get('/api/health',(_req,res)=>res.json({ok:true,demo}));app.get('/api/auth/login',beginAuth);app.get('/api/auth/callback',finishAuth);app.use('/api',authenticate);
 app.get('/api/configuration',async(_req,res)=>res.json(await getConfiguration()));
