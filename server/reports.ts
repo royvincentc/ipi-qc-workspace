@@ -33,6 +33,16 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  if(!sample)throw new Fault(404,'Sample not found');
  const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category&&t.active);
  if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
+ // Normalise sample names before product matching.
+ // Patterns like '(5th withdrawal - New Specs)', '(3rd withdrawal) New Specs', '(2nd withdrawal)'
+ // and standalone 'New Specs' / 'Old Specs' are cosmetic qualifiers that do not represent
+ // a distinct managed product — strip them so the matcher resolves to the base product.
+ const normalizeSampleName = (name: string): string => {
+  let n = name
+   .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal(?:\s*[-\u2013]\s*(?:new|old)\s+specs)?\)/gi, '')
+   .replace(/\b(?:new|old)\s+specs\b/gi, '');
+  return n.trim().replace(/\s{2,}/g, ' ');
+ };
  const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
  const matchScore = (sampleName:string, productName:string) => {
    const s = sampleName.toLowerCase();
@@ -72,12 +82,13 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
    return productTokens.length > 0 && matched === productTokens.length ? matched : 0;
   };
 
+ const normalizedName = normalizeSampleName(sample.name);
  const candidates = managed.value.products.filter(p=>p.active&&p.category===sample.category);
  let bestScore = 0;
  let products:typeof candidates = [];
  for (const p of candidates) {
   for (const name of [p.name, ...p.aliases]) {
-   const score = matchScore(sample.name, name);
+   const score = matchScore(normalizedName, name);
    if (score > 0) {
     if (score > bestScore) {
      bestScore = score;
