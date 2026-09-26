@@ -221,14 +221,18 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Priority: P1
 - Actor/tool: Antigravity
 - Authorization: User selected Render + Neon for deployment to retain PDF previews and avoid Vercel rewrites.
-- Scope/files: ender.yaml, Dockerfile, server/index.ts
+- Scope/files: 
+ender.yaml, Dockerfile, server/index.ts
 - Before: No deployment configuration existed.
-- Change: Added ender.yaml blueprint for automatic deployment on Render's free tier. Added Dockerfile to install Node, Python, and LibreOffice. Patched server/index.ts to decode GOOGLE_APPLICATION_CREDENTIALS_BASE64 to support Render's environment variable limitations securely.
+- Change: Added 
+ender.yaml blueprint for automatic deployment on Render's free tier. Added Dockerfile to install Node, Python, and LibreOffice. Patched server/index.ts to decode GOOGLE_APPLICATION_CREDENTIALS_BASE64 to support Render's environment variable limitations securely.
 - Data impact: None.
 - Verification: Visual code inspection.
 - Problems/risks: First load after 15m of inactivity will be delayed on Render's free tier. Mitigated by advising UptimeRobot.
-- Rollback: Revert ender.yaml, Dockerfile, and the few lines in server/index.ts.
-- Evidence: ender.yaml file present.
+- Rollback: Revert 
+ender.yaml, Dockerfile, and the few lines in server/index.ts.
+- Evidence: 
+ender.yaml file present.
 - Next action/owner: User to deploy to Render or configure local .env with Neon credentials to proceed to data reconciliation.
 
 ### TASK-20260925-009 â€” Validate migrations and configuration seeding (Step 4)
@@ -401,7 +405,9 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Goal/rule link: Phone-friendly workspace, non-technical dashboard utility, real data only
 - Scope/files: src/experience.css, src/workspace.tsx, src/reports.tsx
 - Before: + Log sample button icon and text misaligned. Samples & history table columns squeezed because of a long un-wrappable name+ML string, and missing CSS class. Saved drafts panel missing padding causing empty state to hug the edges. User chat bubbles had excessive bottom padding and the "You" label was on the wrong side.
-- Change: Added display: inline-flex; align-items: center to .button in CSS. Renamed ecords-table to data-table in workspace.tsx and added a <br /> between sample name and ML number. Added padded class to Saved drafts panel in eports.tsx. Fixed chat bubble line-height, padding, and added lex-direction: row-reverse for user message labels.
+- Change: Added display: inline-flex; align-items: center to .button in CSS. Renamed 
+ecords-table to data-table in workspace.tsx and added a <br /> between sample name and ML number. Added padded class to Saved drafts panel in 
+eports.tsx. Fixed chat bubble line-height, padding, and added lex-direction: row-reverse for user message labels.
 - Data impact: UI styles and layout only. No database or source changes.
 - Verification: Source code inspection of modified files.
 - Problems/risks: None
@@ -544,8 +550,10 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Authorization: User reported a new error: "The incoming sample has no testing context..."
 - Goal/rule link: Sample-to-specification workflow
 - Scope/files: "server/reports.ts"
-- Before: esolveReportSetup threw a 409 error if sample.context was empty. However, samples in the Stability (ST), Water (WS), Raw Material (RM), and Miscellaneous (MIS) categories do not have a "Category" (context) column in the source spreadsheet, making it impossible to prepare reports for them.
-- Change: Updated esolveReportSetup to use a safe fallback (sample.context?.trim() || 'Routine') instead of throwing an error when the context is blank. The system now searches for a specification with the context "Routine" for these samples.
+- Before: 
+esolveReportSetup threw a 409 error if sample.context was empty. However, samples in the Stability (ST), Water (WS), Raw Material (RM), and Miscellaneous (MIS) categories do not have a "Category" (context) column in the source spreadsheet, making it impossible to prepare reports for them.
+- Change: Updated 
+esolveReportSetup to use a safe fallback (sample.context?.trim() || 'Routine') instead of throwing an error when the context is blank. The system now searches for a specification with the context "Routine" for these samples.
 - Data impact: Code only.
 - Verification: Build and tests passed.
 - Next action/owner: User to retry the report draft and verify they have a specification with the context "Routine" configured in Settings.
@@ -643,3 +651,23 @@ pm run build successfully.
 - Rollback: Revert the commit that added transparent PNG and updated CSS.
 - Evidence: Modified files and pushed commit.
 - Next action/owner: User to refresh and verify the polished floating assistant.
+### TASK-20260926-005 — Normalise withdrawal/New-Old Specs qualifiers before product matching
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity (Claude Sonnet 4.6)
+- Authorization: User reported that ML-ST-26-0280 - Omega Pain Killer Liniment- Pro (5th withdrawal - New Specs) could not resolve a specification. User clarified that the (#th withdrawal - New Specs), (#th withdrawal) New Specs, and (#th withdrawal) patterns are cosmetic Stability qualifiers and do not represent a distinct product — they should resolve to the base product (e.g. Omega Pain Killer Liniment- Pro). Same applies to Old Specs.
+- Goal/rule link: Rules §1 (truth and scientific data integrity), §5 (specifications and criteria), §9 (change controls)
+- Scope/files: server/reports.ts
+- Before: The fuzzy matcher used the raw sample name including ordinal withdrawal qualifiers and New/Old Specs labels. These tokens caused the matcher to fail to score against the base product name, resulting in a no specification exists for context Routine error.
+- Change: Added 
+ormalizeSampleName() function in 
+esolveReportSetup() that strips: (1) Parenthetical withdrawal blocks like (Nth withdrawal), (Nth withdrawal - New Specs), (Nth withdrawal - Old Specs); (2) Standalone New Specs / Old Specs labels anywhere in the name. The normalized name is stored in 
+ormalizedName and passed to matchScore(). The original sample.name is preserved unchanged on all records and reports.
+- Data impact: No database or source records changed.
+- Verification: TypeScript typecheck passed (exit 0). All 7 domain/unit tests passed. Inline Node.js unit test of 
+ormalizeSampleName passed all 7 representative cases. Commit 5a7d17 pushed to origin/master.
+- Problems/risks: None. Normalization is one-directional (stripping only) and only applied during fuzzy match; original name preserved everywhere else.
+- Rollback: git revert f5a7d17
+- Evidence: Commit 5a7d17 on master. All 7 inline unit-test cases passed.
+- Next action/owner: User to refresh the live browser and re-select ML-ST-26-0280 on the Analysis Reports page to confirm resolution.
