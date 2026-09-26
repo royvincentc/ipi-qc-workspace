@@ -4,7 +4,8 @@ import { api } from './api';
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hey y\'all! I\'m Miss Minutes! How can I help you keep the laboratory Timeline in perfect order today, hun?' }] }]);
+  const [showSpeech, setShowSpeech] = useState(true);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello. I am Miss Minutes, the QC Smart Assistant. How can I assist you with your laboratory tasks today?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -16,6 +17,14 @@ export function FloatingAssistant() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, open]);
+
+  useEffect(() => {
+    // Auto-hide the speech bubble after 5 minutes (300000 ms)
+    const timer = setTimeout(() => {
+      setShowSpeech(false);
+    }, 300000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -40,13 +49,23 @@ export function FloatingAssistant() {
     return (
       <button
         className="lab-pet miss-minutes"
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); setShowSpeech(false); }}
         aria-label="Open Miss Minutes Assistant"
       >
-        <img src="/miss-minutes-transparent.png" alt="Miss Minutes" className="miss-minutes-avatar" />
-        <div className="miss-minutes-speech">
-          <b>AI Assistant</b>Hey y'all! I'm Miss Minutes. How can I help you keep the Sacred Timeline in order today, hun?
-        </div>
+        <img src="/miss-minutes-mini.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{ objectFit: 'contain', objectPosition: 'center', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
+        {showSpeech && (
+          <div className="miss-minutes-speech" style={{ position: 'absolute', right: '90px', bottom: '20px' }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setShowSpeech(false); }} 
+              style={{ position: 'absolute', top: '8px', right: '8px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}
+              aria-label="Close message"
+            >
+              <X size={14} />
+            </button>
+            <b style={{ paddingRight: '12px' }}>AI Assistant</b>
+            Hello. I am Miss Minutes, the QC Smart Assistant. How can I assist you with your laboratory tasks today?
+          </div>
+        )}
       </button>
     );
   }
@@ -55,7 +74,7 @@ export function FloatingAssistant() {
     <div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
-            <span className="chat-pet"><img src="/miss-minutes-transparent.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{width:"130%",height:"130%",objectFit:"cover",objectPosition:"25% 50%"}} /></span><span><strong>Miss Minutes</strong><small><i/> Smart assistant</small></span>
+            <span className="chat-pet"><img src="/miss-minutes-mini.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{width:"100%",height:"100%",objectFit:"contain",objectPosition:"center"}} /></span><span><strong>Miss Minutes</strong><small><i/> Smart assistant</small></span>
           </div>
           <button className="icon-button" onClick={() => setOpen(false)} aria-label="Close assistant"><X size={18} /></button>
         </div>
@@ -63,7 +82,7 @@ export function FloatingAssistant() {
           {messages.map((m, i) => (
             <div key={i} className={`floating-message ${m.role}`}>
               <div className="floating-message-label">
-                {m.role === 'user' ? <><User size={12}/> You</> : <><img src="/miss-minutes-transparent.png" alt="" style={{width: "16px", height: "16px", objectFit: "cover", objectPosition: "25% 50%", borderRadius: "50%", display: "inline-block", verticalAlign: "middle"}}/> Miss Minutes</>}
+                {m.role === 'user' ? <><User size={12}/> You</> : <><img src="/miss-minutes-mini.png" alt="" style={{width: "16px", height: "16px", objectFit: "contain", objectPosition: "center", borderRadius: "50%", display: "inline-block", verticalAlign: "middle"}}/> Miss Minutes</>}
               </div>
               <div className="floating-bubble">
                 {m.parts.map(p => p.text).join('')}

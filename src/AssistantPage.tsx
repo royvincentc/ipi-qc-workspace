@@ -3,7 +3,7 @@ import { Send, Clock, User, Search, RefreshCw, Sparkles } from 'lucide-react';
 import { api } from './api';
 
 export function AssistantPage() {
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hey y\'all! I\'m Miss Minutes! You can ask me to search for historical QC records, summarize recent out-of-specification results, or query audit logs. How can I help you keep the Timeline in order?' }] }]);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello. I am Miss Minutes, the QC Smart Assistant. You can ask me to search for historical QC records, summarize recent out-of-specification results, or query audit logs. How can I assist you with your laboratory tasks today?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
