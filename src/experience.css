@@ -272,8 +272,8 @@ input:not([type="checkbox"]):focus,select:focus,textarea:focus { box-shadow:0 0 
 .lab-pet.miss-minutes .miss-minutes-avatar {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: 25% 50%;
+    object-fit: contain;
+    object-position: center;
     border-radius: 0;
     filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5));
 }
