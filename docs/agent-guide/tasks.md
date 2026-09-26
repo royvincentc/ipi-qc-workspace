@@ -721,3 +721,14 @@ o specification exists for context 'Routine'). It now properly detects that the 
 **Summary**: The user observed that products in the Google Sheet applicability list often contain fillers like 'old specs' or '5th withdrawal' making exact string matching fail. Extracted the 
 ormalizeSampleName and matchScore functions to the module level and wrapped the applicability filtering in a new 
 esolveApplicabilityMatches helper. This helper first checks for exact matches or alias matches, and falls back to scoring the normalized Google Sheet product names against the configured product, solving the 'no single applicable-test row' errors.
+
+
+### TASK-20260926-011
+**Date**: 2026-09-26
+**Task**: Professionalize AI assistant and implement auto-hide / collapse logic
+**Files Changed**:
+- public/miss-minutes-mini.png
+- src/FloatingAssistant.tsx
+- src/AssistantPage.tsx
+- src/experience.css
+**Summary**: Adjusted the AI assistant ('Miss Minutes') tone to be strictly professional, suited for a QC laboratory. Replaced the obstructive full-body mascot with a 'mini-form' clock face image to save dashboard space. Added state logic (showSpeech, setTimeout) to auto-hide the speech bubble after 5 minutes (300,000 ms) and provided a manual close 'X' button on the popup itself to allow users to dismiss it immediately without opening the chat.
