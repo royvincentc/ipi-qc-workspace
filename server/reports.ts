@@ -38,9 +38,18 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  // and standalone 'New Specs' / 'Old Specs' are cosmetic qualifiers that do not represent
  // a distinct managed product — strip them so the matcher resolves to the base product.
  const normalizeSampleName = (name: string): string => {
+  // "New Specs" and withdrawal ordinals identify the base product.
+  // "(Nth withdrawal - Old Specs)" and standalone "Old Specs" identify the Old Specs product.
+  // The withdrawal parenthetical that contains "Old Specs" is replaced with " Old Specs"
+  // so the fuzzy matcher can route it correctly via an alias in Settings.
   let n = name
-   .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal(?:\s*[-\u2013]\s*(?:new|old)\s+specs)?\)/gi, '')
-   .replace(/\b(?:new|old)\s+specs\b/gi, '');
+   // Withdrawal bracket with Old Specs inside -> replace bracket with " Old Specs"
+   .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal\s*[-\u2013]\s*old\s+specs\)/gi, ' Old Specs')
+   // Withdrawal bracket with New Specs inside, or bare withdrawal -> strip entirely
+   .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal(?:\s*[-\u2013]\s*new\s+specs)?\)/gi, '')
+   // Standalone "New Specs" outside brackets -> strip
+   .replace(/\bNew\s+Specs\b/gi, '');
+  // Standalone "Old Specs" that remains is intentional - do not remove it
   return n.trim().replace(/\s{2,}/g, ' ');
  };
  const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
