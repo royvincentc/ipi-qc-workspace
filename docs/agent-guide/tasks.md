@@ -767,3 +767,11 @@ avCollapsed state in AdminCenter toggled by a button in the PageTitle. Added .se
 - src/App.tsx
 **Summary**: The user reported that the persistent notification toast did not automatically hide. Added a \useEffect\ hook in \src/App.tsx\ that triggers whenever the \
 otice\ state changes, automatically dismissing the toast after 5 seconds by clearing the state.
+
+
+### TASK-20260926-014
+**Date**: 2026-09-26
+**Task**: Auto-seed default template on empty live workspaces
+**Files Changed**:
+- server/index.ts
+**Summary**: Discovered that the root cause of the persistent 'No verified report layout' error was actually that the user's Live workspace database had **0 templates** registered. The codebase only seeded the default templates when DEMO_MODE=true was active, leaving the production DB empty. Added a startup check in server/index.ts to automatically validate and register demo-standardized.docx as a default verified layout into the DB if the 	emplates table is completely empty, ensuring live deployments work out of the box without requiring manual user upload.
