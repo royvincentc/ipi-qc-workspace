@@ -703,3 +703,11 @@ ormalizeSampleName passed all 7 representative cases. Commit 5a7d17 pushed to o
 - server/reports.ts
 **Summary**: When a sample resolves to a product that has 0 specifications attached, the system previously defaulted the target context to 'Routine' and threw a confusing error (
 o specification exists for context 'Routine'). It now properly detects that the product has NO specifications at all and throws an explicit error directing the user to create one in Settings.
+
+
+### TASK-20260926-009
+**Date**: 2026-09-26
+**Task**: Allow fallback to blank specifications for spreadsheet-driven applicability
+**Files Changed**:
+- server/reports.ts
+**Summary**: To reduce data entry fatigue, if a sample type is configured to use the Google Sheet for applicability (e.g. 	ype.applicability === 'spreadsheet'), the report generation will no longer strictly require a matching specification to exist in the database. Instead, it will automatically synthesize a blank specification using the tests identified in the spreadsheet. This allows the user to generate report drafts immediately with blank criteria.
