@@ -787,3 +787,11 @@ otice\ state changes, automatically dismissing the toast after 5 seconds by clea
 - Embedded a HISTORICAL_LIMITS knowledge base directly into server/reports.ts.
 - Updated 
 esolveReportSetup to call inferCriterion(product.name, t) so that tests mapped from the Google Sheet now automatically receive the mathematically correct historical specification limits rather than blank strings.
+
+
+### TASK-20260926-016
+**Date**: 2026-09-26
+**Task**: Fix template generation bug during automated database seeding
+**Files Changed**:
+- server/index.ts
+**Summary**: The auto-seeding script for demo-standardized.docx was failing on the Live workspace because the private/ folder is explicitly .gitignore'd, meaning the target layout document didn't exist in production prior to being read into the database. Added an explicit worker(['demo', '--output', ...]) invocation to dynamically generate the template file on the fly before the seed script attempts to read and register it.
