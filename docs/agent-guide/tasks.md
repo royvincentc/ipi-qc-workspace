@@ -601,3 +601,45 @@ pm run test successfully.
 - Rollback: Revert changes in server/reports.ts and src/reports.tsx.
 - Evidence: Modified files and successful build output.
 - Next action/owner: User to review changes on the dashboard and confirm the new flow.
+
+### TASK-20260926-003 — Miss Minutes Avatar Update
+
+- Status: Completed
+- Priority: P2
+- Actor/tool: Antigravity
+- Authorization: User requested to make the assistant look "identical" to Miss Minutes, providing a reference image.
+- Goal/rule link: UI/UX, AI Persona
+- Scope/files: public/miss-minutes.png, src/FloatingAssistant.tsx, src/AssistantPage.tsx, src/experience.css
+- Before: The Miss Minutes persona used a minimalist Clock outline icon from lucide-react on a green background.
+- Change: 
+  1. Copied the user's provided Miss Minutes reference image into public/miss-minutes.png.
+  2. Replaced the <Clock /> icons in src/FloatingAssistant.tsx and src/AssistantPage.tsx with standard <img /> tags pointing to the new asset.
+  3. Added .miss-minutes-avatar CSS to properly crop, center, and mask the left-hand figure (which has a raised hand) using object-fit: cover and object-position: 25% 50%. Set overflow: hidden on the parent container.
+- Data impact: Added 1 image asset.
+- Verification: Ran 
+pm run build successfully.
+- Problems/risks: None.
+- Rollback: Revert the commit that added miss-minutes.png and updated the UI files.
+- Evidence: Modified files and pushed commit.
+- Next action/owner: User to refresh and verify the avatar.
+
+### TASK-20260926-004 — Miss Minutes Avatar Polish (Transparency and Speech Bubble)
+
+- Status: Completed
+- Priority: P2
+- Actor/tool: Antigravity
+- Authorization: User feedback on the previous avatar implementation.
+- Goal/rule link: UI/UX, AI Persona
+- Scope/files: public/miss-minutes-transparent.png, src/FloatingAssistant.tsx, src/experience.css, src/AssistantPage.tsx
+- Before: The Miss Minutes image had a solid white background and was constrained inside a green, rounded button shape (.lab-pet), making it look awkward. It also only had a basic "Miss Minutes" tooltip on hover.
+- Change: 
+  1. Ran a python script to process the uploaded image and strip away the solid white background (leaving the pure white eyes untouched) to produce miss-minutes-transparent.png.
+  2. Modified .lab-pet.miss-minutes CSS to remove the green gradient background, border, and container overflow, allowing Miss Minutes to stand freely on her own without a clipping mask. 
+  3. Increased her dimensions slightly so her whole body is visible.
+  4. Added a .miss-minutes-speech speech bubble (visible on desktop) that continuously bobs and explicitly says **"AI Assistant: Hey y'all! I'm Miss Minutes..."** to fulfill the requirement of making it known she's an AI speaking to you. 
+- Data impact: Added 1 transparent PNG asset.
+- Verification: Processed image successfully and verified Vite build.
+- Problems/risks: None.
+- Rollback: Revert the commit that added transparent PNG and updated CSS.
+- Evidence: Modified files and pushed commit.
+- Next action/owner: User to refresh and verify the polished floating assistant.
