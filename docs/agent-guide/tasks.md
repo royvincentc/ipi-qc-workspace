@@ -694,3 +694,12 @@ ormalizeSampleName passed all 7 representative cases. Commit 5a7d17 pushed to o
 **Files Changed**:
 - src/admin.tsx
 **Summary**: Modified the onChange handler for aliases and lookups textareas to preserve empty lines while typing (allowing users to use the Enter key and backspace freely). Moved the .filter(a => a.trim() !== '') cleanup logic to the Save handler, preventing premature Zod validation errors.
+
+
+### TASK-20260926-008
+**Date**: 2026-09-26
+**Task**: Clarify error message when mapped product has no specifications
+**Files Changed**:
+- server/reports.ts
+**Summary**: When a sample resolves to a product that has 0 specifications attached, the system previously defaulted the target context to 'Routine' and threw a confusing error (
+o specification exists for context 'Routine'). It now properly detects that the product has NO specifications at all and throws an explicit error directing the user to create one in Settings.
