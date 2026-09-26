@@ -35,15 +35,42 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
  const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
  const matchScore = (sampleName:string, productName:string) => {
-  const sampleTokens = tokenize(sampleName);
-  const productTokens = tokenize(productName);
-  for (const t of productTokens) {
-   const idx = sampleTokens.indexOf(t);
-   if (idx === -1) return 0;
-   sampleTokens.splice(idx, 1);
-  }
-  return productTokens.length > 0 ? (productTokens.length * 10000 + productName.length) : 0;
- };
+   const s = sampleName.toLowerCase();
+   const p = productName.toLowerCase();
+   if (s === p) return 10000;
+   if (s.startsWith(p)) return 5000 + p.length;
+   if (s.includes(p)) return 1000 + p.length;
+
+   const getBigrams = (str:string) => {
+    const b = new Map<string,number>();
+    const text = str.replace(/[^a-z0-9]/g, '');
+    for(let i=0; i<text.length-1; i++){
+     const k = text.substring(i,i+2);
+     b.set(k, (b.get(k)||0)+1);
+    }
+    return { b, length: Math.max(0, text.length-1) };
+   };
+   const b1 = getBigrams(s);
+   const b2 = getBigrams(p);
+   if (b1.length > 0 && b2.length > 0) {
+    let intersection = 0;
+    for (const [k, v] of b2.b.entries()) intersection += Math.min(v, b1.b.get(k)||0);
+    const dice = (2.0 * intersection) / (b1.length + b2.length);
+    if (dice > 0.85) return dice * 100;
+   }
+   
+   const sampleTokens = tokenize(sampleName);
+   const productTokens = tokenize(productName);
+   let matched = 0;
+   for (const t of productTokens) {
+    const idx = sampleTokens.indexOf(t);
+    if (idx !== -1) {
+     matched++;
+     sampleTokens.splice(idx, 1);
+    }
+   }
+   return productTokens.length > 0 && matched === productTokens.length ? matched : 0;
+  };
 
  const candidates = managed.value.products.filter(p=>p.active&&p.category===sample.category);
  let bestScore = 0;
