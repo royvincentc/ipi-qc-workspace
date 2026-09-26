@@ -805,3 +805,12 @@ esolveReportSetup to call inferCriterion(product.name, t) so that tests mapped f
 **Summary**: The user clarified that Stability (ST) samples are essentially identical to Finished Goods (FG) in terms of test specifications and Google Sheet lookups, and they do not have separate configurations for them in the admin dashboard. 
 - Patched 
 esolveReportSetup and createDraft so that whenever sample.category === 'ST', the system automatically falls back to searching for matching products, specifications, and Google Sheet applicability tabs assigned to FG instead of strictly requiring ST configuration.
+
+
+### TASK-20260926-018
+**Date**: 2026-09-26
+**Task**: Expand Finished Goods (FG) aliasing to include Semi-Finished Goods (SFG)
+**Files Changed**:
+- server/reports.ts
+**Summary**: The user clarified that Semi-Finished Goods (SFG), Finished Goods (FG), and Stability (ST) are all processed using the identical operational logic and product specifications (differentiating only on 'old specs' vs 'new specs' cosmetic name parsing which is already handled by 
+ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SFG samples automatically fall back to inheriting FG product mappings, database specifications, and Google Sheet applicability tabs in the same way ST now does.

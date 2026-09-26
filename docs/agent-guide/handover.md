@@ -166,6 +166,8 @@ If work is complete, say what acceptance evidence proves completion and list any
 
 - Deeply aliased the ST (Stability) category to fall back to FG (Finished Goods) settings in server/reports.ts, meaning Stability samples will now seamlessly inherit FG products, specifications, and Google Sheet lookup tabs without requiring duplicate admin setup (TASK-20260926-017).
 
+- Expanded the aliasing logic in server/reports.ts to include Semi-Finished Goods (SFG). Now both ST and SFG samples seamlessly fall back to use FG database settings and Google Sheet tabs (TASK-20260926-018).
+
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
