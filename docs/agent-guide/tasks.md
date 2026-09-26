@@ -732,3 +732,12 @@ esolveApplicabilityMatches helper. This helper first checks for exact matches or
 - src/AssistantPage.tsx
 - src/experience.css
 **Summary**: Adjusted the AI assistant ('Miss Minutes') tone to be strictly professional, suited for a QC laboratory. Replaced the obstructive full-body mascot with a 'mini-form' clock face image to save dashboard space. Added state logic (showSpeech, setTimeout) to auto-hide the speech bubble after 5 minutes (300,000 ms) and provided a manual close 'X' button on the popup itself to allow users to dismiss it immediately without opening the chat.
+
+
+### TASK-20260926-012
+**Date**: 2026-09-26
+**Task**: Allow report template resolution to gracefully fallback across categories
+**Files Changed**:
+- server/reports.ts
+**Summary**: The system successfully mapped a Stability sample and resolved its applicability tests from the Google Sheet, but threw a 'No verified report layout' error because the user had not uploaded or configured a layout specifically for the 'Stability' category. Modified 
+esolveReportSetup and createDraft to use the sample category as a preference, but if no verified layouts are registered for that specific category, it now safely falls back to evaluating *all* verified templates (e.g., Routine layouts) to see if they can accept the tests, completely preventing the roadblock.
