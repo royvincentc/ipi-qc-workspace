@@ -162,3 +162,13 @@ If work is complete, say what acceptance evidence proves completion and list any
 ## Next Actions
 - User to refresh the browser and verify the new Miss Minutes polished image avatar and speech bubble.
 - User to test the new specification confirmation modal in the dashboard by selecting the `ML-ST-26-0280` sample again, which should now correctly resolve to "Omega Pain Killer Liniment- Pro" and open the confirmation checkboxes.
+
+### TASK-20260926-005 (2026-09-26, Asia/Manila)
+- Added normalizeSampleName() in server/reports.ts to strip withdrawal ordinal parentheticals
+  and standalone New/Old Specs labels before fuzzy product matching.
+- Commit f5a7d17 pushed to origin/master. TypeScript typecheck passed; 7 domain/unit tests passed.
+
+## Next Actions (updated 2026-09-26)
+- User to refresh the live browser and re-select ML-ST-26-0280 on Analysis Reports page to
+  confirm it now resolves to Omega Pain Killer Liniment- Pro without error.
+- User to verify the Miss Minutes avatar is still showing correctly.
