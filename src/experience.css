@@ -147,12 +147,12 @@ main { width: 100%; max-width: 1600px; margin: 0 auto; padding: clamp(22px,3vw,4
 .dashboard-search input { padding:8px 0!important;background:transparent!important;border:0!important; }
 .filters-bar select { min-width:120px;width:auto!important;background:var(--bg-app)!important;border:1px solid var(--border)!important;border-radius:11px!important; }
 .dashboard-table { border-radius:0 0 18px 18px!important;border-top:0!important; }
-.data-table th { padding:14px 18px;background:rgba(0,0,0,.07);font-size:10px;text-transform:uppercase;letter-spacing:.08em; }
-.data-table td { padding:16px 18px; }
-.data-table tbody tr { transition:transform .18s ease; }
-.data-table tbody tr:hover { transform:translateX(3px); }
-.data-table tbody tr:hover td { background:var(--accent-soft); }
-.table-actions { opacity:1; }
+/* data-table th/td sizing governed by overhaul.css; no per-file overrides needed */
+.data-table tbody tr { transition:background var(--transition-fast); }
+.data-table tbody tr:hover { transform:none; }
+.data-table tbody tr:hover td { background:var(--bg-surface-hover); }
+/* Dashboard table actions always visible (no hover fade needed in compact view) */
+.dashboard-table .table-actions { opacity:1; }
 
 .right-rail { position:relative;width:auto!important;padding:24px!important;border:1px solid var(--border)!important;border-radius:24px;background:color-mix(in srgb,var(--bg-surface) 76%,transparent)!important;box-shadow:var(--shadow-sm);backdrop-filter:blur(14px); }
 .right-rail::before { content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(145deg,rgba(255,255,255,.035),transparent 35%); }
