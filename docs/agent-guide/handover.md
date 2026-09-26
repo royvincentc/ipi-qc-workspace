@@ -158,6 +158,8 @@ If work is complete, say what acceptance evidence proves completion and list any
   - Implemented an auto-hide behavior for notification toasts (like ''Settings saved''), dismissing them automatically after 5 seconds to prevent them from persisting indefinitely.
 - **Pending Actions**:
   - The user is actively updating product aliases in Settings to resolve a duplicate match error.
+- Fixed an issue where the production database had 0 templates by auto-seeding demo-standardized.docx into the DB if the templates table is completely empty on server startup (TASK-20260926-014).
+
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
