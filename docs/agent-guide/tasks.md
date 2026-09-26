@@ -814,3 +814,24 @@ esolveReportSetup and createDraft so that whenever sample.category === 'ST', the
 - server/reports.ts
 **Summary**: The user clarified that Semi-Finished Goods (SFG), Finished Goods (FG), and Stability (ST) are all processed using the identical operational logic and product specifications (differentiating only on 'old specs' vs 'new specs' cosmetic name parsing which is already handled by 
 ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SFG samples automatically fall back to inheriting FG product mappings, database specifications, and Google Sheet applicability tabs in the same way ST now does.
+
+
+### TASK-20260926-019 — Fix report draft failures for all 4 test ML numbers
+
+- Status: Completed
+- Priority: P0
+- Actor/tool: Antigravity agent (2026-09-26 afternoon)
+- Authorization: User request — test report generation for ML-SFG-26-0223, ML-FG-26-0440, ML-ST-26-0280, ML-EM-26-0463
+- Scope/files: server/index.ts, server/reports.ts
+- Commit: e2e54db
+
+**Error A — Duplicate product match for ML-SFG-26-0223:**
+- Before: SFG→FG aliasing searched both categories; same product name under both hit equal score → 409 More than one managed product matches.
+- Change: Post-scoring deduplication block in reports.ts collapses same-name candidates when searchCategory !== sample.category, keeping the FG (canonical) entry.
+
+**Error B — No verified report layout (ML-FG-26-0440, ML-ST-26-0280, ML-EM-26-0463):**
+- Before: Startup auto-seed called python worker/docx_worker.py demo which requires python-docx. Silent failure on Render left templates table empty.
+- Change: Replaced with a pre-built base64 DOCX embedded in server/index.ts; seed writes buffer directly, then validates. No Python needed to write the initial template.
+
+- Verification: tsc --noEmit exits 0. Push pending (DNS issue from agent shell; user to push).
+- Rollback: Revert server/index.ts and server/reports.ts to commit before e2e54db.
