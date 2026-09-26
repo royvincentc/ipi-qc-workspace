@@ -123,12 +123,18 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  const product=products[0];
  const specifications=(await db.query('SELECT data FROM specifications')).rows.map(row=>row.data as Specification).filter(s=>s.active!==false);
  let safeContext = sample.context?.trim();
+ const productSpecs = specifications.filter(s => s.product === product.name && s.category === sample.category);
  if (!safeContext) {
-  const productSpecs = specifications.filter(s => s.product === product.name && s.category === sample.category);
   const uniqueContexts = [...new Set(productSpecs.map(s => s.context))];
-  safeContext = uniqueContexts.length === 1 ? uniqueContexts[0] : 'Routine';
+  if (uniqueContexts.length === 1) {
+    safeContext = uniqueContexts[0];
+  } else if (uniqueContexts.length === 0) {
+    throw new Fault(409, `Mapped to "${product.name}", but it has NO specifications. Go to Settings → Specifications and create one for this product.`);
+  } else {
+    safeContext = 'Routine';
+  }
  }
- const exact=specifications.filter(s=>s.product===product.name&&s.category===sample.category&&normalized(s.context)===normalized(safeContext));
+ const exact=productSpecs.filter(s=>normalized(s.context)===normalized(safeContext));
  if(!exact.length)throw new Fault(409,`Mapped to "${product.name}", but no specification exists for context "${safeContext}". If this mapping is correct, add the specification in Settings. If it mapped to the WRONG product, add the sample's full name as an alias to the CORRECT product in Settings.`);
  const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];
  const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:applicability.filter(x=>x.product===product.name&&x.sheet===type.applicabilitySheet);
