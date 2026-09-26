@@ -160,6 +160,8 @@ If work is complete, say what acceptance evidence proves completion and list any
   - The user is actively updating product aliases in Settings to resolve a duplicate match error.
 - Fixed an issue where the production database had 0 templates by auto-seeding demo-standardized.docx into the DB if the templates table is completely empty on server startup (TASK-20260926-014).
 
+- Extracted historical specification limits from james.zip and embedded a product knowledge base so that tests generated from the Google Sheet now automatically receive the correct historical acceptance limits instead of blank strings (TASK-20260926-015).
+
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.

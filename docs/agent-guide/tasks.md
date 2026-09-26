@@ -775,3 +775,15 @@ otice\ state changes, automatically dismissing the toast after 5 seconds by clea
 **Files Changed**:
 - server/index.ts
 **Summary**: Discovered that the root cause of the persistent 'No verified report layout' error was actually that the user's Live workspace database had **0 templates** registered. The codebase only seeded the default templates when DEMO_MODE=true was active, leaving the production DB empty. Added a startup check in server/index.ts to automatically validate and register demo-standardized.docx as a default verified layout into the DB if the 	emplates table is completely empty, ensuring live deployments work out of the box without requiring manual user upload.
+
+
+### TASK-20260926-015
+**Date**: 2026-09-26
+**Task**: Relearn product acceptance limits from historical reports (james.zip)
+**Files Changed**:
+- server/reports.ts
+**Summary**: The user requested that instead of leaving dynamically generated specifications blank, the system should intelligently populate the correct acceptance limits based on historical file reports in james.zip.
+- Extracted and mined all .docx reports across products (Omega, Efficascent, Herbycin, etc.) to learn the standard limits (e.g., Nmt 100 cfu/mL, Negative).
+- Embedded a HISTORICAL_LIMITS knowledge base directly into server/reports.ts.
+- Updated 
+esolveReportSetup to call inferCriterion(product.name, t) so that tests mapped from the Google Sheet now automatically receive the mathematically correct historical specification limits rather than blank strings.
