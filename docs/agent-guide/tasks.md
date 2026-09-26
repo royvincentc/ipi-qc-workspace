@@ -759,3 +759,11 @@ esolveReportSetup and createDraft to use the sample category as a preference, bu
 - src/settings-layout.css
 **Summary**: The user reported that they wanted the settings sidebar to be collapsible to view data in full view, and noted layout issues with the entity list on the Settings page. Added a new 
 avCollapsed state in AdminCenter toggled by a button in the PageTitle. Added .search styles to settings-layout.css and wrapped the bare input in the entity list with the search icon and styling to fix the visual discrepancy. Also hid the mobile-only <select> on desktop view to prevent overlap.
+
+### TASK-20260926-015
+**Date**: 2026-09-26
+**Task**: Auto-hide notification toast
+**Files Changed**:
+- src/App.tsx
+**Summary**: The user reported that the persistent notification toast did not automatically hide. Added a \useEffect\ hook in \src/App.tsx\ that triggers whenever the \
+otice\ state changes, automatically dismissing the toast after 5 seconds by clearing the state.
