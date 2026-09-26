@@ -711,3 +711,13 @@ o specification exists for context 'Routine'). It now properly detects that the 
 **Files Changed**:
 - server/reports.ts
 **Summary**: To reduce data entry fatigue, if a sample type is configured to use the Google Sheet for applicability (e.g. 	ype.applicability === 'spreadsheet'), the report generation will no longer strictly require a matching specification to exist in the database. Instead, it will automatically synthesize a blank specification using the tests identified in the spreadsheet. This allows the user to generate report drafts immediately with blank criteria.
+
+
+### TASK-20260926-010
+**Date**: 2026-09-26
+**Task**: Implement fuzzy matching for Google Sheet applicability resolving
+**Files Changed**:
+- server/reports.ts
+**Summary**: The user observed that products in the Google Sheet applicability list often contain fillers like 'old specs' or '5th withdrawal' making exact string matching fail. Extracted the 
+ormalizeSampleName and matchScore functions to the module level and wrapped the applicability filtering in a new 
+esolveApplicabilityMatches helper. This helper first checks for exact matches or alias matches, and falls back to scoring the normalized Google Sheet product names against the configured product, solving the 'no single applicable-test row' errors.
