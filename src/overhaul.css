@@ -119,7 +119,7 @@
   color: var(--text-tertiary);
 }
 
-/* Table */
+/* Table - modern, readable, well-spaced */
 .data-table-container {
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -127,48 +127,182 @@
   overflow: hidden;
 }
 
+/* Scrollable wrapper keeps border-radius clip */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 13.5px;
+}
+
+/* Header */
+.data-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .data-table th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 11px 20px;
   color: var(--text-tertiary);
-  font-weight: 500;
-  font-size: 12px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
   border-bottom: 1px solid var(--border);
   background: var(--bg-app);
+  white-space: nowrap;
 }
 
+/* Cells */
 .data-table td {
-  padding: 14px 16px;
+  padding: 17px 20px;
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
+  vertical-align: middle;
   transition: background var(--transition-fast);
+  line-height: 1.45;
 }
 
+/* Subtle zebra stripe */
+.data-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.018);
+}
+
+/* Row hover */
 .data-table tbody tr:hover td {
   background: var(--bg-surface-hover);
+}
+.data-table tbody tr:hover td:first-child {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .data-table tbody tr:last-child td {
   border-bottom: none;
 }
 
-.td-id {
+/* Sample name cell: two-line primary/secondary layout */
+.data-table td a strong {
+  display: block;
   color: var(--text-primary);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-bottom: 3px;
+}
+.data-table td a small,
+.data-table td a .mono {
+  display: block;
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  letter-spacing: 0.2px;
+}
+.data-table td a {
+  color: inherit;
+  text-decoration: none;
+}
+.data-table td a:hover strong {
+  color: var(--accent);
 }
 
+/* Control-number / ML column */
+.td-id {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* Action column: fade in on hover */
 .table-actions {
   opacity: 0;
   transition: opacity var(--transition-fast);
+  text-align: right;
+  white-space: nowrap;
 }
-
 .data-table tbody tr:hover .table-actions {
   opacity: 1;
+}
+.data-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-right: 20px;
+}
+
+/* "Open ->" / "View ->" link as a small pill */
+.data-table tbody td:last-child a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-soft);
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+.data-table tbody td:last-child a:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Filters bar */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--bg-app);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.filters .search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.secondary-filters {
+  padding: 10px 20px;
+  gap: 12px;
+  font-size: 12.5px;
+  background: transparent;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.secondary-filters label.field > span {
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-app);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+}
+.pagination span:first-child {
+  margin-right: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keep badges from wrapping */
+.data-table .badge {
+  white-space: nowrap;
 }
 
 /* Right Rail Components */
