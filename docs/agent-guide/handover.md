@@ -1,4 +1,4 @@
-# IPI QC Microbiology Workspace — Active Handover
+﻿# IPI QC Microbiology Workspace â€” Active Handover
 
 | Document control | Value |
 |---|---|
@@ -38,11 +38,11 @@ Move the audited development application toward a controlled first release in wh
 - Finished Goods validation accepts the observed historical merged title `Finished Goods` while retaining the configured `FINISHED` title rule.
 - A repeatable read-only Google connection verifier exists.
 - Connection test results are now cryptographically bound to a canonical fingerprint of the routing/layout configuration they validated. Relevant configuration changes invalidate the affected test, and Incoming/Environmental changes automatically disable writes.
-- Newly prepared report templates remove standalone `After ... incubation:` parameter paragraphs while preserving the remaining test label’s original formatting.
+- Newly prepared report templates remove standalone `After ... incubation:` parameter paragraphs while preserving the remaining test labelâ€™s original formatting.
 
 - AI Assistant backend securely queries local samples and audit tables; returns 400 Fault if `GEMINI_API_KEY` is not present, avoiding obscuring errors through a generic 500 response.
 - Dashboard and application shell now use one coherent responsive visual layer with readable surfaces, consistent edges/spacing, functional dashboard filters, and retained data-backed metrics.
-- Desktop/phone motion includes route arrival, viewport reveal, loading/typing feedback, ambient graphics, a fine-pointer custom cursor, and the animated assistant pet “Pip.” Coarse pointers and reduced-motion preferences receive appropriate fallbacks.
+- Desktop/phone motion includes route arrival, viewport reveal, loading/typing feedback, ambient graphics, a fine-pointer custom cursor, and the animated assistant pet â€œPip.â€ Coarse pointers and reduced-motion preferences receive appropriate fallbacks.
 - The right-side intelligence content moves below the dashboard at tablet/mobile widths rather than disappearing.
 - Assistant surfaces no longer depend on undefined color variables or an unstable draggable wrapper.
 - Production Render logs confirmed the assistant failure occurred before API-key authentication because Gemini history began with the UI's synthetic `model` greeting.
@@ -57,9 +57,9 @@ Move the audited development application toward a controlled first release in wh
 - TypeScript typecheck passed.
 - Vite production build passed.
 - Desktop and phone browser checks confirmed working search and Settings, no console warnings/errors observed, and no phone page-level horizontal overflow.
-- The current archive-based sample PDF was rendered and visually compared with its reference layout. The incubation prefixes are absent; `Celeste P. Yandug — Assistant Head, Microbiology Laboratory` is present; PAGE and NUMPAGES fields remain automatic. The template still requires IPI approval and human review of inherited drawing objects.
+- The current archive-based sample PDF was rendered and visually compared with its reference layout. The incubation prefixes are absent; `Celeste P. Yandug â€” Assistant Head, Microbiology Laboratory` is present; PAGE and NUMPAGES fields remain automatic. The template still requires IPI approval and human review of inherited drawing objects.
 
-After TASK-20260925-012, the same 38 TypeScript/domain tests and 7 Python worker tests passed. TypeScript typecheck and the Vite production build passed. Final browser checks used a fresh session on the de-identified demo workspace at 390×844, 1024×768, and desktop/default viewports: no page overflow, filters and mobile navigation worked, Pip opened/closed, tablet rail content remained available, and the console contained no warnings or errors. The main bundle was `453.95 kB` (`136.53 kB` gzip).
+After TASK-20260925-012, the same 38 TypeScript/domain tests and 7 Python worker tests passed. TypeScript typecheck and the Vite production build passed. Final browser checks used a fresh session on the de-identified demo workspace at 390Ã—844, 1024Ã—768, and desktop/default viewports: no page overflow, filters and mobile navigation worked, Pip opened/closed, tablet rail content remained available, and the console contained no warnings or errors. The main bundle was `453.95 kB` (`136.53 kB` gzip).
 
 After TASK-20260925-013, all 41 Node/domain tests passed, including three assistant-history/error regressions. TypeScript typecheck and the Vite production build passed; `npm audit` reported zero vulnerabilities. The live Gemini endpoint was not invoked during verification because the screenshot exposed the configured key and it must be rotated first.
 
@@ -95,7 +95,7 @@ The successful rerun in TASK-20260925-007 was not independently repeated during 
 
 ## Decisions that must be preserved
 
-- Log only to today’s laboratory month; never fill earlier months or earlier row gaps.
+- Log only to todayâ€™s laboratory month; never fill earlier months or earlier row gaps.
 - Continue after the last occupied or explicitly reserved row in the current category section.
 - ML-only rows are placeholders, not occupied samples. Exact `RESERVED` in Remarks reserves a row; partial rows are unavailable.
 - Incoming sections are independent even when unrelated samples share a physical worksheet row.
@@ -103,18 +103,18 @@ The successful rerun in TASK-20260925-007 was not independently repeated during 
 - Actual results remain manual. Historical reports never supply actual results.
 - No automatic release or automatic pass/fail in the current release.
 - Preserve standardized DOCX format; remove `after ## hrs incubation` from parameter labels.
-- “Noted by” remains `Celeste P. Yandug — Assistant Head, Microbiology Laboratory`.
+- â€œNoted byâ€ remains `Celeste P. Yandug â€” Assistant Head, Microbiology Laboratory`.
 - Use continuous automatic `Page X of Y`; keep the separate logbook/page reference editable.
 - Live credentials remain server-side, and development remains de-identified unless specifically authorized.
 
 ## Exact next actions
 
 1. Revoke and replace the exposed Gemini key in the active Render service, confirm the TASK-20260925-013 deployment is live, and run one de-identified authenticated assistant smoke test. Do not enable Google writes as part of that check.
-2. Before an operational release gate, reproduce TASK-20260925-007’s recorded all-tabs-passing read-only connection verification; this dashboard task did not open live sources.
+2. Before an operational release gate, reproduce TASK-20260925-007â€™s recorded all-tabs-passing read-only connection verification; this dashboard task did not open live sources.
 3. Confirm the real PostgreSQL environment, Google OAuth client, administrator allowlist, and server-side service-account secret on the selected deployment platform. Test authentication and role enforcement without exposing credentials.
 4. Run a controlled read-only initial import; reconcile duplicate ML records, direct edits, color-only reservations, and numbering state. Produce a review report before enabling writes.
 5. Register each real product name/alias and exact logger testing context, designate the authoritative dated criteria process, and designate one approved repeating-row or uniquely compatible report layout per category.
-6. Exercise the full de-identified sample → automatic checklist parameters/layout → manual results → review → PDF/DOCX workflow on desktop and phone, then visually compare both outputs against the approved format.
+6. Exercise the full de-identified sample â†’ automatic checklist parameters/layout â†’ manual results â†’ review â†’ PDF/DOCX workflow on desktop and phone, then visually compare both outputs against the approved format.
 7. Enabling live Google writes remains a separate controlled decision after all required controls pass.
 
 ## Starting checklist for the next agent
@@ -145,7 +145,7 @@ When transferring work, replace the volatile sections above while preserving ver
 - Ordered next actions with the first executable step
 ```
 
-If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
+If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. â€œCompleteâ€ must never mean only that code was generated.
 
 ## Current State (2026-09-26)
 - **Phase**: UI polish & Bugfixes
@@ -171,3 +171,4 @@ If work is complete, say what acceptance evidence proves completion and list any
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
+
