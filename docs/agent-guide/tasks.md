@@ -795,3 +795,13 @@ esolveReportSetup to call inferCriterion(product.name, t) so that tests mapped f
 **Files Changed**:
 - server/index.ts
 **Summary**: The auto-seeding script for demo-standardized.docx was failing on the Live workspace because the private/ folder is explicitly .gitignore'd, meaning the target layout document didn't exist in production prior to being read into the database. Added an explicit worker(['demo', '--output', ...]) invocation to dynamically generate the template file on the fly before the seed script attempts to read and register it.
+
+
+### TASK-20260926-017
+**Date**: 2026-09-26
+**Task**: Deeply alias Stability (ST) samples to use Finished Goods (FG) specifications and Google Sheet tabs
+**Files Changed**:
+- server/reports.ts
+**Summary**: The user clarified that Stability (ST) samples are essentially identical to Finished Goods (FG) in terms of test specifications and Google Sheet lookups, and they do not have separate configurations for them in the admin dashboard. 
+- Patched 
+esolveReportSetup and createDraft so that whenever sample.category === 'ST', the system automatically falls back to searching for matching products, specifications, and Google Sheet applicability tabs assigned to FG instead of strictly requiring ST configuration.
