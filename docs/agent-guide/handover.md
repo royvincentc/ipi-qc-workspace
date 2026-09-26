@@ -162,6 +162,8 @@ If work is complete, say what acceptance evidence proves completion and list any
 
 - Extracted historical specification limits from james.zip and embedded a product knowledge base so that tests generated from the Google Sheet now automatically receive the correct historical acceptance limits instead of blank strings (TASK-20260926-015).
 
+- Fixed an issue where the template auto-seed script crashed in production by instructing the document engine to dynamically build the demo-standardized.docx file on-the-fly before injecting it into the DB (TASK-20260926-016).
+
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
