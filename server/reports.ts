@@ -28,16 +28,7 @@ function templateAccepts(template:Template,tests:Specification['tests']){
  const expected=new Set(tests.map(resultKey));
  return bindings.length===expected.size&&bindings.every(binding=>expected.has(resultKey(binding)));
 }
-export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
- const sample=(await db.query('SELECT data FROM samples WHERE id=$1',[sampleId])).rows[0]?.data as Sample|undefined;
- if(!sample)throw new Fault(404,'Sample not found');
- const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category&&t.active);
- if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
- // Normalise sample names before product matching.
- // Patterns like '(5th withdrawal - New Specs)', '(3rd withdrawal) New Specs', '(2nd withdrawal)'
- // and standalone 'New Specs' / 'Old Specs' are cosmetic qualifiers that do not represent
- // a distinct managed product — strip them so the matcher resolves to the base product.
- const normalizeSampleName = (name: string): string => {
+export const normalizeSampleName = (name: string): string => {
   // Stability qualifier rules before fuzzy product matching:
   //
   // NEW SPECS (= base product "Omega Pain Killer Liniment- Pro"):
@@ -62,8 +53,8 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
   // Standalone "Old Specs" that remains is intentional — do not remove it
   return n.trim().replace(/\s{2,}/g, ' ');
  };
- const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
- const matchScore = (sampleName:string, productName:string) => {
+export const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
+export const matchScore = (sampleName:string, productName:string) => {
    const s = sampleName.toLowerCase();
    const p = productName.toLowerCase();
    if (s === p) return 10000;
@@ -101,6 +92,42 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
    return productTokens.length > 0 && matched === productTokens.length ? matched : 0;
   };
 
+
+
+export function resolveApplicabilityMatches(applicability: any[], product: any, sheetName: string) {
+  let bestRow = null;
+  let bestScore = 0;
+  for (const row of applicability) {
+    if (row.sheet !== sheetName) continue;
+    
+    // First try exact or alias match (case insensitive)
+    const exactMatch = [product.name, ...product.aliases].some(name => row.product.toLowerCase() === name.toLowerCase());
+    if (exactMatch) {
+      return [row]; // immediate exact match
+    }
+
+    // Fallback to fuzzy match
+    const rowNormalized = normalizeSampleName(row.product);
+    for (const name of [product.name, ...product.aliases]) {
+      const score = matchScore(rowNormalized, name);
+      if (score > 0 && score > bestScore) {
+        bestScore = score;
+        bestRow = row;
+      }
+    }
+  }
+  return bestRow ? [bestRow] : [];
+}
+
+export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
+ const sample=(await db.query('SELECT data FROM samples WHERE id=$1',[sampleId])).rows[0]?.data as Sample|undefined;
+ if(!sample)throw new Fault(404,'Sample not found');
+ const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category&&t.active);
+ if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
+ // Normalise sample names before product matching.
+ // Patterns like '(5th withdrawal - New Specs)', '(3rd withdrawal) New Specs', '(2nd withdrawal)'
+ // and standalone 'New Specs' / 'Old Specs' are cosmetic qualifiers that do not represent
+ // a distinct managed product — strip them so the matcher resolves to the base product.
  const normalizedName = normalizeSampleName(sample.name);
  const candidates = managed.value.products.filter(p=>p.active&&p.category===sample.category);
  let bestScore = 0;
@@ -137,7 +164,7 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  const exact=productSpecs.filter(s=>normalized(s.context)===normalized(safeContext!));
  if(!exact.length && type.applicability === 'managed')throw new Fault(409,`Mapped to "${product.name}", but no specification exists for context "${safeContext}". If this mapping is correct, add the specification in Settings. If it mapped to the WRONG product, add the sample's full name as an alias to the CORRECT product in Settings.`);
  const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];
- const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:applicability.filter(x=>(x.product===product.name||product.aliases.includes(x.product))&&x.sheet===type.applicabilitySheet);
+ const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:resolveApplicabilityMatches(applicability, product, type.applicabilitySheet);
  if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'The QC Micro Products Specifications checklist has no single applicable-test row for this product, or every test is unchecked.');
  const tests = exact.length ? latestCriteria(specifications,product.name,sample.category,exact[0].context,matches[0].tests) : matches[0].tests.map((t: string) => ({ test: t, label: t, type: 'finding', unit: '', criterion: '', source: 'Spreadsheet', sourceLocation: '', date: new Date().toISOString().split('T')[0], dateBasis: 'release', revision: '0' } as any));
  const issues=[...new Set(exact.flatMap(s=>s.issues))];if(issues.length)throw new Fault(409,issues.join('; '));
@@ -152,7 +179,8 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
 
 export async function createAutomaticDraft(sampleId:string,actor:User){const setup=await resolveReportSetup(sampleId);return createDraft(sampleId,setup.specification.id,setup.template.id,actor,setup.specification);}
 export async function createDraft(sampleId:string,specId:string,templateId:string,actor:User,injectedSpec?:import('../shared/model.js').Specification){const sample=(await db.query('SELECT data FROM samples WHERE id=$1',[sampleId])).rows[0]?.data as Sample;const template=(await db.query('SELECT data FROM templates WHERE id=$1',[templateId])).rows[0]?.data as Template;const candidate=injectedSpec||(await db.query('SELECT data FROM specifications WHERE id=$1',[specId])).rows[0]?.data as Specification;if(!sample||!template||!candidate)throw new Fault(404,'Sample, specification or template not found');if(candidate.active===false)throw new Fault(409,'This specification is inactive. Select its current revision.');if(!template.verified)throw new Fault(409,'Template must pass sanitization and layout verification');if(template.category!==sample.category||candidate.category!==sample.category)throw new Fault(409,'Category does not match');
- const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category);if(!type)throw new Fault(409,'Sample type is not configured');if(!managed.value.products.some(p=>p.active&&p.name===candidate.product&&p.category===sample.category))throw new Fault(409,'This product is not active in Products / materials. Ask an administrator to review it.');const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];const matches=type.applicability==='managed'?[{tests:candidate.tests.map(t=>t.test)}]:applicability.filter(x=>x.product===candidate.product&&x.sheet===type.applicabilitySheet);if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'Product applicability is missing, ambiguous or all false');
+ const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category);if(!type)throw new Fault(409,'Sample type is not configured');if(!managed.value.products.some(p=>p.active&&p.name===candidate.product&&p.category===sample.category))throw new Fault(409,'This product is not active in Products / materials. Ask an administrator to review it.');const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];const prodObj = managed.value.products.find(p => p.name === candidate.product && p.category === sample.category) || { name: candidate.product, aliases: [] };
+ const matches=type.applicability==='managed'?[{tests:candidate.tests.map(t=>t.test)}]:resolveApplicabilityMatches(applicability, prodObj, type.applicabilitySheet);if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'Product applicability is missing, ambiguous or all false');
  const all=(await db.query('SELECT data FROM specifications')).rows.map(x=>x.data as Specification);const tests=injectedSpec?injectedSpec.tests:latestCriteria(all.filter(s=>s.active!==false),candidate.product,sample.category,candidate.context,matches[0].tests);if(candidate.issues.length)throw new Fault(409,candidate.issues.join('; '));
  if(tests.some((t: any)=>!managed.value.tests.some(x=>x.id===t.test&&x.active&&x.categories.includes(sample.category))))throw new Fault(409,'An applicable test is inactive or unavailable for this sample type. Ask an administrator to review the specification.');const spec={...candidate,tests,revision:hash(tests)};const now=new Date().toISOString();const draft:Draft={configurationRevision:managed.revision,configurationSnapshot:structuredClone(managed.value),templateSnapshot:structuredClone(template),id:randomUUID(),sampleId,sample:structuredClone(sample),specification:spec,templateId,templateRevision:template.revision,revision:1,results:tests.map(t=>({test:t.test,location:t.location,stage:t.stage,replicate:t.replicate,state:'not_entered',value:'',qualifier:'',unit:t.unit,reason:'',remarks:''})),fields:{...reportFieldDefaults(sample,template),analysisDate:'',logbookReference:'',analyst:actor.name},updatedAt:now,analyst:actor.email};reportRows(draft,template);
  await db.query('INSERT INTO drafts(id,revision,data) VALUES($1,1,$2)',[draft.id,JSON.stringify(draft)]);await db.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,1,$2)',[draft.id,JSON.stringify(draft)]);await audit(actor.email,'draft_created',draft.id,{sampleId,specificationRevision:spec.revision,templateRevision:template.revision});return draft;
