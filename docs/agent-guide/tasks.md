@@ -750,3 +750,12 @@ esolveReportSetup and createDraft to use the sample category as a preference, bu
 - server/reports.ts
 - worker/docx_worker.py
 **Summary**: The user was still getting the 'No verified report layout' error. While we implemented a fallback for categories earlier, the underlying problem was that the existing layout template in their DB had 'fixed' result bindings (e.g. exactly 3 tests bound). \	emplateAccepts\ was strictly rejecting the template because the Google Sheet requested a different number of tests (mismatched schema). Bypassed \	emplateAccepts\ completely, and updated \docx_worker.py\ to tolerate missing placeholders by safely replacing them with empty strings instead of crashing.
+
+### TASK-20260926-014
+**Date**: 2026-09-26
+**Task**: Make settings navigation collapsible and fix search input UI
+**Files Changed**:
+- src/admin.tsx
+- src/settings-layout.css
+**Summary**: The user reported that they wanted the settings sidebar to be collapsible to view data in full view, and noted layout issues with the entity list on the Settings page. Added a new 
+avCollapsed state in AdminCenter toggled by a button in the PageTitle. Added .search styles to settings-layout.css and wrapped the bare input in the entity list with the search icon and styling to fix the visual discrepancy. Also hid the mobile-only <select> on desktop view to prevent overlap.
