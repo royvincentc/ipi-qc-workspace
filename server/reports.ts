@@ -116,6 +116,35 @@ export function resolveApplicabilityMatches(applicability: any[], product: any, 
   return bestRow ? [bestRow] : [];
 }
 
+
+const HISTORICAL_LIMITS: Record<string, Record<string, string>> = {
+  "Cheers Baby Oil": { "SPC": "Nmt 500 cfu/mL", "MY": "Nmt 10 cfu/mL" },
+  "Dr. S. Wong's Apple Drink": { "SPC": "Nmt 100 cfu/mL", "Salmonella": "Negative", "MY": "Nmt 10 cfu/mL" },
+  "Dr. Wong's Lightening Lotion": { "MY": "Nmt 20 cfu/mL" },
+  "Dr. Wong's Papaya Bright Whitening Soap": { "SPC": "Nmt 100 cfu/mL", "P. aeruginosa": "Negative", "S. aureus": "Negative" },
+  "Efficascent Boost Pain Relief Massage Roll On": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL" },
+  "Herbycin Cooling Mouth Spray": { "SPC": "Nmt 10 cfu/mL", "MY": "Nmt 10 cfu/mL" },
+  "Herbycin Syrup": { "SPC": "Nmt 100 cfu/mL", "Salmonella": "Negative", "MY": "Nmt 100 cfu/mL" },
+  "Lecit-E 200 Softgel Capsule": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL" },
+  "Mama's Love Baby Oil": { "SPC": "Nmt 1,000 cfu/mL", "P. aeruginosa": "Negative", "S. aureus": "Negative", "MY": "Nmt 20 cfu/mL" },
+  "Mama's Love Cotton": { "SPC": "Nmt 50 cfu/g", "MY": "Nmt 10 cfu/g" },
+  "Megascent Panyawan Massage Oil": { "SPC": "Nmt 100 cfu/mL" },
+  "Omega Pain Killer Cream": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL" },
+  "Omega Pain Killer Liniment": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL", "P. aeruginosa": "Negative", "S. aureus": "Negative" },
+  "Sulfur 10% Ointment": { "SPC": "Nmt 100 cfu/g", "MY": "Nmt 10 cfu/g" },
+  "Whitfield's Ointment": { "SPC": "Nmt 100 cfu/g", "MY": "Nmt 10 cfu/g" }
+};
+
+function inferCriterion(productName: string, testName: string): string {
+  let matchedProduct = Object.keys(HISTORICAL_LIMITS).find(k => productName.includes(k));
+  if (matchedProduct && HISTORICAL_LIMITS[matchedProduct][testName]) {
+    return HISTORICAL_LIMITS[matchedProduct][testName];
+  }
+  if (testName === 'SPC' || testName === 'Standard Plate Count (SPC)') return 'Nmt 100 cfu/mL';
+  if (testName === 'MY' || testName === 'Molds and Yeast') return 'Nmt 10 cfu/mL';
+  if (['E. coli', 'S. aureus', 'P. aeruginosa', 'Salmonella'].includes(testName)) return 'Negative';
+  return '';
+}
 export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  const sample=(await db.query('SELECT data FROM samples WHERE id=$1',[sampleId])).rows[0]?.data as Sample|undefined;
  if(!sample)throw new Fault(404,'Sample not found');
@@ -163,7 +192,7 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];
  const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:resolveApplicabilityMatches(applicability, product, type.applicabilitySheet);
  if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'The QC Micro Products Specifications checklist has no single applicable-test row for this product, or every test is unchecked.');
- const tests = exact.length ? latestCriteria(specifications,product.name,sample.category,exact[0].context,matches[0].tests) : matches[0].tests.map((t: string) => ({ test: t, label: t, type: 'finding', unit: '', criterion: '', source: 'Spreadsheet', sourceLocation: '', date: new Date().toISOString().split('T')[0], dateBasis: 'release', revision: '0' } as any));
+ const tests = exact.length ? latestCriteria(specifications,product.name,sample.category,exact[0].context,matches[0].tests) : matches[0].tests.map((t: string) => ({ test: t, label: t, type: 'finding', unit: '', criterion: inferCriterion(product.name, t), source: 'Historical Knowledge Base', sourceLocation: 'james.zip records', date: new Date().toISOString().split('T')[0], dateBasis: 'release', revision: '1' } as any));
  const issues=[...new Set(exact.flatMap(s=>s.issues))];if(issues.length)throw new Fault(409,issues.join('; '));
  if(tests.some((t: any)=>!managed.value.tests.some(x=>x.id===t.test&&x.active&&x.categories.includes(sample.category))))throw new Fault(409,'An applicable checklist test is inactive or unavailable for this sample type. Ask an administrator to review it.');
  const allTemplates=(await db.query('SELECT data FROM templates')).rows.map(row=>row.data as Template).filter(t=>t.verified&&templateAccepts(t,tests));
