@@ -580,3 +580,24 @@ Active work is concentrated in Phases 9Ã¢â‚¬â€œ12: approved-report int
 - Rollback: Revert changes in server/ai.ts, src/FloatingAssistant.tsx, src/AssistantPage.tsx, and src/experience.css
 - Evidence: Modified files and successful build output.
 - Next action/owner: User to review changes on the dashboard and chat with Miss Minutes.
+
+### TASK-20260926-002 — Product Auto-detection and Specification Confirmation Modal
+
+- Status: Completed
+- Priority: P1
+- Actor/tool: Antigravity
+- Authorization: User requested to auto-detect products based on % of identity, and prompt user with specification checkboxes when generating a report.
+- Goal/rule link: Sample-to-specification workflow, UI/UX
+- Scope/files: server/reports.ts, src/reports.tsx
+- Before: Product mapping fell back to counting matching tokens if an exact or startsWith match failed. This caused "Omega Pain Killer Liniment- Pro" to be outscored by the longer, non-Pro "Omega Pain Killer Liniment (5th Withdrawal)" which contained more matching tokens, causing an ambiguous context error. Also, clicking "Create result draft" immediately created a draft without showing the resolved specification parameters.
+- Change: 
+  1. Updated matchScore in server/reports.ts to explicitly prioritize startsWith and includes string matching, followed by a Dice coefficient bigram similarity score (requiring > 85% similarity). It falls back to token intersection only as a last resort. This guarantees exact substrings like "- Pro" match correctly even if the sample has many other words.
+  2. Updated src/reports.tsx so clicking "Create result draft" opens a Dialog modal instead of immediately creating the draft. The modal displays a table of the detected specification's parameters (with prefilled checkboxes) from the QC Micro Products Specifications sheet, allowing the user to double check the mapping and tests before clicking "Confirm & Create Draft".
+- Data impact: Code only; no live data touched.
+- Verification: Ran 
+pm run build and 
+pm run test successfully.
+- Problems/risks: None. 
+- Rollback: Revert changes in server/reports.ts and src/reports.tsx.
+- Evidence: Modified files and successful build output.
+- Next action/owner: User to review changes on the dashboard and confirm the new flow.

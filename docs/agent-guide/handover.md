@@ -154,8 +154,10 @@ If work is complete, say what acceptance evidence proves completion and list any
 - Improved the missing specification error message to guide users on how to use aliases to correct the fuzzy matcher if it maps a sample to a sibling product.
 - Added Section 12 to `rules.md` requiring agents to push to origin after committing so the live server updates automatically.
 - Updated the AI Assistant persona to "Miss Minutes" (from the Marvel Universe) across `server/ai.ts`, `src/FloatingAssistant.tsx`, and `src/AssistantPage.tsx`. The floating chat widget has also been made noticeably smaller in `src/experience.css` and the initial greetings have been updated to proactively interact with the user and offer assistance with the Timeline.
+- Improved the fuzzy matching algorithm in `server/reports.ts` to prioritize exact prefixes (`startsWith`), substrings (`includes`), and a Dice bigram similarity coefficient before falling back to token subset matching. This successfully matches samples like "- Pro" correctly when previously a longer, sibling product's token count outscored it.
+- Added a confirmation modal in `src/reports.tsx`. When users click "Create result draft", a popup dialog now lists the detected specification parameters with prefilled checkboxes to allow for double-checking the layout before drafting.
 - Build and tests pass successfully.
 
 ## Next Actions
-- Commit changes and push to origin so that Render redeploys with the updated Miss Minutes AI.
-- User needs to go to **Settings > Products / materials**, edit the `Omega Pain Killer Liniment- Pro` product, and add the full sample name as an alias so the system maps it correctly instead of mapping it to the non-Pro version. Then, select the stability sample `ML-ST-26-0280` again in the dashboard.
+- Commit changes and push to `origin master` so that Render redeploys.
+- User to test the new specification confirmation modal in the dashboard by selecting the `ML-ST-26-0280` sample again, which should now correctly resolve to "Omega Pain Killer Liniment- Pro" and open the confirmation checkboxes.
