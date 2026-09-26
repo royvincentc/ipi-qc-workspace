@@ -60,6 +60,13 @@ function Workspace({data}:{data:any}){
   const notify=(text:string,error=false)=>{setNotice({text,error});};
 
   useEffect(() => {
+    if (notice) {
+      const timer = setTimeout(() => setNotice(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notice]);
+
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();

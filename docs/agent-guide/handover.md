@@ -155,6 +155,7 @@ If work is complete, say what acceptance evidence proves completion and list any
   - Fixed a frustrating UX bug in the Admin Settings where textareas swallowed empty lines, preventing deletion and triggering Zod validation errors.
   - Added collapsible state for the `settings-nav` sidebar in Admin Settings to maximize screen real estate for data entry.
   - Fixed search input visual bugs in the Admin Settings entity list, making it consistent with the rest of the application styling.
+  - Implemented an auto-hide behavior for notification toasts (like ''Settings saved''), dismissing them automatically after 5 seconds to prevent them from persisting indefinitely.
 - **Pending Actions**:
   - The user is actively updating product aliases in Settings to resolve a duplicate match error.
 ## Next Actions
