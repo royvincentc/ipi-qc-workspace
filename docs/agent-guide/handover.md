@@ -164,6 +164,8 @@ If work is complete, say what acceptance evidence proves completion and list any
 
 - Fixed an issue where the template auto-seed script crashed in production by instructing the document engine to dynamically build the demo-standardized.docx file on-the-fly before injecting it into the DB (TASK-20260926-016).
 
+- Deeply aliased the ST (Stability) category to fall back to FG (Finished Goods) settings in server/reports.ts, meaning Stability samples will now seamlessly inherit FG products, specifications, and Google Sheet lookup tabs without requiring duplicate admin setup (TASK-20260926-017).
+
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
