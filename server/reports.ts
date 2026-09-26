@@ -173,6 +173,19 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
   }
  }
 
+ // When SFG/ST aliases to FG, the same product name may be registered under both categories.
+ // Deduplicate: if multiple matches share a name, keep the FG (canonical) entry only.
+ if (products.length > 1 && searchCategory !== sample.category) {
+  const byName = new Map();
+  for (const p of products) {
+   const key = p.name.toLowerCase().trim();
+   const existing = byName.get(key);
+   // Prefer FG-category entry; if both are FG or both are own-category, keep first seen.
+   if (!existing || p.category === searchCategory) byName.set(key, p);
+  }
+  products = [...byName.values()];
+ }
+
  if(products.length!==1)throw new Fault(409,products.length?`More than one managed product matches this sample name (${products.map(p=>p.name).join(', ')}). Remove the duplicate alias in Settings.`:'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
  const product=products[0];
  const specifications=(await db.query('SELECT data FROM specifications')).rows.map(row=>row.data as Specification).filter(s=>s.active!==false);
