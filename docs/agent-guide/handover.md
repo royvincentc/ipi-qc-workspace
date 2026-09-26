@@ -148,17 +148,13 @@ When transferring work, replace the volatile sections above while preserving ver
 If work is complete, say what acceptance evidence proves completion and list any operational or validation work that remains. “Complete” must never mean only that code was generated.
 
 ## Current State (2026-09-26)
-- Deployed a fix in `server/reports.ts` to add a string-length tie-breaker to the token-based fuzzy matching algorithm. This resolves false-positive ties between products with identical token sets but different punctuation (e.g. "Liniment- Pro" vs "Liniment Pro"). 
-- Improved the conflict error message in `server/reports.ts` to list the actual conflicting product names when a genuine tie occurs, aiding the user in identifying duplicates in Settings.
-- Deployed a fix in `server/reports.ts` to allow report generation for samples that do not have a testing context column in their source spreadsheet (like Stability, Water, Raw Material). These samples now safely fall back to searching for a specification with the context `"Routine"` (or automatically use the product's only specification context) instead of immediately throwing an error.
-- Improved the missing specification error message to guide users on how to use aliases to correct the fuzzy matcher if it maps a sample to a sibling product.
-- Added Section 12 to `rules.md` requiring agents to push to origin after committing so the live server updates automatically.
-- Updated the AI Assistant persona to "Miss Minutes" (from the Marvel Universe) across `server/ai.ts`, `src/FloatingAssistant.tsx`, and `src/AssistantPage.tsx`. The floating chat widget has also been made noticeably smaller in `src/experience.css` and the initial greetings have been updated to proactively interact with the user and offer assistance with the Timeline.
-- Improved the fuzzy matching algorithm in `server/reports.ts` to prioritize exact prefixes (`startsWith`), substrings (`includes`), and a Dice bigram similarity coefficient before falling back to token subset matching. This successfully matches samples like "- Pro" correctly when previously a longer, sibling product's token count outscored it.
-- Added a confirmation modal in `src/reports.tsx`. When users click "Create result draft", a popup dialog now lists the detected specification parameters with prefilled checkboxes to allow for double-checking the layout before drafting.
-- Polished the Miss Minutes floating assistant avatar by processing the image to remove the solid white background. Modified CSS to remove the confining green button shape so her whole body is visible. Added a persistent, animated speech bubble that explicitly introduces her as the "AI Assistant".
-- Build and tests pass successfully.
-
+- **Phase**: UI polish & Bugfixes
+- **Recent work**: 
+  - Overhauled Samples & history table CSS for better readability and modern spacing.
+  - Expanded sample name normalization to strip (T,X,Y) stability timepoints.
+  - Fixed a frustrating UX bug in the Admin Settings where textareas (liases) swallowed empty lines, preventing deletion and triggering Zod validation errors.
+- **Pending Actions**:
+  - The user is actively updating product aliases in Settings to resolve a duplicate match error.
 ## Next Actions
 - User to refresh the browser and verify the new Miss Minutes polished image avatar and speech bubble.
 - User to test the new specification confirmation modal in the dashboard by selecting the `ML-ST-26-0280` sample again, which should now correctly resolve to "Omega Pain Killer Liniment- Pro" and open the confirmation checkboxes.

@@ -671,3 +671,26 @@ ormalizeSampleName passed all 7 representative cases. Commit 5a7d17 pushed to o
 - Rollback: git revert f5a7d17
 - Evidence: Commit 5a7d17 on master. All 7 inline unit-test cases passed.
 - Next action/owner: User to refresh the live browser and re-select ML-ST-26-0280 on the Analysis Reports page to confirm resolution.
+
+
+### TASK-20260926-006
+**Date**: 2026-09-26
+**Task**: Modernize Samples & history table UI
+**Files Changed**:
+- src/overhaul.css
+- src/experience.css
+**Summary**: Improved cell padding, modernized column headers, added a subtle zebra stripe and left-border accent on hover, styled the open link as a pill button, and removed a conflicting hover transform.
+
+### TASK-20260926-005c
+**Date**: 2026-09-26
+**Task**: Expand sample name normalization for stability timepoints
+**Files Changed**:
+- server/reports.ts
+**Summary**: Added regex pattern to strip (T,14,15) style stability timepoint notations from sample names before product matching, routing them correctly to the base product.
+
+### TASK-20260926-007
+**Date**: 2026-09-26
+**Task**: Fix Admin UI textarea newline bug and validation error
+**Files Changed**:
+- src/admin.tsx
+**Summary**: Modified the onChange handler for aliases and lookups textareas to preserve empty lines while typing (allowing users to use the Enter key and backspace freely). Moved the .filter(a => a.trim() !== '') cleanup logic to the Save handler, preventing premature Zod validation errors.
