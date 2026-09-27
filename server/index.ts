@@ -112,6 +112,7 @@ setTimeout(async () => {
   try {
     const customP = 'templates/custom-template.docx';
     await writeFile(privatePath(customP), Buffer.from(CUSTOM_TEMPLATE_B64, 'base64'));
+    await db.query("DELETE FROM templates WHERE data->>'name' = 'IPI Standardized Micro Layout'");
     if (Number((await db.query("SELECT count(*) FROM templates WHERE data->>'name' = 'Roy Custom Template'")).rows[0].count) === 0) {
       const v2 = await worker(['validate', '--input', privatePath(customP)]);
       const t2 = {
