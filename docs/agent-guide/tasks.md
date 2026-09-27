@@ -851,3 +851,19 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Verification: tsc --noEmit exits 0.
 - Rollback: Remove 'COL' from the array in server/reports.ts.
 
+
+### TASK-20260927-021 - Fix hardcoded finding type in historical limits fallback
+
+- Status: Completed
+- Priority: P0
+- Actor/tool: Antigravity agent (2026-09-27)
+- Authorization: User request - fix tests being forced to 'Positive / negative' instead of numeric
+- Scope/files: server/reports.ts
+- Commit: 3daeb8a
+
+**Error - SPC and MY tests forced to Finding type:**
+- Before: When generating a report for a product that lacked an exact specification (falling back to the historical knowledge base records), the system arbitrarily hardcoded \	ype: 'finding'\ for all tests. This completely ignored the Admin Settings configuring SPC and MY to 'numeric'.
+- Change: Replaced the hardcoded 'finding' string with a dynamic lookup that checks \managed.value.tests\ to properly inherit the Admin-configured \inputType\ (and \unit\) based on the test's shortName or sheetHeader.
+- Verification: tsc --noEmit exits 0.
+- Rollback: Revert server/reports.ts line 209 to hardcode 'finding' and unit ''.
+
