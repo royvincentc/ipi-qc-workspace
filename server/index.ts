@@ -107,6 +107,29 @@ app.get('/api/audit/:id',requireRole('administrator'),async(req,res)=>{const eve
 app.get('/api/audit',requireRole('administrator'),async(_req,res)=>res.json((await db.query('SELECT * FROM audit ORDER BY created_at DESC LIMIT 200')).rows));
 app.use(express.static(path.resolve('dist')));app.get('/{*path}',(_req,res)=>res.sendFile(path.resolve('dist/index.html')));
 app.use((err:any,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{const status=err instanceof Fault?err.status:err instanceof z.ZodError?400:500;console.error(status===500?err.message:'Request rejected',status);res.status(status).json({error:status===500?'The server could not complete this operation. Please try again or contact your administrator.':err instanceof z.ZodError?err.issues.map((i:any)=>i.message).join('; '):err.message});});
+import { CUSTOM_TEMPLATE_B64 } from './custom-template.b64.ts';
+setTimeout(async () => {
+  try {
+    const customP = 'templates/custom-template.docx';
+    await writeFile(privatePath(customP), Buffer.from(CUSTOM_TEMPLATE_B64, 'base64'));
+    if (Number((await db.query("SELECT count(*) FROM templates WHERE data->>'name' = 'Roy Custom Template'")).rows[0].count) === 0) {
+      const v2 = await worker(['validate', '--input', privatePath(customP)]);
+      const t2 = {
+        id: randomUUID(),
+        name: 'Roy Custom Template',
+        family: 'standard',
+        category: 'Routine',
+        revision: hash(CUSTOM_TEMPLATE_B64),
+        path: customP,
+        verified: true,
+        manifest: { ...v2, requiredFields: [] }
+      };
+      await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [t2.id, JSON.stringify(t2)]);
+      console.log('Seeded Roy Custom Template!');
+    }
+  } catch(e) { console.error('Failed seeding custom', e); }
+}, 2000);
+
 const server=app.listen(Number(process.env.PORT||3001),demo?'127.0.0.1':'0.0.0.0',()=>console.log(`IPI API listening on ${process.env.PORT||3001}${demo?' (de-identified demo)':''}`));
 const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},300000);interval.unref();
 
