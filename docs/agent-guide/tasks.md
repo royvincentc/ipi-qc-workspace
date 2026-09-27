@@ -867,3 +867,19 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Verification: tsc --noEmit exits 0.
 - Rollback: Revert server/reports.ts line 209 to hardcode 'finding' and unit ''.
 
+
+### TASK-20260927-022 - Fix FileNotFoundError for demo template on Render ephemeral FS
+
+- Status: Completed
+- Priority: P0
+- Actor/tool: Antigravity agent (2026-09-27)
+- Authorization: User request - fix 'Document processing failed: FileNotFoundError: [Errno 2] No such file or directory: /app/private/templates/demo-standardized.docx'
+- Scope/files: server/index.ts
+- Commit: (pending)
+
+**Error - Template missing on report generation:**
+- Before: The server auto-seeded \demo-standardized.docx\ to disk and inserted it into the templates DB table only if the DB count was 0. However, on Render's ephemeral free tier, the file system resets on sleep but the PostgreSQL DB persists. When the server wakes up, the DB says the template exists, so it skips writing the file to disk, causing document generation to crash when it tries to read the missing .docx file.
+- Change: Moved the \writeFile\ command outside the \if (count === 0)\ block in \server/index.ts\ so that the server ALWAYS writes the embedded base64 template to the local disk during startup.
+- Verification: npm run build exits 0.
+- Rollback: Revert server/index.ts to put the writeFile back inside the DB count condition.
+
