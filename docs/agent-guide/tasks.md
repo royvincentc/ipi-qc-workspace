@@ -835,3 +835,19 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 
 - Verification: tsc --noEmit exits 0. Push pending (DNS issue from agent shell; user to push).
 - Rollback: Revert server/index.ts and server/reports.ts to commit before e2e54db.
+
+### TASK-20260927-020 - Fix missing standard specification for COL test
+
+- Status: Completed
+- Priority: P0
+- Actor/tool: Antigravity agent (2026-09-27)
+- Authorization: User request - fix 'COL: unresolved criterion source' error in Review Report UI
+- Scope/files: server/reports.ts
+- Commit: pending
+
+**Error - COL: unresolved criterion source:**
+- Before: The test name 'COL' (Coliforms) was not mapped to a default criterion in the fallback logic.
+- Change: Added 'COL' to the fallback pathogen list in server/reports.ts to automatically assign 'Negative' as the standard specification.
+- Verification: tsc --noEmit exits 0.
+- Rollback: Remove 'COL' from the array in server/reports.ts.
+
