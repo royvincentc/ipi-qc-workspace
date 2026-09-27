@@ -142,7 +142,7 @@ function inferCriterion(productName: string, testName: string): string {
   }
   if (testName === 'SPC' || testName === 'Standard Plate Count (SPC)') return 'Nmt 100 cfu/mL';
   if (testName === 'MY' || testName === 'Molds and Yeast') return 'Nmt 10 cfu/mL';
-  if (['E. coli', 'S. aureus', 'P. aeruginosa', 'Salmonella', 'COL'].includes(testName)) return 'Negative';
+  if (['E. coli', 'S. aureus', 'P. aeruginosa', 'Salmonella', 'COL', 'EC', 'SA', 'PA', 'SAL'].includes(testName)) return 'Negative';
   return '';
 }
 export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
