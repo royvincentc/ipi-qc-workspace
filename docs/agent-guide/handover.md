@@ -170,6 +170,8 @@ If work is complete, say what acceptance evidence proves completion and list any
 
 - Fixed a `NetworkError when attempting to fetch resource` in the UI caused by a server crash/rejection when generating reports that lacked criteria for the `COL` (Coliforms) test, by adding `COL` to the default pathogen negative criteria fallback list (TASK-20260927-020).
 
+- Fixed a bug where tests like SPC and MY were incorrectly forced to the "Finding (Positive/Negative)" type regardless of Admin Settings when falling back to Historical Knowledge Base records. The fallback logic now correctly inherits the Admin-configured `inputType` (TASK-20260927-021).
+
 ## Next Actions
 1. Ensure the user can successfully generate a report draft for all 4 test samples (ML-SFG-26-0223, ML-FG-26-0440, ML-ST-26-0280, ML-EM-26-0463) in the Live workspace using the corrected browser console test script.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
