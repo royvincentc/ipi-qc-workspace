@@ -1,4 +1,4 @@
-﻿# IPI QC Microbiology Workspace â€” Active Handover
+# IPI QC Microbiology Workspace â€” Active Handover
 
 | Document control | Value |
 |---|---|
@@ -168,7 +168,9 @@ If work is complete, say what acceptance evidence proves completion and list any
 
 - Expanded the aliasing logic in server/reports.ts to include Semi-Finished Goods (SFG). Now both ST and SFG samples seamlessly fall back to use FG database settings and Google Sheet tabs (TASK-20260926-018).
 
+- Fixed a `NetworkError when attempting to fetch resource` in the UI caused by a server crash/rejection when generating reports that lacked criteria for the `COL` (Coliforms) test, by adding `COL` to the default pathogen negative criteria fallback list (TASK-20260927-020).
+
 ## Next Actions
-1. Ensure the user can successfully generate a report draft for a Stability sample in the Live workspace.
+1. Ensure the user can successfully generate a report draft for all 4 test samples (ML-SFG-26-0223, ML-FG-26-0440, ML-ST-26-0280, ML-EM-26-0463) in the Live workspace using the corrected browser console test script.
 2. Await further instructions on any new workflow tweaks or report formatting adjustments needed by the Quality Control team.
 
