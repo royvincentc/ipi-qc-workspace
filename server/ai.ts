@@ -3,7 +3,7 @@ import { db } from './db.js';
 import { z } from 'zod';
 import { Fault } from './domain.js';
 import express from 'express';
-import { prepareAssistantChat, publicGeminiError } from './ai-support.js';
+import { createGeminiFunctionResponse, prepareAssistantChat, publicGeminiError } from './ai-support.js';
 
 const querySamples: FunctionDeclaration = {
   name: 'query_samples',
@@ -110,7 +110,7 @@ aiRouter.post('/chat', async (req, res) => {
       }
 
       response = await chat.sendMessage({
-        message: [{ functionResponse: { name: call.name || 'unknown', response: functionResponseData } }]
+        message: [createGeminiFunctionResponse(call, functionResponseData)]
       });
     }
 
