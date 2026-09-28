@@ -1051,3 +1051,16 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 
 **Summary**: Moved the collapsed rail’s expand control into a dedicated top utility zone so it no longer overlaps the brand mark. Added a low-cost transform-only laboratory logo animation with reduced-motion behavior, isolated the ambient layer with paint containment, and coalesced route reveal registrations into one animation frame.
 **Verification**: TypeScript typecheck passed; Vite production build passed (`1624` modules, main JS `462.47 kB` / `138.53 kB` gzip). Impeccable detector completed without new blocking findings; remaining warnings are legacy side-tab rules and advisory token notes. No live sources or Google writes were accessed.
+
+### TASK-20260928-040
+**Date**: 2026-09-28
+**Task**: Default Google sign-in to viewer access and refine People & permissions
+**Files Changed**:
+- server/auth.ts
+- server/index.ts
+- src/App.tsx
+- src/settings.tsx
+- src/settings-layout.css
+
+**Summary**: Verified Google accounts are now provisioned as active viewers on first sign-in. Only active administrators can change roles or account status, and the server prevents removing the last active administrator. Reworked the People & permissions panel with explicit viewer-by-default policy copy, access counts, scannable account rows, role descriptions, and responsive editing controls.
+**Verification**: TypeScript typecheck passed; Vite production build passed. Impeccable detector reported no new layout-transition warning; remaining findings are advisory design-token notes in existing settings styles. Playwright browser verification was attempted but the local Playwright browser executable is not installed, and the project’s global npx launcher points to a missing npm installation. No live Google reads or writes were accessed.

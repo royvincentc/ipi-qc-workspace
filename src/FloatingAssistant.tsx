@@ -5,7 +5,7 @@ import { api } from './api';
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
   const [showSpeech, setShowSpeech] = useState(true);
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello. I am Miss Minutes, the QC Smart Assistant. How can I assist you with your laboratory tasks today?' }] }]);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello. I’m Miss Minutes, the QC Smart Assistant for IPI Microbiology. I can help locate authorized QC records, summarize documented results, and review audit history. How can I assist you?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -62,8 +62,8 @@ export function FloatingAssistant() {
             >
               <X size={14} />
             </button>
-            <b style={{ paddingRight: '12px' }}>AI Assistant</b>
-            Hello. I am Miss Minutes, the QC Smart Assistant. How can I assist you with your laboratory tasks today?
+            <b style={{ paddingRight: '12px' }}>IPI QC Assistant</b>
+            Hello. I’m Miss Minutes, the QC Smart Assistant for IPI Microbiology. I can help locate authorized QC records, summarize documented results, and review audit history. How can I assist you?
           </div>
         )}
       </button>
@@ -74,7 +74,7 @@ export function FloatingAssistant() {
     <div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
-            <span className="chat-pet"><img src="/miss-minutes-mini.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{width:"100%",height:"100%",objectFit:"contain",objectPosition:"center"}} /></span><span><strong>Miss Minutes</strong><small><i/> Smart assistant</small></span>
+            <span className="chat-pet"><img src="/miss-minutes-mini.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{width:"100%",height:"100%",objectFit:"contain",objectPosition:"center"}} /></span><span><strong>Miss Minutes</strong><small><i/> QC records assistant</small></span>
           </div>
           <button className="icon-button" onClick={() => setOpen(false)} aria-label="Close assistant"><X size={18} /></button>
         </div>
@@ -91,7 +91,7 @@ export function FloatingAssistant() {
           ))}
           {loading && (
             <div className="floating-thinking">
-              <Sparkles size={14} /> <span>Thinking</span><i/><i/><i/>
+              <Sparkles size={14} /> <span>Reviewing records</span><i/><i/><i/>
             </div>
           )}
           <div ref={messagesEndRef} />
