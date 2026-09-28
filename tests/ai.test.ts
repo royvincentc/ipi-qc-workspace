@@ -33,7 +33,10 @@ test('Gemini errors become actionable messages without exposing upstream details
 test('Gemini 3 function responses preserve the function-call id', () => {
   assert.deepEqual(
     createGeminiFunctionResponse({ id: 'call-123', name: 'query_samples' }, { samples: [] }),
-    { functionResponse: { id: 'call-123', name: 'query_samples', response: { samples: [] } } }
+    {
+      role: 'user',
+      parts: [{ functionResponse: { id: 'call-123', name: 'query_samples', response: { samples: [] } } }]
+    }
   );
   assert.throws(() => createGeminiFunctionResponse({ name: 'query_samples' }, {}), /did not include an id/);
 });

@@ -8,7 +8,12 @@ export function createGeminiFunctionResponse(
   response: Record<string, unknown>
 ) {
   if (!call.id) throw new Error('Gemini function call did not include an id');
-  return { functionResponse: { id: call.id, name: call.name || 'unknown', response } };
+  // @google/genai rejects function-response parts unless they are wrapped in
+  // a Content object. The function result is a user turn in the tool loop.
+  return {
+    role: 'user' as const,
+    parts: [{ functionResponse: { id: call.id, name: call.name || 'unknown', response } }]
+  };
 }
 
 export function prepareAssistantChat(messages: AssistantMessage[]) {

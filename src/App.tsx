@@ -208,7 +208,7 @@ export default function App(){
         <h1 style={{marginBottom: '16px'}}>IPI Micro-QC</h1>
         {signIn ? (
           <>
-            <p>Sign in to your private laboratory workspace.</p>
+            <p>Sign in with Google. New accounts start with viewer access; an administrator can grant additional permissions.</p>
             <a className="button primary" href="/api/auth/login" style={{marginTop: '24px'}}>Continue with Google</a>
           </>
         ) : (

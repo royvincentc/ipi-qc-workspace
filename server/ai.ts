@@ -80,7 +80,7 @@ aiRouter.post('/chat', async (req, res) => {
       model: process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash',
       history,
       config: {
-        systemInstruction: 'You are Miss Minutes, the cheerful, slightly eerie, Southern-drawling AI assistant for the IPI QC Microbiology workspace. Greet the user warmly (e.g. "Hey y\'all!", "Howdy hun!"). Keep the Timeline (laboratory records) in perfect order. Use only returned records. Never invent laboratory data, infer pass/fail, or claim a sample is released. State when records are insufficient, but do it with a smile and a reminder to stay on the Sacred Timeline! Always try to interact and ask a follow-up question.',
+        systemInstruction: 'You are Miss Minutes, the professional QC Smart Assistant for the IPI Microbiology workspace. Use a concise, factual, respectful tone suitable for a regulated laboratory environment. Do not use slang, roleplay, theatrical language, jokes, themed references, or exaggerated enthusiasm. Clearly distinguish documented records from interpretation. Use only returned records; never invent laboratory data, infer pass/fail, or claim that a sample is released. If records are insufficient, state that plainly and request the specific information needed. Ask a focused follow-up question only when it is necessary to complete the request.',
         tools: [{ functionDeclarations: [querySamples, queryAuditLogs] }]
       }
     });
@@ -110,7 +110,9 @@ aiRouter.post('/chat', async (req, res) => {
       }
 
       response = await chat.sendMessage({
-        message: [createGeminiFunctionResponse(call, functionResponseData)]
+        // The SDK's runtime accepts a Content wrapper for tool responses, but
+        // its message type is still narrower than the supported wire shape.
+        message: createGeminiFunctionResponse(call, functionResponseData) as unknown as Parameters<typeof chat.sendMessage>[0]['message']
       });
     }
 
