@@ -25,5 +25,5 @@ export function reportRows(d:Draft,t:Template){
  }):d.specification.tests;
  if(bindings.length&&ordered.length!==d.specification.tests.length)throw new Fault(422,'Template does not represent every applicable test instance');
  if(bindings.length&&new Set(ordered.map(resultKey)).size!==d.specification.tests.length)throw new Fault(422,'Template result rows do not match applicable tests');
- return ordered.map((test,i)=>{const r=d.results.find(x=>resultKey(x)===resultKey(test));if(!r)throw new Fault(422,`${test.label}: actual result is missing`);return {index:i,test:[test.label,test.location,test.stage,test.replicate].filter(Boolean).join(' · '),criterion:test.criterion,value:[r.qualifier,r.value,r.unit].filter(Boolean).join(' '),remarks:r.remarks};});
+ return ordered.map((test,i)=>{const r=d.results.find(x=>resultKey(x)===resultKey(test));if(!r)throw new Fault(422,`${test.label}: actual result is missing`);return {index:i,test:[({'SPC':'Standard Plate Count','MY':'Molds and Yeast'}[test.label]||test.label),test.location,test.stage,test.replicate].filter(Boolean).join(' · '),criterion:test.criterion,value:[r.qualifier,r.value,r.unit].filter(Boolean).join(' '),remarks:r.remarks};});
 }
