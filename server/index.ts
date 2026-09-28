@@ -1,3 +1,4 @@
+import { deleteDraft } from './reports.js';
 import {registerSearch} from './search.js';
 import {getConfiguration,saveConfiguration,sourceTypes,migrateConfigurationColumns,connectionFingerprint} from './configuration.js';
 import {validateIntake} from '../shared/configuration.js';
@@ -75,6 +76,11 @@ app.post('/api/settings/test',requireRole('administrator'),async(req,res)=>{cons
 app.post('/api/settings/users',requireRole('administrator'),async(req,res)=>{const u=z.object({email:z.string().email(),name:z.string().min(1),role:z.enum(['administrator','analyst','viewer']),active:z.boolean()}).parse(req.body);if(u.email.toLowerCase()===req.user.email&&(u.role!=='administrator'||!u.active))throw new Fault(400,'You cannot remove your own administrator access');await db.query('INSERT INTO users(email,name,role,active) VALUES($1,$2,$3,$4) ON CONFLICT(email) DO UPDATE SET name=$2,role=$3,active=$4',[u.email.toLowerCase(),u.name,u.role,u.active]);await audit(req.user.email,'user_updated',u.email,{role:u.role,active:u.active});res.json({ok:true});});
 app.post('/api/submissions/:id/reconcile',requireRole('administrator'),async(req,res)=>res.json(await reconcileSubmission(String(req.params.id),req.user.email)));
 app.get('/api/references',async(_req,res)=>res.json({specifications:(await db.query('SELECT data FROM specifications')).rows.map(r=>r.data),templates:(await db.query('SELECT data FROM templates')).rows.map(r=>{const {path,...safe}=r.data;return safe;}),documents:(await db.query('SELECT data FROM files')).rows.map(r=>r.data).filter(f=>['reference','template-candidate'].includes(f.kind)).map(({path,evidence,...safe})=>({...safe,evidenceSummary:evidence?{family:evidence.family,candidateCriteria:evidence.candidateCriteria?.length}:undefined}))}));
+
+  app.delete('/api/drafts/:id', requireRole('administrator'), async (req, res) => {
+    await deleteDraft(req.params.id as string, req.user.email);
+    res.json({ok: true});
+  });
 app.get('/api/drafts',async(_req,res)=>res.json((await db.query('SELECT data FROM drafts ORDER BY data->>\'updatedAt\' DESC')).rows.map(r=>r.data)));
 app.get('/api/report-setup/:sampleId',async(req,res)=>res.json(await resolveReportSetup(String(req.params.sampleId))));
 app.post('/api/drafts',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({sampleId:z.string()}).parse(req.body);res.status(201).json(await createAutomaticDraft(b.sampleId,req.user));});
