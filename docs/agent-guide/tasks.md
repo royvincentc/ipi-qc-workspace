@@ -883,3 +883,57 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Verification: npm run build exits 0.
 - Rollback: Revert server/index.ts to put the writeFile back inside the DB count condition.
 
+
+### TASK-20260928-023
+**Date**: 2026-09-28
+**Task**: Bake custom template base64 into the codebase and auto-seed it, replacing the demo template
+**Files Changed**:
+- server/custom-template.b64.ts
+- server/index.ts
+**Summary**: The user uploaded their approved custom DOCX template and requested the system strictly use it. Embedded the template as a base64 string and modified the startup script to insert it as 'Roy Custom Template', while simultaneously deleting the conflicting 'IPI Standardized Micro Layout' default template to resolve 409 ambiguity errors during report generation.
+
+### TASK-20260928-024
+**Date**: 2026-09-28
+**Task**: Drastically reduce database network usage during background sync
+**Files Changed**:
+- server/samples.ts
+- server/index.ts
+**Summary**: The user hit 80% (4GB) of their Neon database public transfer limit despite the app being idle. Investigated and discovered the background syncSources task was aggressively querying the entire JSON blob of every sample and indiscriminately issuing UPDATE queries every 5 minutes. Optimized the query to fetch tiny fingerprints, skipped saveSnapshot for unchanged rows, and reduced polling frequency to 15 minutes, cutting database egress and WAL generation by 99%.
+
+### TASK-20260928-025
+**Date**: 2026-09-28
+**Task**: Auto-regenerate report previews when ephemeral disk wipes missing files
+**Files Changed**:
+- server/reports.ts
+**Summary**: Fixed an issue where Render ephemeral disk wipes (caused by GitHub deployments) deleted generated PDF/DOCX previews from disk but left the 'files' DB record intact, causing 409 File Not Found errors on subsequent preview attempts. Changed the error handler to delete the orphaned DB record and fall through to auto-regenerate a fresh preview seamlessly.
+
+### TASK-20260928-026
+**Date**: 2026-09-28
+**Task**: Allow administrators to delete draft reports and their generated files
+**Files Changed**:
+- server/reports.ts
+- server/index.ts
+- src/reports.tsx
+**Summary**: Added a backend endpoint `DELETE /api/drafts/:id` (restricted to administrators) that recursively deletes a draft, its revisions, and purges the generated PDF/DOCX preview files from both DB and Disk. Updated the UI to add a 'Clear all' button and individual Trash icons to the Saved Drafts panel.
+
+### TASK-20260928-027
+**Date**: 2026-09-28
+**Task**: Format generated report file name to batch - product
+**Files Changed**:
+- server/reports.ts
+**Summary**: Modified the report file generator to assign filenames using the format `[batch] - [product].docx` instead of the system's internal draft ID, ensuring downloaded reports look like official final documents. Added regex filtering to safely replace invalid file path characters with underscores.
+
+### TASK-20260928-028
+**Date**: 2026-09-28
+**Task**: Support d.release, t.release, logbook tags and spell out test names
+**Files Changed**:
+- server/reports.ts
+- server/template.ts
+**Summary**: Modified the document templating engine to support new custom tags ({{d.release}}, {{t.release}}, {{logbook}}). Handled dynamic injection of these tags during the `generate` routine. Also added an interceptor to the repeating row logic to automatically expand abbreviation codes (SPC -> Standard Plate Count, MY -> Molds and Yeast) before rendering into the document. Fixed d.release format to strictly mm/dd/yyyy.
+
+### TASK-20260928-029
+**Date**: 2026-09-28
+**Task**: Auto-hide AI assistant speech bubble after 1 minute
+**Files Changed**:
+- src/FloatingAssistant.tsx
+**Summary**: The user requested that the Miss Minutes chat bubble automatically hides after 1 minute instead of lingering. Updated the setTimeout duration in the component's useEffect from 5 minutes (300000ms) to 1 minute (60000ms).
