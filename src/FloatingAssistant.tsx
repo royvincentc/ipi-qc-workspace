@@ -19,10 +19,10 @@ export function FloatingAssistant() {
   }, [messages, open]);
 
   useEffect(() => {
-    // Auto-hide the speech bubble after 5 minutes (300000 ms)
+    // Auto-hide the speech bubble after 1 minute (60000 ms)
     const timer = setTimeout(() => {
       setShowSpeech(false);
-    }, 300000);
+    }, 60000);
     return () => clearTimeout(timer);
   }, []);
 
