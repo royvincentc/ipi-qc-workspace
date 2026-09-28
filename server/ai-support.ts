@@ -3,6 +3,14 @@ export interface AssistantMessage {
   parts: Array<{ text: string }>;
 }
 
+export function createGeminiFunctionResponse(
+  call: { id?: string; name?: string },
+  response: Record<string, unknown>
+) {
+  if (!call.id) throw new Error('Gemini function call did not include an id');
+  return { functionResponse: { id: call.id, name: call.name || 'unknown', response } };
+}
+
 export function prepareAssistantChat(messages: AssistantMessage[]) {
   const lastMessage = messages.at(-1);
   if (!lastMessage || lastMessage.role !== 'user') {

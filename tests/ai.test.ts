@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { prepareAssistantChat, publicGeminiError } from '../server/ai-support.js';
+import { createGeminiFunctionResponse, prepareAssistantChat, publicGeminiError } from '../server/ai-support.js';
 
 test('assistant greeting is excluded so Gemini history begins with a user', () => {
   const greeting = { role: 'model' as const, parts: [{ text: 'Hello' }] };
@@ -28,4 +28,12 @@ test('Gemini errors become actionable messages without exposing upstream details
   assert.equal(publicGeminiError(new Error('429 RESOURCE_EXHAUSTED')).category, 'quota');
   assert.equal(publicGeminiError(new Error('model not found 404')).category, 'model');
   assert.equal(publicGeminiError(new Error('socket included sensitive upstream detail')).message.includes('sensitive'), false);
+});
+
+test('Gemini 3 function responses preserve the function-call id', () => {
+  assert.deepEqual(
+    createGeminiFunctionResponse({ id: 'call-123', name: 'query_samples' }, { samples: [] }),
+    { functionResponse: { id: 'call-123', name: 'query_samples', response: { samples: [] } } }
+  );
+  assert.throws(() => createGeminiFunctionResponse({ name: 'query_samples' }, {}), /did not include an id/);
 });
