@@ -1,5 +1,5 @@
 // Frozen migration defaults. Runtime catalogs are served by the configuration service.
-export const categories:Record<string,string> = {SFG:'Semi-Finished Goods',FG:'Finished Goods',WS:'Water',RM:'Raw Material',ST:'Stability',MIS:'Miscellaneous',EM:'Environmental Monitoring'} as const;
+export const categories:Record<string,string> = {SFG:'Semi-Finished Goods',FG:'Finished Goods',WS:'Water',RM:'Raw Material',ST:'Product Stability',MIS:'Miscellaneous',EM:'Environmental Monitoring'} as const;
 export type Category = string;
 export type Role = 'administrator'|'analyst'|'viewer';
 export interface User {email:string;name:string;role:Role}

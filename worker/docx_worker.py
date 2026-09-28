@@ -77,7 +77,7 @@ def prepare_template(data,output):
                     cells=row.findall(W+'tc')
                     if len(cells)<4:continue
                     name,criterion=text(cells[0]),text(cells[1])
-                    if not re.search(r'\bNmt\b|\bcfu\b|^Negative$|^Absent',criterion,re.I):continue
+                    if not re.search(r'\bNmt\b|\bcfu\b|^Negative$|^Absent|\{\{criterion\}\}',criterion,re.I):continue
                     # Incubation timing belongs to the method, not the report parameter
                     # label. Remove only that paragraph so the test label keeps its style.
                     for paragraph in list(cells[0].findall(W+'p')):
@@ -153,7 +153,7 @@ def replace_tokens(paragraph,values):
     source=''.join(n.text or '' for n in nodes)
     for match in reversed(list(re.finditer(r'\{\{\s*([\w.:-]+)\s*\}\}',source))):
         key=match.group(1)
-        if key not in values: values[key] = ''
+        if key not in values: raise ValueError('Unresolved template token: '+key)
         start,end=match.span(); offset=0; assigned=False
         for node in nodes:
             value=node.text or ''; a,b=offset,offset+len(value);offset=b
