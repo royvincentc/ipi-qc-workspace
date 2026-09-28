@@ -12,3 +12,74 @@
 ## Next Actions
 1. Await confirmation from the user that the generated PDF/DOCX templates are perfectly aligned with their organizational standards now that the date/time tags and test abbreviation spelling expansions are active.
 2. Monitor database bandwidth to ensure the background sync optimization effectively halts the Neon egress limit warnings.
+3. Review the approved `DESIGN.md` and continue the scoped implementation only after visual review. Preserve the current dashboard's animated hero, atmospheric background, motion graphics, and assistant personality while keeping operational work visually primary.
+
+## Latest design audit handover — 2026-09-28, Asia/Taipei
+
+- User-authorized objective: create the approved UI design contract after a read-only baseline audit.
+- Branch/HEAD: `master`; existing uncommitted user files remain untouched.
+- New design artifacts: `DESIGN.md` and `.impeccable/design.json`.
+- Verification: de-identified demo app rendered and inspected at 1440×900, 1280×800, 1024×768, 768×1024, and 390×844; dashboard search/filter and intake category interaction verified; design sidecar JSON parsed successfully.
+- Browser evidence: at 390px, document width measured 405px with horizontal spill; no live Google or production source was accessed.
+- Current phase: approved design direction; implementation is intentionally paused pending the next user request.
+- Latest direction revision: cinematic motion is explicitly retained with a motion budget, reduced-motion fallback, and no overlap with sample actions or data-entry controls. See `design-reference-dashboard-motion.png`.
+
+## Latest implementation refinement — 2026-09-28, Asia/Taipei
+
+- User-authorized objective: proceed with a small refinement pass based on the current dashboard screenshot, not a wholesale redesign.
+- Task: TASK-20260928-032.
+- Changed: safe activity timestamp rendering in `src/workspace.tsx`; mobile table width containment and phone assistant sizing in `src/experience.css` and `src/overhaul.css`.
+- Verification: direct TypeScript typecheck passed; de-identified demo browser checks at 390×844 and 1440×900 found no page overflow or `Invalid Date`; dashboard search filtering still works.
+- No live source, Google write, or production environment was accessed.
+
+## Latest Settings filter refinement — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-036.
+- Changed: gave the Settings “Find a setting…” control its own surface instead of inheriting competing generic search/input backgrounds. It now uses a single recessed field, stable icon/input alignment, and a visible focus ring.
+- Verification: TypeScript typecheck passed; browser inspection confirmed the control’s rendered bounds and no document overflow. Impeccable detector returned 0 anti-patterns for the changed Settings files.
+- No live source, Google write, or production environment was accessed.
+
+## Latest Settings browser refinement — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-035.
+- Changed: replaced the compressed shared Settings entity list with a roomy record browser for Sample types, Products / materials, Tests, and Lookup values. Rows now show identity, contextual metadata, status, selected state, and a clear relationship to the editor pane.
+- Verification: TypeScript typecheck passed; browser checks at 1224×600 and 390×844 confirmed the new layout and no document overflow. Impeccable detector returned 0 anti-patterns for `src/admin.tsx` and `src/settings-layout.css`.
+- No live source, Google write, or production environment was accessed.
+
+## Latest browser-comment refinement — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-034.
+- Changed: search/lookup controls now share a recessed console treatment; the assistant page uses the floating Miss Minutes asset and has local conversation history; topbar date/time stays on one line; settings entity rows have more breathing room; and the sidebar collapse control moved to the sidebar header with explicit collapse/expand labels.
+- Confirmed: the floating assistant speech bubble timeout is 60 seconds (`60000ms`).
+- Verification: TypeScript typecheck passed. Browser checks covered `/assistant`, `/samples`, `/reports`, and `/settings` at desktop and 390×844 mobile widths; no document overflow was observed. Impeccable completed with four remaining legacy/layout findings and advisory token notes.
+- No live source, Google write, or production environment was accessed.
+- Next safe step: review the refined dashboard visually, then decide whether to address remaining table ergonomics or move to another screen.
+
+## Latest comment implementation — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-037.
+- Changed: the command palette search field now has one deliberate recessed surface and focus treatment; native dialogs now use a restrained modal surface and backdrop; assistant history no longer saves greeting-only sessions, removes stale empty records, supports deletion, and requests a concise AI title with a deterministic fallback.
+- Google Drive: existing library synchronization remains read-only and server-authorized. Automatic report backup is not enabled; enabling Drive writes requires a separate approved destination, scope, audit, failure/retry, and deployment configuration.
+- Verification: TypeScript typecheck and Vite production build passed. Browser checks confirmed empty assistant drafts are not listed, real requests create a titled record with a delete affordance, and the command palette renders as a single inset field. Impeccable reported only two pre-existing thick side-tab rules in the legacy experience stylesheet plus advisory token notes.
+- No live source or Google write was accessed.
+
+## Latest cursor refinement — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-038.
+- Changed: retained the existing static cursor architecture while updating the pointer artwork toward the user’s white/blue reference and adding a lightweight VFX halo/trail. Action controls, text fields, and press states receive distinct feedback; coarse pointers and reduced-motion users are not affected.
+- Verification: TypeScript typecheck, Vite production build, and browser inspection passed. Impeccable found only existing legacy side-tab warnings and advisory token notes.
+- No live source or Google write was accessed.
+
+## Latest sidebar and motion refinement — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-039.
+- Changed: the collapsed sidebar control now occupies a separate top utility zone, leaving the animated laboratory mark below it. Logo motion is transform-only and disabled for reduced-motion users. Ambient rendering is paint-contained and route reveal registration is frame-coalesced.
+- Verification: TypeScript typecheck, Vite production build, and Impeccable detection passed. No live source or Google write was accessed.
+
+## Latest table ergonomics refinement — 2026-09-28, Asia/Taipei
+
+- Task: TASK-20260928-033.
+- Changed: dashboard action links now use concise visible labels with explicit accessible names, a single visual arrow affordance, and keyboard-focused row highlighting.
+- Verification: TypeScript typecheck passed; browser checks completed at 1280×800, 1024×768, 768×1024, and 390×844 with no document overflow or `Invalid Date` text.
+- Impeccable detector completed. It reported two existing side-tab warnings in the legacy experience stylesheet plus advisory token notes; no new blocking finding was introduced by this refinement.
+- No live source, Google write, or production environment was accessed.

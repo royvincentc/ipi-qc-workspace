@@ -17,10 +17,15 @@ export function RouteExperience(){
       if(!observed.has(node)){observed.add(node);node.classList.add('scroll-reveal');observer.observe(node);}
     });
     register();
-    const mutations=new MutationObserver(()=>requestAnimationFrame(register));
+    let registerFrame=0;
+    const scheduleRegister=()=>{
+      if(registerFrame) return;
+      registerFrame=requestAnimationFrame(()=>{registerFrame=0;register();});
+    };
+    const mutations=new MutationObserver(scheduleRegister);
     const main=document.querySelector('main');
     if(main)mutations.observe(main,{childList:true,subtree:true});
-    return()=>{observer.disconnect();mutations.disconnect();};
+    return()=>{observer.disconnect();mutations.disconnect();if(registerFrame)cancelAnimationFrame(registerFrame);};
   },[location.pathname]);
   return null;
 }

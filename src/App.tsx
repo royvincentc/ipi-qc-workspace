@@ -3,7 +3,7 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot} from 'lucide-react';
+import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
 import {SampleDetail} from './pages';
@@ -12,6 +12,7 @@ import SettingsPage from './settings';
 import { AssistantPage } from './AssistantPage';
 import { FloatingAssistant } from './FloatingAssistant';
 import {AmbientBackdrop,RouteExperience} from './Experience';
+import {CursorEffects} from './CursorEffects';
 const AdminCenter=lazy(()=>import('./admin'));
 
 const navigation=[
@@ -84,6 +85,7 @@ function Workspace({data}:{data:any}){
       <Notice.Provider value={notify}>
         <div className="app">
           <AmbientBackdrop/>
+          <CursorEffects/>
           <RouteExperience/>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`}>
             <Link to="/" className="brand" title={config.value.general.appName}>
@@ -93,6 +95,9 @@ function Workspace({data}:{data:any}){
                 <span>{config.value.general.department}</span>
               </div>
             </Link>
+            <button className="icon-button collapse-btn" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+              {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+            </button>
             
             <nav className="main-nav">
               {navigation.map(([url,label,Icon])=>
@@ -126,9 +131,6 @@ function Workspace({data}:{data:any}){
                   </button>
                 )}
               </div>
-              <button className="icon-button collapse-btn" aria-label="Toggle Sidebar" onClick={() => setCollapsed(!collapsed)} title="Toggle Sidebar">
-                <Menu size={16} />
-              </button>
             </div>
           </aside>
 
@@ -147,7 +149,7 @@ function Workspace({data}:{data:any}){
                 </div>
                 <div className="topbar-divider"></div>
                 <div className="topbar-date">
-                  <small>{new Intl.DateTimeFormat(config.value.general.dateFormat,{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:config.value.general.timezone}).format(now)}</small>
+                  <span>{new Intl.DateTimeFormat(config.value.general.dateFormat,{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:config.value.general.timezone}).format(now)}</span>
                   <strong>{new Intl.DateTimeFormat(config.value.general.dateFormat,{hour:'2-digit',minute:'2-digit',timeZone:config.value.general.timezone}).format(now)}</strong>
                 </div>
                 <div className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</div>

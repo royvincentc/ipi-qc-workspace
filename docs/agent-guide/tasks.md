@@ -937,3 +937,117 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 **Files Changed**:
 - src/FloatingAssistant.tsx
 **Summary**: The user requested that the Miss Minutes chat bubble automatically hides after 1 minute instead of lingering. Updated the setTimeout duration in the component's useEffect from 5 minutes (300000ms) to 1 minute (60000ms).
+
+### TASK-20260928-030
+**Date**: 2026-09-28
+**Task**: Create approved UI design system direction
+**Files Changed**:
+- DESIGN.md
+- .impeccable/design.json
+
+**Summary**: Completed the Phase 1 read-only UI/UX audit and created the approved design contract for the IPI QC Microbiology Operations Dashboard. Documented the laboratory-operations-console direction, current token vocabulary, responsive rules, component guidance, motion principles, accessibility expectations, and non-copying principles derived from Linear, Vercel, and Raycast reference analysis. No application code or live data was changed.
+**Verification**: DESIGN.md reviewed against the rendered demo audit; `.impeccable/design.json` parsed successfully as JSON; no live sources accessed.
+
+### TASK-20260928-031
+**Date**: 2026-09-28
+**Task**: Preserve cinematic dashboard motion direction
+**Files Changed**:
+- DESIGN.md
+- .impeccable/design.json
+- design-reference-dashboard-motion.png
+
+**Summary**: Incorporated the project owner's feedback that the current dashboard's animated hero, atmospheric background, motion graphics, and assistant personality are desirable. Updated the design contract to retain those qualities with a deliberate motion budget, reduced-motion fallback, and strict non-overlap with operational work. Generated a second visual reference combining the motion atmosphere with the stronger work-queue hierarchy.
+**Verification**: Design sidecar JSON parsed successfully; generated reference saved locally; no application code or live data changed.
+
+### TASK-20260928-032
+**Date**: 2026-09-28
+**Task**: Refine the approved dashboard without replacing its visual identity
+**Files Changed**:
+- src/workspace.tsx
+- src/experience.css
+- src/overhaul.css
+
+**Summary**: Kept the existing cinematic dashboard, animated hero, right intelligence rail, dense sample table, and Miss Minutes assistant. Added safe activity-date parsing so malformed source timestamps render as a neutral fallback instead of `Invalid Date`; tightened the mobile dashboard table so intrinsic content cannot widen the page; and reduced the assistant footprint at phone widths. No live data or Google source was accessed.
+**Verification**: TypeScript typecheck passed. De-identified demo browser checks passed at 390×844 and 1440×900: no horizontal overflow, no `Invalid Date` text, and the dashboard search filter narrowed the sample table correctly.
+
+### TASK-20260928-033
+**Date**: 2026-09-28
+**Task**: Clarify dashboard table actions and keyboard focus
+**Files Changed**:
+- src/workspace.tsx
+- src/experience.css
+
+**Summary**: Refined dashboard sample/report actions so visible labels are concise while accessible names identify the record being opened. Kept the arrow as a visual affordance and added a focused-row surface treatment for keyboard navigation.
+**Verification**: TypeScript typecheck passed; browser checks confirmed the action text is `View` with a single generated arrow, responsive widths remain overflow-free, and no `Invalid Date` text appears. Impeccable detector completed with two pre-existing side-tab warnings and advisory token notes in the legacy CSS layers.
+
+### TASK-20260928-034
+**Date**: 2026-09-28
+**Task**: Apply browser comment refinements across the workspace
+**Files Changed**:
+- src/App.tsx
+- src/AssistantPage.tsx
+- src/ui.tsx
+- src/workspace.tsx
+- src/styles.css
+- src/experience.css
+- src/settings-layout.css
+
+**Summary**: Confirmed the Miss Minutes speech bubble is configured to hide after 60 seconds; redesigned sample and report lookup fields as recessed console controls; made the assistant use the same Miss Minutes asset as the floating assistant; added local conversation history with new/open conversation controls; kept topbar date and time on one line; increased settings list row breathing room; and moved the sidebar collapse control into the sidebar header with a clearer collapse/expand icon.
+**Verification**: TypeScript typecheck passed. Browser checks covered the assistant, samples, reports, settings, desktop 1224×600, mobile 390×844, and responsive no-overflow behavior. Impeccable detector completed with four remaining legacy/layout findings and advisory token notes; no new blocking UI issue was observed. No live sources or Google writes were accessed.
+
+### TASK-20260928-035
+**Date**: 2026-09-28
+**Task**: Replace compressed Settings entity tables with a record browser
+**Files Changed**:
+- src/admin.tsx
+- src/settings-layout.css
+
+**Summary**: Reworked the shared Settings entity list used by Sample types, Products / materials, Tests, and Lookup values. The list now presents roomy selectable records with contextual descriptors, explicit status, a clearer introduction, a dedicated scroll region, and a wider editor relationship. Removed the active-state side border in favor of an inset accent treatment.
+**Verification**: TypeScript typecheck passed. Browser checks at 1224×600 and 390×844 confirmed the new record browser, selected item/editor relationship, and no document overflow. Impeccable detector reported 0 anti-patterns for the changed Settings files. No live sources or Google writes were accessed.
+
+### TASK-20260928-036
+**Date**: 2026-09-28
+**Task**: Refine the Settings filter control
+**Files Changed**:
+- src/admin.tsx
+- src/settings-layout.css
+
+**Summary**: Replaced the Settings navigation search field’s competing inherited surfaces with a dedicated `settings-filter` control: one recessed field, one border, clear focus ring, stable icon alignment, and transparent input background.
+**Verification**: TypeScript typecheck passed. Browser inspection confirmed the field bounds and transparent inner input at desktop width with no document overflow. Impeccable detector returned 0 anti-patterns for the changed Settings files. No live sources or Google writes were accessed.
+
+### TASK-20260928-037
+**Date**: 2026-09-28
+**Task**: Refine search, assistant history, and modal surfaces from browser comments
+**Files Changed**:
+- src/App.tsx
+- src/AssistantPage.tsx
+- src/dialog.tsx
+- src/experience.css
+- src/overhaul.css
+- server/ai.ts
+
+**Summary**: Reworked the global sample-search palette into a single recessed, focused search field; redesigned native confirmation/preview dialogs with a controlled surface, backdrop, header, and content spacing; made assistant history persist only after a real user message, remove stale greeting-only conversations, support deletion, and request a concise model-generated title with a safe local fallback. The existing Google Drive library remains read-only: Drive retrieval/synchronization is already supported, while automatic report backup remains a separate permissioned write workflow.
+**Verification**: TypeScript typecheck passed; Vite production build passed (`1623` modules, main JS `460.57 kB` / `137.96 kB` gzip). Browser checks confirmed greeting-only assistant sessions are not listed, real requests create a titled record with delete affordance, and the command palette uses the new single-field treatment. Impeccable found only two pre-existing thick side-tab rules in the legacy experience stylesheet plus advisory token notes. No live Google reads or writes were accessed.
+
+### TASK-20260928-038
+**Date**: 2026-09-28
+**Task**: Add a restrained interactive laboratory cursor
+**Files Changed**:
+- src/CursorEffects.tsx
+- src/App.tsx
+- src/experience.css
+- public/cursor-lab.svg
+- public/cursor-lab-action.svg
+
+**Summary**: Extended the existing custom cursor with a white/blue laboratory pointer treatment and a lightweight pointer-following VFX layer. The effect has distinct idle, action, text-entry, and press states, remains pointer-events-free, and is disabled for coarse pointers and reduced-motion preferences.
+**Verification**: TypeScript typecheck passed; Vite production build passed (`1624` modules, main JS `462.41 kB` / `138.50 kB` gzip). Browser inspection confirmed the cursor assets and VFX nodes render in the running app. Impeccable reported only existing legacy side-tab warnings and advisory token notes. No live sources or Google writes were accessed.
+
+### TASK-20260928-039
+**Date**: 2026-09-28
+**Task**: Separate collapsed sidebar control and optimize logo motion
+**Files Changed**:
+- src/experience.css
+- src/Experience.tsx
+
+**Summary**: Moved the collapsed rail’s expand control into a dedicated top utility zone so it no longer overlaps the brand mark. Added a low-cost transform-only laboratory logo animation with reduced-motion behavior, isolated the ambient layer with paint containment, and coalesced route reveal registrations into one animation frame.
+**Verification**: TypeScript typecheck passed; Vite production build passed (`1624` modules, main JS `462.47 kB` / `138.53 kB` gzip). Impeccable detector completed without new blocking findings; remaining warnings are legacy side-tab rules and advisory token notes. No live sources or Google writes were accessed.
