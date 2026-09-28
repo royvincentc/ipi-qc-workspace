@@ -76,6 +76,16 @@
 - Changed: the collapsed sidebar control now occupies a separate top utility zone, leaving the animated laboratory mark below it. Logo motion is transform-only and disabled for reduced-motion users. Ambient rendering is paint-contained and route reveal registration is frame-coalesced.
 - Verification: TypeScript typecheck, Vite production build, and Impeccable detection passed. No live source or Google write was accessed.
 
+## Latest report-generation repair — 2026-09-29, Asia/Manila
+
+- Task: TASK-20260929-041.
+- User-authorized objective: fix nonfunctional special tags in the uploaded report template and ensure Omega Pain Killer Liniment - Pro resolves its five specification parameters rather than only SPC.
+- Changed: `server/reports.ts` now maps every special tag found in the uploaded custom template (`sample.released`, `date.mfd`, `exp.date`, `fill.vol`, `requested.by`, and `logbook`) from manual report details or pinned sample metadata as appropriate. `sample.released` is the report-generation timestamp, not an inferred laboratory result. Product/applicability resolution now favors a more specific product name and only accepts positive best checklist-row matches; equal candidates remain visible to the existing ambiguity block.
+- Verification: focused tag/Omega regression tests passed; 7 DOCX-worker tests passed; TypeScript typecheck and Vite production build passed; diff check passed. The full Node test runner stopped after its initial eight passing tests in this host environment; use the focused regressions as the direct evidence for this repair.
+- Data/source access: no live Google or production database access; no source/template/laboratory records changed.
+- Current dirty inventory: `server/reports.ts`, `tests/configuration.test.ts`, `docs/agent-guide/tasks.md`, and this handover are this task’s changes. Existing untracked `.agents/`, `.impeccable/`, `fix.py`, `output/`, `patch.py`, `patch.txt`, `patch2.py`, `patch_docs.py`, `query.ts`, and `upload_template.ts` remain preserved and untouched.
+- Next safe action: commit and push the focused fix, then generate an Omega Pain Killer Liniment - Pro report in the live application and review the rendered PDF/DOCX for five rows and populated template metadata.
+
 ## Latest table ergonomics refinement — 2026-09-28, Asia/Taipei
 
 - Task: TASK-20260928-033.
