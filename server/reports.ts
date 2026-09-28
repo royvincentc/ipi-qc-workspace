@@ -51,7 +51,25 @@ export const normalizeSampleName = (name: string): string => {
   return n.trim().replace(/\s{2,}/g, ' ');
  };
 export const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
+/**
+ * These words distinguish otherwise similarly named Omega specifications.
+ * Package volume is deliberately not a qualifier: 15 mL through 120 mL use
+ * the same row unless one of these controlled product variants is present.
+ */
+export function sameSpecificationVariant(sampleName:string,productName:string){
+ const qualifiers=(value:string)=>{
+  const words=new Set(tokenize(value));
+  return {
+   export:words.has('export'),
+   pro:words.has('pro'),
+   oldSpecs:/\bold\s+specs\b/i.test(value)
+  };
+ };
+ const sample=qualifiers(sampleName),product=qualifiers(productName);
+ return sample.export===product.export&&sample.pro===product.pro&&sample.oldSpecs===product.oldSpecs;
+}
 export const matchScore = (sampleName:string, productName:string) => {
+   if(!sameSpecificationVariant(sampleName,productName))return 0;
    const s = sampleName.toLowerCase();
    const p = productName.toLowerCase();
    const productTokens = tokenize(productName);
