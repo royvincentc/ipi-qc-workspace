@@ -132,5 +132,5 @@ setTimeout(async () => {
 }, 2000);
 
 const server=app.listen(Number(process.env.PORT||3001),demo?'127.0.0.1':'0.0.0.0',()=>console.log(`IPI API listening on ${process.env.PORT||3001}${demo?' (de-identified demo)':''}`));
-const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},300000);interval.unref();
+const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},900000);interval.unref();
 

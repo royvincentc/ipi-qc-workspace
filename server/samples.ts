@@ -47,9 +47,15 @@ async function autoCreateProducts(actor:string){
 export async function syncSources(actor:string){if(demo)return {count:0,message:'De-identified demo; live synchronization is disabled'};const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;
  for(const [url,cs] of [[config.incoming,sourceCatalog.filter(t=>t.register==='incoming').map(t=>t.id)],[config.environmental,sourceCatalog.filter(t=>t.register==='environmental').map(t=>t.id)]] as [string,Category[]][]){if(!url)continue;const book=await readWorkbook(url);await locked(book.id,async()=>{const records:Sample[]=[];for(const sheet of book.sheets)for(const c of cs){const type=managed.value.sampleTypes.find(t=>t.id===c)!;validateLayout(sheet,c,type);for(const r of sectionRows(sheet,c,type))if(r.occupied&&!r.reserved&&r.ml.trim())records.push(sourceSample(book.id,sheet,c,r.row,r.values,type,managed.revision));}
   // Validate identity for the entire import before persisting any changed rows.
-  const existing=(await db.query('SELECT id,data FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1',[book.id])).rows.filter(r=>r.data.ml?.trim());
-  for(const old of existing){const current=records.find(s=>s.source.sheetId===old.data.source.sheetId&&s.category===old.data.category&&s.source.row===old.data.source.row);if(!current||current.ml!==old.data.ml)throw new Fault(409,`A source record (${old.data.ml}) on sheet "${old.data.source.sheet}" row ${old.data.source.row} moved, disappeared, or changed identity. Reconcile the spreadsheet before synchronization.`);}
-  for(const record of records){await saveSnapshot(record);count++;}
+  const existing = (await db.query('SELECT id, data->>\'ml\' as ml, data->\'source\'->>\'sheet\' as sheet, data->\'source\'->>\'sheetId\' as sheet_id, data->>\'category\' as category, data->\'source\'->>\'row\' as row, data->\'source\'->>\'fingerprint\' as fingerprint, data->>\'configurationRevision\' as rev FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1', [book.id])).rows.filter(r => r.ml?.trim());
+    const old_records = existing.map(r => ({ id: r.id, ml: r.ml, category: r.category, rev: Number(r.rev), source: { sheet: r.sheet, sheetId: Number(r.sheet_id), row: Number(r.row), fingerprint: r.fingerprint } }));
+    for(const old of old_records){const current=records.find(s=>s.source.sheetId===old.source.sheetId&&s.category===old.category&&s.source.row===old.source.row);if(!current||current.ml!==old.ml)throw new Fault(409,`A source record (${old.ml}) on sheet "${old.source.sheet}" row ${old.source.row} moved, disappeared, or changed identity. Reconcile the spreadsheet before synchronization.`);}
+    for(const record of records){
+      const match = old_records.find(s => s.source.sheetId === record.source.sheetId && s.category === record.category && s.source.row === record.source.row);
+      if (match && match.source.fingerprint === record.source.fingerprint && match.rev === record.configurationRevision) continue;
+      await saveSnapshot(record);
+      count++;
+    }
  });}
  if(config.specifications)await setSetting('applicability',await readApplicability(config.specifications));
  // Auto-create managed products for any sample names without a matching product entry
