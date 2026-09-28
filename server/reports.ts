@@ -54,9 +54,14 @@ export const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[
 export const matchScore = (sampleName:string, productName:string) => {
    const s = sampleName.toLowerCase();
    const p = productName.toLowerCase();
-   if (s === p) return 10000;
-   if (s.startsWith(p)) return 5000 + p.length;
-   if (s.includes(p)) return 1000 + p.length;
+   const productTokens = tokenize(productName);
+   // Specific product names must win over their shorter parent names.  In
+   // particular, "Omega Pain Killer Liniment - Pro" must not resolve to the
+   // generic "Omega Pain Killer Liniment" merely because both are prefixes.
+   const specificity = productTokens.length * 1_000 + p.length;
+   if (s === p) return 1_000_000 + specificity;
+   if (s.startsWith(p)) return 900_000 + specificity;
+   if (s.includes(p)) return 800_000 + specificity;
 
    const getBigrams = (str:string) => {
     const b = new Map<string,number>();
@@ -73,11 +78,10 @@ export const matchScore = (sampleName:string, productName:string) => {
     let intersection = 0;
     for (const [k, v] of b2.b.entries()) intersection += Math.min(v, b1.b.get(k)||0);
     const dice = (2.0 * intersection) / (b1.length + b2.length);
-    if (dice > 0.85) return dice * 100;
+    if (dice > 0.85) return 700_000 + Math.round(dice * 10_000) + specificity;
    }
    
    const sampleTokens = tokenize(sampleName);
-   const productTokens = tokenize(productName);
    let matched = 0;
    for (const t of productTokens) {
     const idx = sampleTokens.indexOf(t);
@@ -86,21 +90,23 @@ export const matchScore = (sampleName:string, productName:string) => {
      sampleTokens.splice(idx, 1);
     }
    }
-   return productTokens.length > 0 && matched === productTokens.length ? matched : 0;
+   return productTokens.length > 0 && matched === productTokens.length ? 600_000 + specificity : 0;
   };
 
 
 
 export function resolveApplicabilityMatches(applicability: any[], product: any, sheetName: string, sampleName?: string) {
-  let bestRow = null;
-  let bestScore = -10000;
+  let bestScore = 0;
+  const bestRows: any[] = [];
   for (const row of applicability) {
     if (row.sheet !== sheetName) continue;
     
     // First try exact or alias match (case insensitive)
     const exactMatch = [product.name, ...product.aliases].some(name => row.product.toLowerCase() === name.toLowerCase());
     if (exactMatch) {
-      return [row]; // immediate exact match
+      bestScore = Number.MAX_SAFE_INTEGER;
+      bestRows.push(row);
+      continue;
     }
 
     // Fallback to fuzzy match
@@ -108,13 +114,18 @@ export function resolveApplicabilityMatches(applicability: any[], product: any, 
     const namesToTest = sampleName ? [sampleName, ...product.aliases] : [product.name, ...product.aliases];
     for (const name of namesToTest) {
       const score = matchScore(rowNormalized, name);
-      if (score > -500 && score > bestScore) {
+      if (score > bestScore) {
         bestScore = score;
-        bestRow = row;
+        bestRows.length = 0;
+        bestRows.push(row);
+      } else if (score > 0 && score === bestScore) {
+        bestRows.push(row);
       }
     }
   }
-  return bestRow ? [bestRow] : [];
+  // Returning every equally good row lets the caller block an ambiguous
+  // scientific mapping instead of silently taking the first spreadsheet row.
+  return bestRows;
 }
 
 
@@ -229,10 +240,39 @@ export async function createDraft(sampleId:string,specId:string,templateId:strin
  await db.query('INSERT INTO drafts(id,revision,data) VALUES($1,1,$2)',[draft.id,JSON.stringify(draft)]);await db.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,1,$2)',[draft.id,JSON.stringify(draft)]);await audit(actor.email,'draft_created',draft.id,{sampleId,specificationRevision:spec.revision,templateRevision:template.revision});return draft;
 }
 export async function saveDraft(id:string,expected:number,results:Result[],fields:Record<string,string>,actor:string){return locked('draft:'+id,async(tx)=>{const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!old)throw new Fault(404,'Draft not found');if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');const keys=old.results.map(resultKey);if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');for(const r of results)if(r.state==='not_tested'&&!r.reason.trim())throw new Fault(400,'Not-tested results require a reason');const d={...old,results,fields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};await tx.query('BEGIN');try{await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[d.revision,JSON.stringify(d),id]);await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[id,d.revision,JSON.stringify(d)]);await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision});return d;});}
+function firstText(...values:unknown[]){return values.map(value=>String(value??'').trim()).find(Boolean)||'';}
+export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
+ const fields:Record<string,string>=Object.fromEntries(((t.manifest.tokens||[]) as string[]).filter(k=>!k.startsWith('result.')).map(k=>[k,'']));
+ const timezone=d.configurationSnapshot?.general.timezone||'Asia/Manila';
+ const releaseDate=new Intl.DateTimeFormat('en-US',{timeZone:timezone,month:'2-digit',day:'2-digit',year:'numeric'}).format(now);
+ const releaseTime=new Intl.DateTimeFormat('en-US',{timeZone:timezone,hour:'2-digit',minute:'2-digit',hour12:true}).format(now);
+ const sourceFields=d.sample.fields||{};
+ const manual=d.fields||{};
+ Object.assign(fields,{
+  'd.release':releaseDate,
+  't.release':releaseTime,
+  // The approved template calls this field "Date&Time Released". It is the
+  // report-generation timestamp, never an inferred laboratory result.
+  'sample.released':firstText(manual['sample.released'],`${releaseDate} ${releaseTime}`),
+  'logbook':firstText(manual.logbook,manual.logbookReference),
+  'date.mfd':firstText(manual['date.mfd'],manual.manufactureDate,sourceFields.manufactureDate),
+  'fill.vol':firstText(manual['fill.vol'],manual.fillVolume,sourceFields.fillVolume),
+  'exp.date':firstText(manual['exp.date'],manual.expiryDate,sourceFields.expiryDate),
+  'requested.by':firstText(manual['requested.by'],manual.requestedBy,sourceFields.requestedBy),
+  'report.laboratoryName':d.configurationSnapshot?.general.laboratoryName||'',
+  'report.department':d.configurationSnapshot?.general.department||'',
+  'report.site':d.configurationSnapshot?.general.site||'',
+  'sample.name':d.sample.name,
+  'sample.ml':d.sample.ml,
+  'sample.batch':d.sample.batch,
+  'sample.received':d.sample.received,
+  'sample.category':d.sample.categoryLabel||d.configurationSnapshot?.sampleTypes?.find(t=>t.id===d.sample.category)?.name||categories[d.sample.category]
+ },Object.fromEntries(Object.entries(d.configurationSnapshot?.reports||{}).map(([k,v])=>['report.'+k,String(v)])),manual);
+ return fields;
+}
 export async function generate(id:string,revision:number,actor:string){return locked('draft:'+id,async()=>{const d=(await db.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!d)throw new Fault(404,'Draft not found');if(d.revision!==revision)throw new Fault(409,'Save and review the latest draft before generation');const issues=reportIssues(d);if(issues.length)throw new Fault(422,issues.join('; '));const t=d.templateSnapshot||(await db.query('SELECT data FROM templates WHERE id=$1',[d.templateId])).rows[0]?.data as Template;if(!t||!t.verified||t.revision!==d.templateRevision)throw new Fault(409,'Template revision changed; create a new draft with the verified template');
  if(!demo){const source=d.sample.source;const live=await rangeValues(source.spreadsheetId,source.sheet,source.range);if(hash(Array.from({length:source.raw.length},(_,i)=>live[i]??''))!==source.fingerprint)throw new Fault(409,'Source sample changed; reconcile and create a new draft before generation');}
- const existing=(await db.query("SELECT data FROM files WHERE data->>'draftId'=$1 AND data->>'resultRevision'=$2 AND data->>'templateRevision'=$3 ORDER BY created_at DESC LIMIT 1",[id,String(revision),d.templateRevision])).rows[0]?.data;if(existing){try{await access(privatePath(existing.path));await access(privatePath(existing.pdf));return existing;}catch{await db.query('DELETE FROM files WHERE id=$1', [existing.id]); console.warn('Regenerating missing file');}}const fileId=randomUUID();await mkdir(privatePath('generated'),{recursive:true});const output=privatePath(`generated/${fileId}.docx`),payloadPath=privatePath(`generated/${fileId}.json`);const fields:Record<string,string>=Object.fromEntries(((t.manifest.tokens||[]) as string[]).filter(k=>!k.startsWith('result.')).map(k=>[k,'']));const _tz=d.configurationSnapshot?.general.timezone||'Asia/Manila';const _n=new Date();Object.assign(fields,{'d.release':new Intl.DateTimeFormat('en-US',{timeZone:_tz,month:'2-digit',day:'2-digit',year:'numeric'}).format(_n),'t.release':new Intl.DateTimeFormat('en-US',{timeZone:_tz,hour:'2-digit',minute:'2-digit',hour12:true}).format(_n),'logbook':d.fields.logbookReference||''},{'report.laboratoryName':d.configurationSnapshot?.general.laboratoryName||'','report.department':d.configurationSnapshot?.general.department||'','report.site':d.configurationSnapshot?.general.site||''},Object.fromEntries(Object.entries(d.configurationSnapshot?.reports||{}).map(([k,v])=>['report.'+k,v])),d.fields,{'sample.name':d.sample.name,'sample.ml':d.sample.ml,'sample.batch':d.sample.batch,'sample.received':d.sample.received,'sample.category':d.sample.categoryLabel||d.configurationSnapshot?.sampleTypes.find(t=>t.id===d.sample.category)?.name||categories[d.sample.category]});
- Object.assign(fields,{'date.mfd':d.fields.manufactureDate||'','fill.vol':d.fields.fillVolume||'','exp.date':d.fields.expiryDate||'','requested.by':d.fields.requestedBy||''});
+ const existing=(await db.query("SELECT data FROM files WHERE data->>'draftId'=$1 AND data->>'resultRevision'=$2 AND data->>'templateRevision'=$3 ORDER BY created_at DESC LIMIT 1",[id,String(revision),d.templateRevision])).rows[0]?.data;if(existing){try{await access(privatePath(existing.path));await access(privatePath(existing.pdf));return existing;}catch{await db.query('DELETE FROM files WHERE id=$1', [existing.id]); console.warn('Regenerating missing file');}}const fileId=randomUUID();await mkdir(privatePath('generated'),{recursive:true});const output=privatePath(`generated/${fileId}.docx`),payloadPath=privatePath(`generated/${fileId}.json`);const fields=reportTemplateFields(d,t);
  const rows=reportRows(d,t).map(({index,...row})=>{for(const [k,v]of Object.entries(row))fields[`result.${index}.${k}`]=v;return row;});
  const missing=((t.manifest.requiredFields||[]) as string[]).filter(k=>!fields[k]?.trim());if(missing.length)throw new Fault(422,'Missing template fields: '+missing.join(', '));await writeFile(payloadPath,JSON.stringify({fields,rows,reportSettings:d.configurationSnapshot?.reports}));const args=['generate','--input',privatePath(t.path),'--payload',payloadPath,'--output',output];await worker(args);const pdf=privatePath(`generated/${fileId}.pdf`);await renderPdf(output,pdf);const file={id:fileId,name:`${d.sample.batch||'Unknown'} - ${d.sample.name||'Unknown'}.docx`.replace(/[<>:"/\\|?*]+/g, '_'),kind:'report',path:`generated/${fileId}.docx`,pdf:`generated/${fileId}.pdf`,createdAt:new Date().toISOString(),sampleId:d.sampleId,ml:d.sample.ml,draftId:id,resultRevision:d.revision,specificationRevision:d.specification.revision,templateRevision:d.templateRevision,sourceSnapshot:d.sample.source,configurationRevision:d.configurationRevision,sha256:createHash('sha256').update(await readFile(output)).digest('hex'),externalReviewRequired:true,demo};await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[fileId,JSON.stringify(file)]);await audit(actor,'report_generated',fileId,{draftId:id,revision});return file;});}
 

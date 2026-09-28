@@ -9,7 +9,7 @@ const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('.
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
 const {submitSample}=await import('../server/samples.js');
-const {createDraft,createAutomaticDraft,resolveReportSetup}=await import('../server/reports.js');
+const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,resolveApplicabilityMatches,matchScore}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
 await migrate();after(close);
 
@@ -52,6 +52,28 @@ test('draft pins template, criteria, manual empty results and configuration revi
 });
 test('viewer cannot administer configuration',()=>{
  const middleware=requireRole('administrator');assert.throws(()=>middleware({user:{role:'viewer'}} as any,{} as any,()=>{}),(e:any)=>e.status===403);
+});
+
+test('report template aliases populate the approved custom template tags',()=>{
+ const draft={
+  sample:{name:'Omega Pain Killer Liniment - Pro',ml:'ML-FG-26-9999',batch:'LOT-42',received:'2026-09-29 08:00',category:'FG',fields:{manufactureDate:'2026-01-01',expiryDate:'2028-01-01',fillVolume:'60 mL',requestedBy:'QC'}},
+  fields:{logbookReference:'MIC-42 p.7',analyst:'Analyst'},
+  configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}},
+ } as any;
+ const template={manifest:{tokens:['sample.released','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
+ const fields=reportTemplateFields(draft,template,new Date('2026-09-29T01:23:00Z'));
+ assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.match(fields['sample.released'],/^09\/29\/2026 \d{2}:\d{2} (AM|PM)$/);
+});
+
+test('applicability resolution selects the specific Omega Pro row and blocks tied rows',()=>{
+ const product={name:'Omega Pain Killer Liniment - Pro',aliases:[]};
+ const rows=[
+  {sheet:'RM/FP/AS',product:'Unrelated Product',tests:['SPC']},
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment - Pro',tests:['SPC','MY','PA','SA','EC']},
+ ];
+ const match=resolveApplicabilityMatches(rows,product,'RM/FP/AS','Omega Pain Killer Liniment - Pro (5th withdrawal - New Specs) - 60 mL');
+ assert.deepEqual(match,[rows[1]]);assert.ok(matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment - Pro')>matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment'));
+ assert.equal(resolveApplicabilityMatches([...rows, {...rows[1]}],product,'RM/FP/AS').length,2);
 });
 
 test('connection validation survives appearance edits and is invalidated by routing changes',async()=>{

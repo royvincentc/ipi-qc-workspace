@@ -1064,3 +1064,19 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 
 **Summary**: Verified Google accounts are now provisioned as active viewers on first sign-in. Only active administrators can change roles or account status, and the server prevents removing the last active administrator. Reworked the People & permissions panel with explicit viewer-by-default policy copy, access counts, scannable account rows, role descriptions, and responsive editing controls.
 **Verification**: TypeScript typecheck passed; Vite production build passed. Impeccable detector reported no new layout-transition warning; remaining findings are advisory design-token notes in existing settings styles. Playwright browser verification was attempted but the local Playwright browser executable is not installed, and the project’s global npx launcher points to a missing npm installation. No live Google reads or writes were accessed.
+
+### TASK-20260929-041 — Resolve uploaded-template tags and specific product applicability
+
+- Status: Completed in code; deployment verification remains
+- Priority: P0
+- Actor/tool: Codex
+- Authorization: Project-owner report that custom-template fields were blank and that Omega Pain Killer Liniment - Pro generated only SPC instead of its five parameters
+- Scope/files: `server/reports.ts`, `tests/configuration.test.ts`, this ledger, active handover
+- Before: The uploaded custom template’s `{{sample.released}}` token was never assigned. Its sample metadata aliases (`{{date.mfd}}`, `{{exp.date}}`, `{{fill.vol}}`, and `{{requested.by}}`) were not populated from the incoming sample fields. The applicability resolver treated a score of zero as a candidate, allowing the first unrelated checklist row to win; product matching could prefer the shorter generic Omega Liniment name over the more specific Pro product.
+- Change: Centralized report-template field resolution. The custom tags now receive their intended source metadata, `{{logbook}}` maps to the editable logbook reference, and `{{sample.released}}` receives the report-generation date/time (not a laboratory result). Made product matching favor the most specific full/token match and made applicability matching return only positive best matches, preserving equally scored rows so the existing ambiguity guard blocks instead of silently choosing one.
+- Data impact: Code and disposable test data only. No Google Sheet, production database, laboratory result, template file, or source record was changed.
+- Verification: Focused regression tests for custom tag values and Omega’s five-parameter applicability row passed; 7 DOCX worker tests passed; TypeScript typecheck passed; Vite production build passed (`1624` modules; `464.69 kB` / `139.25 kB` gzip main JS); `git diff --check` passed. The full Node suite was invoked but its runner stopped after reporting the first eight passing tests in this environment, so focused regression evidence is retained separately.
+- Problems/risks: The template’s static footer text (for example, historical remarks/signature content) remains inherited document content and is outside this tag/mapping fix; it requires the established controlled template review rather than automatic alteration.
+- Rollback: Revert the focused report resolver and regression-test changes together.
+- Evidence: Current source diff, `custom-template.docx` validation inventory, and commands run on 2026-09-29 Asia/Manila.
+- Next action/owner: Deploy, then generate an Omega Pain Killer Liniment - Pro report from the live app and visually confirm all five rows and all template fields before operational use.
