@@ -1096,3 +1096,19 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Rollback: Revert this task’s three implementation/test files together to restore the prior embedded template and startup behavior.
 - Evidence: Uploaded DOCX SHA-256 `c574c6b44cbc42c6455a80de049b78767e5443f5803938d283f1fe0b1191bf5e`, worker validation, generated de-identified QA artifact, and command output dated 2026-09-29 Asia/Manila.
 - Next action/owner: Commit and deploy, then generate a real authorized report and confirm the revised `d.release`/`t.release` spacing and full Omega parameter list in the live PDF/DOCX.
+
+### TASK-20260929-043 — Make product-variant keywords decisive for report specifications
+
+- Status: Completed in code; deployment verification remains
+- Priority: P0
+- Actor/tool: Codex
+- Authorization: Project owner clarified the distinct Omega Pain Killer Liniment specifications and reported Herbycin Syrup resolving only SPC.
+- Scope/files: `server/reports.ts`, `tests/configuration.test.ts`, this ledger, active handover
+- Before: Fuzzy matching could score a shorter shared Liniment name even when a sample carried a meaningful `Export`, `Pro`, or `Old Specs` qualifier. This could choose an incompatible checklist row. Herbycin Syrup therefore lacked regression protection against a one-test resolution.
+- Change: Added a case-insensitive specification-variant guard. `Export`, `Pro`, and the `Old Specs` phrase must agree between sample/product or checklist row before scoring; package-volume tokens remain intentionally non-discriminating. Thus base/non-export, Export, Pro/New, and Pro Old Specs resolve only to their matching variants. Added a Herbycin Syrup checklist regression containing SPC, MY, S. aureus, E. coli, Salmonella, and Enterobacteriaceae.
+- Data impact: Code and disposable test data only. No Google Sheet, product, specification, laboratory result, or production database was modified.
+- Verification: Focused Omega/Herbycin regression passed; TypeScript typecheck passed; 7 DOCX worker tests passed; Vite production build passed (`1624` modules; `464.69 kB` / `139.25 kB` gzip main JS); `git diff --check` passed.
+- Problems/risks: This logic relies on the controlled qualifier words stated by the owner. A future scientifically distinct variant needs an explicit qualifier rule and regression before it is automatically selected.
+- Rollback: Revert the matcher and test change together.
+- Evidence: Owner-provided QC Micro Products Specifications screenshot and direct regression output dated 2026-09-29 Asia/Manila.
+- Next action/owner: Commit, request explicit deployment approval, then verify live report setup for each Omega variant and Herbycin Syrup.

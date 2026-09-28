@@ -98,6 +98,16 @@
 - Note: The uploaded template retains static `REMARKS: Passed` content. It is outside the requested tag migration but conflicts with the established no-automatic-pass/fail rule; it requires an owner-controlled template decision before operational use.
 - Next safe action: commit, then request explicit approval before pushing to shared `master`/Render. After deployment, generate and visually inspect an authorized Omega Pain Killer Liniment - Pro report for five parameters and correctly spaced release date/time.
 
+## Latest product-variant mapping repair — 2026-09-29, Asia/Manila
+
+- Task: TASK-20260929-043.
+- User-authorized objective: apply the stated Omega Liniment product-variant rules and repair Herbycin Syrup’s SPC-only resolution.
+- Changed: report matching is now case-insensitive and rejects candidate products/checklist rows unless `Export`, `Pro`, and `Old Specs` agree. Fill volume remains a packaging variation. This distinguishes base/non-export, Export, Pro/New, and Pro Old Specs before fuzzy scoring. A regression confirms the Herbycin Syrup row resolves SPC, MY, S. aureus, E. coli, Salmonella, and Enterobacteriaceae rather than SPC alone.
+- Verification: focused mapping regression, TypeScript typecheck, 7 DOCX worker tests, Vite production build, and diff check passed.
+- Data/source access: owner-provided screenshot only; no live Google or production database access and no source records changed.
+- Current dirty inventory: `server/reports.ts`, `tests/configuration.test.ts`, `docs/agent-guide/tasks.md`, and this handover are this task’s changes. Existing untracked files remain untouched.
+- Next safe action: commit, then obtain explicit approval to push all pending report/template commits to shared `master`/Render. After deployment, exercise each Omega variant and Herbycin Syrup in live report setup.
+
 ## Latest table ergonomics refinement — 2026-09-28, Asia/Taipei
 
 - Task: TASK-20260928-033.

@@ -9,7 +9,7 @@ const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('.
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
 const {submitSample}=await import('../server/samples.js');
-const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,resolveApplicabilityMatches,matchScore}=await import('../server/reports.js');
+const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,resolveApplicabilityMatches,matchScore,sameSpecificationVariant}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
 await migrate();after(close);
 
@@ -65,15 +65,23 @@ test('report template aliases populate the approved custom template tags',()=>{
  assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
 });
 
-test('applicability resolution selects the specific Omega Pro row and blocks tied rows',()=>{
+test('applicability resolution respects Omega specification keywords and the Herbycin row',()=>{
  const product={name:'Omega Pain Killer Liniment - Pro',aliases:[]};
  const rows=[
-  {sheet:'RM/FP/AS',product:'Unrelated Product',tests:['SPC']},
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment - 15 mL, 30 mL, 60 mL, 120 mL',tests:['SPC','MY','PA','SA','CA']},
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment - Export (120,60)',tests:['SPC','MY','COL']},
   {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment - Pro',tests:['SPC','MY','PA','SA','EC']},
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment - Pro (60mL, 120mL & 30mL) Old Specs',tests:['SPC','MY','COL']},
  ];
  const match=resolveApplicabilityMatches(rows,product,'RM/FP/AS','Omega Pain Killer Liniment - Pro (5th withdrawal - New Specs) - 60 mL');
- assert.deepEqual(match,[rows[1]]);assert.ok(matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment - Pro')>matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment'));
- assert.equal(resolveApplicabilityMatches([...rows, {...rows[1]}],product,'RM/FP/AS').length,2);
+ assert.deepEqual(match,[rows[2]]);assert.ok(matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment - Pro')>matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment'));
+ assert.equal(sameSpecificationVariant('OMEGA PAIN KILLER LINIMENT - EXPORT (30mL, 15mL)','Omega Pain Killer Liniment - Export (120,60)'),true);
+ assert.equal(sameSpecificationVariant('Omega Pain Killer Liniment - Pro (60mL, 120mL & 30mL) OLD SPECS','Omega Pain Killer Liniment - Pro Old Specs'),true);
+ assert.equal(sameSpecificationVariant('Omega Pain Killer Liniment - Pro (60mL)','Omega Pain Killer Liniment - Pro Old Specs'),false);
+ assert.equal(sameSpecificationVariant('Omega Pain Killer Liniment - 120 mL','Omega Pain Killer Liniment - Export (120,60)'),false);
+ const herbycin=resolveApplicabilityMatches([{sheet:'RM/FP/AS',product:'Herbycin Syrup',tests:['SPC','MY','SA','EC','SAL','ENT']}],{name:'Herbycin Syrup',aliases:[]},'RM/FP/AS','HERBYCIN SYRUP');
+ assert.deepEqual(herbycin[0].tests,['SPC','MY','SA','EC','SAL','ENT']);
+ assert.equal(resolveApplicabilityMatches([...rows, {...rows[2]}],product,'RM/FP/AS').length,2);
 });
 
 test('connection validation survives appearance edits and is invalidated by routing changes',async()=>{
