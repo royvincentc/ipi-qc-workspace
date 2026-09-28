@@ -609,15 +609,20 @@ main {
 .global-search { display: flex; align-items: center; gap: 12px; background: var(--bg-app); border: 1px solid var(--border); padding: 8px 16px; border-radius: var(--radius-md); width: 100%; max-width: 600px; color: var(--text-tertiary); font-size: 14px; cursor: pointer; transition: border-color var(--transition-fast); }
 .global-search:hover { border-color: var(--border-strong); }
 .topbar-divider { width: 1px; height: 24px; background: var(--border); margin: 0 16px; }
-.topbar-date { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.2; }
-.topbar-date small { font-size: 11px; color: var(--text-tertiary); }
+.topbar-date { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; line-height: 1.2; }
+.topbar-date span { font-size: 11px; color: var(--text-tertiary); }
 .topbar-date strong { font-size: 13px; color: var(--text-primary); }
 .sidebar-collapsed .brand-text, .sidebar-collapsed .user-text { display: none; }
-.collapse-btn { width: 100%; justify-content: center; }
+.collapse-btn { position: absolute; top: 18px; right: 12px; width: 30px; height: 30px; justify-content: center; color: var(--text-tertiary); }
+.collapse-btn:hover { color: var(--accent); background: var(--bg-surface-hover); }
 .brand-text { min-width: 0; }
 .brand-text span { display: block; font-size: 10px; color: var(--text-tertiary); }
 .user-text { display: flex; flex-direction: column; min-width: 0; }
 .mobile-menu-button, .mobile-nav-backdrop { display: none; }
+
+.search-field { min-height: 46px; padding: 0 14px; border: 1px solid var(--border); border-radius: 13px; background: color-mix(in srgb,var(--bg-app) 88%,transparent); transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast); }
+.search-field:focus-within { border-color: var(--accent); background: var(--bg-app); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-field input { min-height: 44px; padding: 0 4px!important; background: transparent!important; border: 0!important; box-shadow: none!important; }
 
 @media (max-width: 768px) {
   .mobile-menu-button { display: inline-flex; flex-shrink: 0; }
@@ -628,6 +633,7 @@ main {
   .topbar { padding: 10px 12px; gap: 8px; }
   .topbar .global-search { min-width: 0; padding: 8px 10px; }
   .topbar .global-search kbd, .topbar-date, .topbar-divider { display: none; }
+  .collapse-btn { display: none; }
   .topbar-right { gap: 8px; white-space: nowrap; }
   .topbar-right > div:first-child { font-size: 0; margin-right: 0 !important; }
   main { padding: 18px 14px; min-width: 0; }

@@ -35,6 +35,7 @@ const messageSchema = z.object({
   parts: z.array(z.object({ text: z.string().min(1).max(8000) })).min(1).max(8)
 });
 const inputSchema = z.object({ messages: z.array(messageSchema).min(2).max(50) });
+const titleInputSchema = z.object({ prompt: z.string().trim().min(1).max(8000) });
 const sampleArgs = z.object({
   q: z.string().max(200).optional(),
   category: z.string().max(50).optional(),
@@ -46,6 +47,24 @@ const auditArgs = z.object({
 });
 
 export const aiRouter = express.Router();
+
+aiRouter.post('/title', async (req, res) => {
+  const { prompt } = titleInputSchema.parse(req.body);
+  const fallback = prompt.replace(/\s+/g, ' ').replace(/[.!?]+$/, '').trim().slice(0, 48) + (prompt.length > 48 ? '…' : '');
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  if (!apiKey) return res.json({ title: fallback });
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash',
+      contents: `Create a concise title for this QC microbiology assistant conversation. Return only the title, no quotes, no punctuation at the end, and keep it under 48 characters. User request: ${prompt}`
+    });
+    const title = response.text?.trim().replace(/^['"]|['"]$/g, '').slice(0, 48);
+    return res.json({ title: title || fallback });
+  } catch {
+    return res.json({ title: fallback });
+  }
+});
 
 aiRouter.post('/chat', async (req, res) => {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
