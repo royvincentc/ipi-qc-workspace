@@ -1112,3 +1112,18 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Rollback: Revert the matcher and test change together.
 - Evidence: Owner-provided QC Micro Products Specifications screenshot and direct regression output dated 2026-09-29 Asia/Manila.
 - Next action/owner: Commit, request explicit deployment approval, then verify live report setup for each Omega variant and Herbycin Syrup.
+
+### TASK-20260929-044 — Generate and render-check a Herbycin Syrup parameter preview
+
+- Status: Completed locally; deployment verification remains
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: Project owner requested an example Herbycin Syrup report file for review.
+- Scope/files: revised embedded template source, `output/Herbycin Syrup report preview.docx`, this ledger, active handover
+- Change: Generated a de-identified, blank-result Herbycin Syrup preview with the six applicable parameters: Standard Plate Count, Molds and Yeast, S. aureus, E. coli, Salmonella, and Enterobacteriaceae. During render QA, corrected the deployed template copy’s split-run date/time separator and removed only empty trailing body paragraphs that caused an unwanted blank second page. The owner’s uploaded source DOCX was not modified.
+- Data impact: A local preview file and temporary de-identified QA artifacts only. No actual results, criteria, Google data, source record, or production database was changed.
+- Verification: template validation found all 18 placeholders; worker generation completed without unresolved tokens; final Word PDF had exactly one page; TypeScript typecheck, Vite production build, and all 7 DOCX worker tests passed.
+- Problems/risks: The source template retains static `REMARKS: Passed`; the preview therefore shows that static text even though result cells are blank. It remains a controlled-template decision outside this request and must not be treated as an automatic release conclusion.
+- Rollback: Revert the embedded template update to restore the previous source formatting; the local preview may be discarded independently.
+- Evidence: `output/Herbycin Syrup report preview.docx` and one-page Word PDF generated 2026-09-29 Asia/Manila.
+- Next action/owner: Project owner reviews the preview layout and confirms whether the static footer wording should be revised through controlled template approval.

@@ -108,6 +108,16 @@
 - Current dirty inventory: `server/reports.ts`, `tests/configuration.test.ts`, `docs/agent-guide/tasks.md`, and this handover are this task’s changes. Existing untracked files remain untouched.
 - Next safe action: commit, then obtain explicit approval to push all pending report/template commits to shared `master`/Render. After deployment, exercise each Omega variant and Herbycin Syrup in live report setup.
 
+## Latest Herbycin Syrup preview — 2026-09-29, Asia/Manila
+
+- Task: TASK-20260929-044.
+- User-authorized objective: produce a report example for Herbycin Syrup review.
+- Changed: generated a local blank-result preview containing six requested parameter rows. Template render QA corrected spacing between split `d.release`/`t.release` runs and removed empty trailing body paragraphs that forced a blank second page. The current deployed template source embeds these presentation corrections; the uploaded source DOCX was preserved.
+- Verification: generated DOCX had no unresolved tags; Word rendered a final one-page PDF; TypeScript typecheck, Vite production build, and 7 DOCX worker tests passed.
+- Data/source access: de-identified local preview only; no live sources, database records, actual results, or criteria changed.
+- Note: preview retains the uploaded template’s static `REMARKS: Passed` footer despite blank results. It is not an automatic laboratory conclusion and needs an owner-controlled template decision.
+- Next safe action: provide the preview for owner review, then commit the embedded template correction. Push to shared master/Render still requires explicit approval.
+
 ## Latest table ergonomics refinement — 2026-09-28, Asia/Taipei
 
 - Task: TASK-20260928-033.
