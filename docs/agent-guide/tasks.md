@@ -1080,3 +1080,19 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Rollback: Revert the focused report resolver and regression-test changes together.
 - Evidence: Current source diff, `custom-template.docx` validation inventory, and commands run on 2026-09-29 Asia/Manila.
 - Next action/owner: Deploy, then generate an Omega Pain Killer Liniment - Pro report from the live app and visually confirm all five rows and all template fields before operational use.
+
+### TASK-20260929-042 — Replace the embedded report template with the revised upload
+
+- Status: Completed in code; deployment verification remains
+- Priority: P0
+- Actor/tool: Codex
+- Authorization: Project owner uploaded the revised `{{sample.batch}} - {{sample.name}}.docx` format and requested the report template be updated.
+- Scope/files: `server/custom-template.b64.ts`, `server/index.ts`, `tests/configuration.test.ts`, this ledger, active handover
+- Before: The deployed template source still embedded the earlier uploaded DOCX. Startup re-wrote its file, but an existing `Roy Custom Template` database record retained the old manifest and revision rather than refreshing after a template change.
+- Change: Embedded the revised upload and updated startup to refresh the existing named template’s path, revision, and validated manifest. The new template uses `{{d.release}}` and `{{t.release}}` in place of the removed tag. A single separator space was added between these adjacent tags in the deployed copy to prevent a joined date/time; the user’s original upload was preserved unchanged.
+- Data impact: Code and temporary de-identified document QA artifacts only. No Google Sheet, production database, source template, or laboratory record was changed.
+- Verification: Validated all 18 template tokens; generated a de-identified DOCX proof with no unresolved tags; Word rendered it to a one-page PDF. The original rendered image showed populated fields; after the spacing repair, this host’s image-view tool returned a blank preview despite the non-empty one-page Word PDF, so visual confirmation of the revised spacing remains a deployment follow-up. Focused regression tests passed, 7 DOCX worker tests passed, TypeScript typecheck and Vite production build passed, and `git diff --check` passed.
+- Problems/risks: The owner-supplied template retains static historical text such as `REMARKS: Passed`; that document-content decision was not changed by this tag/template update and requires separate controlled review under the report rules.
+- Rollback: Revert this task’s three implementation/test files together to restore the prior embedded template and startup behavior.
+- Evidence: Uploaded DOCX SHA-256 `c574c6b44cbc42c6455a80de049b78767e5443f5803938d283f1fe0b1191bf5e`, worker validation, generated de-identified QA artifact, and command output dated 2026-09-29 Asia/Manila.
+- Next action/owner: Commit and deploy, then generate a real authorized report and confirm the revised `d.release`/`t.release` spacing and full Omega parameter list in the live PDF/DOCX.

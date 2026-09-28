@@ -86,6 +86,18 @@
 - Current dirty inventory: `server/reports.ts`, `tests/configuration.test.ts`, `docs/agent-guide/tasks.md`, and this handover are this task’s changes. Existing untracked `.agents/`, `.impeccable/`, `fix.py`, `output/`, `patch.py`, `patch.txt`, `patch2.py`, `patch_docs.py`, `query.ts`, and `upload_template.ts` remain preserved and untouched.
 - Next safe action: commit and push the focused fix, then generate an Omega Pain Killer Liniment - Pro report in the live application and review the rendered PDF/DOCX for five rows and populated template metadata.
 
+## Latest revised-template replacement — 2026-09-29, Asia/Manila
+
+- Task: TASK-20260929-042.
+- User-authorized objective: replace the embedded custom report template with the newly uploaded format.
+- Changed: `server/custom-template.b64.ts` now embeds the new upload. On startup, `server/index.ts` refreshes the existing `Roy Custom Template` database record with the new validated manifest and revision instead of keeping stale metadata. The deployed copy adds one space between adjacent `{{d.release}}` and `{{t.release}}` tags, preventing the generated Date&Time Released value from running together; the original upload is untouched.
+- New template tags: `analyst`, `criterion`, `d.release`, `date.mfd`, `exp.date`, `fill.vol`, `logbook`, `remarks`, `requested.by`, `sample.batch`, `sample.category`, `sample.ml`, `sample.name`, `sample.received`, `t.release`, `test`, `tests`, and `value`.
+- Verification: worker validation found all 18 tags; a de-identified proof generated without unresolved placeholders and Word produced a non-empty one-page PDF. Focused report regressions, 7 DOCX-worker tests, TypeScript typecheck, and Vite production build passed. The host image viewer displayed a blank image after the final PDF re-render despite the successful Word PDF, so visually verify date/time spacing after deployment.
+- Data/source access: no live Google or production database access; no laboratory record/source file changed.
+- Current dirty inventory: `server/custom-template.b64.ts`, `server/index.ts`, `tests/configuration.test.ts`, `docs/agent-guide/tasks.md`, and this handover are this task’s changes. Existing untracked files remain preserved and untouched.
+- Note: The uploaded template retains static `REMARKS: Passed` content. It is outside the requested tag migration but conflicts with the established no-automatic-pass/fail rule; it requires an owner-controlled template decision before operational use.
+- Next safe action: commit, then request explicit approval before pushing to shared `master`/Render. After deployment, generate and visually inspect an authorized Omega Pain Killer Liniment - Pro report for five parameters and correctly spaced release date/time.
+
 ## Latest table ergonomics refinement — 2026-09-28, Asia/Taipei
 
 - Task: TASK-20260928-033.

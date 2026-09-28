@@ -60,9 +60,9 @@ test('report template aliases populate the approved custom template tags',()=>{
   fields:{logbookReference:'MIC-42 p.7',analyst:'Analyst'},
   configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}},
  } as any;
- const template={manifest:{tokens:['sample.released','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
+ const template={manifest:{tokens:['d.release','t.release','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
  const fields=reportTemplateFields(draft,template,new Date('2026-09-29T01:23:00Z'));
- assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.match(fields['sample.released'],/^09\/29\/2026 \d{2}:\d{2} (AM|PM)$/);
+ assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
 });
 
 test('applicability resolution selects the specific Omega Pro row and blocks tied rows',()=>{

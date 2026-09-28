@@ -119,18 +119,23 @@ setTimeout(async () => {
     const customP = 'templates/custom-template.docx';
     await writeFile(privatePath(customP), Buffer.from(CUSTOM_TEMPLATE_B64, 'base64'));
     await db.query("DELETE FROM templates WHERE data->>'name' = 'IPI Standardized Micro Layout'");
-    if (Number((await db.query("SELECT count(*) FROM templates WHERE data->>'name' = 'Roy Custom Template'")).rows[0].count) === 0) {
-      const v2 = await worker(['validate', '--input', privatePath(customP)]);
-      const t2 = {
-        id: randomUUID(),
-        name: 'Roy Custom Template',
-        family: 'standard',
-        category: 'Routine',
-        revision: hash(CUSTOM_TEMPLATE_B64),
-        path: customP,
-        verified: true,
-        manifest: { ...v2, requiredFields: [] }
-      };
+    const v2 = await worker(['validate', '--input', privatePath(customP)]);
+    const current = (await db.query("SELECT id,data FROM templates WHERE data->>'name' = 'Roy Custom Template' LIMIT 1")).rows[0];
+    const t2 = {
+      ...current?.data,
+      id: current?.id || randomUUID(),
+      name: 'Roy Custom Template',
+      family: 'standard',
+      category: 'Routine',
+      revision: hash(CUSTOM_TEMPLATE_B64),
+      path: customP,
+      verified: true,
+      manifest: { ...v2, requiredFields: [] }
+    };
+    if (current) {
+      await db.query('UPDATE templates SET data=$1 WHERE id=$2', [JSON.stringify(t2), t2.id]);
+      console.log('Updated Roy Custom Template.');
+    } else {
       await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [t2.id, JSON.stringify(t2)]);
       console.log('Seeded Roy Custom Template!');
     }
