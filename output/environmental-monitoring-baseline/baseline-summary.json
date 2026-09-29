@@ -1,0 +1,45 @@
+{
+  "archive": "C:\\Users\\Roy\\Documents\\PF- Environmental Monitoring.zip",
+  "logbook_title": "MICRO-QC Environmental Monitoring Logbook 2026",
+  "logbook_spreadsheet_id": "1rDbum4U-u_c5lEyGX0MiytmLzdIXbiiPcNezGCKbtsc",
+  "documents": 745,
+  "swabbing_activities": 6921,
+  "logbook_rows": 501,
+  "matches": {
+    "review": 3980,
+    "matched": 2884,
+    "unmatched": 57
+  },
+  "documents_by_product_method": {
+    "Cheers Baby Oil | Accupoint": 48,
+    "Cheers Baby Oil | SPC/MY": 50,
+    "Dr. Wong's Apple Fruit Juice | Accupoint": 16,
+    "Dr. Wong's Apple Fruit Juice | SPC/MY": 14,
+    "Dr. Wong's Lightening Face Cream | Accupoint": 19,
+    "Dr. Wong's Lightening Face Cream | SPC/MY": 21,
+    "Dr. Wong's Lightening Lotion | Accupoint": 25,
+    "Dr. Wong's Lightening Lotion | SPC/MY": 26,
+    "Efficascent Boost Pain Relief Massage Roll On | Accupoint": 70,
+    "Efficascent Boost Pain Relief Massage Roll On | SPC/MY": 85,
+    "Herbycin Cooling Mouth Spray | Accupoint": 16,
+    "Herbycin Cooling Mouth Spray | SPC/MY": 17,
+    "Herbycin Nature's Leaf | Accupoint": 1,
+    "Herbycin Nature's Leaf | SPC/MY": 1,
+    "Herbycin Syrup | Accupoint": 81,
+    "Herbycin Syrup | SPC/MY": 79,
+    "Herbycin Syrup Filling LYI22 SPCMY (AV).docx | SPC/MY": 1,
+    "Mama's Love Baby Oil | Accupoint": 55,
+    "Mama's Love Baby Oil | SPC/MY": 52,
+    "Omega Pain Killer Liniment - Export | Accupoint": 33,
+    "Omega Pain Killer Liniment - Export | SPC/MY": 32,
+    "SPCMY - Water Treatment Validation- Source.docx | SPC/MY": 1,
+    "SPCMY - Water Treatment Validation- T3 SP.docx | SPC/MY": 1,
+    "SPCMY - Water Treatment Validation- T4 SP.docx | SPC/MY": 1
+  },
+  "activities_by_method": {
+    "Accupoint": 2317,
+    "SPC/MY": 4604
+  },
+  "parse_exceptions": 0,
+  "governance": "Archive readings are evidence of swabbing activity. They are not imported as analytical sample results."
+}

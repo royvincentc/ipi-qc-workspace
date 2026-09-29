@@ -1,0 +1,502 @@
+﻿accupoint_samplers,analyzed_by,area,batch,category,date_analyzed,date_received,date_released,equipment_monitored,facility,ml_number,plates_used,proceed_read_by,product,received_by,remarks,secondary_category,sheet_id,sheet_row,status,tab
+2,Anne,Compounding,CYI44,Regular,09/01/2026,09/01/2026 @08:32 am,09/08/2026,2,PF2,ML-EM-26-0419,4,,Mama's Love Baby Oil (G),Anne,PASSED,N/A,507425896,5,RELEASED,September(ENVI) 2026
+8,Anne,Compounding,EYI72,Regular,09/01/2026,09/01/2026 @08:40 am,09/08/2026,8,PF2,ML-EM-26-0420,16,,Efficascent Boost Pain Relief Massage Roll On,Anne,PASSED,N/A,507425896,6,RELEASED,September(ENVI) 2026
+4,Anne,Filling,CYI44,Regular,09/01/2026,09/01/2026 @08:32 am,09/08/2026,4,PF2,ML-EM-26-0421,8,,Mama's Love Baby Oil (G),Anne,PASSED,N/A,507425896,7,RELEASED,September(ENVI) 2026
+5,James,Weighing,EYI07,Regular,09/02/2026,09/01/2026 @ 08:15 am,,22,PF1,ML-EM-26-0422,,,OPK Export - Weighing,James,,N/A,507425896,8,ON-GOING,September(ENVI) 2026
+,James,Compounding,EYI07,Regular,09/02/2026,09/01/2026 @ 08:32 am,,8,PF1,ML-EM-26-0423,,,OPK Export- Compounding Utensils,James,,N/A,507425896,9,,September(ENVI) 2026
+,James,Compounding,EYI07,Regular,09/02/2026,09/01/2026 @ 08:32 am,,7,PF1,ML-EM-26-0424,,,OPK Export- Compounding Tanks,James,,N/A,507425896,10,,September(ENVI) 2026
+,James,Filling,EYI07,Regular,09/02/2026,09/01/2026 @ 02:54 pm,,9,PF1,ML-EM-26-0425,,,OPK-Export- Filling,James,,N/A,507425896,11,,September(ENVI) 2026
+5,James,Compounding,LYI21,Regular,09/02/2026,09/02/2026 @ 08:28 am,,11,PF1,ML-EM-26-0426,,,Herbycin Syrup (Weighing),James,,N/A,507425896,12,,September(ENVI) 2026
+,James,Compounding,LYI21,Regular,09/02/2026,09/02/2026 @ 08:28 am,,9,PF1,ML-EM-26-0427,,,Herbycin Syrup (Compounding),James,,N/A,507425896,13,,September(ENVI) 2026
+5,Aryan,Filling,EYI72,Regular,09/02/2026,09/02/2026 @08:24 am,,5,PF2,ML-EM-26-0428,10,,Efficascent Boost Pain Relief Massage Roll On,Aryan,,N/A,507425896,14,ON-GOING,September(ENVI) 2026
+2,Aryan,Compounding,CYI42,Regular,09/02/2026,09/02/2026 @08:46 am,,2,PF2,ML-EM-26-0429,4,,Cheers Baby Oil - Bouquet,Aryan,,N/A,507425896,15,ON-GOING,September(ENVI) 2026
+8,Aryan,Compounding,EYI73,Regular,09/02/2026,09/02/2026 @08:53 am,,8,PF2,ML-EM-26-0430,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,,N/A,507425896,16,ON-GOING,September(ENVI) 2026
+6,Aryan,Compounding,FYH06,Regular,09/03/2026,09/03/2026 @07:06 AM,,9,PF1,ML-EM-26-0431,8,,Dr. S. Wong's Apple Fruit Juice,Aryan,,N/A,507425896,17,ON-GOING,September(ENVI) 2026
+,Aryan,Filling,CYI42,Regular,09/03/2026,09/03/2026 @07:20 am,,4,PF2,ML-EM-26-0432,,,Cheers Baby Oil - Bouquet,James,,N/A,507425896,18,ON-GOING,September(ENVI) 2026
+2,Aryan,Filling,LYI21,Regular,09/03/2026,09/03/2026 @07:30 AM,,2,PF1,ML-EM-26-0433,4,,Herbycin Syrup (Filling),Aryan,,N/A,507425896,19,ON-GOING,September(ENVI) 2026
+5,Aryan,Weighing,EYI08,Pilot,09/03/2026,09/03/2026 @08:33 AM,,10,PF1,ML-EM-26-0434,10,,OPK Export - Weighing,Aryan,,N/A,507425896,20,ON-GOING,September(ENVI) 2026
+3,Aryan,Compounding,EYI08,Pilot,09/03/2026,09/03/2026 @08:59 AM,,8,PF2,ML-EM-26-0435,10,,OPK Export- Compounding Utensils,Aryan,,N/A,507425896,21,ON-GOING,September(ENVI) 2026
+3,Aryan,Compounding,EYI08,Pilot,09/03/2026,09/03/2026 @08:59 AM,,7,PF1,ML-EM-26-0436,8,,OPK Export- Compounding Tanks,Aryan,,N/A,507425896,22,ON-GOING,September(ENVI) 2026
+8,Aryan,Compounding,EYI74,Regular,09/03/2026,09/03/2026 @09:28 AM,,8,PF2,ML-EM-26-0437,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,,N/A,507425896,23,ON-GOING,September(ENVI) 2026
+2,Anne,Filling,LYI22,Regular,09/05/2026,09/05/2026 @07:21 am,09/12/2026,2,PF1,ML-EM-26-0438,4,,Herbycin Syrup (Filling),Anne,PASSED,N/A,507425896,24,RELEASED,September(ENVI) 2026
+4,James,Compounding,LYI21,Regular,,09/02/2026 @ 08:28 am,,7,PF1,ML-EM-26-0439,,,Herbycin Syrup (Tanks),James,,N/A,507425896,25,,September(ENVI) 2026
+5,James,Compounding,LYI22,Regular,,09/04/2026 @ 07:15 am,,11,PF1,ML-EM-26-0440,,,Herbycin Syrup (Weighing),James,,N/A,507425896,26,,September(ENVI) 2026
+4,James,Compounding,LYI22,Regular,,09/04/2026 @ 07:15 am,,9,PF1,ML-EM-26-0441,,,Herbycin Syrup (Compounding),James,,N/A,507425896,27,,September(ENVI) 2026
+5,James,Weighing,EYI09,Regular,,09/07/2026 @ 08:09 am,,22,PF1,ML-EM-26-0442,10,,OPK Export - Weighing,James,,N/A,507425896,28,,September(ENVI) 2026
+5,James,Compounding,EYI09,Regular,,09/07/2026 @ 08:19 am,,10,PF1,ML-EM-26-0443,,,OPK Export- Compounding Utensils,James,,N/A,507425896,29,,September(ENVI) 2026
+3,James,Compounding,EYI09,Regular,,09/07/2026 @ 08:39 am,,7,PF1,ML-EM-26-0444,,,OPK Export- Compounding Tanks,James,,N/A,507425896,30,,September(ENVI) 2026
+2,James,Compounding,EYI09,Regular,,09/07/2026 @ 10:39 am,,4,PF1,ML-EM-26-0445,,,OPK Export- Compounding Tanks,James,,N/A,507425896,31,,September(ENVI) 2026
+2,James,Filling,LYI24,Regular,,09/10/2026 @ 07:11 am,,2,PF1,ML-EM-26-0446,4,,Herbycin Syrup (Filling),James,,N/A,507425896,32,,September(ENVI) 2026
+5,James,Filling,EYI10,Regular,,09/10/2026 @ 07:25 am,,9,PF1,ML-EM-26-0447,,,OPK-Export- Filling,James,,N/A,507425896,33,,September(ENVI) 2026
+5,,Filling,EYI09,Regular,09/08/2026,09/08/2026 @08:16 am,09/15/2026,4,PF1,ML-EM-26-0448,8,,OPK-Export- Filling,Anne,FAILED,N/A,507425896,34,RELEASED,September(ENVI) 2026
+5,,Compounding,LYI23,Regular,09/08/2026,09/08/2026 @08:41 am,09/15/2026,9,PF1,ML-EM-26-0449,18,,Herbycin Syrup (Compounding),Anne,PASSED,N/A,507425896,35,RELEASED,September(ENVI) 2026
+5,,Compounding,LYI23,Regular,09/08/2026,09/08/2026 @08:41 am,09/15/2026,11,PF1,ML-EM-26-0450,22,,Herbycin Syrup (Weighing),Anne,PASSED,N/A,507425896,36,RELEASED,September(ENVI) 2026
+5,,Compounding,LYI23,Regular,,09/08/2026 @08:41 am,,7,PF1,ML-EM-26-0451,14,,Herbycin Syrup (Compounding),Anne,,N/A,507425896,37,,September(ENVI) 2026
+8,Aryan,Compounding,EYI75,Regular,09/08/2026,09/08/2026 @ 09:15 AM,09/15/2026,8,PF2,ML-EM-26-0452,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,507425896,38,RELEASED,September(ENVI) 2026
+2,,Filling,LYI23,Regular,,09/09/2026 @08:38 AM,,2,PF1,ML-EM-26-0453,4,,Herbycin Syrup (Filling),Anne,,N/A,507425896,39,,September(ENVI) 2026
+5,,Compounding,LYI24,Regular,,09/09/2026 @08:43 AM,,7,PF1,ML-EM-26-0454,14,,Herbycin Syrup (Compounding),Anne,,N/A,507425896,40,,September(ENVI) 2026
+5,,Weighing,LYI24,Regular,,09/09/2026 @08:43 AM,,9,PF1,ML-EM-26-0455,18,,Herbycin Syrup (Weighing),Anne,,N/A,507425896,41,,September(ENVI) 2026
+5,,Compounding,LYI24,Regular,,09/09/2026 @08:43 AM,,11,PF1,ML-EM-26-0456,22,,Herbycin Syrup (Compounding),Anne,,N/A,507425896,42,,September(ENVI) 2026
+5,Aryan,Filling,EYI75,Regular,09/09/2026,09/09/2026 @08:46 AM,09/15/2026,5,PF2,ML-EM-26-0457,10,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,507425896,43,RELEASED,September(ENVI) 2026
+8,Aryan,Compounding,EYI76,Regular,09/09/2026,09/09/2026 @08:59 AM,09/15/2026,8,PF2,ML-EM-26-0458,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,507425896,44,RELEASED,September(ENVI) 2026
+5,James,Weighing,EYI10,Regular,,09/09/2026 @ 09:19 am,,22,PF1,ML-EM-26-0459,,,OPK Export - Weighing,James,,N/A,507425896,45,,September(ENVI) 2026
+5,James,Compounding,EYI10,Regular,,09/09/2026 @ 09:31 am,,10,PF1,ML-EM-26-0460,,,OPK Export- Compounding Utensils,James,,N/A,507425896,46,,September(ENVI) 2026
+4,James,Compounding,EYI10,Regular,,09/09/2026 @ 09:31 am,,7,PF1,ML-EM-26-0461,,,OPK Export- Compounding Tanks,James,,N/A,507425896,47,,September(ENVI) 2026
+8,Anne,Compounding,EYI28,Regular,,09/11/2026 @ 09:04 am,,8,PF2,ML-EM-26-0462,16,,Efficascent Boost Pain Relief Massage Roll On,Anne,,N/A,507425896,48,ON-GOING,September(ENVI) 2026
+2,Anne,Compounding,CYI43,Regular,,09/11/2026 @ 09:08 am,,2,PF2,ML-EM-26-0463,4,,Cheers Baby Oil - Bouquet,Anne,,N/A,507425896,49,ON-GOING,September(ENVI) 2026
+5,Anne,Filling,EYI78,Regular,09/14/2026,09/14/2026 @ 08:19 am,,5,PF2,ML-EM-26-0464,10,,Efficascent Boost Pain Relief Massage Roll On,Anne,,N/A,507425896,50,ON-GOING,September(ENVI) 2026
+4,Anne,Filling,CYI43,Regular,09/14/2026,09/14/2026 @ 08:39 am,,4,PF2,ML-EM-26-0465,8,,Cheers Baby Oil - Bouquet,Anne,,N/A,507425896,51,ON-GOING,September(ENVI) 2026
+8,Anne,Compounding,EYI79,Regular,09/14/2026,09/14/2026 @ 09:07 am,,8,PF2,ML-EM-26-0466,16,,Efficascent Boost Pain Relief Massage Roll On,Anne,,N/A,507425896,52,ON-GOING,September(ENVI) 2026
+4,Anne,Compounding,CYI44,Regular,09/14/2026,09/14/2026 @ 09:12 am,,4,PF2,ML-EM-26-0467,8,,Cheers Baby Oil - Bouquet,Anne,,N/A,507425896,53,ON-GOING,September(ENVI) 2026
+6,Jas/ Daryl,Filling,EYI11,Regular,09/15/2026,09/15/2026 @ 07:04 AM,,9,PF1,ML-EM-26-0468,22,,OPK-Export- Filling,Jas/ Daryl,,N/A,507425896,54,ON-GOING,September(ENVI) 2026
+5,Jas/ Daryl,Compounding,CYI10,Pilot,09/15/2026,09/15/2026 @ 08:31 AM,,5,PF2,ML-EM-26-0469,10,,Dr. Wong's Lightening Face Cream,Jas/ Daryl,,1,507425896,55,ON-GOING,September(ENVI) 2026
+8,Jas/ Daryl,Compounding,EYI80,Regular,09/15/2026,09/15/2026 @ 08:46 AM,,8,PF2,ML-EM-26-0470,16,,Efficascent Boost Pain Relief Massage Roll On,Jas/ Daryl,,N/A,507425896,56,ON-GOING,September(ENVI) 2026
+8,James,Compounding,EYI77,Regular,,09/10/2026 @ 09:02 am,,8,PF2,ML-EM-26-0471,,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,507425896,57,,September(ENVI) 2026
+5,James,Weighing,EYI11,Regular,,09/14/2026 @ 08:18 am,,22,PF1,ML-EM-26-0472,10,,OPK Export - Weighing,James,,N/A,507425896,58,,September(ENVI) 2026
+4,James,Compounding,EYI11,Demo,,09/14/2026 @ 08:32 am,,8,PF1,ML-EM-26-0473,,,OPK Export- Compounding Utensils,James,,2,507425896,59,,September(ENVI) 2026
+4,James,Compounding,EYI11,Demo,,09/14/2026 @ 08:32 am,,8,PF1,ML-EM-26-0474,,,OPK Export- Compounding Tanks,James,,2,507425896,60,,September(ENVI) 2026
+4,James,Compounding,CYI10,Pilot,,09/16/2026 @ 08:33 am,,4,PF2,ML-EM-26-0475,,,Dr. Wong's Lightening Face Cream - For Filliing,James,,1,507425896,61,,September(ENVI) 2026
+2,James,Compounding,CYI45,Regular,,09/16/2026 @ 08:33 am,,2,PF2,ML-EM-26-0476,,,Cheers Baby Oil - Bouquet,James,,N/A,507425896,62,,September(ENVI) 2026
+5,James,Filling,CYI10,Pilot,,09/17/2026 @ 08:22 am,,8,PF2,ML-EM-26-0477,,,Dr. Wong's Lightening Face Cream - Filliing,James / Roy / Daryl,,1,507425896,63,,September(ENVI) 2026
+2,James,Compounding,CYI46,Regular,,09/17/2026 @ 08:44 am,,2,PF2,ML-EM-26-0478,,,Cheers Baby Oil - Bouquet,James / Roy / Daryl,,N/A,507425896,64,,September(ENVI) 2026
+,,,,,,,,,,ML-EM-26-0479,,,,,,,507425896,65,,September(ENVI) 2026
+2,Aryan,Compounding,CYI47,Regular,09/18/2026,09/18/2026 @08:30 am,,2,PF2,ML-EM-26-0480,4,,Cheers Baby Oil - Bouquet,Daryl / Aryan,,N/A,507425896,66,ON-GOING,September(ENVI) 2026
+4,James,Filling,CYI47,Regular,09/21/2026,09/21/2026 @ 08:32 am,,4,PF2,ML-EM-26-0481,8,,Cheers Baby Oil - Bouquet,James,,N/A,507425896,67,,September(ENVI) 2026
+2,James,Compounding,CYI48,Regular,09/21/2026,09/21/2026 @ 08:49 am,,2,PF2,ML-EM-26-0482,4,,Cheers Baby Oil - Bouquet,James,,N/A,507425896,68,,September(ENVI) 2026
+2,Aryan,Compounding,CYI49,Regular,09/22/2026,09/22/2026 @08:33 am,,2,PF2,ML-EM-26-0483,4,,Cheers Baby Oil - Bouquet,Aryan,,N/A,507425896,69,ON-GOING,September(ENVI) 2026
+2,Aryan,Compounding,CYI45,Regular,09/22/2026,09/22/2026 @01:32 Pm,,2,PF2,ML-EM-26-0484,4,,Mama's Love Baby Oil (G),Aryan,,N/A,507425896,70,ON-GOING,September(ENVI) 2026
+2,Daryl/Jas,Compounding,CYI46,Regular,09/23/2026,09/23/2026 @10:33 am,,2,PF2,ML-EM-26-0485,4,,Mama's Love Baby Oil (G),Jas/ Daryl,,N/A,507425896,71,ON-GOING,September(ENVI) 2026
+4,Daryl/Jas,Filling,CYI45,Regular,09/23/2026,09/23/2026 @12:31 pm,,4,PF2,ML-EM-26-0486,8,,Mama's Love Baby Oil (G),Jas/ Daryl,,N/A,507425896,72,ON-GOING,September(ENVI) 2026
+2,Daryl/James,Compounding,,Pilot,09/24/2026,09/24/2026 @09:31 am,,2,PF2,ML-EM-26-0487,4,,Mama's Love Baby Oil (P),Daryl,,N/A,507425896,73,,September(ENVI) 2026
+2,Aryan,Compounding,CYI47,Regular,09/25/2026,09/25/2026 @09:03 AM,,2,PF2,ML-EM-26-0488,4,,Mama's Love Baby Oil (P),Aryan,,N/A,507425896,74,ON-GOING,September(ENVI) 2026
+2,Daryl/James,Compounding,CYI48,Pilot,09/26/2026,09/26/2026 @08:30 AM,,2,PF2,ML-EM-26-0489,4,,Mama's Love Baby Oil (P),Daryl,,N/A,507425896,75,,September(ENVI) 2026
+2,Aryan,Compounding,CYH39,Regular,08/01/2026,08/01/2026 @08:17 AM,08/10/2026,2,PF2,ML-EM-26-0372,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,1152325680,5,RELEASED,AUGUST (ENVI) 2026
+6,Aryan,Compounding,CYH06,Regular,08/03/2026,08/03/2026 @07:15 AM,08/10/2026,11,PF1,ML-EM-26-0373,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,N/A,1152325680,6,RELEASED,AUGUST (ENVI) 2026
+5,Aryan,Compounding,CYH06,Regular,08/03/2026,08/03/2026 @07:15 AM,08/10/2026,11,PF1,ML-EM-26-0374,22,,Herbycin Cooling Mouth Spray (Compounding),Aryan,FOR EVALUATION,N/A,1152325680,7,RELEASED,AUGUST (ENVI) 2026
+2,Aryan,Filling,CYH39,Regular,08/03/2026,08/03/2026 @08:16 AM,08/10/2026,2,PF2,ML-EM-26-0375,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,1152325680,8,RELEASED,AUGUST (ENVI) 2026
+2,Aryan,Compounding,CYH40,Regular,08/03/2026,08/03/2026 @09:29 AM,08/10/2026,2,PF2,ML-EM-26-0376,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,1152325680,9,RELEASED,AUGUST (ENVI) 2026
+2,Karen,Filling,LYG19,Regular,,07/30/2026 @07:10 AM,,2,PF1,ML-EM-26-0377,8,,Herbycin Syrup (Filling),Karen,,N/A,1152325680,10,,AUGUST (ENVI) 2026
+6,Karen,Compounding,LYG20,Regular,,07/30/2026 @07:20 AM,,11,PF1,ML-EM-26-0378,22,,Herbycin Syrup (Weighing),Karen,,N/A,1152325680,11,,AUGUST (ENVI) 2026
+7 (2 failed trials),Karen,Compounding,LYG20,Regular,07/05/2026,07/30/2026 @07:20 AM,07/16/2026,9,PF1,ML-EM-26-0379,18,,Herbycin Syrup (Compounding),Karen,,N/A,1152325680,12,RELEASED,AUGUST (ENVI) 2026
+4,Karen,Compounding,CYG38,Regular,07/05/2026,07/30/2026 @07:20 AM,,7,PF1,ML-EM-26-0380,14,,Herbycin Syrup (Tanks),Karen,,N/A,1152325680,13,Cancelled,AUGUST (ENVI) 2026
+,,Compounding,,Regular,07/05/2026,07/30/2026 @08:50 AM,,,PF2,ML-EM-26-0381,,,Mama's Love Baby Oil (G),,,N/A,1152325680,14,Cancelled,AUGUST (ENVI) 2026
+2,Jas,Filling,LYG20,Regular,,07/31/2026 @ 07:13 AM,,2,PF1,ML-EM-26-0382,8,,Cheers Baby Oil - Bouquet,Jas,,N/A,1152325680,15,,AUGUST (ENVI) 2026
+2,Jas,Filling,CYH06,Regular,,08/04/2026 @ 07:14 AM,,2,PF1,ML-EM-26-0383,8,,Herbycin Cooling Mouth Spray (Filling),Jas,,N/A,1152325680,16,,AUGUST (ENVI) 2026
+2,Jas,Compounding,CYH41,Regular,,08/04/2026 @ 01:47 PM,,2,PF2,ML-EM-26-0384,4,,Mama's Love Baby Oil (G),Jas,,N/A,1152325680,17,,AUGUST (ENVI) 2026
+4,Karen/Night Shift,Filling,CYH41,Regular,08/05/2026,08/05/2026 @ 03:04 PM,,4,PF2,ML-EM-26-0385,12,,Mama's Love Baby Oil (G),Karen,,N/A,1152325680,18,,AUGUST (ENVI) 2026
+,,Filling,CYH07,Regular,,08/10/2026 @ 07:18 AM,,11,PF1,ML-EM-26-0386,,,Herbycin Cooling Mouth Spray (Weighing),,,N/A,1152325680,19,,AUGUST (ENVI) 2026
+,,Filling,CYH07,Regular,,08/10/2026 @ 07:18 AM,,11,PF1,ML-EM-26-0387,,,Herbycin Cooling Mouth Spray (Compounding),,,N/A,1152325680,20,,AUGUST (ENVI) 2026
+2,Aryan,Compounding,CYH37,Regular,08/10/2026,08/10/2026 @ 07:35 AM,08/19/2026,2,PF2,ML-EM-26-0388,4,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,1152325680,21,RELEASED,AUGUST (ENVI) 2026
+1,Aryan,Compounding,CYH38,Regular,08/10/2026,08/10/2026 @ 07:36 AM,08/19/2026,1,PF2,ML-EM-26-0389,2,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,1152325680,22,RELEASED,AUGUST (ENVI) 2026
+4,Aryan,Filling,CYH37,Regular,08/10/2026,08/10/2026 @ 08:22 AM,08/19/2026,4,PF2,ML-EM-26-0390,8,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,1152325680,23,RELEASED,AUGUST (ENVI) 2026
+,,Filling,CYH07,Regular,,08/11/2026 @ 07:25 AM,,2,PF1,ML-EM-26-0391,,,Herbycin Cooling Mouth Spray (Filling),,,N/A,1152325680,24,,AUGUST (ENVI) 2026
+,,Filling,FYH04,Regular,,08/11/2026 @ 07:34 AM,,23,PF1,ML-EM-26-0392,,,Dr. S. Wong's Apple Fruit Juice,,,N/A,1152325680,25,,AUGUST (ENVI) 2026
+2,Karen,Compounding,CYH39,Regular,,08/11/2026 @ 09:47 AM,,2,PF2,ML-EM-26-0393,8,,Cheers Baby Oil - Bouquet,Karen,,N/A,1152325680,26,,AUGUST (ENVI) 2026
+23,Karen,Compounding,FYH05,Regular,,08/12/2026 @ 07:00 AM,,27,PF1,ML-EM-26-0394,54,,Dr. S. Wong's Apple Fruit Juice,Karen,,N/A,1152325680,27,,AUGUST (ENVI) 2026
+2,Karen,Compounding,CYH40,Regular,,08/12/2026 @ 09:02 AM,,2,PF2,ML-EM-26-0395,4,,Cheers Baby Oil - Bouquet,Karen,,N/A,1152325680,28,,AUGUST (ENVI) 2026
+8,Anne,Compounding,EYH63,Regular,08/14/2026,08/14/2026 @08:36 AM,08/21/2026,8,PF2,ML-EM-26-0395,16,,Efficascent Boost Pain Relief Massage Roll On,Anne,,N/A,1152325680,29,,AUGUST (ENVI) 2026
+8,Karen,Compounding,EYH64,Regular,,08/15/2026 @09:04 AM,,8,PF2,ML-EM-26-0396,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,1152325680,30,,AUGUST (ENVI) 2026
+5,Karen,Filling,EYH63,Regular,,08/15/2026 @09:33 AM,,5,PF2,ML-EM-26-0397,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,1152325680,31,,AUGUST (ENVI) 2026
+8,Karen,Filling,EYH64,Regular,,08/17/2026 @08:30 AM,,8,PF2,ML-EM-26-0398,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,1152325680,32,,AUGUST (ENVI) 2026
+5,Karen,Compounding,EYH65,Regular,,08/17/2026 @08:40 AM,,5,PF2,ML-EM-26-0399,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,1152325680,33,,AUGUST (ENVI) 2026
+8,James,Compounding,EYH66,Regular,,08/18/2026 @ 08:38 am,,8,PF2,ML-EM-26-0400,,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1152325680,34,,AUGUST (ENVI) 2026
+15,James,Compounding,FYH06,Regular,,08/19/2026 @ 07:08 am,,24,PF1,ML-EM-26-0401,,,Dr. S. Wong's Apple Drink (Peeling),James,,N/A,1152325680,35,,AUGUST (ENVI) 2026
+8,James,Compounding,EYH67,Regular,,08/19/2026 @ 08:25 am,,8,PF2,ML-EM-26-0402,,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1152325680,36,,AUGUST (ENVI) 2026
+8,Karen/Daryl,Compounding,EYH68,Regular,08/24/2026,08/24/2026 @ 08:42 AM,,8,PF2,ML-EM-26-0403,20,,Efficascent Boost Pain Relief Massage Roll On,Karen/Daryl,,N/A,1152325680,37,ON-GOING,AUGUST (ENVI) 2026
+2,Karen/Daryl,Compounding,CYH41,Regular,08/24/2026,08/24/2026 @ 09:04 AM,,2,PF2,ML-EM-26-0404,4,,Cheers Baby Oil - Bouquet,Karen/Daryl,,N/A,1152325680,38,ON-GOING,AUGUST (ENVI) 2026
+4,Karen/Daryl,Filling,CYH41,Regular,08/24/2026,08/24/2026 @ 09:19 AM,,4,PF2,ML-EM-26-0405,8,,Cheers Baby Oil - Bouquet,Karen/Daryl,,N/A,1152325680,39,ON-GOING,AUGUST (ENVI) 2026
+8,James,Compounding,EYH69,Regular,,08/25/2026 @ 07:24 am,,8,PF2,ML-EM-26-0406,,,Mama's Love Baby Oil (G),James,,N/A,1152325680,40,,AUGUST (ENVI) 2026
+2,James,Compounding,CYH42,Regular,,08/25/2026 @ 07:30 am,,2,PF2,ML-EM-26-0407,,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1152325680,41,,AUGUST (ENVI) 2026
+,James,Filling,,,,08/25/2026 @ 08:48 am,,,PF2,ML-EM-26-0408,,,Efficascent Boost Pain Relief Massage Roll On,James,,,1152325680,42,,AUGUST (ENVI) 2026
+4,James,Filling,CYH42,Regular,,08/25/2026 @ 02:03 pm,,4,PF2,ML-EM-26-0409,,,Mama's Love Baby Oil (G),James,,N/A,1152325680,43,,AUGUST (ENVI) 2026
+8,James,Compounding,FYH04,Regular,08/26/2026,08/26/2026 @ 07:05 am,09/04/2026,12,PF1,ML-EM-26-0410,,,Dr. S. Wong's Apple Fruit Juice,James,,N/A,1152325680,44,RELEASED,AUGUST (ENVI) 2026
+,James,Compounding,CYH43,Regular,08/26/2026,08/26/2026 @ 08:40 am,09/04/2026,2,PF2,ML-EM-26-0411,,,Mama's Love Baby Oil (G),James,,N/A,1152325680,45,RELEASED,AUGUST (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0412,,,,,,,1152325680,46,,AUGUST (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0413,,,,,,,1152325680,47,,AUGUST (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0414,,,,,,,1152325680,48,,AUGUST (ENVI) 2026
+3,Jas,Filling,FYH04,Regular,,08/27/2026 @ 07:36 AM,,3,PF1,ML-EM-26-0415,10,,Dr. S. Wong's Apple Fruit Juice,Jas,,N/A,1152325680,49,,AUGUST (ENVI) 2026
+8,Jas,Compounding,EYH71,Regular,,08/27/2026 @ 08:47 AM,,8,PF2,ML-EM-26-0416,16,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,1152325680,50,,AUGUST (ENVI) 2026
+13,Jas,Compounding,FYH05,Regular,,08/27/2026 @ 10:33 AM,,13,PF1,ML-EM-26-0417,26,,Dr. S. Wong's Apple Drink (Fermentation),Jas,,N/A,1152325680,51,,AUGUST (ENVI) 2026
+4,Jas,Filling,FYH05,Regular,,08/28/2026 @ 07:40 AM,,4,PF1,ML-EM-26-0418,12,,Dr. S. Wong's Apple Fruit Juice,Jas,,N/A,1152325680,52,,AUGUST (ENVI) 2026
+2,Aryan,Filling,NONE,TRIAL,07/01/2026,07/01/2026 @07:27 am,07/08/2026,2,PF1,ML-EM-26-0295,4,,Herbycin Nature's Leaf,Aryan,NEW PRODUCT,N/A,1390849189,5,RELEASED,JULY (ENVI) 2026
+8 + 1 (Failed 256 RLU),Aryan,Compounding,EYG51,Regular,07/01/2026,07/01/2026 @08:56 am,07/08/2026,8,PF2,ML-EM-26-0296,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,1390849189,6,RELEASED,JULY (ENVI) 2026
+5,louis,Filling,EYG51,Regular,,07/02/2026 @08:25 am,,5,PF2,ML-EM-26-0297,18,,Efficascent Boost Pain Relief Massage Roll On,louis,,N/A,1390849189,7,,JULY (ENVI) 2026
+8,louis,Compounding,EYG52,Regular,,07/02/2026 @09:13 am,,8,PF2,ML-EM-26-0298,18,,Efficascent Boost Pain Relief Massage Roll On,louis,,N/A,1390849189,8,,JULY (ENVI) 2026
+8,Karen,Compounding,EYG51,Regular,07/03/2026,07/03/2026 @09:13 am,,8,PF2,ML-EM-26-0299,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,1390849189,9,,JULY (ENVI) 2026
+8,Jas,Compounding,EYG54,Regular,,07/04/2026 @ 09:10 AM,,8,PF2,ML-EM-26-0300,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,1390849189,10,,JULY (ENVI) 2026
+2,Jas,Compounding,CYG31,Regular,,07/04/2026 @ 09:16 AM,,2,PF2,ML-EM-26-0301,4,,Mama's Love Baby Oil (P),Jas,,N/A,1390849189,11,,JULY (ENVI) 2026
+8,Aryan,Compounding,EYG55,Regular,07/05/2026,07/05/2026 @ 08:55 AM,07/16/2026,8,PF2,ML-EM-26-0302,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,1390849189,12,RELEASED,JULY (ENVI) 2026
+6,Aryan,Compounding,CYG06,Regular,07/05/2026,07/06/2026 @07:10 AM,,13,PF1,ML-EM-26-0303,26,,Herbycin Cooling Mouth Spray (Weighing),Aryan,,N/A,1390849189,13,Cancelled,JULY (ENVI) 2026
+5,Aryan,Compounding,CYG06,Regular,07/05/2026,07/06/2026 @07:10 AM,,11,PF1,ML-EM-26-0304,22,,Herbycin Cooling Mouth Spray (Compounding),Aryan,,N/A,1390849189,14,Cancelled,JULY (ENVI) 2026
+,James,Compounding,,Regular,,07/07/2026 @ 07:16 am,,,PF1,ML-EM-26-0305,,,Dr. S. Wong's Apple Drink (Peeling),James / Roy,,N/A,1390849189,15,,JULY (ENVI) 2026
+2,James,Filling,CYG31,Regular,,07/07/2026 @ 08:18 am,,2,PF2,ML-EM-26-0306,4,,Mama's Love Baby Oil (P),James / Roy,,N/A,1390849189,16,,JULY (ENVI) 2026
+8,James,Filling,EYG55,Regular,,07/07/2026 @ 08:29 am,,5,PF2,ML-EM-26-0307,16,,Efficascent Boost Pain Relief Massage Roll On,James / Roy,,N/A,1390849189,17,,JULY (ENVI) 2026
+8,James,Compounding,EYG56,Regular,,07/07/2026 @ 09:33 am,,8,PF2,ML-EM-26-0308,16,,Efficascent Boost Pain Relief Massage Roll On,James / Roy,,N/A,1390849189,18,,JULY (ENVI) 2026
+2,James,Compounding,CYG32,Regular,,07/07/2026 @ 09:47 am,,2,PF2,ML-EM-26-0309,4,,Mama's Love Baby Oil (P),James / Roy,,N/A,1390849189,19,,JULY (ENVI) 2026
+8,James,Compounding,EYG57,Regular,,07/08/2026 @ 09:17 am,,8,PF2,ML-EM-26-0310,16,,Efficascent Boost Pain Relief Massage Roll On,James / Roy,,N/A,1390849189,20,,JULY (ENVI) 2026
+8,Jas,Compounding,EYG58,Regular,,07/09/2026 @ 09;05 AM,,8,PF2,ML-EM-26-0311,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,1390849189,21,,JULY (ENVI) 2026
+2,Jas,Compounding,CYG33,Regular,,07/09/2026 @ 09;22 AM,,2,PF2,ML-EM-26-0312,4,,Mama's Love Baby Oil (P),Jas,,N/A,1390849189,22,,JULY (ENVI) 2026
+8 + 1 (Failed 247 RLU),Aryan,Compounding,EYG59,Regular,07/10/2026,07/10/2026 @08:49 AM,07/17/2026,8,PF2,ML-EM-26-0313,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,1390849189,23,RELEASED,JULY (ENVI) 2026
+,James,Compounding,EYG60,Regular,,07/11/2026 @ 09:10 am,,,PF2,ML-EM-26-0314,,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1390849189,24,,JULY (ENVI) 2026
+8,James,Compounding,EYG61,Regular,,07/12/2026,,8,PF2,ML-EM-26-0315,20,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1390849189,25,,JULY (ENVI) 2026
+5,James,Filling,EYG61,Regular,,07/14/2026 @ 08:49 am,,8,PF2,ML-EM-26-0316,16,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1390849189,26,,JULY (ENVI) 2026
+5,James,Compounding,CYG09,Regular,,07/14/2026 @ 09:40 am,,5,PF2,ML-EM-26-0317,10,,Dr. Wong's Lightening Face Cream,James,,N/A,1390849189,27,,JULY (ENVI) 2026
+8,James,Compounding,EYG62,Regular,,07/14/2026 @ 09:52 am,,8,PF2,ML-EM-26-0318,16,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,1390849189,28,,JULY (ENVI) 2026
+,James,Compounding,LYG13,Regular,,07/14/2026 @ 01:42 pm,,,PF1,ML-EM-26-0319,,,Herbycin Syrup (Weighing),James,,N/A,1390849189,29,,JULY (ENVI) 2026
+,James,Compounding,LYG13,Regular,,07/14/2026 @ 01:42 pm,,,PF1,ML-EM-26-0320,,,Herbycin Syrup (Compounding),James,,N/A,1390849189,30,,JULY (ENVI) 2026
+,James,Compounding,LYG13,Regular,,07/14/2026 @ 01:42 pm,,,PF1,ML-EM-26-0321,,,Herbycin Syrup (Tanks),James,,N/A,1390849189,31,,JULY (ENVI) 2026
+,James,Filling,LYG13,Regular,,07/15/2026 @ 07:25 am,,,PF1,ML-EM-26-0322,,,Herbycin Syrup (Filling),James / Roy,,N/A,1390849189,32,,JULY (ENVI) 2026
+,James,Compounding,CYG09,Regular,,07/15/2026 @ 09:09 am,,,PF2,ML-EM-26-0323,,,Dr. Wong's Lightening Face Cream,James / Roy,,N/A,1390849189,33,,JULY (ENVI) 2026
+,James,Compounding,EYG57,Regular,,07/15/2026 @ 09:17 am,,,PF2,ML-EM-26-0324,,,Efficascent Boost Pain Relief Massage Roll On,James / Roy,,N/A,1390849189,34,,JULY (ENVI) 2026
+,James,Compounding,LYG14,Regular,,07/15/2026 @ 12:17 pm,,,PF1,ML-EM-26-0325,,,Herbycin Syrup (Weighing),James / Roy,,N/A,1390849189,35,,JULY (ENVI) 2026
+,James,Compounding,LYG14,Regular,,07/15/2026 @ 12:17 pm,,,PF1,ML-EM-26-0326,,,Herbycin Syrup (Compounding),James / Roy,,N/A,1390849189,36,,JULY (ENVI) 2026
+,James,Compounding,LYG14,Regular,,07/15/2026 @ 12:17 pm,,,PF1,ML-EM-26-0327,,,Herbycin Syrup (Tanks),James / Roy,,N/A,1390849189,37,,JULY (ENVI) 2026
+4,Aryan,Compounding,LYG15,Regular,07/16/2026,07/16/2026 @07:09 AM,07/23/2026,11,PF1,ML-EM-26-0328,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,N/A,1390849189,38,RELEASED,JULY (ENVI) 2026
+5 + 1 (Failed 377 RLU),Aryan,Compounding,LYG15,Regular,07/16/2026,07/16/2026 @07:09 AM,07/23/2026,9,PF1,ML-EM-26-0329,18,,Herbycin Syrup (Compounding),Aryan,FOR EVALUATION,N/A,1390849189,39,RELEASED,JULY (ENVI) 2026
+"4 + 2 (Failed 207, 4548 RLU)",Aryan,Compounding,LYG15,Regular,07/16/2026,07/16/2026 @07:09 AM,07/23/2026,7,PF1,ML-EM-26-0330,14,,Herbycin Syrup (Tanks),Aryan,FOR EVALUATION,N/A,1390849189,40,RELEASED,JULY (ENVI) 2026
+2,Aryan,Filling,LYG14,Regular,07/16/2026,07/16/2026 @08:33 AM,07/23/2026,2,PF1,ML-EM-26-0331,4,,Herbycin Syrup (Filling),Aryan,FOR EVALUATION,N/A,1390849189,41,RELEASED,JULY (ENVI) 2026
+5,Aryan,Filling,CYG09,Regular,07/16/2026,07/16/2026 @09:29 AM,07/23/2026,5,PF2,ML-EM-26-0332,10,,Dr. Wong's Lightening Face Cream,Aryan,PASSED,N/A,1390849189,42,RELEASED,JULY (ENVI) 2026
+2,Jas,Filling,LYG15,Regular,,07/17/2026 @ 07:18 AM,,2,PF1,ML-EM-26-0333,8,,Herbycin Syrup (Filling),Jas,,N/A,1390849189,43,,JULY (ENVI) 2026
+2,Jas,Compounding,CYG34,Regular,,07/17/2026 @ 09:09 AM,,2,PF2,ML-EM-26-0334,4,,Mama's Love Baby Oil (G),Jas,,N/A,1390849189,44,,JULY (ENVI) 2026
+4,James,Filling,CYG35,Regular,,07/20/2026 @ 09:09 AM,,4,PF2,ML-EM-26-0335,8,,Mama's Love Baby Oil (G),James,,N/A,1390849189,45,,JULY (ENVI) 2026
+2,James,Compounding,CYG34,Regular,,07/20/2026 @ 09:09 AM,,2,PF2,ML-EM-26-0336,4,,Mama's Love Baby Oil (G),James,,N/A,1390849189,46,,JULY (ENVI) 2026
+2,Karen,Compounding,CYG34,Regular,07/25/2026,07/25/2026 @ 08:30 AM,,2,PF2,ML-EM-26-0337,8,,Cheers Baby Oil - Bouquet,Karen,,N/A,1390849189,47,,JULY (ENVI) 2026
+4,Aryan,Filling,CYG34,Regular,07/27/2026,07/27/2026 @ 07:33 AM,08/05/2026,4,PF2,ML-EM-26-0338,8,,Cheers Baby Oil - Bouquet,James,PASSED,N/A,1390849189,48,RELEASED,JULY (ENVI) 2026
+2,Aryan,Compounding,CYG35,Regular,07/27/2026,07/27/2026 @ 08:28 AM,08/05/2026,2,PF2,ML-EM-26-0339,4,,Cheers Baby Oil - Bouquet,James,FAILED,N/A,1390849189,49,RELEASED,JULY (ENVI) 2026
+2,Aryan,Compounding,CYG36,Regular,07/27/2026,07/27/2026 @ 03:32 PM,08/05/2026,2,PF2,ML-EM-26-0340,4,,Cheers Baby Oil - Bouquet,ROY,PASSED,N/A,1390849189,50,RELEASED,JULY (ENVI) 2026
+5,Aryan,Weighing,LYG18,Regular,07/28/2026,07/28/2026 @ 07:39 AM,08/05/2026,11,PF1,ML-EM-26-0341,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,N/A,1390849189,51,RELEASED,JULY (ENVI) 2026
+5,Aryan,Compounding,LYG18,Regular,07/28/2026,07/28/2026 @ 07:39 AM,08/05/2026,9,PF1,ML-EM-26-0342,18,,Herbycin Syrup (Compounding),Aryan,FOR EVALUATION,N/A,1390849189,52,RELEASED,JULY (ENVI) 2026
+4 + 1 (Failed 117 RLU),Aryan,Compounding,LYG18,Regular,07/28/2026,07/28/2026 @ 07:39 AM,08/05/2026,7,PF1,ML-EM-26-0343,14,,Herbycin Syrup (Tanks),Aryan,FOR EVALUATION,N/A,1390849189,53,RELEASED,JULY (ENVI) 2026
+2,Aryan,Compounding,CYG36,Regular,07/28/2026,07/28/2026 @ 01:25 PM,08/05/2026,2,PF2,ML-EM-26-0344,4,,Mama's Love Baby Oil (G),Aryan,PASSED,N/A,1390849189,54,RELEASED,JULY (ENVI) 2026
+,James,Compounding,CYG35,Regular,,07/20/2026 @ 09:08 am,,,PF2,ML-EM-26-0345,,,Mama's Love Baby Oil (G),James / Roy,,N/A,1390849189,55,,JULY (ENVI) 2026
+,James,Filling,CYG34,Regular,,07/20/2026 @ 09:19 am,,,PF2,ML-EM-26-0346,,,Mama's Love Baby Oil (G),James / Roy,,N/A,1390849189,56,,JULY (ENVI) 2026
+,James,Compounding,FYG03,Regular,,07/22/2026 @ 07:11 am,,,PF1,ML-EM-26-0347,,,Dr. S. Wong's Apple Drink (Fermentation),James / Roy,,N/A,1390849189,57,,JULY (ENVI) 2026
+,James,Compounding,CYG31,Regular,,07/22/2026 @ 07:11 am,,,PF2,ML-EM-26-0348,,,Cheers Baby Oil - Bouquet,James / Roy,,N/A,1390849189,58,,JULY (ENVI) 2026
+,James,Compounding,LYG16,Regular,,07/22/2026 @ 09:13 am,,,PF1,ML-EM-26-0349,,,Herbycin Syrup (Weighing),Anne/Jadel,,N/A,1390849189,59,,JULY (ENVI) 2026
+,James,Compounding,LYG16,Regular,,07/22/2026 @ 09:13 am,,,PF1,ML-EM-26-0350,,,Herbycin Syrup (Compounding),Anne/Jadel,,N/A,1390849189,60,,JULY (ENVI) 2026
+,James,Compounding,LYG16,Regular,,07/22/2026 @ 09:13 am,,,PF1,ML-EM-26-0351,,,Herbycin Syrup (Tanks),Anne/Jadel,,N/A,1390849189,61,,JULY (ENVI) 2026
+,James,Filling,FYG03,Regular,,07/22/2026 @ 10:57 am,,,PF1,ML-EM-26-0352,,,Dr. S. Wong's Apple Drink (Fermentation),Anne/Jadel,,N/A,1390849189,62,,JULY (ENVI) 2026
+,James,Filling,CYG31,Regular,,07/22/2026 @ 03:12 am,,,PF2,ML-EM-26-0353,,,Cheers Baby Oil - Bouquet,Anne/Jadel,,N/A,1390849189,63,,JULY (ENVI) 2026
+,James,Compounding,LYG17,Regular,,07/23/2026 @ 07:20 am,,,PF1,ML-EM-26-0354,,,Herbycin Syrup (Weighing),James,,N/A,1390849189,64,,JULY (ENVI) 2026
+,James,Compounding,LYG17,Regular,,07/23/2026 @ 07:20 am,,,PF1,ML-EM-26-0355,,,Herbycin Syrup (Compounding),James,,N/A,1390849189,65,,JULY (ENVI) 2026
+,James,Compounding,LYG17,Regular,,07/23/2026 @ 07:20 am,,,PF1,ML-EM-26-0356,,,Herbycin Syrup (Tanks),James,,N/A,1390849189,66,,JULY (ENVI) 2026
+,James,Compounding,CYG32,Regular,,07/23/2026 @ 09:03 am,,,PF2,ML-EM-26-0357,,,Cheers Baby Oil - Bouquet,James,,N/A,1390849189,67,,JULY (ENVI) 2026
+,James,Filling,LYG16,Regular,,07/23/2026 @ 02:23 pm,,,PF1,ML-EM-26-0358,,,Herbycin Syrup (Filling),James,,N/A,1390849189,68,,JULY (ENVI) 2026
+,James,Filling,LYG17,Regular,,07/24/2026 @ 08:28 am,,,PF1,ML-EM-26-0359,,,Herbycin Syrup (Filling),James,,N/A,1390849189,69,,JULY (ENVI) 2026
+,James,Compounding,CYG33,Regular,,07/24/2026 @ 09:45 am,,,PF1,ML-EM-26-0359,,,Cheers Baby Oil - Bouquet,James,,N/A,1390849189,70,,JULY (ENVI) 2026
+,James,Filling,LYG18,Regular,,07/29/2026 @ 07:11 am,,,PF1,ML-EM-26-0361,,,Herbycin Syrup (Filling),James,,N/A,1390849189,71,,JULY (ENVI) 2026
+,James,Compounding,LYG19,Regular,,07/29/2026 @ 07:18 am,,,PF1,ML-EM-26-0362,,,Herbycin Syrup (Weighing),James,,N/A,1390849189,72,,JULY (ENVI) 2026
+,James,Compounding,LYG19,Regular,,07/29/2026 @ 07:18 am,,,PF1,ML-EM-26-0363,,,Herbycin Syrup (Compounding),James,,N/A,1390849189,73,,JULY (ENVI) 2026
+,James,Compounding,LYG19,Regular,,07/29/2026 @ 07:18 am,,,PF1,ML-EM-26-0364,,,Herbycin Syrup (Tanks),James,,N/A,1390849189,74,,JULY (ENVI) 2026
+,James,Filling,CYG36,Regular,,07/29/2026 @ 07:18 am,,,PF2,ML-EM-26-0365,,,Mama's Love Baby Oil (G),James,,N/A,1390849189,75,,JULY (ENVI) 2026
+,James,Compounding,CYG37,Regular,,07/29/2026 @ 11:01 am,,,PF2,ML-EM-26-0366,,,Mama's Love Baby Oil (G),James,,N/A,1390849189,76,,JULY (ENVI) 2026
+,Karen,Filling,LYG19,Regular,,07/30/2026 @ 07:10 am,,,PF1,ML-EM-26-0367,,,Herbycin Syrup (Filling),Karen,,N/A,1390849189,77,,JULY (ENVI) 2026
+,Karen,Compounding,LYG20,Regular,,07/30/2026 @ 07:20 am,,,PF1,ML-EM-26-0368,,,Herbycin Syrup (Weighing),Karen,,N/A,1390849189,78,,JULY (ENVI) 2026
+,Karen,Compounding,LYG20,Regular,,07/30/2026 @ 07:20 am,,,PF1,ML-EM-26-0369,,,Herbycin Syrup (Compounding),Karen,,N/A,1390849189,79,,JULY (ENVI) 2026
+,Karen,Compounding,LYG20,Regular,,07/30/2026 @ 07:20 am,,,PF1,ML-EM-26-0370,,,Herbycin Syrup (Tanks),Karen,,N/A,1390849189,80,,JULY (ENVI) 2026
+,Karen,Compounding,CYG38,Regular,,07/30/2026 @ 08:50 am,,,PF1,ML-EM-26-0371,,,Mama's Love Baby Oil (G),Karen,,N/A,1390849189,81,,JULY (ENVI) 2026
+8,Jas,Compounding,EYF41,Regular,,06/02/2026 @ 09:13 AM,,8,PF2,ML-EM-26-0250,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,31274356,5,,JUNE (ENVI) 2026
+8,James,Compounding,EYF42,Regular,,06/03/2026,,8,PF2,ML-EM-26-0251,16,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,31274356,6,,JUNE (ENVI) 2026
+5,James,Filling,EYF41,Regular,,06/03/2026 @ 09:32 am,,5,PF2,ML-EM-26-0252,10,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,31274356,7,,JUNE (ENVI) 2026
+8,Aryan,Compounding,EYF43,Regular,06/04/2026,06/04/2026 @08:22 am,06/11/2026,8,PF2,ML-EM-26-0253,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,31274356,8,RELEASED,JUNE (ENVI) 2026
+8,Karen,Compounding,EYF44,Regular,,06/05/2026 @08:30 am,,8,PF2,ML-EM-26-0254,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,31274356,9,,JUNE (ENVI) 2026
+8,Aryan,Compounding,EYF45,Regular,06/06/2026,06/06/2026 @08:29 am,06/13/2026,8,PF2,ML-EM-26-0255,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,31274356,10,RELEASED,JUNE (ENVI) 2026
+8,James,Compounding,EYF46,Regular,,06/07/2026 @ 07:16 am,,8,PF2,ML-EM-26-0256,16,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,31274356,11,,JUNE (ENVI) 2026
+,James,Compounding,,Regular,,06/08/2026,,,PF1,ML-EM-26-0257,,,Herbycin Cooling Mouth Spray (Weighing),James,,N/A,31274356,12,,JUNE (ENVI) 2026
+,James,Compounding,,Regular,,06/08/2026,,,PF1,ML-EM-26-0258,,,Herbycin Cooling Mouth Spray (Compounding),James,,N/A,31274356,13,,JUNE (ENVI) 2026
+2,Karen,Filling,CYF04,Regular,,06/09/2026 @ 07:16 AM,,2,PF1,ML-EM-26-0259,8,,Herbycin Cooling Mouth Spray (Filling),Karen,,N/A,31274356,14,,JUNE (ENVI) 2026
+5,Jas,Filling,EYF46,Regular,,06/10/2026 @ 08:18 AM,,5,PF2,ML-EM-26-0260,14,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,31274356,15,,JUNE (ENVI) 2026
+8,Jas,Compounding,EYF47,Regular,,06/10/2026 @ 08:35 AM,,8,PF2,ML-EM-26-0261,,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,31274356,16,,JUNE (ENVI) 2026
+8,James,Compounding,EYF48,Regular,,06/11/2026 @ 08:27 am,,8,PF2,ML-EM-26-0262,16,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,31274356,17,,JUNE (ENVI) 2026
+8,Anne,Compounding,EYF50,Regular,06/13/2026,06/13/2026 @08:33 am,06/20/2026,8,PF2,ML-EM-26-0263,16,,Efficascent Boost Pain Relief Massage Roll On,Anne,PASSED,N/A,31274356,18,RELEASED,JUNE (ENVI) 2026
+2,Anne,Compounding,CYF26,Regular,06/13/2026,06/13/2026 @08:47 am,06/20/2026,2,PF2,ML-EM-26-0264,8,,Cheers Baby Oil - Bouquet,Anne,PASSED,N/A,31274356,19,RELEASED,JUNE (ENVI) 2026
+7,Karen,Compounding,CYF05,Regular,,06/15/2026 @07:11 am,,13,PF1,ML-EM-26-0265,30,,Herbycin Cooling Mouth Spray (Weighing),Karen,,N/A,31274356,20,,JUNE (ENVI) 2026
+8,Karen,Compounding,CYF05,Regular,,06/15/2026 @07:11 am,,11,PF1,ML-EM-26-0266,22,,Herbycin Cooling Mouth Spray (Compounding),Karen,,N/A,31274356,21,,JUNE (ENVI) 2026
+8,James,Compounding,EYF49,Regular,,06/12/2026 @08:31 am,,8,PF2,ML-EM-26-0267,16,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,31274356,22,,JUNE (ENVI) 2026
+4,James,Filling,CYF05,Regular,,06/16/2026 @ 07:16 am,,3,PF1,ML-EM-26-0268,6,,Herbycin Syrup (Filling),James,,N/A,31274356,23,,JUNE (ENVI) 2026
+2,Karen,Compounding,CYF26,Regular,,06/18/2026 @08:25 am,,2,PF2,ML-EM-26-0269,8,,Mama's Love Baby Oil (G),Karen,,N/A,31274356,24,,JUNE (ENVI) 2026
+4,Karen,Filling,CYF26,Regular,,06/18/2026 @03:02 pm,,4,PF2,ML-EM-26-0270,8,,Mama's Love Baby Oil (G),Karen,,N/A,31274356,25,,JUNE (ENVI) 2026
+2,Karen,Compounding,CYF28,Regular,,06/20/2026 @08:40 am,,2,PF2,ML-EM-26-0271,8,,Mama's Love Baby Oil (G),Karen,,N/A,31274356,26,,JUNE (ENVI) 2026
+4,Jas,Filling,CYF28,Regular,,06/23/2026 @ 08:34 AM,,4,PF2,ML-EM-26-0272,12,,Cheers Baby Oil - Bouquet,Jas,,N/A,31274356,27,,JUNE (ENVI) 2026
+3,Jas,Compounding,CYF29,Regular,,06/23/2026 @ 08:55 AM,,2,PF2,ML-EM-26-0273,4,,Cheers Baby Oil - Bouquet,Jas,,N/A,31274356,28,,JUNE (ENVI) 2026
+5,Aryan,Weighing,LYF10,Regular,06/23/2026,06/23/2026 @08:30 am,07/01/2026,11,PF1,ML-EM-26-0274,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,N/A,31274356,29,RELEASED,JUNE (ENVI) 2026
+4 (+1 Failed 260 RLU),Aryan,Compounding,LYF10,Regular,06/23/2026,06/23/2026 @08:30 am,07/01/2026,9,PF1,ML-EM-26-0275,18,,Herbycin Syrup (Compounding),Aryan,FOR EVALUATION,N/A,31274356,30,RELEASED,JUNE (ENVI) 2026
+4 (+1 Failed 521 RLU),Aryan,Compounding,LYF10,Regular,06/23/2026,06/23/2026 @08:30 am,07/01/2026,7,PF1,ML-EM-26-0276,14,,Herbycin Syrup (Tanks),Aryan,FOR EVALUATION,N/A,31274356,31,RELEASED,JUNE (ENVI) 2026
+4,James,Filling,CYF26,Regular,,06/16/2026 @ 08:37 am,,4,PF2,ML-EM-26-0277,8,,Cheers Baby Oil - Bouquet,James,,N/A,31274356,32,,JUNE (ENVI) 2026
+2,James,Compounding,CYF27,Regular,,06/19/2026 @ 08:55 am,,2,PF2,ML-EM-26-0278,2,,Mama's Love Baby Oil (G),James,,N/A,31274356,33,,JUNE (ENVI) 2026
+2,James,Compounding,CYF28,Regular,,06/20/2026 @ 08:37 am,,2,PF2,ML-EM-26-0279,2,,Cheers Baby Oil - Bouquet,James,,N/A,31274356,34,,JUNE (ENVI) 2026
+2,Aryan,Compounding,CYF30,Regular,06/24/2026,06/23/2026 @02:56 pm,07/01/2026,2,PF2,ML-EM-26-0280,4,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,31274356,35,RELEASED,JUNE (ENVI) 2026
+2,Aryan,Filling,LYF10,Regular,06/24/2026,06/24/2026 @07:05 am,07/01/2026,2,PF1,ML-EM-26-0281,4,,Herbycin Syrup (Filling),Aryan / Louie,FOR EVALUATION,N/A,31274356,36,RELEASED,JUNE (ENVI) 2026
+5 (+1 Failed 451 RLU),Aryan,Compounding,LYF11,Regular,06/24/2026,06/24/2026 @07:02 am,07/01/2026,11,PF1,ML-EM-26-0282,22,,Herbycin Syrup (Weighing),Aryan / Louie,FOR EVALUATION,N/A,31274356,37,RELEASED,JUNE (ENVI) 2026
+4,Aryan,Compounding,LYF11,Regular,06/24/2026,06/24/2026 @07:02 am,07/01/2026,9,PF1,ML-EM-26-0283,18,,Herbycin Syrup (Compounding),Aryan / Louie,FOR EVALUATION,N/A,31274356,38,RELEASED,JUNE (ENVI) 2026
+,Aryan,Compounding,LYF11,Regular,06/24/2026,06/24/2026 @07:02 am,07/01/2026,7,PF1,ML-EM-26-0284,14,,Herbycin Syrup (Tanks),Aryan / Louie,FOR EVALUATION,N/A,31274356,39,RELEASED,JUNE (ENVI) 2026
+2,Aryan,Compounding,CYF29,Regular,06/24/2026,06/24/2026 @01:14 pm,07/02/2026,2,PF2,ML-EM-26-0285,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,31274356,40,RELEASED,JUNE (ENVI) 2026
+2,Jas,Filling,LYF11,Regular,,06/25/2026 @ 07:05 AM,,2,PF1,ML-EM-26-0286,8,,Herbycin Syrup (Filling),Jas,,N/A,31274356,41,,JUNE (ENVI) 2026
+5,Jas,Compounding,LYF12,Regular,,06/25/2026 @ 07:10 AM,,11,PF1,ML-EM-26-0287,22,,Herbycin Syrup (Weighing),Jas,,N/A,31274356,42,,JUNE (ENVI) 2026
+5,Jas,Compounding,LYF12,Regular,,06/25/2026 @ 07:10 AM,,9,PF1,ML-EM-26-0288,18,,Herbycin Syrup (Compounding),Jas,,N/A,31274356,43,,JUNE (ENVI) 2026
+5,Jas,Compounding,LYF12,Regular,,06/25/2026 @ 07:10 AM,,7,PF1,ML-EM-26-0289,14,,Herbycin Syrup (Tanks),Jas,,N/A,31274356,44,,JUNE (ENVI) 2026
+2,Jas,Compounding,CYF30,Regular,,06/25/2026 @ 09:03 AM,,2,PF2,ML-EM-26-0290,4,,Mama's Love Baby Oil (P),Jas,,N/A,31274356,45,,JUNE (ENVI) 2026
+2,Jas,Filling,CYF29,Regular,,06/25/2026 @ 09:11 AM,,2,PF2,ML-EM-26-0291,4,,Mama's Love Baby Oil (P),Jas,,N/A,31274356,46,,JUNE (ENVI) 2026
+2 (+1 Failed 101 RLU),Anne,Filling,LYF12,Regular,06/26/2026,06/26/2025 @07:21 AM,07/03/2026,2,PF1,ML-EM-26-0292,,,Herbycin Syrup (Filling),Anne/Jadel,FOR EVALUATION,N/A,31274356,47,RELEASED,JUNE (ENVI) 2026
+2,Jas,Filling,CYF30,Regular,,06/30/2026 @ 07:17 AM,,2,PF2,ML-EM-26-0293,8,,Mama's Love Baby Oil (P),Jas,,N/A,31274356,48,,JUNE (ENVI) 2026
+0,Jas,N/A,N/A,N/A,,06/30/2026 @ 08:57 am,,3,WATER TREATMENT,ML-EM-26-0294,6,,Drinking Water (Before Rinsing)- Source,Anne,,N/A,31274356,49,,JUNE (ENVI) 2026
+5,Aryan,Compounding,LYE01,Pilot,05/05/2026,05/05/2026 @7:40 am,05/11/2026,11,PF1,ML-EM-26-0175,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,,987778876,5,RELEASED,MAY (ENVI) 2026
+4,Aryan,Compounding,LYE01,Pilot,05/05/2026,05/05/2026 @7:40 am,05/11/2026,9,PF1,ML-EM-26-0176,18,,Herbycin Syrup (Compounding),Aryan,FOR EVALUATION,,987778876,6,RELEASED,MAY (ENVI) 2026
+4,Aryan,Compounding,LYE01,Pilot,05/05/2026,05/05/2026 @7:40 am,05/11/2026,7,PF1,ML-EM-26-0177,14,,Herbycin Syrup (Tanks),Aryan,FOR EVALUATION,,987778876,7,RELEASED,MAY (ENVI) 2026
+5,Aryan,Compounding,LYE02,,05/06/2026,05/06/2026 @7:07 am,05/12/2026,11,PF1,ML-EM-26-0178,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,,987778876,8,RELEASED,MAY (ENVI) 2026
+4,Aryan,Compounding,LYE02,,05/06/2026,05/06/2026 @7:07 am,05/12/2026,9,PF1,ML-EM-26-0179,18,,Herbycin Syrup (Compounding),Aryan,FOR EVALUATION,,987778876,9,RELEASED,MAY (ENVI) 2026
+5,Aryan,Compounding,LYE02,,05/06/2026,05/06/2026 @7:07 am,05/12/2026,7,PF1,ML-EM-26-0180,14,,Herbycin Syrup (Tanks),Aryan,FOR EVALUATION,,987778876,10,RELEASED,MAY (ENVI) 2026
+2,Aryan,Filling,LYE01,,05/06/2026,05/06/2026 @8:04 am,05/12/2026,2,PF1,ML-EM-26-0181,4,,Herbycin Syrup (Filling),Aryan,FOR EVALUATION,,987778876,11,RELEASED,MAY (ENVI) 2026
+6,Jas,Weighing,LYE03,Pilot,,05/07/2026 @ 07:23 AM,,11,PF1,ML-EM-26-0182,22,,Herbycin Syrup (Weighing),Jas,,3,987778876,14,,MAY (ENVI) 2026
+4,Jas,Compounding,LYE03,Pilot,,05/07/2026 @ 07:23 AM,,9,PF1,ML-EM-26-0183,18,,Herbycin Syrup (Compounding),Jas,,3,987778876,15,,MAY (ENVI) 2026
+4,Jas,Compounding,LYE03,Pilot,,05/07/2026 @ 07:23 AM,,7,PF1,ML-EM-26-0184,18,,Herbycin Syrup (Tanks),Jas,,3,987778876,16,,MAY (ENVI) 2026
+2,Jas,Filling,LYE02,Pilot,,05/07/2026 @ 08:13 AM,,2,PF1,ML-EM-26-0185,4,,Herbycin Syrup (Filling),Jas,,3,987778876,17,,MAY (ENVI) 2026
+2,Jas,Filling,LYE03,Pilot,,05/09/2026 @ 07:14 AM,,2,PF1,ML-EM-26-0186,4,,Herbycin Syrup (Filling),Jas,,3,987778876,18,,MAY (ENVI) 2026
+8,Jas,Compounding,EYE30,Regular,,05/09/2026 @ 08:26 AM,,8,PF2,ML-EM-26-0187,16,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,987778876,19,,MAY (ENVI) 2026
+5,Jas,Compounding,CYE11,Regular,,05/09/2026 @ 08:26 AM,,5,PF2,ML-EM-26-0188,14,,Dr. Wong's Lightening Lotion - Compounding,Jas,,N/A,987778876,20,,MAY (ENVI) 2026
+4,Karen,Compounding,CYE11,Regular,05/10/2026,05/10/2026 @ 07:00 AM,,4,PF2,ML-EM-26-0189,12,,Dr. Wong's Lightening Lotion - For Filling,Karen,,N/A,987778876,21,RELEASED,MAY (ENVI) 2026
+5,Aryan,Compounding,LYE04,Pilot,05/12/2026,05/12/2026 @ 08:40 AM,05/18/2026,11,PF1,ML-EM-26-0190,22,,Herbycin Syrup (Weighing),Aryan,FOR EVALUATION,,987778876,22,RELEASED,MAY (ENVI) 2026
+5,Aryan,Compounding,LYE04,Pilot,05/12/2026,05/12/2026 @ 08:40 AM,05/18/2026,9,PF1,ML-EM-26-0191,18,,Herbycin Syrup (Compounding),Aryan,FOR EVALUATION,,987778876,23,RELEASED,MAY (ENVI) 2026
+4,Aryan,Compounding,LYE04,Pilot,05/12/2026,05/12/2026 @ 08:40 AM,05/18/2026,7,PF1,ML-EM-26-0192,14,,Herbycin Syrup (Tanks),Aryan,FOR EVALUATION,,987778876,24,RELEASED,MAY (ENVI) 2026
+8,Aryan,Compounding,EYE31,Regular,05/12/2026,05/12/2026 @ 09:10 AM,05/18/2026,8,PF2,ML-EM-26-0193,16,James,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,987778876,25,RELEASED,MAY (ENVI) 2026
+5,Aryan,Compounding,CYE12,Regular,05/12/2026,05/12/2026 @ 09:28 AM,05/18/2026,5,PF2,ML-EM-26-0194,10,James,Dr. Wong's Lightening Lotion - Compounding,Aryan,FAILED,N/A,987778876,26,RELEASED,MAY (ENVI) 2026
+4,Aryan,Filling,EYE30,Regular,05/12/2026,05/12/2026 @ 09:41 AM,05/18/2026,4,PF2,ML-EM-26-0195,8,James,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,987778876,27,RELEASED,MAY (ENVI) 2026
+4,Aryan,Filling,CYE11,Regular,05/12/2026,05/12/2026 @ 10:08 AM,05/18/2026,4,PF2,ML-EM-26-0196,8,James,Dr. Wong's Lightening Lotion - Filling,Aryan,PASSED,N/A,987778876,28,RELEASED,MAY (ENVI) 2026
+5,Karen,Weighing,LYE05,Pilot,05/13/2026,05/13/2026 @ 07:08 AM,,11,PF1,ML-EM-26-0197,26,,Herbycin Syrup (Weighing),Karen,,,987778876,29,,MAY (ENVI) 2026
+5,Karen,Compounding,LYE05,Pilot,05/13/2026,05/13/2026 @ 07:08 AM,,9,PF1,ML-EM-26-0198,18,,Herbycin Syrup (Compounding),Karen,,,987778876,30,,MAY (ENVI) 2026
+4,Karen,Compounding,LYE05,Pilot,05/13/2026,05/13/2026 @ 07:08 AM,,7,PF1,ML-EM-26-0199,14,,Herbycin Syrup (Tanks),Karen,,,987778876,31,,MAY (ENVI) 2026
+2,Karen,Filling,LYE04,Pilot,05/13/2026,05/13/2026 @ 07:15 AM,,2,PF1,ML-EM-26-0200,4,,Herbycin Syrup (Filling),Karen,,N/A,987778876,32,,MAY (ENVI) 2026
+4,Karen,Compounding,CYE12,Regular,05/13/2026,05/13/2026 @ 08:30 AM,,4,PF2,ML-EM-26-0201,8,,Dr. Wong's Lightening Lotion - For Filling,Karen,,N/A,987778876,33,,MAY (ENVI) 2026
+8,Karen,Compounding,EYE32,Regular,05/13/2026,05/13/2026 @ 08:35 AM,,8,PF2,ML-EM-26-0202,16,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,987778876,34,,MAY (ENVI) 2026
+5,Karen,,CYE13,Regular,05/13/2026,05/13/2026 @ 01:02 PM,,5,PF2,ML-EM-26-0203,10,,Dr. Wong's Lightening Lotion - Compounding,Karen,,N/A,987778876,35,,MAY (ENVI) 2026
+6,Jas,Weighing,LYE06,Regular,,05/14/2026 @ 07:00 AM,,11,PF1,ML-EM-26-0204,26,,Herbycin Syrup (Weighing),Jas,,N/A,987778876,36,,MAY (ENVI) 2026
+7,Jas,Compounding,LYE06,Regular,,05/14/2026 @ 07:00 AM,,9,PF1,ML-EM-26-0205,18,,Herbycin Syrup (Compounding),Jas,,N/A,987778876,37,,MAY (ENVI) 2026
+4,Jas,Compounding,LYE06,Regular,,05/14/2026 @ 07:00 AM,,7,PF1,ML-EM-26-0206,14,,Herbycin Syrup (Tanks),Jas,,N/A,987778876,38,,MAY (ENVI) 2026
+2,Jas,Filling,LYE05,Regular,,05/14/2026 @ 07:38 AM,,2,PF1,ML-EM-26-0207,4,,Herbycin Syrup (Filling),Jas,,N/A,987778876,39,,MAY (ENVI) 2026
+4,Jas,For Filling,CYE13,Regular,,05/14/2026 @ 08:36 AM,,4,PF2,ML-EM-26-0208,8,,Dr. Wong's Lightening Lotion - For Filling,Jas,,N/A,987778876,40,,MAY (ENVI) 2026
+8,Jas,Compounding,EYE33,Regular,,05/14/2026 @ 08:55 AM,,8,PF2,ML-EM-26-0209,16,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,987778876,41,,MAY (ENVI) 2026
+5,Jas,Compounding,CYE14,Regular,,05/14/2026 @ 01:11 PM,,5,PF2,ML-EM-26-0210,10,,Dr. Wong's Lightening Lotion - Compounding,Jas,,N/A,987778876,42,,MAY (ENVI) 2026
+2,James,Filling,LYE06,Regular,05/15/2026,05/15/2026 @ 08:06 am,,2,PF1,ML-EM-26-0211,4,,Herbycin Syrup (Filling),James,,N/A,987778876,43,ON-GOING,MAY (ENVI) 2026
+8,James,Compounding,EYE34,Regular,05/15/2026,05/15/2026 @ 08:26 am,,8,PF2,ML-EM-26-0212,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,987778876,44,ON-GOING,MAY (ENVI) 2026
+5,James,Compounding,CYE14,Regular,05/15/2026,05/15/2026 @ 08:45 am,,4,PF2,ML-EM-26-0213,4,,Dr. Wong's Lightening Lotion - For Filling,James,,N/A,987778876,45,ON-GOING,MAY (ENVI) 2026
+8,Karen,Compounding,EYE35,Regular,,05/16/2026 @ 08:24 AM,,8,PF2,ML-EM-26-0214,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,987778876,46,,MAY (ENVI) 2026
+2,James,Compounding,CYE18,Regular,05/17/2026,05/17/2026 @ 08:27 am,,2,PF2,ML-EM-26-0215,4,,Cheers Baby Oil - Bouquet,James,,N/A,987778876,47,,MAY (ENVI) 2026
+8,James,Compounding,EYE36,Regular,05/17/2026,05/17/2026 @ 08:32 am,,8,PF2,ML-EM-26-0216,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,987778876,48,,MAY (ENVI) 2026
+5,Jas,Weighing,CYE03,Regular,,05/19/2026 @ 07:01 AM,,13,PF1,ML-EM-26-0217,26,,Herbycin Cooling Mouth Spray (Weighing),Jas,,N/A,987778876,49,,MAY (ENVI) 2026
+5,Jas,Compounding,CYE03,Regular,,05/19/2026 @ 07:01 AM,,11,PF1,ML-EM-26-0218,26,,Herbycin Cooling Mouth Spray (Compounding),Jas,,N/A,987778876,50,,MAY (ENVI) 2026
+4,Jas,Filling,CYE18,Regular,,05/19/2026 @ 08:16 AM,,4,PF2,ML-EM-26-0219,8,,Cheers Baby Oil - Bouquet,Jas,,N/A,987778876,51,,MAY (ENVI) 2026
+2,Jas,Compounding,CYE19,Regular,,05/19/2026 @ 09:07 AM,,2,PF2,ML-EM-26-0220,4,,Cheers Baby Oil - Bouquet,Jas,,N/A,987778876,52,,MAY (ENVI) 2026
+3,James,Filling,CYE03,Regular,05/19/2026,05/19/2026 @,,3,PF1,ML-EM-26-0221,6,,Herbycin Cooling Mouth Spray (Filling),James,,N/A,987778876,53,,MAY (ENVI) 2026
+2,James,Compounding,CYE20,Regular,05/19/2026,05/19/2026 @ 02:52 pm,,2,PF2,ML-EM-26-0222,4,,Cheers Baby Oil - Bouquet,James,,N/A,987778876,54,,MAY (ENVI) 2026
+8,James,Compounding,EYE37,Regular,05/20/2026,05/20/2026 @ 08:24 am,,8,PF2,ML-EM-26-0223,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,987778876,55,,MAY (ENVI) 2026
+5,James,Filling,EYE36,Regular,05/20/2026,05/20/2026 @ 09:28 am,,5,PF2,ML-EM-26-0224,10,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,987778876,56,,MAY (ENVI) 2026
+2,James,Compounding,CYE23,Regular,05/20/2026,05/20/2026 @ 01:07 pm,,2,PF2,ML-EM-26-0225,4,,Mama's Love Baby Oil (G),James,,N/A,987778876,57,,MAY (ENVI) 2026
+2,Aryan,Compounding,CYE24,Regular,05/21/2026,05/21/2026 @08:33 am,05/27/2026,2,PF2,ML-EM-26-0226,4,,Mama's Love Baby Oil (G),Aryan,FOR EVALUATION,N/A,987778876,58,RELEASED,MAY (ENVI) 2026
+8,Aryan,Compounding,EYE38,Regular,05/21/2026,05/21/2026 @08:41 am,05/27/2026,8,PF2,ML-EM-26-0227,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FOR EVALUATION,N/A,987778876,59,RELEASED,MAY (ENVI) 2026
+4,Aryan,Filling,CYE23,Regular,05/21/2026,05/21/2026 @09:44 am,05/27/2026,4,PF2,ML-EM-26-0228,8,,Mama's Love Baby Oil (G),Aryan,FOR EVALUATION,N/A,987778876,60,RELEASED,MAY (ENVI) 2026
+2,Karen,Compounding,CYE25,Regular,05/22/2026,05/22/2026 @09:05 am,,2,PF2,ML-EM-26-0229,8,,Mama's Love Baby Oil (G),Karen,,N/A,987778876,61,,MAY (ENVI) 2026
+8,Karen,Compounding,EYE39,Regular,05/22/2026,05/22/2026 @09:08 am,,8,PF2,ML-EM-26-0230,16,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,987778876,62,,MAY (ENVI) 2026
+8,Jas,Compounding,EYE40,Regular,05/23/2026,05/23/2026 @ 08:46 AM,,8,PF2,ML-EM-26-0231,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,987778876,63,,MAY (ENVI) 2026
+2,Jas,Compounding,CYE21,Regular,05/23/2026,05/23/2026 @ 10:30 AM,,2,PF2,ML-EM-26-0232,4,,Cheers Baby Oil - Bouquet,Jas,,N/A,987778876,64,,MAY (ENVI) 2026
+2,James,Compounding,CYE22,Regular,05/24/2026,05/24/2026 @ 11:03 am,,2,PF2,ML-EM-26-0233,4,,Cheers Baby Oil - Bouquet,James,,N/A,987778876,65,,MAY (ENVI) 2026
+4,James,Filling,CYE21,Regular,05/24/2026,05/24/2026 @ 11:03 am,,4,PF2,ML-EM-26-0234,8,,Cheers Baby Oil - Bouquet,James,,N/A,987778876,66,,MAY (ENVI) 2026
+4,Aryan,Filling,CYE21,Regular,05/26/2026,05/26/2026 @07:32 am,,4,PF2,ML-EM-26-0235,8,,Cheers Baby Oil - Bouquet,Aryan,,N/A,987778876,67,ON-GOING,MAY (ENVI) 2026
+5,Aryan,Weighing,CYE23,Regular,05/26/2026,05/26/2026 @08:30 am,,11,PF1,ML-EM-26-0236,22,,Herbycin Syrup (Weighing),Aryan,,N/A,987778876,68,ON-GOING,MAY (ENVI) 2026
+5 (+1 Failed),Aryan,Compounding,CYE24,Regular,05/26/2026,05/26/2026 @08:30 am,,9,PF1,ML-EM-26-0237,18,,Herbycin Syrup (Compounding),Aryan,,N/A,987778876,69,ON-GOING,MAY (ENVI) 2026
+4,Aryan,Compounding,CYE25,Regular,05/26/2026,05/26/2026 @08:30 am,,7,PF1,ML-EM-26-0238,14,,Herbycin Syrup (Tanks),Aryan,,N/A,987778876,70,ON-GOING,MAY (ENVI) 2026
+5,Karen,Weighing,LYE08,Regular,,05/27/2026 @07:05 am,,11,PF1,ML-EM-26-0239,26,,Herbycin Syrup (Weighing),Karen,,N/A,987778876,71,,MAY (ENVI) 2026
+5,Karen,Compounding,LYE08,Regular,,05/27/2026 @07:05 am,,9,PF1,ML-EM-26-0240,18,,Herbycin Syrup (Compounding),Karen,,N/A,987778876,72,,MAY (ENVI) 2026
+4,Karen,Compounding,LYE08,Regular,,05/27/2026 @07:05 am,,7,PF1,ML-EM-26-0241,14,,Herbycin Syrup (Tanks),Karen,,N/A,987778876,73,,MAY (ENVI) 2026
+2,Karen,Filling,LYE07,Regular,,05/27/2026 @08:20 am,,2,PF1,ML-EM-26-0242,4,,Herbycin Syrup (Filling),Karen,,N/A,987778876,74,,MAY (ENVI) 2026
+2,Karen,Compounding,CYE23,Regular,,05/27/2026 @08:36 am,,2,PF2,ML-EM-26-0243,4,,Cheers Baby Oil - Bouquet,Karen,,N/A,987778876,75,,MAY (ENVI) 2026
+4,Jas,Compounding,LYE09,Demo,,05/28/2026 @ 07:15 AM,,7,PF1,ML-EM-26-0244,14,,Herbycin Syrup (Tanks),Jas,,3,987778876,76,,MAY (ENVI) 2026
+6,Jas,Weighing,LYE09,Demo,,05/28/2026 @ 07:15 AM,,11,PF1,ML-EM-26-0245,22,,Herbycin Syrup (Weighing),Jas,,3,987778876,77,,MAY (ENVI) 2026
+5,Jas,Compounding,LYE09,Demo,,05/28/2026 @ 07:15 AM,,9,PF1,ML-EM-26-0246,18,,Herbycin Syrup (Compounding),Jas,,3,987778876,78,,MAY (ENVI) 2026
+2,Jas,Filling,LYE08,Demo,,05/28/2026 @ 07:08 AM,,2,PF1,ML-EM-26-0247,8,,Herbycin Syrup (Filling),Jas,,2,987778876,79,,MAY (ENVI) 2026
+2,Jas,Compounding,CYE24,Regular,,05/28/2026 @ 08:35 AM,,2,PF2,ML-EM-26-0248,4,,Cheers Baby Oil - Bouquet,Jas,,N/A,987778876,80,,MAY (ENVI) 2026
+2,James,Filling,LYE09,Demo,,05/29/2026 @ 07:00 am,,2,PF1,ML-EM-26-0249,4,,Herbycin Syrup (Filling),James,,3,987778876,81,,MAY (ENVI) 2026
+10,Jas,Compounding,FYC01,Regular,,04/07/2026 @ 07:38 AM,,14,PF1,ML-EM-26-0143,30,,Dr. S. Wong's Apple Drink (Peeling),Jas,,N/A,370370255,5,,APRIL (ENVI) 2026
+2,Jas,Compounding,CYD14,Regular,,04/07/2026 @ 08:40 AM,,2,PF2,ML-EM-26-0144,6,,Mama's Love Baby Oil (P),Jas,,N/A,370370255,6,,APRIL (ENVI) 2026
+2,Jas,Filling,CYD14,Regular,,04/07/2026 @ 08:46 AM,,2,PF2,ML-EM-26-0145,4,,Mama's Love Baby Oil (P),Jas,,N/A,370370255,7,,APRIL (ENVI) 2026
+4,Jas,Filling,FYC01,Regular,,04/07/2026 @ 12:18 PM,,4,PF1,ML-EM-26-0146,8,,Dr. S. Wong's Apple Fruit Juice,Jas,,N/A,370370255,8,,APRIL (ENVI) 2026
+8,James,Filling,FYC02,Pilot,,04/07/2026 @ 07:11 am,,13,PF1,ML-EM-26-0147,,,Dr. S. Wong's Apple Fruit Juice,James,,,370370255,9,,APRIL (ENVI) 2026
+2,James,Compounding,CYD15,Regular,,04/08/2026 @ 08:32 am,,2,PF2,ML-EM-26-0148,2,,Mama's Love Baby Oil (P),James,,N/A,370370255,10,,APRIL (ENVI) 2026
+2,Aryan,Compounding,CYD16,Regular,04/09/2026,04/09/2026 @08:28 am,04/15/2026,2,PF2,ML-EM-26-0150,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,370370255,12,RELEASED,APRIL (ENVI) 2026
+2,Karen,Compounding,CYD17,Regular,,04/10/2026 @ 01:03 pm,,2,PF2,ML-EM-26-0151,8,,Mama's Love Baby Oil (P),Karen,,N/A,370370255,13,,APRIL (ENVI) 2026
+2,James,Filling,CYD15,Regular,,04/13/2026 @ 07:33 am,,2,PF2,ML-EM-26-0152,4,,Mama's Love Baby Oil (P),James,,N/A,370370255,14,,APRIL (ENVI) 2026
+2,Aryan,Compounding,CYD18,Regular,04/14/2026,04/14/2026 @08:27 am,04/20/2026,2,PF2,ML-EM-26-0153,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,370370255,15,RELEASED,APRIL (ENVI) 2026
+2,,Compounding,CYD12,Regular,,04/16/2026 @ 08:33 AM,,2,PF2,ML-EM-26-0154,8,,Cheers Baby Oil - Bouquet,Jas,,N/A,370370255,16,,APRIL (ENVI) 2026
+2,Karen,Compounding,CYD13,Regular,04/18/2026,04/18/2026 @ 08:30 AM,,2,PF2,ML-EM-26-0155,8,,Cheers Baby Oil - Bouquet,Karen,,N/A,370370255,17,,APRIL (ENVI) 2026
+4,Karen,Filling,CYD12,Regular,,04/18/2026 @ 01:00 PM,,4,PF2,ML-EM-26-0156,8,,Cheers Baby Oil - Bouquet,Karen,,N/A,370370255,18,,APRIL (ENVI) 2026
+5,Aryan,Compounding,CYD01,Regular,04/20/2026,04/20/2026 @07:35 am,04/27/2026,13,PF1,ML-EM-26-0157,26,,Herbycin Cooling Mouth Spray (Weighing),Aryan,FOR EVALUATION,N/A,370370255,19,RELEASED,APRIL (ENVI) 2026
+5,Aryan,Compounding,CYD01,Regular,04/20/2026,04/20/2026 @07:35 am,04/27/2026,11,PF1,ML-EM-26-0158,22,,Herbycin Cooling Mouth Spray (Compounding),Aryan,FOR EVALUATION,N/A,370370255,20,RELEASED,APRIL (ENVI) 2026
+3,Aryan,Filling,CYD01,Regular,04/20/2026,04/20/2026 @01:46 pm,04/27/2026,3,PF1,ML-EM-26-0159,6,,Herbycin Cooling Mouth Spray (Filling),Aryan,FOR EVALUATION,N/A,370370255,21,RELEASED,APRIL (ENVI) 2026
+4,Jas,Filling,CYD13,Regular,,04/21/2026 @ 07:30 AM,,4,PF2,ML-EM-26-0160,12,,Cheers Baby Oil - Bouquet,Jas,,N/A,370370255,22,,APRIL (ENVI) 2026
+2,Jas,Compounding,CYD14,Regular,,04/21/2026 @ 08:33 AM,,2,PF2,ML-EM-26-0161,4,,Cheers Baby Oil - Bouquet,Jas,,N/A,370370255,23,,APRIL (ENVI) 2026
+6,Aryan,Compounding,CYD02,Regular,04/22/2026,04/22/2026 @ 09:38 am,04/28/2026,14,PF1,ML-EM-26-0162,,James,Herbycin Cooling Mouth Spray (Weighing),James,FOR EVALUATION,N/A,370370255,24,RELEASED,APRIL (ENVI) 2026
+5,Aryan,Compounding,CYD02,Regular,04/22/2026,04/22/2026 @ 09:38 am,04/28/2026,11,PF1,ML-EM-26-0163,,James,Herbycin Cooling Mouth Spray (Compounding),James,FOR EVALUATION,N/A,370370255,25,RELEASED,APRIL (ENVI) 2026
+2,Aryan,Compounding,CYD19,Regular,04/22/2026,04/22/2026 @ 10:35 am,04/28/2026,2,PF2,ML-EM-26-0164,4,James,Mama's Love Baby Oil (P),James,PASSED,N/A,370370255,26,RELEASED,APRIL (ENVI) 2026
+6,Aryan,Filling,CYD02,Regular,04/23/2026,04/23/2026 @08:52 am,04/29/2026,3,PF1,ML-EM-26-0165,6,,Herbycin Cooling Mouth Spray (Filling),Aryan,FOR EVALUATION,N/A,370370255,27,RELEASED,APRIL (ENVI) 2026
+2,Aryan,Compounding,CYD20,Regular,04/23/2026,04/23/2026 @09:28 am,04/29/2026,2,PF2,ML-EM-26-0166,4,,Mama's Love Baby Oil (G),Aryan,PASSED,N/A,370370255,28,RELEASED,APRIL (ENVI) 2026
+4,Aryan,Filling,CYD19,Regular,04/23/2026,04/23/2026 @12:57 pm,04/29/2026,4,PF2,ML-EM-26-0167,8,,Mama's Love Baby Oil (G),Aryan,FAILED,N/A,370370255,29,RELEASED,APRIL (ENVI) 2026
+2,Aryan,Compounding,CYD21,Regular,04/25/2026,04/25/2026 @07:13 am,05/05/2026,2,PF2,ML-EM-26-0168,4,,Mama's Love Baby Oil (G),Aryan,PASSED,N/A,370370255,30,RELEASED,APRIL (ENVI) 2026
+2,Jas,Compounding,CYD22,Regular,04/28/2026,04/26/2026 @ 09:00 AM,,2,PF2,ML-EM-26-0169,8,,Mama's Love Baby Oil (G),Jas,,N/A,370370255,31,,APRIL (ENVI) 2026
+4,Aryan,Compounding,CYD21,Regular,04/28/2026,04/28/2026 @07:45 am,05/05/2026,4,PF2,ML-EM-26-0170,8,,Mama's Love Baby Oil (G),Aryan,PASSED,N/A,370370255,32,RELEASED,APRIL (ENVI) 2026
+2,Aryan,Compounding,CYD15,Regular,04/28/2026,04/28/2026 @10:03 am,05/05/2026,2,PF2,ML-EM-26-0171,4,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,370370255,33,RELEASED,APRIL (ENVI) 2026
+2,Karen,Compounding,CYD16,Regular,04/29/2026,04/29/2026 @07:03 am,,2,PF2,ML-EM-26-0172,8,,Cheers Baby Oil - Bouquet,Karen,,N/A,370370255,34,,APRIL (ENVI) 2026
+4,Karen,Filling,CYD15,Regular,04/29/2026,04/29/2026 @07:15 am,,4,PF2,ML-EM-26-0173,8,,Cheers Baby Oil - Bouquet,Karen,,N/A,370370255,35,,APRIL (ENVI) 2026
+2,Karen,Compounding,CYD17,Regular,04/29/2026,04/29/2026 @01:00 am,,2,PF2,ML-EM-26-0174,4,,Cheers Baby Oil - Bouquet,Karen,,N/A,370370255,36,,APRIL (ENVI) 2026
+2,James,Compounding,CYC07,Regular,03/02/2026,03/02/2025 @ 08:24 am,,2,PF2,ML-EM-26-0098,4,,Mama's Love Baby Oil (P),James,,N/A,638948729,5,ON-GOING,MARCH (ENVI) 2026
+8,James,Compounding,EYC25,Regular,03/02/2026,03/02/2025 @ 08:29 am,,8,PF2,ML-EM-26-0099,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,638948729,6,ON-GOING,MARCH (ENVI) 2026
+2,James,Filling,CYC07,Regular,03/02/2026,03/02/2025 @ 08:29 am,,2,PF2,ML-EM-26-0100,4,,Mama's Love Baby Oil (P),James,,N/A,638948729,7,ON-GOING,MARCH (ENVI) 2026
+5,James,Filling,EYB06,Regular,03/02/2026,03/02/2025 @ 09:11 am,,8,PF1,ML-EM-26-0101,8,,OPK-Export- Filling,James,,N/A,638948729,8,ON-GOING,MARCH (ENVI) 2026
+2,Aryan,Compounding,CYC06,Regular,03/03/2026,03/03/2025 @ 08:28 am,03/10/2026,2,PF2,ML-EM-26-0102,4,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,638948729,9,RELEASED,MARCH (ENVI) 2026
+8,Aryan,Compounding,EYC26,Regular,03/03/2026,03/03/2025 @ 08:32 am,03/10/2026,8,PF2,ML-EM-26-0103,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,638948729,10,RELEASED,MARCH (ENVI) 2026
+5,Aryan,Filling,EYC25,Regular,03/03/2026,03/03/2025 @ 09:44 am,03/10/2026,5,PF2,ML-EM-26-0104,10,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,638948729,11,RELEASED,MARCH (ENVI) 2026
+8,Karen,Compounding,EYC27,Regular,03/04/2026,03/03/2025 @ 08:30 am,,8,PF2,ML-EM-26-0105,12,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,638948729,12,,MARCH (ENVI) 2026
+2,Karen,Compounding,CYC07,Regular,03/04/2026,03/03/2025 @ 08:50 am,,2,PF2,ML-EM-26-0106,4,,Cheers Baby Oil - Bouquet,Karen,,N/A,638948729,13,,MARCH (ENVI) 2026
+4,Jas,Filling,CYC06,Regular,,03/05/2026 @ 07:10 AM,,4,PF2,ML-EM-26-0107,12,,Cheers Baby Oil - Florabelle,Jas,,N/A,638948729,14,,MARCH (ENVI) 2026
+8,Jas,Compounding,EYB28,Regular,,03/05/2026 @ 08:35 AM,,8,PF2,ML-EM-26-0108,16,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,638948729,15,,MARCH (ENVI) 2026
+2,James,Compounding,CYC08,Regular,03/06/2026,03/06/2026 @ 07:31 am,,2,PF2,ML-EM-26-0109,2,,Cheers Baby Oil - Bouquet,James,,N/A,638948729,16,ON-GOING,MARCH (ENVI) 2026
+8,James,Compounding,EYC29,Regular,03/06/2026,03/06/2026 @ 07:39 am,,8,PF2,ML-EM-26-0110,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,638948729,17,ON-GOING,MARCH (ENVI) 2026
+5,James,Compounding,CYC07,Regular,03/06/2026,03/06/2026 @ 07:57 am,,5,PF2,ML-EM-26-0111,6,,Dr. Wong's Lightening Lotion - Compounding,James,,N/A,638948729,18,ON-GOING,MARCH (ENVI) 2026
+2,James,Compounding,CYC09,Regular,03/06/2026,03/06/2026 @ 05:30 pm,,2,PF2,ML-EM-26-0112,2,,Cheers Baby Oil - Bouquet,James,,N/A,638948729,19,ON-GOING,MARCH (ENVI) 2026
+4,James,Compounding,CYC07,Regular,03/06/2026,03/06/2026 @ 05:35 pm,,4,PF2,ML-EM-26-0113,4,,Dr. Wong's Lightening Lotion - For Filling,James,,N/A,638948729,20,ON-GOING,MARCH (ENVI) 2026
+4,Karen,Filling,CYC09,Regular,03/09/2026,03/09/2026 @ 07:15 am,,4,PF2,ML-EM-26-0114,12,,Cheers Baby Oil - Bouquet,Karen,PASSED,N/A,638948729,21,RELEASED,MARCH (ENVI) 2026
+2,Karen,Compounding,CYC08,Regular,03/09/2026,03/09/2026 @ 09:00 am,,2,PF2,ML-EM-26-0115,4,,Mama's Love Baby Oil (G),Karen,PASSED,N/A,638948729,22,RELEASED,MARCH (ENVI) 2026
+5,Karen,Compounding,CYC08,Regular,03/09/2026,03/09/2026 @ 09:15 am,,5,PF2,ML-EM-26-0116,10,,Dr. Wong's Lightening Lotion - Compounding,Karen,FAILED,N/A,638948729,23,RELEASED,MARCH (ENVI) 2026
+5,Karen,Filling,CYC07,Regular,03/09/2026,03/09/2026 @ 09:30 am,,5,PF2,ML-EM-26-0117,10,,Dr. Wong's Lightening Lotion - Filling,Karen,PASSED,N/A,638948729,24,RELEASED,MARCH (ENVI) 2026
+4,Karen,Filling,CYC08,Regular,03/09/2026,03/09/2026 @ 03:30 pm,,4,PF2,ML-EM-26-0118,8,,Mama's Love Baby Oil (G),Karen,PASSED,N/A,638948729,25,RELEASED,MARCH (ENVI) 2026
+4,Jas,For Filling,CYC08,Regular,,03/10/2026 @ 08:23 AM,,4,PF2,ML-EM-26-0119,8,,Dr. Wong's Lightening Lotion - For Filling,Jas,,N/A,638948729,26,,MARCH (ENVI) 2026
+2,Jas,Compounding,CYC09,Regular,,03/10/2026 @ 08:34 AM,,2,PF2,ML-EM-26-0120,4,,Mama's Love Baby Oil (G),Jas,,N/A,638948729,27,,MARCH (ENVI) 2026
+5,Jas,Compounding,CYC09,Regular,,03/10/2026 @ 12:30 PM,,5,PF2,ML-EM-26-0121,10,,Dr. Wong's Lightening Lotion - Compounding,Jas,,N/A,638948729,28,,MARCH (ENVI) 2026
+2,Jas,Compounding,CYC10,Regular,,03/10/2026 @ 12:43 PM,,2,PF2,ML-EM-26-0122,4,,Mama's Love Baby Oil (G),Jas,,N/A,638948729,29,,MARCH (ENVI) 2026
+4,James,Compounding,CYC09,Regular,03/11/2026,03/11/2026 @ 08:11 am,,4,PF2,ML-EM-26-0123,4,,Dr. Wong's Lightening Lotion - For Filling,James,,N/A,638948729,30,ON-GOING,MARCH (ENVI) 2026
+2,James,Compounding,CYC11,Regular,03/11/2026,03/11/2026 @ 12:29 am,,2,PF2,ML-EM-26-0124,4,,Mama's Love Baby Oil (G),James,,N/A,638948729,31,,MARCH (ENVI) 2026
+5,James,Compounding,CYC10,Regular,03/11/2026,03/11/2026 @ 12:38 pm,,5,PF2,ML-EM-26-0125,6,,Dr. Wong's Lightening Lotion - Compounding,James,,N/A,638948729,32,,MARCH (ENVI) 2026
+4,Aryan,For Filling,CYC10,Regular,03/18/2026,03/12/2026 @ 09:26 am,,4,PF2,ML-EM-26-0126,8,,Dr. Wong's Lightening Lotion - For Filling,Aryan,PASSED,N/A,638948729,33,RELEASED,MARCH (ENVI) 2026
+2,Karen,Compounding,CYC12,Regular,03/13/2026,03/13/2026 @ 08:25 am,,2,PF2,ML-EM-26-0127,8,,Mama's Love Baby Oil (G),Karen,,N/A,638948729,34,ON-GOING,MARCH (ENVI) 2026
+2,Karen,Compounding,CYC13,Regular,03/13/2026,03/13/2026 @ 01:33 pm,,2,PF2,ML-EM-26-0128,4,,Mama's Love Baby Oil (G),Karen,,N/A,638948729,35,ON-GOING,MARCH (ENVI) 2026
+4,James,Filling,CYC13,Regular,,03/16/2026 @ 07:29 am,,4,PF2,ML-EM-26-0129,8,,Mama's Love Baby Oil (G),James,,N/A,638948729,36,,MARCH (ENVI) 2026
+2,James,Compounding,CYC10,Regular,,03/16/2026 @ 08:31 am,,2,PF2,ML-EM-26-0130,4,,Cheers Baby Oil - Bouquet,James,,N/A,638948729,37,,MARCH (ENVI) 2026
+2,Aryan,Compounding,CYC11,Regular,03/17/2026,03/17/2026 @09:29 am,03/23/2026,2,PF2,ML-EM-26-0131,4,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,638948729,38,RELEASED,MARCH (ENVI) 2026
+4 + 1 (Failed 111 RLU),Aryan,Filling,CYC10,Regular,03/17/2026,03/17/2026 @12:39 Pm,03/23/2026,4,PF2,ML-EM-26-0132,8,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,638948729,39,RELEASED,MARCH (ENVI) 2026
+17,Karen,Compounding,EYC01,Regular,03/23/2026,03/23/2026 @08:44 AM,,24,PF1,ML-EM-26-0133,52,,Dr. S. Wong's Apple Fruit Juice,Karen,,N/A,638948729,40,,MARCH (ENVI) 2026
+5,Karen,Filling,CYC06,Regular,03/23/2026,03/23/2026 @10:25 AM,,5,PF2,ML-EM-26-0134,10,,Dr. Wong's Lightening Face Cream,Karen,,N/A,638948729,41,,MARCH (ENVI) 2026
+14,Jas,Compounding,FYC02,Regular,,03/24/2026 @ 07:35 AM,,26,PF1,ML-EM-26-0135,30,,Dr. S. Wong's Apple Fruit Juice,Jas,,N/A,638948729,42,,MARCH (ENVI) 2026
+5,Jas,For Filling,CYC06,Regular,,03/24/2026 @ 09:04 AM,,4,PF2,ML-EM-26-0136,8,,Dr. Wong's Lightening Face Cream,Jas,,N/A,638948729,43,,MARCH (ENVI) 2026
+5,James,Compounding,CYC07,Regular,03/25/2026,03/25/2026 @ 08:23 AM,,5,PF2,ML-EM-26-0137,6,,Dr. Wong's Lightening Face Cream,James,,N/A,638948729,44,,MARCH (ENVI) 2026
+5,James,Filling,CYC06,Regular,03/25/2026,03/25/2026 @ 09:13 am,,5,PF2,ML-EM-26-0138,5,,Dr. Wong's Lightening Face Cream,James,,N/A,638948729,45,,MARCH (ENVI) 2026
+4,Aryan,For Filling,CYC07,Regular,03/26/2026,03/26/2026 @08:33 am,,4,PF2,ML-EM-26-0139,- - -,,Dr. Wong's Lightening Face Cream,Aryan,PASSED,N/A,638948729,46,RELEASED,MARCH (ENVI) 2026
+5,Karen,Compounding,CYC08,Regular,03/27/2026,03/27/2026 @09:04 am,,5,PF2,ML-EM-26-0140,-----,,Dr. Wong's Lightening Face Cream,Karen,,N/A,638948729,47,,MARCH (ENVI) 2026
+4,Aryan,For Filling,CYC08,Regular,03/30/2026,03/28/2026 @08:31 am,,4,PF2,ML-EM-26-0141,- - -,,Dr. Wong's Lightening Face Cream,Aryan,PASSED,N/A,638948729,48,RELEASED,MARCH (ENVI) 2026
+5,James,Filling,CYC08,Regular,03/30/2026,03/30/2026 @08:19 am,,8,PF2,ML-EM-26-0142,16,,Dr. Wong's Lightening Face Cream,James,,N/A,638948729,49,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0143,,,,,,,638948729,50,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0144,,,,,,,638948729,51,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0145,,,,,,,638948729,52,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0146,,,,,,,638948729,53,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0147,,,,,,,638948729,54,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0148,,,,,,,638948729,55,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0149,,,,,,,638948729,56,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0150,,,,,,,638948729,57,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0151,,,,,,,638948729,58,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0152,,,,,,,638948729,59,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0153,,,,,,,638948729,60,,MARCH (ENVI) 2026
+,,,,,,,,,,ML-EM-26-0154,,,,,,,638948729,61,,MARCH (ENVI) 2026
+5,James,Weighing,EYB03,Regular,02/02/2026,02/02/2026 @ 07:58 am,,22,PF1,ML-EM-26-0041,10,Jas,OPK Export - Weighing,James,,N/A,319329873,5,ON-GOING,FEBRUARY (ENVI) 2026
+5,James,Compounding,EYB03,Regular,02/02/2026,02/02/2026 @ 08:30 am,,10,PF1,ML-EM-26-0042,10,Jas,OPK Export- Compounding Utesils,James,,N/A,319329873,6,ON-GOING,FEBRUARY (ENVI) 2026
+3,James,Compounding,EYB03,Regular,02/02/2026,02/02/2026 @ 08:30 am,,7,PF1,ML-EM-26-0043,8,Jas,OPK Export- Compounding Tanks,James,,N/A,319329873,7,ON-GOING,FEBRUARY (ENVI) 2026
+2,James,Filling,CYB05,Regular,02/02/2026,02/02/2026 @ 09:04 am,,2,PF2,ML-EM-26-0044,4,Aryan,Mama's Love Baby Oil (P),James,,N/A,319329873,8,ON-GOING,FEBRUARY (ENVI) 2026
+2,James,Compounding,CYB05,Regular,02/02/2026,02/02/2026 @ 09:16 am,,2,PF2,ML-EM-26-0045,4,Aryan,Mama's Love Baby Oil (P),James,,N/A,319329873,9,ON-GOING,FEBRUARY (ENVI) 2026
+5,James,Compounding,CYB01,Regular,02/02/2026,02/02/2026 @ 09:22 am,,5,PF2,ML-EM-26-0046,6,Aryan,Dr. Wong's Lightening Lotion - Compounding,James,,N/A,319329873,10,ON-GOING,FEBRUARY (ENVI) 2026
+8,James,Compounding,EYB12,Regular,02/03/2026,02/02/2026 @ 09:32 am,,8,PF2,ML-EM-26-0047,8,James,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,319329873,11,ON-GOING,FEBRUARY (ENVI) 2026
+5,Aryan,Filling,EYB03,Regular,02/02/2026,02/02/2026 @02:55 pm,02/10/2026,9,PF1,ML-EM-26-0048,12,,Omega Pain Killer Liniment - Export (Filling),Aryan,FAILED,N/A,319329873,12,RELEASED,FEBRUARY (ENVI) 2026
+4,Aryan,Compounding,CYB01,Regular,02/03/2026,02/03/2026 @09:00 am,02/10/2026,4,PF2,ML-EM-26-0049,8,,Dr. Wong's Lightening Face Cream (For Filling),Aryan,FAILED,N/A,319329873,13,RELEASED,FEBRUARY (ENVI) 2026
+2,Aryan,Compounding,CYB06,Regular,02/03/2026,02/03/2026 @09:12 am,02/10/2026,2,PF2,ML-EM-26-0050,4,,Mama's Love Baby Oil (P),Aryan,PASSED,N/A,319329873,14,RELEASED,FEBRUARY (ENVI) 2026
+5,Aryan,Filling,EYB12,Regular,02/03/2026,02/03/2026 @09:32 am,02/10/2026,5,PF2,ML-EM-26-0051,10,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,319329873,15,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Weighing,EYB04,Regular,02/04/2026,02/04/2026 @08:00 am,02/11/2026,22,PF1,ML-EM-26-0052,14,Karen,OPK Export - Weighing,Karen,FAILED,N/A,319329873,16,RELEASED,FEBRUARY (ENVI) 2026
+3,Karen,Compounding,EYB04,Regular,02/04/2026,02/04/2026 @08:30 am,02/11/2026,7,PF1,ML-EM-26-0053,8,Karen,OPK Export- Compounding Tanks,Karen,PASSED,N/A,319329873,17,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Compounding,EYB04,Regular,02/04/2026,02/04/2026 @08:30 am,02/11/2026,10,PF1,ML-EM-26-0054,10,Karen,OPK Export- Compounding Utesils,Karen,PASSED,N/A,319329873,18,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Compounding,CYB03,Regular,02/04/2026,02/04/2026 @09:13 am,02/11/2026,5,PF2,ML-EM-26-0055,10,Karen,Dr. Wong's Lightening Lotion - Compounding,Karen,PASSED,N/A,319329873,19,RELEASED,FEBRUARY (ENVI) 2026
+2,Karen,Compounding,CYB05,Regular,02/04/2026,02/04/2026 @09:25 am,02/11/2026,2,PF2,ML-EM-26-0056,4,Karen,Cheers Baby Oil - Bouquet,Karen,PASSED,N/A,319329873,20,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Filling,CYB01,Regular,02/04/2026,02/04/2026 @09:38 am,02/11/2026,5,PF2,ML-EM-26-0057,10,Karen,Dr. Wong's Lightening Face Cream,Karen,PASSED,N/A,319329873,21,RELEASED,FEBRUARY (ENVI) 2026
+4,Karen,Filling,EYB04,Regular,02/04/2026,02/04/2026 @02:00 pm,02/11/2026,9,PF1,ML-EM-26-0058,10,Karen,OPK-Export- Filling,Karen,FAILED,N/A,319329873,22,RELEASED,FEBRUARY (ENVI) 2026
+5,Jas,Weighing,EYB05,Regular,,02/05/2026 @ 08:04 AM,,22,PF1,ML-EM-26-0059,10,,OPK Export - Weighing,Jas,,N/A,319329873,23,,FEBRUARY (ENVI) 2026
+4,Jas,Compounding,EYB05,Regular,,02/05/2026 @ 08:28 AM,,7,PF1,ML-EM-26-0060,6,,OPK Export- Compounding Tanks,Jas,,N/A,319329873,24,,FEBRUARY (ENVI) 2026
+5,Jas,Compounding,EYB05,Regular,,02/05/2026 @ 08:28 AM,,11,PF1,ML-EM-26-0061,5,,OPK Export- Compounding Utesils,Jas,,N/A,319329873,25,,FEBRUARY (ENVI) 2026
+4,James,Compounding,CYB03,Regular,02/05/2026,02/05/2026 @ 08:27 am,,4,PF2,ML-EM-26-0062,4,,Dr. Wong's Lightening Lotion - For Filling,James,,N/A,319329873,26,ON-GOING,FEBRUARY (ENVI) 2026
+4,Jas,Filling,CYB05,Regular,,02/05/2026b @ 02:13 PM,,4,PF2,ML-EM-26-0063,8,,Cheers Baby Oil - Bouquet,Jas,,N/A,319329873,27,ON-GOING,FEBRUARY (ENVI) 2026
+5,Aryan,Compounding,CYB04,Regular,02/06/2026,02/06/2026 @08:53 am,02/13/2026,5,PF2,ML-EM-26-0064,10,,Dr. Wong's Lightening Lotion - Compounding,Aryan,PASSED,N/A,319329873,28,RELEASED,FEBRUARY (ENVI) 2026
+5,Aryan,Filling,CYB03,Regular,02/06/2026,02/06/2026 @09:36 am,02/13/2026,5,PF2,ML-EM-26-0065,10,,Dr. Wong's Lightening Lotion - Filling,Aryan,PASSED,N/A,319329873,29,RELEASED,FEBRUARY (ENVI) 2026
+5,Aryan,Filling,EYB05,Regular,02/06/2026,02/06/2026 @12:55 pm,02/13/2026,9,PF1,ML-EM-26-0066,10,,OPK-Export- Filling,Aryan,FAILED,N/A,319329873,30,RELEASED,FEBRUARY (ENVI) 2026
+4,Aryan,Compounding,CYB04,Regular,02/07/2026,02/07/2026 @08:15 am,02/16/2026,4,PF2,ML-EM-26-0067,8,,Dr. Wong's Lightening Lotion - For Filling,Aryan,FAILED,N/A,319329873,31,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Compounding,CYB05,Regular,02/09/2026,02/09/2026 @ 09:00 AM,02/16/2026,5,PF2,ML-EM-26-0068,14,Karen,Dr. Wong's Lightening Lotion - Compounding,Karen,PASSED,N/A,319329873,32,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Filling,CYB04,Regular,02/09/2026,02/09/2026 @ 09:17 AM,02/16/2026,5,PF2,ML-EM-26-0069,10,Karen,Dr. Wong's Lightening Lotion - Filling,Karen,PASSED,N/A,319329873,33,RELEASED,FEBRUARY (ENVI) 2026
+4,Jas,Compounding,CYB05,Regular,,02/10/2026 @ 08:12 AM,,4,PF2,ML-EM-26-0070,12,,Dr. Wong's Lightening Lotion - For Filling,Jas,,N/A,319329873,34,,FEBRUARY (ENVI) 2026
+5,Jas,Compounding,CYB06,Regular,,02/10/2026 @ 12: 17PM,,5,PF2,ML-EM-26-0071,10,,Dr. Wong's Lightening Lotion - Compounding,Jas,,N/A,319329873,35,,FEBRUARY (ENVI) 2026
+4,James,Compounding,CYB06,Regular,02/11/2026,02/11/2026 @ 08:32 am,,4,PF2,ML-EM-26-0072,4,,Dr. Wong's Lightening Lotion - For Filling,James,,N/A,319329873,36,ON-GOING,FEBRUARY (ENVI) 2026
+8,Aryan,Compounding,EYB13,Regular,02/12/2026,02/12/2026 @08:57 am,02/18/2026,8,PF2,ML-EM-26-0073,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,319329873,37,RELEASED,FEBRUARY (ENVI) 2026
+8,Karen,Compounding,EYB14,Regular,02/13/2026,02/13/2026 @09:00 am,02/20/2026,8,PF2,ML-EM-26-0074,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,319329873,38,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Filling,EYB13,Regular,02/13/2026,02/13/2026 @09:30 am,02/20/2026,5,PF2,ML-EM-26-0075,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,FAILED,N/A,319329873,39,RELEASED,FEBRUARY (ENVI) 2026
+8,,Compounding,EYB15,Regular,,02/14/2026 @ 08:29 am,,8,PF2,ML-EM-26-0076,8,,Efficascent Boost Pain Relief Massage Roll On,,,N/A,319329873,40,,FEBRUARY (ENVI) 2026
+8,Aryan,Compounding,EYB16,Regular,02/17/2026,02/17/2026 @08:55 am,02/24/2026,8,PF2,ML-EM-26-0077,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,319329873,41,RELEASED,FEBRUARY (ENVI) 2026
+5,Aryan,Filling,EYB15,Regular,02/17/2026,02/17/2026 @09:23 am,02/24/2026,5,PF2,ML-EM-26-0078,10,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,319329873,42,RELEASED,FEBRUARY (ENVI) 2026
+8,Karen,Compounding,EYB17,Regular,02/18/2026,02/18/2026 @08:30 am,02/18/2026,8,PF2,ML-EM-26-0079,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,319329873,43,RELEASED,FEBRUARY (ENVI) 2026
+8,Jas,Compounding,EYB18,Regular,,02/19/2026 @ 09:14 AM,,8,PF2,ML-EM-26-0080,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,319329873,44,ON-GOING,FEBRUARY (ENVI) 2026
+5,James,Compounding,CYB03,Regular,02/20/2026,02/19/2026 @ 09:28 am,,5,PF2,ML-EM-26-0081,6,,Dr. Wong's Lightening Face Cream,James,,N/A,319329873,45,ON-GOING,FEBRUARY (ENVI) 2026
+8,Aryan,Compounding,EYB19,Regular,02/21/2026,02/21/2026 @ 09:00 am,02/27/2026,8,PF2,ML-EM-26-0082,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,319329873,46,RELEASED,FEBRUARY (ENVI) 2026
+4,Aryan,For Filling,CYB03,Regular,02/21/2026,02/21/2026 @ 09:20 am,02/27/2026,4,PF2,ML-EM-26-0083,8,,Dr. Wong's Lightening Face Cream,Aryan,PASSED,N/A,319329873,47,RELEASED,FEBRUARY (ENVI) 2026
+8,Karen,Compounding,EYB20,Regular,02/24/2026,02/23/2026 @ 08:30 am,03/02/2026,8,PF2,ML-EM-26-0084,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,319329873,48,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Compounding,CYB04,Regular,02/24/2026,02/23/2026 @ 08:49 am,03/02/2026,5,PF2,ML-EM-26-0085,10,,Dr. Wong's Lightening Face Cream,Karen,PASSED,N/A,319329873,49,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Filling,EYB19,Regular,02/24/2026,02/23/2026 @ 09:30 am,03/02/2026,5,PF2,ML-EM-26-0086,10,,Dr. Wong's Lightening Face Cream,Karen,FAILED,N/A,319329873,50,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Filling,CYB03,Regular,02/24/2026,02/23/2026 @ 09:45 am,03/02/2026,5,PF2,ML-EM-26-0087,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,FAILED,N/A,319329873,51,RELEASED,FEBRUARY (ENVI) 2026
+8,Jas,Compounding,EYB21,Regular,,02/24/2026 @ 08:33 AM,,8,PF2,ML-EM-26-0088,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,319329873,52,,FEBRUARY (ENVI) 2026
+4,Jas,For Filling,CYB04,Regular,,02/24/2026 @ 08:48 AM,,4,PF2,ML-EM-26-0089,8,,Dr. Wong's Lightening Face Cream,Jas,,N/A,319329873,53,,FEBRUARY (ENVI) 2026
+8,James,Compounding,EYB22,Regular,02/25/2026,02/25/2026 @ 08:21 am,,8,PF2,ML-EM-26-0090,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,319329873,54,ON-GOING,FEBRUARY (ENVI) 2026
+5,James,Compounding,CYB05,Regular,02/25/2026,02/25/2026 @ 08:36 am,,5,PF2,ML-EM-26-0091,6,,Dr. Wong's Lightening Face Cream,James,,N/A,319329873,55,ON-GOING,FEBRUARY (ENVI) 2026
+8,Aryan,Compounding,EYB23,Regular,02/26/2026,02/26/2025 @08:17 am,3/4/2026,8,PF2,ML-EM-26-0092,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,319329873,56,RELEASED,FEBRUARY (ENVI) 2026
+4,Aryan,For Filling,CYB05,Regular,02/26/2026,02/26/2025 @08:33 am,3/4/2026,4,PF2,ML-EM-26-0093,8,,Dr. Wong's Lightening Face Cream,Aryan,PASSED,N/A,319329873,57,RELEASED,FEBRUARY (ENVI) 2026
+5,Karen,Weighing,EYB06,Regular,02/27/2026,02/27/2025 @08:00 am,,22,PF1,ML-EM-26-0094,14,,OPK Export - Weighing,Karen,,N/A,319329873,58,ON-GOING,FEBRUARY (ENVI) 2026
+5,Karen,Compounding,EYB06,Regular,02/27/2026,02/27/2025 @08:30 am,,7,PF1,ML-EM-26-0095,10,,OPK Export- Compounding Tanks,Karen,,N/A,319329873,59,ON-GOING,FEBRUARY (ENVI) 2026
+5,Karen,Compounding,EYB06,Regular,02/27/2026,02/27/2025 @08:30 am,,10,PF1,ML-EM-26-0096,10,,OPK Export- Compounding Utesils,Karen,,N/A,319329873,60,ON-GOING,FEBRUARY (ENVI) 2026
+8,Karen,Compounding,EYB24,Regular,02/27/2026,02/27/2025 @09:00 am,,8,PF2,ML-EM-26-0097,16,,Efficascent Boost Pain Relief Massage Roll On,Karen,,N/A,319329873,61,ON-GOING,FEBRUARY (ENVI) 2026
+8,Aryan,Compounding,EYA01,Regular,01/06/0206,01/06/2026 @08:26 am,01/12/2026,8,PF2,ML-EM-26-0001,16,James,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,2103178016,5,RELEASED,JANUARY (ENVI) 2026
+8,Karen,Compounding,EYA02,Regular,01/07/2026,01/07/2026 @08:30 am,01/14/2026,8,PF2,ML-EM-26-0002,20,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,2103178016,6,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Filling,EYA01,Regular,01/07/2026,01/07/2026 @09:30 am,01/14/2026,5,PF2,ML-EM-26-0003,16,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,2103178016,7,RELEASED,JANUARY (ENVI) 2026
+8,Jas,Compounding,EYA03,Regular,01/08/2026,01/08/2026 @ 09:00 AM,,8,PF2,ML-EM-26-0004,20,Jas,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,2103178016,8,,JANUARY (ENVI) 2026
+8,James,Compounding,EYA04,Regular,01/09/2026,01/09/2026 @ 08:57 am,01/16/2026,8,PF2,ML-EM-26-0005,,,Efficascent Boost Pain Relief Massage Roll On,James,PASSED,N/A,2103178016,9,RELEASED,JANUARY (ENVI) 2026
+5,Aryan,Weighing,EYA01,Regular,01/10/2026,01/10/2026 @07:59 am,01/16/2026,10,PF1,ML-EM-26-0006,16,N/A,Omega Pain Killer Liniment - Export (Weighing),Aryan,PASSED,N/A,2103178016,10,RELEASED,JANUARY (ENVI) 2026
+5,Aryan,Compounding,EYA01,Regular,01/10/2026,01/10/2026 @08:30 am,01/16/2026,10,PF1,ML-EM-26-0007,10,N/A,Omega Pain Killer Liniment - Export (Compounding),Aryan,PASSED,N/A,2103178016,11,RELEASED,JANUARY (ENVI) 2026
+4,Aryan,Compounding,EYA02,Regular,01/10/2026,01/10/2026 @08:30 am,01/16/2026,7,PF1,ML-EM-26-0008,6,N/A,Omega Pain Killer Liniment - Export (Tanks),Aryan,PASSED,N/A,2103178016,12,RELEASED,JANUARY (ENVI) 2026
+8,Aryan,Compounding,EYA05,Regular,01/10/2026,01/10/2026 @09:05 am,01/16/2026,8,PF2,ML-EM-26-0009,16,N/A,Efficascent Boost Pain Relief Massage Roll On,Aryan,PASSED,N/A,2103178016,13,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Filling,EYA01,Regular,01/12/2026,01/12/2026 @07:15 am,01/19/2026,9,PF1,ML-EM-26-0010,14,,Omega Pain Killer Liniment - Export (Filling),Karen,FAILED,N/A,2103178016,14,RELEASED,JANUARY (ENVI) 2026
+2,Karen,Compounding,CYA01,Regular,01/12/2026,01/12/2026 @08:35 am,01/19/2026,2,PF2,ML-EM-26-0011,4,,Mama's Love Baby Oil (P),Karen,PASSED,N/A,2103178016,15,RELEASED,JANUARY (ENVI) 2026
+8,Karen,Compounding,EYA06,Regular,01/12/2026,01/12/2026 @08:40 am,01/19/2026,8,PF2,ML-EM-26-0012,16,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,2103178016,16,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Compounding,CYA01,Regular,01/12/2026,01/12/2026 @08:55 am,01/19/2026,5,PF2,ML-EM-26-0013,10,,Dr. Wong's Lightening Lotion - Compounding,Karen,FAILED,N/A,2103178016,17,RELEASED,JANUARY (ENVI) 2026
+2,Karen,Filling,CYA01,Regular,01/12/2026,01/12/2026 @09:15 am,01/19/2026,2,PF2,ML-EM-26-0014,4,,Mama's Love Baby Oil (P),Karen,PASSED,N/A,2103178016,18,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Filling,EYA05,Regular,01/12/2026,01/12/2026 @09:35 am,01/19/2026,5,PF2,ML-EM-26-0015,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,2103178016,19,RELEASED,JANUARY (ENVI) 2026
+2,Jas,Compounding,CYA02,Regular,01/13/2026,01/13/2026 @ 08:48 AM,01/20/2026,2,PF2,ML-EM-26-0016,8,Jas,Mama's Love Baby Oil (G),Jas,,N/A,2103178016,20,,JANUARY (ENVI) 2026
+4,Jas,Compounding,CYA01,Regular,01/13/2026,01/13/2026 @ 08:58 AM,01/20/2026,4,PF2,ML-EM-26-0017,,Jas,Dr. Wong's Lightening Lotion - For Filling,Jas,,N/A,2103178016,21,,JANUARY (ENVI) 2026
+5,Jas,Compounding,CYA02,Regular,01/13/2026,01/13/2026 @ 08:58 AM,01/20/2026,5,PF2,ML-EM-26-0018,14,Jas,Dr. Wong's Lightening Lotion - Compounding,Jas,,N/A,2103178016,22,,JANUARY (ENVI) 2026
+4,James,Compounding,CYA02,Regular,01/14/2026,01/14/2026 @ 09:00 am,01/22/2026,4,PF2,ML-EM-26-0019,4,,Dr. Wong's Lightening Lotion - For Filling,James,PASSED,N/A,2103178016,23,RELEASED,JANUARY (ENVI) 2026
+5,James,Filling,CYA01,Regular,01/14/2026,01/14/2026 @ 08:58 am,01/22/2026,5,PF2,ML-EM-26-0020,10,,Dr. Wong's Lightening Lotion - Filling,James,FAILED,N/A,2103178016,24,RELEASED,JANUARY (ENVI) 2026
+2,Karen,Compounding,CYA01,Regular,01/16/2026,01/16/2026 @ 08:35 am,01/23/2026,2,PF2,ML-EM-26-0021,8,,Cheers Baby Oil - Bouquet,Karen,PASSED,N/A,2103178016,25,RELEASED,JANUARY (ENVI) 2026
+4,Karen,Filling,CYA02,Regular,01/16/2026,01/16/2026 @ 02:40 pm,01/23/2026,4,PF2,ML-EM-26-0022,8,,Mama's Love Baby Oil (G),Karen,PASSED,N/A,2103178016,26,RELEASED,JANUARY (ENVI) 2026
+4,James,Filling,CYA01,Regular,01/19/2026,01/19/2026 @ 08:38 am,,4,PF2,ML-EM-26-0023,8,,Cheers Baby Oil - Bouquet,James,,N/A,2103178016,27,,JANUARY (ENVI) 2026
+2,James,Compounding,CYA02,Regular,01/19/2026,01/19/2026 @ 08:57 am,,2,PF2,ML-EM-26-0024,4,,Cheers Baby Oil - Bouquet,James,,N/A,2103178016,28,,JANUARY (ENVI) 2026
+2,Aryan,Compounding,CYA03,Regular,01/20/2026,01/20/2026 @08:31 am,01/26/2026,2,PF2,ML-EM-26-0025,4,,Cheers Baby Oil - Bouquet,Aryan,PASSED,N/A,2103178016,29,RELEASED,JANUARY (ENVI) 2026
+2,Karen,Compounding,CYA04,Regular,01/21/2026,01/21/2026 @08:50 am,01/28/2026,2,PF2,ML-EM-26-0026,8,,Cheers Baby Oil - Bouquet,Karen,PASSED,N/A,2103178016,30,RELEASED,JANUARY (ENVI) 2026
+2,Jas,Compounding,CYA03,Regular,01/22/2026,01/22/2026 @ 08:43 AM,01/29/2026,2,PF2,ML-EM-26-0027,8,Jas,Mama's Love Baby Oil (G),Jas,,N/A,2103178016,31,ON-GOING,JANUARY (ENVI) 2026
+4,James,Filling,CYA03,Regular,01/23/2026,01/23/2026 @ 07:26 am,,4,PF2,ML-EM-26-0028,8,,Mama's Love Baby Oil (G),James,,N/A,2103178016,32,ON-GOING,JANUARY (ENVI) 2026
+2,James,Compounding,CYA04,Regular,01/23/2026,01/23/2026 @ 08:31 am,,2,PF2,ML-EM-26-0029,4,,Mama's Love Baby Oil (G),James,,N/A,2103178016,33,ON-GOING,JANUARY (ENVI) 2026
+8,James,Compounding,EYA07,Regular,01/23/2026,01/23/2026 @ 08:36 am,,8,PF2,ML-EM-26-0030,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,2103178016,34,ON-GOING,JANUARY (ENVI) 2026
+4,Karen,Filling,CYA04,Regular,01/26/2026,01/26/2026 @ 07:28 am,02/02/2026,4,PF2,ML-EM-26-0031,12,,Mama's Love Baby Oil (G),Karen,PASSED,N/A,2103178016,35,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Weighing,EYA02,Regular,01/26/2026,01/26/2026 @ 08:00 am,02/02/2026,22,PF1,ML-EM-26-0032,10,,OPK Export - Weighing,Karen,FAILED,N/A,2103178016,36,RELEASED,JANUARY (ENVI) 2026
+4,Karen,Compounding,EYA02,Regular,01/26/2026,01/26/2026 @ 08:20 am,02/02/2026,9,PF1,ML-EM-26-0033,8,,OPK Export- Compounding Tanks,Karen,PASSED,N/A,2103178016,37,RELEASED,JANUARY (ENVI) 2026
+4,Karen,Compounding,EYA02,Regular,01/26/2026,01/26/2026 @ 08:20 am,02/02/2026,7,PF1,ML-EM-26-0034,6,,OPK Export- Compounding Utesils,Karen,PASSED,N/A,2103178016,38,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Compounding,EYA08,Regular,01/26/2026,01/26/2026 @ 08:51 am,02/02/2026,8,PF2,ML-EM-26-0035,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,FAILED,N/A,2103178016,39,RELEASED,JANUARY (ENVI) 2026
+5,Karen,Filling,EYA07,Regular,01/26/2026,01/26/2026 @ 09:30 am,02/02/2026,5,PF2,ML-EM-26-0036,10,,Efficascent Boost Pain Relief Massage Roll On,Karen,PASSED,N/A,2103178016,40,RELEASED,JANUARY (ENVI) 2026
+6,Jas,Filling,EYA02,Regular,01/27/2026,01/27/2026 @ 08:13 AM,02/03/2026,8,PF1,ML-EM-26-0037,14,,OPK-Export- Filling,Jas,,N/A,2103178016,41,,JANUARY (ENVI) 2026
+8,Jas,Compounding,EYA09,Regular,01/27/2026,01/27/2026 @ 08:47 AM,02/03/2026,8,PF2,ML-EM-26-0038,20,,Efficascent Boost Pain Relief Massage Roll On,Jas,,N/A,2103178016,42,,JANUARY (ENVI) 2026
+8,James,Compounding,EYA10,Regular,01/28/2026,01/28/2026 @ 08:28 am,,8,PF2,ML-EM-26-0039,8,,Efficascent Boost Pain Relief Massage Roll On,James,,N/A,2103178016,43,ON-GOING,JANUARY (ENVI) 2026
+8,Aryan,Compounding,EYA11,Regular,01/29/2026,01/29/2026 @08:55 AM,02/10/2026,8,PF2,ML-EM-26-0040,16,,Efficascent Boost Pain Relief Massage Roll On,Aryan,FAILED,N/A,2103178016,44,RELEASED,JANUARY (ENVI) 2026
