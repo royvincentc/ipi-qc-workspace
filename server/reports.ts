@@ -110,7 +110,10 @@ export const matchScore = (sampleName:string, productName:string) => {
    // stores one row listing several sizes (15/30/60/120 mL), while the logger
    // stores one selected size. Ignore numeric tokens for the fallback match so
    // those representations resolve to the same controlled applicability row.
-   const comparableToken = (token:string) => !/^\d+$/.test(token) && token !== 'm' && token !== 'l';
+   // Unit tokens occur once in the logbook name but repeatedly in a
+   // consolidated sheet row such as "15 mL, 30 mL, 60 mL, 120 mL". They are
+   // packaging notation, not product identity, so exclude them with volumes.
+   const comparableToken = (token:string) => !/^\d+$/.test(token) && !['m','l','ml','g','kg'].includes(token);
    const sampleTokens = tokenize(sampleName).filter(comparableToken);
    const productComparableTokens = productTokens.filter(comparableToken);
    let matched = 0;
@@ -152,7 +155,9 @@ export function resolveApplicabilityMatches(applicability: any[], product: any, 
         bestScore = score;
         bestRows.length = 0;
         bestRows.push(row);
-      } else if (score > 0 && score === bestScore) {
+      } else if (score > 0 && score === bestScore && !bestRows.includes(row)) {
+        // The sample name and its managed product can tie against one row.
+        // Preserve genuine row ambiguity, but never count the same row twice.
         bestRows.push(row);
       }
     }
