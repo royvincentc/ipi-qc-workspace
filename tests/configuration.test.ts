@@ -82,7 +82,9 @@ test('applicability resolution respects Omega specification keywords and the Her
  const herbycin=resolveApplicabilityMatches([{sheet:'RM/FP/AS',product:'Herbycin Syrup',tests:['SPC','MY','SA','EC','SAL','ENT']}],{name:'Herbycin Syrup',aliases:[]},'RM/FP/AS','HERBYCIN SYRUP');
  assert.deepEqual(herbycin[0].tests,['SPC','MY','SA','EC','SAL','ENT']);
  const omegaCurrent=[{sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL',tests:['SPC','MY','PA','SA','CA']}];
+ assert.ok(matchScore('Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL')>0);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL'),omegaCurrent);
+ assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL'),omegaCurrent);
  const herbycinOld=[{sheet:'RM/FP/AS',product:'Herbycin Syrup',tests:['SPC','MY','SA','EC','SAL','ENT']}];
  assert.deepEqual(resolveApplicabilityMatches(herbycinOld,{name:'Herbycin Syrup',aliases:[]},'RM/FP/AS','Herbycin Syrup ( 7th Withdrawa- Actual) Old Specs'),herbycinOld);
  assert.equal(resolveApplicabilityMatches([...rows, {...rows[2]}],product,'RM/FP/AS').length,2);

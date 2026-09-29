@@ -110,9 +110,10 @@ export const matchScore = (sampleName:string, productName:string) => {
    // stores one row listing several sizes (15/30/60/120 mL), while the logger
    // stores one selected size. Ignore numeric tokens for the fallback match so
    // those representations resolve to the same controlled applicability row.
-   const sampleTokens = tokenize(sampleName).filter(token => !/^\d+$/.test(token));
+   const comparableToken = (token:string) => !/^\d+$/.test(token) && token !== 'm' && token !== 'l';
+   const sampleTokens = tokenize(sampleName).filter(comparableToken);
    let matched = 0;
-   for (const t of productTokens.filter(token => !/^\d+$/.test(token))) {
+   for (const t of productTokens.filter(comparableToken)) {
     const idx = sampleTokens.indexOf(t);
     if (idx !== -1) {
      matched++;
@@ -140,7 +141,10 @@ export function resolveApplicabilityMatches(applicability: any[], product: any, 
 
     // Fallback to fuzzy match
     const rowNormalized = normalizeSampleName(row.product);
-    const namesToTest = sampleName ? [sampleName, ...product.aliases] : [product.name, ...product.aliases];
+    // Keep the raw logger name for qualifier-aware matching, but always also
+    // test the canonical managed product. Stability names often add withdrawal
+    // and size text that is not present in the applicability row.
+    const namesToTest = sampleName ? [sampleName, product.name, ...product.aliases] : [product.name, ...product.aliases];
     for (const name of namesToTest) {
       const score = matchScore(rowNormalized, name);
       if (score > bestScore) {
@@ -262,7 +266,7 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
 
 export async function createAutomaticDraft(sampleId:string,actor:User){const setup=await resolveReportSetup(sampleId);return createDraft(sampleId,setup.specification.id,setup.template.id,actor,setup.specification);}
 export async function createDraft(sampleId:string,specId:string,templateId:string,actor:User,injectedSpec?:import('../shared/model.js').Specification){const sample=(await db.query('SELECT data FROM samples WHERE id=$1',[sampleId])).rows[0]?.data as Sample;const template=(await db.query('SELECT data FROM templates WHERE id=$1',[templateId])).rows[0]?.data as Template;const candidate=injectedSpec||(await db.query('SELECT data FROM specifications WHERE id=$1',[specId])).rows[0]?.data as Specification;if(!sample||!template||!candidate)throw new Fault(404,'Sample, specification or template not found');if(candidate.active===false)throw new Fault(409,'This specification is inactive. Select its current revision.');if(!template.verified)throw new Fault(409,'Template must pass sanitization and layout verification');if(candidate.category!==sample.category)throw new Fault(409,'Specification category does not match sample category');
- const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category);if(!type)throw new Fault(409,'Sample type is not configured');if(!managed.value.products.some(p=>p.active&&p.name===candidate.product&&p.category===sample.category))throw new Fault(409,'This product is not active in Products / materials. Ask an administrator to review it.');const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];const prodObj = managed.value.products.find(p => p.name === candidate.product && (p.category === sample.category || (['ST', 'SFG'].includes(sample.category) && p.category === 'FG'))) || { name: candidate.product, aliases: [] };
+ const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category);if(!type)throw new Fault(409,'Sample type is not configured');const productIsActive=managed.value.products.some(p=>p.active&&p.name===candidate.product&&(p.category===sample.category||(['ST','SFG'].includes(sample.category)&&p.category==='FG')));if(!productIsActive)throw new Fault(409,'This product is not active in Products / materials. Ask an administrator to review it.');const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];const prodObj = managed.value.products.find(p => p.name === candidate.product && (p.category === sample.category || (['ST', 'SFG'].includes(sample.category) && p.category === 'FG'))) || { name: candidate.product, aliases: [] };
  const matches=type.applicability==='managed'?[{tests:candidate.tests.map(t=>t.test)}]:resolveApplicabilityMatches(applicability, prodObj, ['ST', 'SFG'].includes(sample.category) ? (managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet || type.applicabilitySheet) : type.applicabilitySheet, sample.name);if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'Product applicability is missing, ambiguous or all false');
  const all=(await db.query('SELECT data FROM specifications')).rows.map(x=>x.data as Specification);const tests=injectedSpec?injectedSpec.tests:latestCriteria(all.filter(s=>s.active!==false),candidate.product,sample.category,candidate.context,matches[0].tests);if(candidate.issues.length)throw new Fault(409,candidate.issues.join('; '));
  if(tests.some((t: any)=>!managed.value.tests.some(x=>x.id===t.test&&x.active&&(x.categories.includes(sample.category) || (['ST', 'SFG'].includes(sample.category) && x.categories.includes('FG'))))))throw new Fault(409,'An applicable test is inactive or unavailable for this sample type. Ask an administrator to review the specification.');const spec={...candidate,tests,revision:hash(tests)};const now=new Date().toISOString();const draft:Draft={configurationRevision:managed.revision,configurationSnapshot:structuredClone(managed.value),templateSnapshot:structuredClone(template),id:randomUUID(),sampleId,sample:structuredClone(sample),specification:spec,templateId,templateRevision:template.revision,revision:1,results:tests.map(t=>({test:t.test,location:t.location,stage:t.stage,replicate:t.replicate,state:'not_entered',value:'',qualifier:'',unit:t.unit,reason:'',remarks:''})),fields:{...reportFieldDefaults(sample,template),analysisDate:'',logbookReference:'',analyst:actor.name},updatedAt:now,analyst:actor.email};reportRows(draft,template);
