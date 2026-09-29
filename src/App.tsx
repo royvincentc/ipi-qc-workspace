@@ -30,13 +30,24 @@ function DeploymentUpdate(){
   const announcedBuild=useRef<string|undefined>(undefined);
   useEffect(()=>{
     let active=true;
+    const storageKey='ipi:last-deployment-build';
+    const rememberedBuild=()=>{try{return window.localStorage.getItem(storageKey)||undefined;}catch{return undefined;}};
+    const remember=(id:string)=>{try{window.localStorage.setItem(storageKey,id);}catch{/* Storage is optional for this convenience notice. */}};
     const check=async()=>{
       if(document.visibilityState==='hidden')return;
       try{
         const build=await api<{id:string|null}>('/build');
         if(!active||!build.id)return;
-        if(!currentBuild.current){currentBuild.current=build.id;return;}
-        if(build.id!==currentBuild.current&&build.id!==announcedBuild.current){announcedBuild.current=build.id;setUpdate(build.id);}
+        if(!currentBuild.current){
+          currentBuild.current=build.id;
+          // A reload may happen after a deployment completed. Remembering the
+          // build makes that update visible instead of silently treating it as
+          // the first poll of a new session.
+          if(rememberedBuild()&&rememberedBuild()!==build.id){announcedBuild.current=build.id;setUpdate(build.id);}
+          remember(build.id);
+          return;
+        }
+        if(build.id!==currentBuild.current&&build.id!==announcedBuild.current){announcedBuild.current=build.id;remember(build.id);setUpdate(build.id);}
       }catch{/* Deployment detection must never interrupt laboratory work. */}
     };
     void check();
