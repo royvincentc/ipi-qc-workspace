@@ -21,6 +21,7 @@ import {categories,type Category,type Specification,type Template,type Sample,re
 import {seed} from './seed.js';
 import {aiRouter} from './ai.js';
 import fs from 'node:fs';
+const deploymentBuildId=process.env.RENDER_GIT_COMMIT||process.env.GIT_COMMIT||process.env.COMMIT_SHA||'';
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64 && !process.env.GOOGLE_APPLICATION_CREDENTIALS) {
   const dest = path.resolve('private/credentials.json');
   fs.mkdirSync(path.dirname(dest), { recursive: true });
@@ -60,6 +61,7 @@ app.get('/api/health',(_req,res)=>res.json({ok:true,demo}));app.get('/api/auth/l
 app.get('/api/configuration',async(_req,res)=>res.json(await getConfiguration()));
 app.put('/api/configuration',requireRole('administrator'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),value:z.unknown()}).parse(req.body);res.json(await saveConfiguration(b.value,b.revision,req.user.email));});
 app.get('/api/me',(req,res)=>res.json({user:req.user,demo}));app.post('/api/auth/logout',signOut);
+app.get('/api/build',(_req,res)=>res.json({id:deploymentBuildId||null}));
 registerSearch(app);
 app.use('/api/ai', aiRouter);
 app.get('/api/overview',async(_req,res)=>{const samples=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>r.data);const drafts=(await db.query('SELECT data FROM drafts ORDER BY data->>\'updatedAt\' DESC LIMIT 5')).rows.map(r=>r.data);res.json({samples,drafts,count:Number((await db.query('SELECT count(*) FROM samples')).rows[0].count),draftCount:Number((await db.query('SELECT count(*) FROM drafts')).rows[0].count),sync:await setting('sync',{lastSuccess:null,error:null}),connections:await setting('connections',defaultConnections)});});
