@@ -9,3 +9,4 @@ createRoot(document.getElementById('root')!).render(<React.StrictMode><RouterPro
 import './overhaul.css';
 import './settings-layout.css';
 import './experience.css';
+import './report-design.css';

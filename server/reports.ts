@@ -288,7 +288,7 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
  const sourceFields=d.sample.fields||{};
  const manual=d.fields||{};
  Object.assign(fields,{
-  'd.release':`${releaseDate} @`,
+  'd.release':releaseDate,
   't.release':releaseTime,
   // The approved template calls this field "Date&Time Released". It is the
   // report-generation timestamp, never an inferred laboratory result.
