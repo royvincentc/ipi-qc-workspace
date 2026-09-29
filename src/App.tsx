@@ -1,9 +1,9 @@
 import FileLibrary from './library';
 import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
-import {useState,lazy,Suspense,useEffect} from 'react';
+import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen} from 'lucide-react';
+import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
 import {SampleDetail} from './pages';
@@ -23,6 +23,35 @@ const navigation=[
   ['/library','File Library',FolderOpen],
   ['/assistant','Smart Assistant',Bot]
 ] as const;
+
+function DeploymentUpdate(){
+  const [update,setUpdate]=useState<string>();
+  const currentBuild=useRef<string|undefined>(undefined);
+  const announcedBuild=useRef<string|undefined>(undefined);
+  useEffect(()=>{
+    let active=true;
+    const check=async()=>{
+      if(document.visibilityState==='hidden')return;
+      try{
+        const build=await api<{id:string|null}>('/build');
+        if(!active||!build.id)return;
+        if(!currentBuild.current){currentBuild.current=build.id;return;}
+        if(build.id!==currentBuild.current&&build.id!==announcedBuild.current){announcedBuild.current=build.id;setUpdate(build.id);}
+      }catch{/* Deployment detection must never interrupt laboratory work. */}
+    };
+    void check();
+    const timer=window.setInterval(check,30_000);
+    const onVisibility=()=>void check();
+    document.addEventListener('visibilitychange',onVisibility);
+    return()=>{active=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisibility);};
+  },[]);
+  if(!update)return null;
+  return <aside className="deployment-update" role="status" aria-live="polite" aria-label="Workspace update ready">
+    <div className="deployment-signal" aria-hidden="true"><span/><span/><span/></div>
+    <div className="deployment-copy"><span className="deployment-kicker">WORKSPACE UPDATE READY</span><strong>A newer version is live.</strong><p>Save any open edits, then reload to use the update.</p></div>
+    <div className="deployment-actions"><button className="icon-button deployment-dismiss" onClick={()=>setUpdate(undefined)} aria-label="Dismiss update notice"><X size={16}/></button><button className="button primary deployment-reload" onClick={()=>window.location.reload()}><RefreshCw size={16}/> Reload update</button></div>
+  </aside>;
+}
 
 function CommandPalette({open, onClose}: {open: boolean, onClose: () => void}) {
   const [query,setQuery]=useState('');
@@ -184,6 +213,7 @@ function Workspace({data}:{data:any}){
 
           <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
           <FloatingAssistant />
+          <DeploymentUpdate />
 
           {notice && (
             <div className={`toast ${notice.error?'bad':''}`} role="status">
