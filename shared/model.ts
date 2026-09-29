@@ -11,7 +11,12 @@ export interface Result {test:string;location?:string;stage?:string;replicate?:s
 export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];fields:Record<string,string>;updatedAt:string;analyst:string}
 export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:Record<string,unknown>;verified:boolean;demo?:boolean}
 export interface ReportSetup {sample:Sample;specification:Specification;template:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>}
-export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P. aeruginosa',SA:'S. aureus',CA:'C. albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
+export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P.aeruginosa',SA:'S.aureus',CA:'C.albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
+/** The workbook uses short IDs; reports show the organism names. */
+export function reportTestLabel(test:string,fallback=''){
+ const labels:Record<string,string>={PA:'P.aeruginosa',SA:'S.aureus',CA:'C.albicans',EC:'E.coli',SAL:'Salmonella',ENT:'Enterobacteriaceae'};
+ return labels[test]||fallback||testLabels[test]||test;
+}
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'>){return [r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function microbiologyLimit(test:string){return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function resultDisplayValue(test:Criterion,r:Result){

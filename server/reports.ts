@@ -8,7 +8,7 @@ import {db,locked,setting,demo,audit} from './db.js';
 import {Fault,hash,latestCriteria} from './domain.js';
 import {defaultConnections} from './samples.js';
 import {readApplicability,rangeValues} from './google.js';
-import {categories,reportIssues,resultKey,type Draft,type Sample,type Template,type Specification,type Result,type User,type ReportSetup} from '../shared/model.js';
+import {categories,reportIssues,resultKey,testLabels,type Draft,type Sample,type Template,type Specification,type Result,type User,type ReportSetup} from '../shared/model.js';
 import {reportRows} from './template.js';
 export const storage=path.resolve(process.env.PRIVATE_STORAGE||'private');
 export function privatePath(file:string){const p=path.resolve(storage,file);if(!p.startsWith(storage+path.sep))throw new Fault(400,'Invalid private file path');return p;}
@@ -112,15 +112,16 @@ export const matchScore = (sampleName:string, productName:string) => {
    // those representations resolve to the same controlled applicability row.
    const comparableToken = (token:string) => !/^\d+$/.test(token) && token !== 'm' && token !== 'l';
    const sampleTokens = tokenize(sampleName).filter(comparableToken);
+   const productComparableTokens = productTokens.filter(comparableToken);
    let matched = 0;
-   for (const t of productTokens.filter(comparableToken)) {
+   for (const t of productComparableTokens) {
     const idx = sampleTokens.indexOf(t);
     if (idx !== -1) {
      matched++;
      sampleTokens.splice(idx, 1);
     }
    }
-   return productTokens.length > 0 && matched === productTokens.length ? 600_000 + specificity : 0;
+   return productComparableTokens.length > 0 && matched === productComparableTokens.length ? 600_000 + specificity : 0;
   };
 
 
@@ -251,7 +252,7 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];
  const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:resolveApplicabilityMatches(applicability, product, ['ST', 'SFG'].includes(sample.category) ? (managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet || type.applicabilitySheet) : type.applicabilitySheet, sample.name);
  if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'The QC Micro Products Specifications checklist has no single applicable-test row for this product, or every test is unchecked.');
- const tests = exact.length ? latestCriteria(specifications,product.name,sample.category,exact[0].context,matches[0].tests) : matches[0].tests.map((t: string) => { const mt = managed.value.tests.find(x => x.sheetHeader === t || x.shortName === t || x.id === t); return { test: t, label: t, type: mt?.inputType || 'finding', unit: mt?.unit || '', criterion: inferCriterion(product.name, t), source: 'Historical Knowledge Base', sourceLocation: 'james.zip records', date: new Date().toISOString().split('T')[0], dateBasis: 'release', revision: '1' } as any });
+ const tests = exact.length ? latestCriteria(specifications,product.name,sample.category,exact[0].context,matches[0].tests) : matches[0].tests.map((t: string) => { const mt = managed.value.tests.find(x => x.sheetHeader === t || x.shortName === t || x.id === t); return { test: t, label: mt?.reportLabel || mt?.name || testLabels[t] || t, type: mt?.inputType || 'finding', unit: mt?.unit || '', criterion: inferCriterion(product.name, t), source: 'Historical Knowledge Base', sourceLocation: 'james.zip records', date: new Date().toISOString().split('T')[0], dateBasis: 'release', revision: '1' } as any });
  const issues=[...new Set(exact.flatMap(s=>s.issues))];if(issues.length)throw new Fault(409,issues.join('; '));
  if(tests.some((t: any)=>!managed.value.tests.some(x=>x.id===t.test&&x.active&&(x.categories.includes(sample.category) || (['ST', 'SFG'].includes(sample.category) && x.categories.includes('FG'))))))throw new Fault(409,'An applicable checklist test is inactive or unavailable for this sample type. Ask an administrator to review it.');
  const allTemplates=(await db.query('SELECT data FROM templates')).rows.map(row=>row.data as Template).filter(t=>t.verified&&templateAccepts(t,tests));
@@ -282,11 +283,11 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
  const sourceFields=d.sample.fields||{};
  const manual=d.fields||{};
  Object.assign(fields,{
-  'd.release':releaseDate,
+  'd.release':`${releaseDate} @`,
   't.release':releaseTime,
   // The approved template calls this field "Date&Time Released". It is the
   // report-generation timestamp, never an inferred laboratory result.
-  'sample.released':firstText(manual['sample.released'],`${releaseDate} ${releaseTime}`),
+  'sample.released':firstText(manual['sample.released'],`${releaseDate} @ ${releaseTime}`),
   'logbook':firstText(manual.logbook,manual.logbookReference),
   'logbookReference':firstText(manual.logbook,manual.logbookReference),
   'date.mfd':firstText(manual['date.mfd'],manual.manufactureDate,sourceFields.manufactureDate),
@@ -300,7 +301,7 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
   'sample.ml':d.sample.ml,
   'sample.batch':d.sample.batch,
   'sample.received':d.sample.received,
-  'sample.category':d.sample.categoryLabel||d.configurationSnapshot?.sampleTypes?.find(t=>t.id===d.sample.category)?.name||categories[d.sample.category]
+  'sample.category':d.sample.category==='ST'?categories.ST:d.sample.categoryLabel||d.configurationSnapshot?.sampleTypes?.find(t=>t.id===d.sample.category)?.name||categories[d.sample.category]
  },Object.fromEntries(Object.entries(d.configurationSnapshot?.reports||{}).map(([k,v])=>['report.'+k,String(v)])),manual);
  return fields;
 }
