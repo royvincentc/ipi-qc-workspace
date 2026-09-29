@@ -13,7 +13,7 @@ export interface Template {id:string;name:string;family:string;category:Category
 export interface ReportSetup {sample:Sample;specification:Specification;template:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>}
 export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P. aeruginosa',SA:'S. aureus',CA:'C. albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'>){return [r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
-export function microbiologyLimit(test:string){return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'?'Nmt 10 cfu/mL':undefined;}
+export function microbiologyLimit(test:string){return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function resultDisplayValue(test:Criterion,r:Result){
  const limit=microbiologyLimit(test.test);
  if(limit&&r.qualifier==='Nmt')return limit;
@@ -33,7 +33,7 @@ export function reportIssues(d:Draft):string[]{
  if(!d.fields.analysisDate)issues.push('Analysis date is required');
  for(const key of ['analysisDate','manufactureDate','expiryDate']){const value=d.fields[key];if(value&&(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString().slice(0,10)!==value))issues.push(`${key.replace(/([A-Z])/g,' $1')}: enter a valid date`);}
  if(d.fields.manufactureDate&&d.fields.expiryDate&&d.fields.expiryDate<d.fields.manufactureDate)issues.push('Expiry date cannot be earlier than manufacture date');
- for(const key of (d.templateSnapshot?.manifest.requiredFields||[]) as string[])if(!d.fields[key]?.trim()&&!['analysisDate','logbookReference'].includes(key))issues.push(`${key.replace(/([A-Z])/g,' $1')}: required report detail`);
- if(!d.fields.logbookReference)issues.push('Logbook reference is required');
+ for(const key of (d.templateSnapshot?.manifest.requiredFields||[]) as string[]){const value=key==='logbookReference'?d.fields.logbook:d.fields[key];if(!value?.trim()&&!['analysisDate','logbookReference'].includes(key))issues.push(`${key.replace(/([A-Z])/g,' $1')}: required report detail`);}
+ if(!d.fields.logbook)issues.push('Logbook is required');
  return issues;
 }

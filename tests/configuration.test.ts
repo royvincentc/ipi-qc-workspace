@@ -85,6 +85,14 @@ test('applicability resolution respects Omega specification keywords and the Her
  assert.ok(matchScore('Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL')>0);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL'),omegaCurrent);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL'),omegaCurrent);
+ const genericOmega=[
+  ...omegaCurrent,
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment- Export (120,60)',tests:['SPC','MY','COL']},
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment- Pro (60mL)',tests:['SPC','MY','PA']},
+  {sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment- Local (30mL) Old Specs',tests:['SPC','MY','COL']},
+ ];
+ assert.deepEqual(resolveApplicabilityMatches(genericOmega,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL'),[omegaCurrent[0]]);
+ assert.deepEqual(resolveApplicabilityMatches(genericOmega,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL'),[omegaCurrent[0]]);
  const herbycinOld=[{sheet:'RM/FP/AS',product:'Herbycin Syrup',tests:['SPC','MY','SA','EC','SAL','ENT']}];
  assert.deepEqual(resolveApplicabilityMatches(herbycinOld,{name:'Herbycin Syrup',aliases:[]},'RM/FP/AS','Herbycin Syrup ( 7th Withdrawa- Actual) Old Specs'),herbycinOld);
  assert.equal(resolveApplicabilityMatches([...rows, {...rows[2]}],product,'RM/FP/AS').length,2);

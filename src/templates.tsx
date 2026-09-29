@@ -10,7 +10,7 @@ export default function TemplatesPage(){const {categories,testLabels}=useCatalog
  const {data,reload}=useLoad(()=>api('/references'));
  const [source,setSource]=useState(''),[prepared,setPrepared]=useState<any>();
  const [file,setFile]=useState<File>(),[name,setName]=useState(''),[category,setCategory]=useState<Category>('FG'),[family,setFamily]=useState('routine');
- const [required,setRequired]=useState('analysisDate, logbookReference'),[bindings,setBindings]=useState<Binding[]>([]);
+ const [required,setRequired]=useState('analysisDate, logbook'),[bindings,setBindings]=useState<Binding[]>([]);
  const [sanitized,setSanitized]=useState(false),[verified,setVerified]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');const notify=useContext(Notice);
  const update=(i:number,k:keyof Binding,value:string)=>setBindings(rows=>rows.map((r,j)=>i===j?{...r,[k]:value}:r));
  async function prepare(){setBusy(true);setError('');try{const r=await api(`/references/${source}/prepare-template`,'POST');setPrepared(r);setFile(undefined);setName(r.name.replace(/^Prepared · /,''));setFamily(data?.documents?.find((x:any)=>x.id===source)?.evidenceSummary?.family||'routine');setRequired((r.manifest.requiredFields||[]).join(', '));setBindings((r.manifest.instances||[]).map((x:any)=>({index:x.index,test:'',location:'',stage:'',replicate:''})));setSanitized(false);setVerified(false);reload();}catch(e:any){setError(e.message);}finally{setBusy(false);}}
