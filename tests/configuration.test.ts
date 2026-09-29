@@ -8,6 +8,7 @@ const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('../server/configuration.js');
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
+const {reportTestLabel}=await import('../shared/model.js');
 const {submitSample}=await import('../server/samples.js');
 const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,resolveApplicabilityMatches,matchScore,sameSpecificationVariant}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
@@ -62,7 +63,14 @@ test('report template aliases populate the approved custom template tags',()=>{
  } as any;
  const template={manifest:{tokens:['d.release','t.release','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
  const fields=reportTemplateFields(draft,template,new Date('2026-09-29T01:23:00Z'));
- assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
+ assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026 @');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
+});
+
+test('report organism labels use the full workbook names',()=>{
+ assert.equal(reportTestLabel('SA','SA'),'S.aureus');
+ assert.equal(reportTestLabel('EC','EC'),'E.coli');
+ assert.equal(reportTestLabel('SAL','SAL'),'Salmonella');
+ assert.equal(reportTestLabel('ENT','ENT'),'Enterobacteriaceae');
 });
 
 test('applicability resolution respects Omega specification keywords and the Herbycin row',()=>{
@@ -75,6 +83,7 @@ test('applicability resolution respects Omega specification keywords and the Her
  ];
  const match=resolveApplicabilityMatches(rows,product,'RM/FP/AS','Omega Pain Killer Liniment - Pro (5th withdrawal - New Specs) - 60 mL');
  assert.deepEqual(match,[rows[2]]);assert.ok(matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment - Pro')>matchScore('Omega Pain Killer Liniment - Pro','Omega Pain Killer Liniment'));
+ assert.deepEqual(resolveApplicabilityMatches(rows,product,'RM/FP/AS','Omega Pain Killer Liniment- Pro (5th withdrawal - Old Specs)-60 mL'),[rows[3]]);
  assert.equal(sameSpecificationVariant('OMEGA PAIN KILLER LINIMENT - EXPORT (30mL, 15mL)','Omega Pain Killer Liniment - Export (120,60)'),true);
  assert.equal(sameSpecificationVariant('Omega Pain Killer Liniment - Pro (60mL, 120mL & 30mL) OLD SPECS','Omega Pain Killer Liniment - Pro Old Specs'),true);
  assert.equal(sameSpecificationVariant('Omega Pain Killer Liniment - Pro (60mL)','Omega Pain Killer Liniment - Pro Old Specs'),false);
@@ -83,6 +92,7 @@ test('applicability resolution respects Omega specification keywords and the Her
  assert.deepEqual(herbycin[0].tests,['SPC','MY','SA','EC','SAL','ENT']);
  const omegaCurrent=[{sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL',tests:['SPC','MY','PA','SA','CA']}];
  assert.ok(matchScore('Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL')>0);
+ assert.ok(matchScore('Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL')>0);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL'),omegaCurrent);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL'),omegaCurrent);
  const genericOmega=[
