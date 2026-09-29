@@ -175,7 +175,7 @@ const HISTORICAL_LIMITS: Record<string, Record<string, string>> = {
   "Mama's Love Cotton": { "SPC": "Nmt 50 cfu/g", "MY": "Nmt 10 cfu/g" },
   "Megascent Panyawan Massage Oil": { "SPC": "Nmt 100 cfu/mL" },
   "Omega Pain Killer Cream": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL" },
-  "Omega Pain Killer Liniment": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL", "P. aeruginosa": "Negative", "S. aureus": "Negative" },
+  "Omega Pain Killer Liniment": { "SPC": "Nmt 100 cfu/mL", "MY": "Nmt 10 cfu/mL", "P. aeruginosa": "Negative", "S. aureus": "Negative", "C. albicans": "Negative" },
   "Sulfur 10% Ointment": { "SPC": "Nmt 100 cfu/g", "MY": "Nmt 10 cfu/g" },
   "Whitfield's Ointment": { "SPC": "Nmt 100 cfu/g", "MY": "Nmt 10 cfu/g" }
 };
@@ -187,7 +187,7 @@ function inferCriterion(productName: string, testName: string): string {
   }
   if (testName === 'SPC' || testName === 'Standard Plate Count (SPC)') return 'Nmt 100 cfu/mL';
   if (testName === 'MY' || testName === 'Molds and Yeast') return 'Nmt 10 cfu/mL';
-  if (['E. coli', 'S. aureus', 'P. aeruginosa', 'Salmonella', 'COL', 'EC', 'SA', 'PA', 'SAL'].includes(testName)) return 'Negative';
+  if (['E. coli', 'S. aureus', 'P. aeruginosa', 'C. albicans', 'Salmonella', 'COL', 'EC', 'SA', 'PA', 'CA', 'SAL'].includes(testName)) return 'Negative';
   return '';
 }
 export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
