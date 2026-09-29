@@ -43,6 +43,10 @@ export const normalizeSampleName = (name: string): string => {
    .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal\s*[-\u2013]\s*old\s+specs\)/gi, ' Old Specs')
    // Withdrawal bracket with New Specs inside, or bare withdrawal -> strip entirely
    .replace(/\s*\(\d+(?:st|nd|rd|th)\s+withdrawal(?:\s*[-\u2013]\s*new\s+specs)?\)/gi, '')
+   // Stability exports occasionally contain truncated/malformed withdrawal text
+   // (for example "7th Withdrawa- Actual"). It is still a timepoint qualifier,
+   // not a product identity, so remove the complete parenthetical segment.
+   .replace(/\s*\([^)]*\bwithdraw(?:al|a)?\b[^)]*\)/gi, '')
    // Stability timepoint bracket e.g. (T,14,15), (T,6,12,18,24) -> strip (= New Specs / base product)
    .replace(/\s*\(T(?:,\s*\d+)+\)/gi, '')
    // Standalone "New Specs" outside brackets -> strip
@@ -62,7 +66,10 @@ export function sameSpecificationVariant(sampleName:string,productName:string){
   return {
    export:words.has('export'),
    pro:words.has('pro'),
-   oldSpecs:/\bold\s+specs\b/i.test(value)
+   // Old Specs is a controlled Omega variant. Other products (for example
+   // Herbycin Syrup) may carry that historical note without having a separate
+   // applicability row, so it must not block their base-product match.
+   oldSpecs:words.has('omega')&&/\bold\s+specs\b/i.test(value)
   };
  };
  const sample=qualifiers(sampleName),product=qualifiers(productName);
@@ -99,9 +106,13 @@ export const matchScore = (sampleName:string, productName:string) => {
     if (dice > 0.85) return 700_000 + Math.round(dice * 10_000) + specificity;
    }
    
-   const sampleTokens = tokenize(sampleName);
+   // Package volumes are deliberately not product identity. The sheet often
+   // stores one row listing several sizes (15/30/60/120 mL), while the logger
+   // stores one selected size. Ignore numeric tokens for the fallback match so
+   // those representations resolve to the same controlled applicability row.
+   const sampleTokens = tokenize(sampleName).filter(token => !/^\d+$/.test(token));
    let matched = 0;
-   for (const t of productTokens) {
+   for (const t of productTokens.filter(token => !/^\d+$/.test(token))) {
     const idx = sampleTokens.indexOf(t);
     if (idx !== -1) {
      matched++;
