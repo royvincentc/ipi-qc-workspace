@@ -154,12 +154,16 @@ def replace_tokens(paragraph,values):
     for match in reversed(list(re.finditer(r'\{\{\s*([\w.:-]+)\s*\}\}',source))):
         key=match.group(1)
         if key not in values: raise ValueError('Unresolved template token: '+key)
-        start,end=match.span(); offset=0; assigned=False
+        start,end=match.span(); replacement=str(values[key] or '')
+        if key=='sample.name.suffix' and not replacement.strip():
+            opening=re.search(r'\s*\(\s*$',source[:start]);closing=re.match(r'\s*\)',source[end:])
+            if opening and closing:start-=len(opening.group(0));end+=len(closing.group(0))
+        offset=0; assigned=False
         for node in nodes:
             value=node.text or ''; a,b=offset,offset+len(value);offset=b
             if b<=start or a>=end:continue
             left=value[:max(0,start-a)];right=value[max(0,end-a):]
-            node.text=left+(str(values[key]) if not assigned else '')+right
+            node.text=left+(replacement if not assigned else '')+right
             node.set('{http://www.w3.org/XML/1998/namespace}space','preserve');assigned=True
 
 def render(template,payload,output,soffice=None):
