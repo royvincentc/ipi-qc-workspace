@@ -82,6 +82,7 @@ These controls support audit readiness. IPI Quality/Regulatory owns the intended
 3. Where historical evidence conflicts, select the latest dated report matching product, test, and relevant context, using explicit release date when available and otherwise explicit analysis date. File modification time and filename are not authority dates.
 4. Missing dates, conflicting dates, equally dated disagreement, missing criteria, or ambiguous product/context matches MUST remain unresolved until an authorized human decides.
 5. Specification edits create a new immutable revision. They MUST NOT rewrite finalized historical records or silently update an open draft that already pinned a revision.
+6. An owner may explicitly confirm a historical criteria map as a current baseline. Store its confirmation date with `dateBasis: owner-confirmed`, label its historical source and exact owner-provided entry, and hash the values into the immutable revision. Do not represent the confirmation date as the underlying report date. Explicit product exceptions take precedence over shared defaults.
 
 ## 6. Reports and files
 

@@ -25,7 +25,14 @@ export function registerSearch(app:Express){
   const filter=where.length?'WHERE '+where.join(' AND '):'';
   const count=Number((await db.query(`SELECT count(*) FROM samples ${filter}`,args)).rows[0].count);
   const sorts:Record<string,string>={recent:'updated_at DESC',name:"data->>'name' ASC",received:receivedDay+" DESC NULLS LAST",ml:"data->>'category', (regexp_match(data->>'ml','([0-9]{2,4})[-/][0-9]+$'))[1]::integer ASC NULLS LAST, substring(data->>'ml' from '[0-9]+$')::numeric ASC NULLS LAST"};const order=sorts[String(req.query.sort)]||sorts.recent;
-  const rows=(await db.query(`SELECT data,(SELECT count(*) FROM samples b WHERE b.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
+  // Search results only need list fields. Sample snapshots also contain the
+  // original source row and field map, which can be much larger and belong in
+  // the single-record endpoint rather than every keystroke/search page.
+  const rows=(await db.query(`SELECT jsonb_build_object(
+    'id',data->'id','name',data->'name','ml',data->'ml','category',data->'category',
+    'categoryLabel',data->'categoryLabel','batch',data->'batch','received',data->'received',
+    'status',data->'status','remarks',data->'remarks','context',data->'context'
+  ) AS data,(SELECT count(*) FROM samples b WHERE b.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
   const statuses=(await db.query("SELECT DISTINCT data->>'status' AS status FROM samples WHERE data->>'status'<>'' ORDER BY status")).rows.map(r=>r.status);
   res.json({items:rows.map(r=>({...r.data,duplicate:Number(r.duplicates)>1})),total:count,page,limit,statuses});
  });

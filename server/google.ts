@@ -1,6 +1,6 @@
 import {getConfiguration} from './configuration.js';
 import {GoogleAuth} from 'google-auth-library';
-import {Fault,googleId,column,monthOf,type Sheet} from './domain.js';
+import {Fault,googleId,column,hash,monthOf,type Sheet} from './domain.js';
 import {demo} from './db.js';
 const auth=new GoogleAuth({scopes:['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive.readonly']});
 export async function google<T=any>(url:string,method='GET',data?:unknown):Promise<T>{if(demo)throw new Fault(400,'Google access is disabled in the de-identified demo');try{const client=await auth.getClient();return (await client.request<T>({url,method:method as any,data,timeout:30000})).data;}catch(e:any){throw new Fault(502,`Google request failed (${e.response?.status||'connection'}). Check server credentials and file access.`);}}
@@ -10,3 +10,57 @@ export async function readWorkbook(url:string):Promise<{id:string;title:string;s
 export async function rangeValues(id:string,sheet:string,range:string){const a1=`'${sheet.replaceAll("'","''")}'!${range}`;return (await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(a1)}?valueRenderOption=FORMATTED_VALUE`)).values?.[0]||[];}
 export async function writeRange(id:string,sheet:string,range:string,values:unknown[]){const a1=`'${sheet.replaceAll("'","''")}'!${range}`;return google(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(a1)}?valueInputOption=RAW`,'PUT',{range:a1,majorDimension:'ROWS',values:[values]});}
 export async function readApplicability(url:string){const id=googleId(url);const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets(properties(title))`);const out:{sheet:string;row:number;product:string;tests:string[]}[]=[];const config=(await getConfiguration()).value;const tests=config.tests.filter(t=>t.sheetHeader&&t.sheetColumn!=null).sort((a,b)=>a.sheetColumn!-b.sheetColumn!);for(const requestedName of [...new Set(config.sampleTypes.filter(t=>t.applicability==='spreadsheet').map(t=>t.applicabilitySheet))]){const name=requestedName==='Raw Materials'&&meta.sheets.some((s:any)=>s.properties.title==='RAW')?'RAW':requestedName;if(!meta.sheets.some((s:any)=>s.properties.title===name))throw new Fault(409,`Missing ${name} specification tab`);const a1=`'${name.replaceAll("'","''")}'!A1:${column(Math.max(1,...tests.map(t=>t.sheetColumn!)))}2000`;const data=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(a1)}?valueRenderOption=UNFORMATTED_VALUE`);const rows=data.values||[];if(tests.some(t=>String(rows[1]?.[t.sheetColumn!]||'').trim()!==t.sheetHeader))throw new Fault(409,`${name}: applicability headers changed`);for(let i=2;i<rows.length;i++){if(!rows[i][0])continue;if(rows[i].slice(1).every((v:any)=>v==null||v===''))continue;if(tests.map(t=>rows[i][t.sheetColumn!]).some(v=>typeof v!=='boolean'))throw new Fault(409,`${name} row ${i+1}: invalid applicability value`);out.push({sheet:name,row:i+1,product:rows[i][0],tests:tests.filter(t=>rows[i][t.sheetColumn!]===true).map(t=>t.id)});}}return out;}
+
+const resultTabs:Partial<Record<string,string>>={RM:'Raw Material',FG:'Finished Goods',SFG:'Semi-Finished Goods',ST:'Product Stability',MIS:'Miscellaneous',WS:'Water'};
+const resultHeaderAliases:Record<string,string[]>={SPC:['SPC','Standard Plate Count (SPC)'],MY:['MY','Molds and Yeast'],PA:['PA','P.aeruginosa','P. aeruginosa'],SA:['SA','S.aureus','S. aureus'],CA:['CA','C.albicans','C. albicans'],EC:['EC','E.coli','E. coli'],SAL:['SAL','Salmonella'],ENT:['ENT','Enterobacteriaceae'],COL:['COL','Coliform']};
+const normalizedHeader=(value:unknown)=>String(value??'').normalize('NFKC').replace(/[^a-z0-9]/gi,'').toLowerCase();
+export function mapResultHeaders(headers:unknown[],configuredTests:{id:string;name:string;reportLabel?:string;shortName?:string;sheetHeader?:string}[]){
+ const columns=new Map<string,number>();
+ for(const test of configuredTests){
+  const aliases=[...(resultHeaderAliases[test.id]||[]),test.name,test.reportLabel||'',test.shortName||'',test.sheetHeader||''].map(normalizedHeader).filter(Boolean);
+  const found=headers.map((header,index)=>({header,index})).filter(x=>aliases.includes(normalizedHeader(x.header)));
+  if(found.length>1)throw new Fault(409,`Results sheet has ambiguous columns for ${test.name}`);
+  if(found.length===1)columns.set(test.id,found[0].index);
+ }
+ return columns;
+}
+
+export async function readResultsRow(url:string,category:string,ml:string){
+ const id=googleId(url),sheetName=resultTabs[category];
+ if(!sheetName)throw new Fault(409,`No Results tab is configured for sample type ${category}`);
+ const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets(properties(title,sheetId,gridProperties(rowCount,columnCount)))`);
+ const sheet=meta.sheets?.find((item:any)=>item.properties.title===sheetName)?.properties;
+ if(!sheet)throw new Fault(409,`Results workbook is missing the ${sheetName} tab`);
+ const rowCount=Number(sheet.gridProperties?.rowCount||0),columnCount=Number(sheet.gridProperties?.columnCount||0);
+ if(rowCount<2||rowCount>5000||columnCount>100)throw new Fault(409,`${sheetName}: Results tab is outside the reviewed size limit`);
+ const endColumn=column(Math.min(columnCount,26)-1);
+ const values=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(`'${sheetName.replaceAll("'","''")}'!A1:${endColumn}${rowCount}`)}?valueRenderOption=FORMATTED_VALUE`);
+ const rows:unknown[][]=values.values||[];
+ const headerCandidates=rows.slice(0,10).map((row,index)=>({row,index})).filter(x=>x.row.some(cell=>normalizedHeader(cell)==='mlnumber'));
+ if(headerCandidates.length!==1)throw new Fault(409,`${sheetName}: Results headers are missing or ambiguous`);
+ const {row:headers,index:headerIndex}=headerCandidates[0];
+ const mlColumn=headers.findIndex(cell=>normalizedHeader(cell)==='mlnumber');
+ const remarksColumn=headers.findIndex(cell=>normalizedHeader(cell)==='remarks');
+ if(mlColumn<0||remarksColumn<0)throw new Fault(409,`${sheetName}: ML Number or Remarks header is missing`);
+ const config=(await getConfiguration()).value;
+ const testColumns=mapResultHeaders(headers,config.tests);
+ const records=rows.map((row,index)=>({row,index})).filter(x=>x.index>headerIndex&&String(x.row[mlColumn]??'').trim()===ml.trim());
+ if(records.length!==1)throw new Fault(records.length?409:404,records.length?`${sheetName}: multiple Results rows match ${ml}`:`${sheetName}: no Results row matches ${ml}`);
+ const match=records[0],raw=Array.from({length:headers.length},(_,i)=>String(match.row[i]??''));
+ const tests=Object.fromEntries([...testColumns].map(([test,index])=>[test,{header:String(headers[index]??''),value:String(match.row[index]??'')} ]));
+ return {spreadsheetId:id,url,sheetId:Number(sheet.sheetId),sheet:sheetName,row:match.index+1,range:`A${match.index+1}:${endColumn}${match.index+1}`,fingerprint:hash(raw),observedAt:new Date().toISOString(),ml:ml.trim(),raw,remarks:String(match.row[remarksColumn]??''),analyst:String(match.row[headers.findIndex(cell=>normalizedHeader(cell)==='analyzedby')]??''),tests};
+}
+
+export async function readMicForAnalyst(spreadsheetId:string,sheetName:string,analyst:string):Promise<string>{
+ if(!analyst.trim())return '';
+ const range=`'${sheetName.replaceAll("'","''")}'!DM1:DN1000`;
+ const rows=(await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`)).values||[];
+ const normalized=(value:unknown)=>String(value??'').trim().toLocaleLowerCase();
+ const headers=rows.map((row:unknown[],index:number)=>({row,index})).filter(({row}:any)=>row.some((v:unknown)=>normalized(v)==='mic')&&row.some((v:unknown)=>normalized(v)==='analyst'));
+ if(headers.length!==1)return '';
+ const {row,index}=headers[0],micColumn=row.findIndex((v:unknown)=>normalized(v)==='mic'),analystColumn=row.findIndex((v:unknown)=>normalized(v)==='analyst');
+ const matches=rows.slice(index+1).filter((row:unknown[])=>normalized(row[analystColumn])===normalized(analyst)).map((row:unknown[])=>String(row[micColumn]??'').trim()).filter(Boolean);
+ const distinct:string[]=[...new Set<string>(matches)];
+ if(distinct.length>1)throw new Fault(409,`MIC/Analyst lookup has conflicting MIC values for ${analyst}`);
+ return String(distinct[0]||'');
+}
