@@ -10,7 +10,7 @@ const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
 const {reportTestLabel}=await import('../shared/model.js');
 const {submitSample}=await import('../server/samples.js');
-const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,resolveApplicabilityMatches,matchScore,sameSpecificationVariant}=await import('../server/reports.js');
+const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,reportFormatName,resolveApplicabilityMatches,matchScore,sameSpecificationVariant}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
 await migrate();after(close);
 
@@ -44,7 +44,7 @@ test('draft pins template, criteria, manual empty results and configuration revi
  const sampleRow=(await db.query('SELECT id,data FROM samples LIMIT 1')).rows[0];const sample=sampleRow.id;await db.query('UPDATE samples SET data=$1 WHERE id=$2',[JSON.stringify({...sampleRow.data,context:'Routine',fields:{...sampleRow.data.fields,context:'Routine',manufactureDate:'2026-09-01',analysisDate:'2026-09-24',status:'RELEASED'}}),sample]);
  const criterion={test:'SPC',label:'Standard Plate Count',type:'numeric',unit:'cfu/g',criterion:'Nmt 50 cfu/g',source:'fixture',sourceLocation:'Table 1',date:'2026-09-01',dateBasis:'release',revision:'1'};
  await db.query('INSERT INTO specifications(id,data) VALUES($1,$2)',['spec',JSON.stringify({id:'spec',product:'Example',category:'FG',context:'Routine',revision:'1',tests:[criterion],issues:[],source:'fixture'})]);
- await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['template',JSON.stringify({id:'template',name:'Fixture',category:'FG',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{requiredFields:['manufactureDate','analysisDate']}})]);
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['template',JSON.stringify({id:'template',name:'STAB, FG',category:'FG',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{requiredFields:['manufactureDate','analysisDate']}})]);
  const setup=await resolveReportSetup(sample);assert.deepEqual(setup.applicableTests,['Standard Plate Count']);assert.equal(setup.template.id,'template');assert.equal(setup.prefilledFields.manufactureDate,'2026-09-01');assert.equal(setup.prefilledFields.analysisDate,undefined);
  const automatic=await createAutomaticDraft(sample,{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(automatic.templateId,'template');assert.equal(automatic.fields.manufactureDate,'2026-09-01');assert.equal(automatic.fields.analysisDate,'');assert.equal(automatic.results[0].state,'not_entered');
  const draft=await createDraft(sample,'spec','template',{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(draft.results[0].state,'not_entered');assert.equal(draft.results[0].value,'');assert.equal(draft.templateSnapshot?.revision,'1');
@@ -64,6 +64,30 @@ test('report template aliases populate the approved custom template tags',()=>{
  const template={manifest:{tokens:['d.release','t.release','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
  const fields=reportTemplateFields(draft,template,new Date('2026-09-29T01:23:00Z'));
  assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
+});
+
+test('report format routing follows category and explicit Supplier values',()=>{
+ const source=(category:string,supplier='')=>({category,fields:{supplier}});
+ assert.equal(reportFormatName(source('ST') as any),'STAB, FG');
+ assert.equal(reportFormatName(source('FG') as any),'STAB, FG');
+ assert.equal(reportFormatName(source('MIS') as any),'MISC');
+ assert.equal(reportFormatName(source('SFG') as any),'SFG');
+ assert.equal(reportFormatName(source('SFG') as any,[{remarks:'Failed'} as any]),'SFGQA');
+ assert.equal(reportFormatName(source('RM','Bodega/Stock') as any),'RM');
+ assert.equal(reportFormatName(source('RM','Direct Supplier') as any),'RMQA');
+ assert.throws(()=>reportFormatName(source('RM') as any),/Supplier/);
+});
+
+test('new report fields map from sample metadata and overall remarks use the source logbook',()=>{
+ const draft={sample:{name:'Sample',ml:'ML-SFG-26-0001',batch:'B1',received:'2026-09-29',category:'SFG',fields:{batchSize:'2,500 L',pageNumber:'123',mic:'MIC-17',remarks:'FAILED in SPC and Molds and Yeast.'}},fields:{'overall.remarks':'manual override must not replace source remarks'},results:[{test:'SPC',remarks:'Failed'},{test:'PA',remarks:'Passed'},{test:'MY',remarks:'Failed'}],specification:{tests:[{test:'SPC',label:'Standard Plate Count (SPC)'},{test:'PA',label:'P. aeruginosa'},{test:'MY',label:'Molds and Yeast'}]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
+ const template={manifest:{tokens:['batch.size','page','mic','overall.remarks']}} as any;
+ const fields=reportTemplateFields(draft,template);
+ assert.deepEqual([fields['batch.size'],fields.page,fields.mic],['2,500 L','123','MIC-17']);
+ assert.equal(fields['overall.remarks'],'FAILED in SPC and Molds and Yeast.');
+ draft.results.forEach((result:any)=>result.remarks='Failed');
+ assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'FAILED in SPC and Molds and Yeast.');
+ draft.results.forEach((result:any)=>result.remarks='Passed');
+ assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'FAILED in SPC and Molds and Yeast.');
 });
 
 test('report organism labels use the full workbook names',()=>{

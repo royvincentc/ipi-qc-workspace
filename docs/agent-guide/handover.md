@@ -125,3 +125,36 @@
 - Verification: TypeScript typecheck passed; browser checks completed at 1280×800, 1024×768, 768×1024, and 390×844 with no document overflow or `Invalid Date` text.
 - Impeccable detector completed. It reported two existing side-tab warnings in the legacy experience stylesheet plus advisory token notes; no new blocking finding was introduced by this refinement.
 - No live source, Google write, or production environment was accessed.
+
+## Latest October source and report-format update — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-045.
+- Current objective: route reports to owner-selected formats and inspect the new October 2026 source layout.
+- Confirmed October columns: sections SFG A:S, FG U:AN, Water AQ:BG, Raw Material BI:BZ, Product Stability CB:CS, Miscellaneous CU:DK; MIC/Analyst lookup DM:DN. Raw Material BP is Supplier, BQ is Requested by, BR is Page Number. New metadata includes Batch/Lot Size, Fill Vol./Wt., DATE MDF, EXP DATE, Requested by, Page Number, and Supplier.
+- Implemented in working tree: category/supplier routing, manual SFG pass/fail route, token aliases, and `overall.remarks` summarizing only explicit analyst outcomes. The six uploaded DOCX files are embedded as candidates; they remain unverified until rendered visual comparison. Drafts pin the routed template record.
+- Verification: TypeScript typecheck and `git diff --check` passed. Focused Node tests could not start (`uv_os_get_passwd returned ENOMEM`). DOCX renderer unavailable (LibreOffice missing; Word COM initialization failed). No rendered visual verification is claimed.
+- Source/data access: October Sheet inspected read-only; no Google writes or production DB/source record changes. Original DOCX files were not edited.
+- Material gap: Current importer reads through CW and uses legacy fixed section positions, so it does not support October's shifted blocks or map its new metadata. The DM:DN MIC lookup mapping is also unresolved. Do not claim October ingestion is automated.
+- Dirty task files: `server/index.ts`, `server/reports.ts`, `shared/model.ts`, `src/reports.tsx`, `tests/configuration.test.ts`, `server/report-formats.b64.ts`, `docs/agent-guide/tasks.md`, and this handover. Preserve existing untracked artifacts (`.agents/`, `.impeccable/`, `fix.py`, `output/`, `patch.py`, `patch.txt`, `patch2.py`, `patch_docs.py`, `query.ts`, `upload_template.ts`).
+- No deployment, commit, live write, or rendered report verification performed.
+- Next safe actions: implement versioned October layout mapping without changing historic tabs; resolve MIC-to-analyst source rule; render and compare all six formats before enabling them; rerun focused/full checks and verify the report flow.
+
+## Latest source-results clarification — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-046.
+- Owner clarified `{{overall.remarks}}` comes from the incoming logbook `Remarks` column, not a computed summary. Updated `server/reports.ts` to populate it directly from the pinned sample source field, overriding any manual report-field value. Existing per-test manual outcomes still select SFG vs SFGQA.
+- Owner confirmed the `{{mic}}` value should be looked up from October's MIC/Analyst table using the report analyst. October lookup is in DM:DN; implementation remains coupled to the pending October layout integration.
+- Read-only inspection confirms Results workbook tabs for all five requested categories. They share columns A:I for record metadata (`ML Number` is D; `Remarks` is I) and test columns J:R for SPC through Coliform. A bounded scan of rows 1:1000 found no `ML-` data records yet, so actual value encoding and replicate/duplicate behavior cannot be validated. User clarification request is pending.
+- QC Micro Products Specifications includes the expected `RM/FP/AS`, `Raw Materials`, and hidden criteria tabs. Visible applicability rows are product names plus TRUE/FALSE test flags. Do not replace or infer acceptance criteria from the Results workbook.
+- Verification: TypeScript typecheck and `git diff --check` passed. Focused test runner was previously blocked by Node host error `uv_os_get_passwd returned ENOMEM`. All Google accesses in this update were metadata/bounded cell reads/searches; no write performed.
+- October source layout remains unintegrated: legacy fixed section coordinates do not support shifted October category blocks or DM:DN MIC lookup. The six DOCX files remain unverified pending rendered visual comparison.
+- Next actions: use user's row-layout answer and a populated row to implement read-only Results lookup; support October layout and MIC lookup; confirm configured QC specification URL; visually render/compare candidate formats; rerun tests.
+
+## Latest product-applicability source update — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-047.
+- Owner named product applicability tabs `RM/FP/AS` and `RAW` in the IPI Results workbook. Verified both tabs read-only: product name column A, applicability labels B:J, with SPC through Coliform flags; section markers without flag data are skipped.
+- Implemented: new configuration seeds map Raw Material to `RAW` and other categories to `RM/FP/AS`; the specifications connection default points to the provided IPI Results URL. Startup version-migrates a saved RM tab value `Raw Materials` to `RAW` and the exact earlier specification workbook URL to IPI Results. Legacy `Raw Materials` tab mapping aliases to `RAW` only when that tab is present.
+- Scope boundary: these tabs define applicable parameters, not acceptance criteria. Criteria stay in the separately controlled specification records/source. Results tabs are currently blank in searched rows, so actual result parsing is not yet implemented.
+- Verification: TypeScript typecheck and `git diff --check` passed. No server restart or persistent app DB migration run; all Google calls were read-only.
+- Outstanding: validate the new workbook with the app's specification connection test after restart; implement October tab geometry and MIC lookup; wait for populated IPI Results sample/row-format clarification; render-verify all candidate report formats.

@@ -30,6 +30,7 @@ export function reportIssues(d:Draft):string[]{
  for(const t of d.specification.tests){const r=d.results.find(x=>resultKey(x)===resultKey(t));const label=[t.label,t.location,t.stage].filter(Boolean).join(' · ');
   if(!t.criterion||!t.source||!t.date) issues.push(`${label}: unresolved criterion source`);
   if(!r||r.state!=='entered') {issues.push(`${label}: result required`);continue;}
+  if(d.sample.category==='SFG'&&!['passed','failed'].includes(r.remarks.trim().toLocaleLowerCase()))issues.push(`${label}: select Passed or Failed so the Semi-Finished Goods report format can be chosen.`);
   if(!microbiologyLimit(t.test)&&r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
   if(t.type==='numeric'&&microbiologyLimit(t.test)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&!r.value.trim()) issues.push(`${label}: enter a value`);}
   else if(t.type==='numeric'&&(!/^\d+(\.\d+)?$/.test(r.value)||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);
