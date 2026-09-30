@@ -48,10 +48,8 @@ export function registerSearch(app:Express){
     'revision',data->'revision','updatedAt',data->'updatedAt','templateId',data->'templateId','templateRevision',data->'templateRevision',
     'fields',data->'fields',
     'templateSnapshot',CASE WHEN data->'templateSnapshot' IS NULL THEN NULL ELSE jsonb_build_object('manifest',jsonb_build_object('requiredFields',data->'templateSnapshot'->'manifest'->'requiredFields')) END,
-    'specification',jsonb_build_object(
-      'issues',data->'specification'->'issues',
-      'tests',COALESCE((SELECT jsonb_agg(jsonb_build_object('test',t->'test','location',t->'location','stage',t->'stage','replicate',t->'replicate','label',t->'label','criterion',t->'criterion','source',t->'source','date',t->'date','type',t->'type','unit',t->'unit)) FROM jsonb_array_elements(data->'specification'->'tests') t),'[]'::jsonb)),
-    'results',COALESCE((SELECT jsonb_agg(jsonb_build_object('test',r->'test','location',r->'location','stage',r->'stage','replicate',r->'replicate','state',r->'state','value',r->'value','qualifier',r->'qualifier','unit',r->'unit')) FROM jsonb_array_elements(data->'results') r),'[]'::jsonb)
+    'specification',data->'specification',
+    'results',data->'results'
   ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100`)).rows.map(r=>r.data).map(d=>{const t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);const referenceIssue=!t?.verified||t.revision!==d.templateRevision;const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;return {id:d.id,sample:{name:d.sample.name,ml:d.sample.ml},revision:d.revision,updatedAt:d.updatedAt,generated:generatedRevisions.has(`${d.id}:${d.revision}`),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};});
   const recent=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>r.data);
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:config.value.general.timezone}).format(new Date());

@@ -1222,3 +1222,12 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Schema: added `owner-confirmed` as a criterion date basis. Updated criteria policy to distinguish the owner's baseline confirmation date from source report dates.
 - Verification: TypeScript no-emit check passed; three focused tests passed for product exceptions, shared defaults, units, and negative findings. No DB writes, Sheets writes, commit, or deployment.
 - Known limit: the historical report documents are not connected to each individual entry in this compact map, so the baseline retains the owner's confirmation and map provenance rather than claiming exact report-level citations. Replace with traceable dated source revisions when those source locations are available.
+
+### TASK-20260930-056 — Fix home dashboard `/api/work` server error
+
+- Owner reported a generic server error banner and persistent loading state on the home screen.
+- Reproduction: `/api/work` returned HTTP 500 on an isolated PGlite demo backend. Server output: SQL syntax error at or near `specification`. The local Vite page had no API service on port 3001 initially; after starting the isolated demo backend, the same endpoint reproduced the SQL failure.
+- Changed: simplified the draft projection in `/api/work` to pass through the nested specification/results JSON while still omitting unrelated configuration snapshots and large source data. This removes the malformed nested aggregate projection.
+- Verification: TypeScript no-emit passed, `git diff --check` passed, `/api/health` returned 200, and `/api/work` returned 200 through both API and Vite proxy. Browser snapshot showed dashboard metrics, sample table, and activity rendered instead of the error banner.
+- Data/runtime: verification used an isolated de-identified PGlite demo database, with Google credentials disabled. Local `.env` points to localhost PostgreSQL, but no PostgreSQL service is listening, so live database and Google-connected behavior could not be verified. The demo backend is running on port 3001 alongside the existing Vite server on 5173.
+- Follow-up: verify against the live PostgreSQL deployment when its authorized API/database service is available. Browser console also reports a pre-existing nested-button warning in the floating assistant, unrelated to the dashboard API error.

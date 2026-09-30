@@ -227,3 +227,12 @@
 - Criteria carry `dateBasis: owner-confirmed` and date 2026-09-30 for the owner's confirmation, not as a claimed historical report date. Each revision is content-hashed. The criteria policy now allows this explicit owner-confirmed baseline form.
 - Three focused historical-criteria tests and TypeScript no-emit passed. No database or Google writes, commit, or deploy.
 - Exact report-level source locations for each map entry remain unavailable; criteria record this as an owner-provided baseline rather than asserting report citations. Current worktree also contains task 053/054 changes; review before committing.
+
+## Home dashboard `/api/work` error — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-056. Reproduced HTTP 500 and SQL syntax error at `specification` on isolated PGlite. Simplified `/api/work` nested draft projection to directly project specification/results JSON.
+- TypeScript no-emit and `git diff --check` passed. `/api/health`, direct `/api/work`, and Vite-proxied `/api/work` return 200. Browser shows dashboard data and no error banner.
+- Local API server was absent initially. Started an isolated demo backend using `.data/home-debug-db` and `output/home-debug-private`; no Google or PostgreSQL credentials. Local PostgreSQL is unavailable, so production DB behavior is not yet verified.
+- Existing floating-assistant nested-button console warning is unrelated and was not modified.
+- Current branch: master at `246e4a1` plus the dashboard fix in `server/search.ts` and corresponding task/handover entries. Untracked preview/scratch files remain preserved. Live data was not accessed; the owner has standing authorization to commit and push project changes.
+- Next: verify `/api/work` against live PostgreSQL when available; assess/fix the separate floating assistant warning if requested.
