@@ -204,3 +204,26 @@
 - Task: TASK-20260930-052.
 - Read July 2026 row 6 for ML-RM-26-0080 from the incoming logbook. Its received timestamp is `07/01/2026 @ 08:57 AM`, analyst Karen, with source Remarks `FAILED in SPC (Done OOS)`.
 - Updated RM and RMQA previews and the archive with the source values; suffix parentheses remain hidden when blank. No Google Sheet write was made.
+
+## Neon egress mitigation — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-053. The owner requested code-side steps to reduce transfer after Neon reported project `ipiqclab` at 4 GB / 5 GB.
+- Changed: `/api/search` now projects only list fields in SQL, omitting bulky source raw-row snapshots and field maps. `/api/drafts` and sample-detail draft references now return the fields their list UI uses. Detail endpoints still return full records.
+- Verification: `git diff --check` passed. TypeScript check reports `server/google.ts:51` cannot find `hash`; this file had a separate 54-line uncommitted addition during inspection and was not changed by this task. No live DB or production access/deploy occurred, so transfer impact remains to be measured after deployment.
+- Working tree: user/inherited uncommitted files remain preserved. Modified by this task: `server/search.ts`, `server/index.ts`, `shared/model.ts`, `src/reports.tsx`, `docs/agent-guide/tasks.md`, this handover. `server/google.ts` has an independent uncommitted change.
+- Next: resolve the existing `server/google.ts` compile issue in its own scoped task, then deploy and compare Neon egress metrics.
+
+## Report Results and MIC import — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-054. Added read-only matching-row import from category Results tabs, exact raw value preservation and source fingerprint checks; analyst MIC lookup uses the October MIC/Analyst table. Imported results do not auto-mark parameter pass/fail. `{{overall.remarks}}` remains sourced from Incoming October Remarks.
+- The acceptance-limits tab exists. Its current generic row (`Differs`/`Negative`) lacks product, context, unit, method, effective date, and revision. Because product SPC criteria may differ, unresolved criteria still block report setup. Historical `james.zip` values remain candidate evidence, not a traceable approved criteria registry.
+- Focused Results-header test and `git diff --check` passed. TypeScript no-emit check completed without diagnostics; combined runner then remained open after the focused test and was interrupted.
+- Concurrent task 053 remains in the same dirty worktree. Preserve its changes; do not commit the shared working tree as one unit without review. No live Sheets writes, DB migration, commit, or deploy occurred.
+- Next: register product-specific criteria with source report/date/context and validate generation end-to-end against the actual workbook row and approved template.
+
+## Owner-confirmed historical acceptance baselines — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-055. Restored the `james.zip`-derived product exceptions supplied and reconfirmed by the owner. Product-specific historical entries take priority over shared SPC/MY/qualitative defaults; registered exact specifications remain higher priority.
+- Criteria carry `dateBasis: owner-confirmed` and date 2026-09-30 for the owner's confirmation, not as a claimed historical report date. Each revision is content-hashed. The criteria policy now allows this explicit owner-confirmed baseline form.
+- Three focused historical-criteria tests and TypeScript no-emit passed. No database or Google writes, commit, or deploy.
+- Exact report-level source locations for each map entry remain unavailable; criteria record this as an owner-provided baseline rather than asserting report citations. Current worktree also contains task 053/054 changes; review before committing.

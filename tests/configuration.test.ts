@@ -8,11 +8,26 @@ const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('../server/configuration.js');
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate}=await import('../server/domain.js');
-const {reportTestLabel}=await import('../shared/model.js');
+const {reportTestLabel,reportIssues,resultDisplayValue}=await import('../shared/model.js');
+const {mapResultHeaders}=await import('../server/google.js');
 const {submitSample}=await import('../server/samples.js');
 const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,reportFormatName,resolveApplicabilityMatches,matchScore,sameSpecificationVariant}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
 await migrate();after(close);
+
+test('Results headers map to configured tests and imported raw text stays unchanged',()=>{
+ const columns=mapResultHeaders(['ML Number','Remarks','Standard Plate Count (SPC)','Molds and Yeast','P.aeruginosa','S.aureus','C.albicans','E.coli','Salmonella','Enterobacteriaceae','Coliform'],[
+  {id:'SPC',name:'Standard Plate Count (SPC)',sheetHeader:'SPC'},
+  {id:'MY',name:'Molds and Yeast',sheetHeader:'MY'},
+  {id:'PA',name:'P.aeruginosa',sheetHeader:'P.aeruginosa'}
+ ]);
+ assert.deepEqual([...columns],[['SPC',2],['MY',3],['PA',4]]);
+ const raw='Nmt 10 cfu/mL';
+ assert.equal(resultDisplayValue({test:'SPC',label:'Standard Plate Count (SPC)'} as any,{test:'SPC',state:'entered',value:raw,sourceValue:raw,qualifier:'',unit:'cfu/mL',reason:'',remarks:''} as any),raw);
+ const issues=reportIssues({sample:{category:'FG'},specification:{issues:[],tests:[{test:'SPC',label:'SPC',criterion:'Nmt 10 cfu/mL',source:'acceptance sheet',date:'2026-09-01',unit:'cfu/mL',type:'numeric'}]},results:[{test:'SPC',state:'entered',value:raw,sourceValue:raw,qualifier:'',unit:'cfu/mL',reason:'',remarks:''}],fields:{analysisDate:'2026-10-01',logbook:'p.123'},templateSnapshot:{manifest:{requiredFields:[]}}} as any);
+ assert.deepEqual(issues,[]);
+ assert.throws(()=>mapResultHeaders(['SPC','Standard Plate Count (SPC)'],[{id:'SPC',name:'Standard Plate Count (SPC)',sheetHeader:'SPC'}]),/ambiguous columns/);
+});
 
 test('migration seeds existing categories once and configuration survives reloading',async()=>{
  const first=await getConfiguration();assert.equal(first.value.sampleTypes.length,7);const value=structuredClone(first.value);value.general.appName='Configured laboratory';

@@ -5,10 +5,12 @@ export type Role = 'administrator'|'analyst'|'viewer';
 export interface User {email:string;name:string;role:Role}
 export interface Source {spreadsheetId:string;sheetId:number;sheet:string;section:string;row:number;range:string;fingerprint:string;observedAt:string;url:string;mappingRevision:string;raw:unknown[];active?:boolean}
 export interface Sample {configurationRevision?:number;categoryLabel?:string;id:string;category:Category;ml:string;name:string;batch:string;received:string;status:string;remarks:string;context:string;source:Source;fields:Record<string,string>;duplicate?:boolean}
-export interface Criterion {test:string;label:string;type:'numeric'|'finding';unit:string;criterion:string;source:string;sourceLocation:string;date:string;dateBasis:'release'|'analysis';revision:string;stage?:string;location?:string;replicate?:string}
+export interface Criterion {test:string;label:string;type:'numeric'|'finding';unit:string;criterion:string;source:string;sourceLocation:string;date:string;dateBasis:'release'|'analysis'|'owner-confirmed';revision:string;stage?:string;location?:string;replicate?:string}
 export interface Specification {active?:boolean;previousId?:string;id:string;product:string;category:Category;context:string;revision:string;tests:Criterion[];issues:string[];source:string}
-export interface Result {test:string;location?:string;stage?:string;replicate?:string;state:'not_entered'|'not_tested'|'entered';value:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
-export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];fields:Record<string,string>;updatedAt:string;analyst:string}
+export interface ResultSource {spreadsheetId:string;url:string;sheetId:number;sheet:string;row:number;range:string;fingerprint:string;observedAt:string;ml:string;raw:string[];remarks?:string;analyst?:string}
+export interface Result {test:string;location?:string;stage?:string;replicate?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
+export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;fields:Record<string,string>;updatedAt:string;analyst:string}
+export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>};
 export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:Record<string,unknown>;verified:boolean;demo?:boolean}
 export interface ReportSetup {sample:Sample;specification:Specification;template:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>}
 export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P.aeruginosa',SA:'S.aureus',CA:'C.albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
@@ -20,6 +22,7 @@ export function reportTestLabel(test:string,fallback=''){
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'>){return [r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function microbiologyLimit(test:string){return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function resultDisplayValue(test:Criterion,r:Result){
+ if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
  const limit=microbiologyLimit(test.test);
  if(limit&&r.qualifier==='Nmt')return limit;
  if(limit&&r.value.trim())return /cfu\/mL$/i.test(r.value.trim())?r.value.trim():`${r.value.trim()} cfu/mL`;
@@ -31,10 +34,13 @@ export function reportIssues(d:Draft):string[]{
   if(!t.criterion||!t.source||!t.date) issues.push(`${label}: unresolved criterion source`);
   if(!r||r.state!=='entered') {issues.push(`${label}: result required`);continue;}
   if(d.sample.category==='SFG'&&!['passed','failed'].includes(r.remarks.trim().toLocaleLowerCase()))issues.push(`${label}: select Passed or Failed so the Semi-Finished Goods report format can be chosen.`);
-  if(!microbiologyLimit(t.test)&&r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
-  if(t.type==='numeric'&&microbiologyLimit(t.test)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&!r.value.trim()) issues.push(`${label}: enter a value`);}
-  else if(t.type==='numeric'&&(!/^\d+(\.\d+)?$/.test(r.value)||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);
-  if(t.type==='finding'&&!['Positive','Negative'].includes(r.value)) issues.push(`${label}: choose Positive or Negative`);
+  const unchangedSourceValue=r.sourceValue!==undefined&&r.value===r.sourceValue;
+  if(!unchangedSourceValue){
+   if(!microbiologyLimit(t.test)&&r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
+   if(t.type==='numeric'&&microbiologyLimit(t.test)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&!r.value.trim()) issues.push(`${label}: enter a value`);}
+   else if(t.type==='numeric'&&(!/^\d+(\.\d+)?$/.test(r.value)||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);
+   if(t.type==='finding'&&!['Positive','Negative'].includes(r.value)) issues.push(`${label}: choose Positive or Negative`);
+  }
  }
  if(!d.fields.analysisDate)issues.push('Analysis date is required');
  for(const key of ['analysisDate','manufactureDate','expiryDate']){const value=d.fields[key];if(value&&(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||new Date(value).toISOString().slice(0,10)!==value))issues.push(`${key.replace(/([A-Z])/g,' $1')}: enter a valid date`);}
