@@ -236,3 +236,10 @@
 - Existing floating-assistant nested-button console warning is unrelated and was not modified.
 - Current branch: master at `246e4a1` plus the dashboard fix in `server/search.ts` and corresponding task/handover entries. Untracked preview/scratch files remain preserved. Live data was not accessed; the owner has standing authorization to commit and push project changes.
 - Next: verify `/api/work` against live PostgreSQL when available; assess/fix the separate floating assistant warning if requested.
+
+## Report template verification and spacing — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-057. Report setup refuses a format unless exactly one matching revision is verified. Refreshed built-in formats are registered but pending visual review because the template hashes changed; Word and LibreOffice are unavailable on this host.
+- Changed: improved the report setup error to explain whether the format is missing, pending visual verification, or duplicated; it directs administrators to Settings → Standardized templates. The template list now shows `Needs visual review` for unverified files. Corrected inline overlap in saved draft identities/actions and the selected sample summary with responsive rows.
+- Local UI check: de-identified demo shows the status labels correctly. The FG demo selection encountered an unrelated missing applicability row before reaching template routing. No live data access or tests. Impeccable detector returned no findings.
+- Do not mark the refreshed report formats verified until a rendered visual comparison is reviewed. Production database/API is unavailable locally. Existing untracked scratch/previews remain; preserve them.
