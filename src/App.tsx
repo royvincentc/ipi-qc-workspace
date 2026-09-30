@@ -7,7 +7,6 @@ import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
 import {AmbientBackdrop,RouteExperience} from './Experience';
-import {CursorEffects} from './CursorEffects';
 const AdminCenter=lazy(()=>import('./admin'));
 const SampleDetailRoute=lazy(()=>import('./pages').then(module=>({default:module.SampleDetail})));
 const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Reports})));
@@ -134,7 +133,6 @@ function Workspace({data}:{data:any}){
       <Notice.Provider value={notify}>
         <div className={`app ${lowPerformanceMode?'app-low-performance':''}`}>
           {lowPerformanceMode?null:<AmbientBackdrop/>}
-          <CursorEffects enabled={!lowPerformanceMode}/>
           <RouteExperience lowPerformanceMode={lowPerformanceMode}/>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`}>
             <Link to="/" className="brand" title={config.value.general.appName}>
