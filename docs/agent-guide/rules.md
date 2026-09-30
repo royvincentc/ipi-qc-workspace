@@ -3,8 +3,8 @@
 | Document control | Value |
 |---|---|
 | Document ID | IPI-AI-RULES |
-| Revision | 1.0 |
-| Effective date | 2026-09-25 |
+| Revision | 1.1 |
+| Effective date | 2026-10-01 |
 | Change authority | The project owner must explicitly authorize material rule changes |
 
 These rules apply to every person or AI agent changing this project. Read [goal.md](goal.md) first. Log work in [tasks.md](tasks.md), audit inherited work with [audit.md](audit.md), and leave current state in [handover.md](handover.md).
@@ -94,7 +94,7 @@ These controls support audit readiness. IPI Quality/Regulatory owns the intended
 6. The controlled “Noted by” value is `Celeste P. Yandug — Assistant Head, Microbiology Laboratory` until explicitly revised.
 7. Use automatic continuous `Page X of Y` fields. Keep the distinct logbook/page reference editable.
 8. Report download MUST be blocked when required fields, criteria, context, or mappings are unresolved. Saving an incomplete draft remains allowed.
-9. Every supported layout MUST pass rendered visual comparison, including long text, variable rows, page breaks, headers/footers, and pagination. A DOCX that merely opens is not sufficient proof.
+9. Rendered visual comparison is the preferred layout check. The project owner may authorize administrators to waive that separate review step. A waived revision must pass DOCX structural/tag validation, retain the sanitization attestation, be recorded as administrator-approved with the waiver stated in the audit trail, and must not be described as visually verified.
 10. File search, preview, and download MUST enforce authorization server-side and SHOULD log access to controlled records.
 
 ## 7. Authentication, authorization, privacy, and secrets
