@@ -1159,3 +1159,40 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Scope: This source defines applicable test flags, not acceptance limits. Criteria remain separate controlled data in registered specifications/criteria source. The IPI Results result tabs are still empty in scanned rows; actual-result retrieval remains pending user clarification and sample data.
 - Verification: TypeScript typecheck and `git diff --check` passed. No application restart or persistent app DB migration was run in this turn. All sheet reads were bounded/read-only; no Google write was made.
 - Next actions: rerun the specification connection test after app restart; confirm result row join/value/replicate behavior when a populated row is available; complete October logbook mapping and MIC lookup; verify template render layouts.
+
+### TASK-20260930-048 — Add optional sample-name suffix to report formats
+
+- Owner request: append `{{sample.name.suffix}}` after `{{sample.name}}`, with exactly one space before the suffix tag; rescan the live sheets.
+- Read-only scan: October 2026 now has 154 columns (through EV). `Sample Name Suffix` headers are C (Semi-Finished Goods), X (Finished Goods), BM (Raw Material), CG (Product Stability), and DA (Miscellaneous); Water has no suffix header. Raw Material Supplier is now BS (it shifted from the earlier BP location); Requested by is BT and Page Number is BU. Remarks headers are T, AP, BI, CC, CW, and DP for SFG, FG, Water, RM, Stability, and Miscellaneous respectively.
+- Changed: all six embedded DOCX formats now contain `{{sample.name}} {{sample.name.suffix}}` in their sample-name header. `reportTemplateFields` maps the suffix from source sample metadata and keeps both sample name and suffix source-controlled rather than manually overridden; source suffix tags are excluded from the extra editable fields.
+- Verification: all six embedded DOCX ZIP packages parse and contain exactly the requested tag sequence; TypeScript typecheck and `git diff --check` passed. Visual rendering is still unavailable on this host, so these format revisions remain unverified for visual layout. No Google cells or original DOCX files were changed.
+- Known limitation: the existing incoming sync still has legacy fixed section positions, so this scan alone does not make the new October suffix column flow into newly synced samples. The report mapping will use it once the October section layout is integrated.
+
+### TASK-20260930-049 — Replace report formats and map Product Stability Type
+
+- Owner request: use seven refreshed report formats; route Product Stability to STAB.docx and Finished Goods to FG.docx; populate `{{type}}` from the logbook Type column.
+- Read-only source scan: October 2026 Product Stability `Type` header is at CH. Other October headers still show suffix columns C/X/BM/CG/DA for SFG/FG/RM/ST/MIS.
+- Changed: replaced embedded report candidates with the seven current owner-provided files named SFG, SFGQA, STAB, FG, MISC, RM, RMQA. Routing now maps ST→STAB and FG→FG while preserving other routes. `reportTemplateFields` maps `{{type}}` from source `type`, `Type`, or legacy `secondaryCategory` and pins it from source metadata. Added routing/type regression expectations.
+- Verification: worker validated all seven embedded DOCX files and their token inventories; only STAB contains `type`, and each contains `sample.name.suffix`. TypeScript typecheck and `git diff --check` passed. Visual render comparison remains unavailable on this host; uploaded templates remain unverified until rendered review.
+- Known limitation: October import geometry remains unsupported, so `Type` at CH is not yet flowing into imported samples. No Google sheet or original DOCX was changed.
+### TASK-20260930-050 — Refresh Product Stability template
+
+- Owner update: supplied a revised `STAB.docx`.
+- Comparison: the updated file retains the existing field and result tags; the `{{type}}` value is now shown in parentheses on its own line.
+- Changed: replaced the embedded STAB asset with the supplied DOCX and regenerated the June Product Stability tag-placement preview from that source. Refreshed the preview bundle.
+- Verification: updated template passes DOCX worker token validation; preview contains no unresolved tags and includes the sample Type and MIC values. The new embedded asset SHA-256 is `c2b17726fb8f8fa879020b59802b48cf83598dab8916606547edabfc832bdb8e`.
+- Limits: LibreOffice is unavailable on this host, so the updated template was not visually rendered. Six drawings remain subject to human layout review. The supplied source DOCX was read only.
+- Next action: review the stability preview in Word and confirm its layout.
+### TASK-20260930-051 — Normalize report dates and omit empty suffix parentheses
+
+- Owner request: keep `{{t.release}}` as a time, format all dates as MM/DD/YYYY, correct the received date in the example previews, and hide empty suffix parentheses.
+- Inspection: all seven embedded templates pair `{{d.release}} @ {{t.release}}`; no template places the time token in the date position. The report resolver already generates `t.release` as a time and `d.release` as a date.
+- Changed: normalize source-backed received, manufacture, and expiry dates to MM/DD/YYYY; preserve the received time. DOCX rendering now removes the empty parenthetical group around `{{sample.name.suffix}}`. Regenerated the seven sample previews, replacing the incomplete received-date placeholder with a blank where the historical source has no reliable date; refreshed the preview bundle.
+- Verification: all seven generated DOCX files contain no unresolved tags or empty `()` groups and use a complete MM/DD/YYYY generation date. Full test suite and visual rendering were not run; LibreOffice is unavailable.
+- Data impact: no Google Sheet or original source DOCX changed. The preview examples contain blank results and criteria because the Results workbook has no matching data rows.
+### TASK-20260930-052 — Restore Raw Material preview timestamp from logbook
+
+- Follow-up: checked the July 2026 Raw Material source row for ML-RM-26-0080 after identifying the incomplete date in the earlier preview.
+- Source values: Received `07/01/2026 @ 08:57 AM`; Analyst `Karen`; Remarks `FAILED in SPC (Done OOS)`.
+- Changed: updated RM and RMQA previews with the source timestamp and analyst, leaving the unavailable suffix and MIC blank; rebuilt the preview archive.
+- Verification: both generated files contain the complete received timestamp and analyst, have no unresolved tags, and suppress empty suffix parentheses. Google source was read only.

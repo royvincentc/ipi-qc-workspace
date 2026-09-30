@@ -164,3 +164,43 @@
 - TASK-20260930-045 through TASK-20260930-047 were committed on `master` as `520909b` (`Add October report source and template routing`) and pushed successfully to `origin/master`.
 - Tracked working tree is clean after the push. Existing unrelated untracked items remain preserved and were not included.
 - No runtime deployment check was performed. TypeScript typecheck and diff check passed before commit; focused test runner remains blocked by the Node host `uv_os_get_passwd returned ENOMEM` issue.
+
+## Latest sample-name suffix update — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-048.
+- October 2026 live sheet re-scanned read-only: grid now extends to EV (154 columns). Suffix columns: SFG C, FG X, RM BM, Product Stability CG, Miscellaneous DA; Water has no suffix header. RM Supplier shifted to BS, Requested by BT, Page Number BU. Remarks columns are T/AP/BI/CC/CW/DP for SFG/FG/Water/RM/ST/MIS.
+- Implemented: each of the six embedded DOCX formats uses `{{sample.name}} {{sample.name.suffix}}` (one literal space). Report field resolver sources suffix from `sample.fields.sampleNameSuffix` and pins sample name/suffix against manual overrides.
+- Verification: six DOCX ZIP assets parse and contain the exact tag sequence; TypeScript typecheck and diff check pass. Rendering unavailable, so no visual verification is claimed.
+- No live Sheet or original DOCX writes. October sample import still needs the shifted block geometry to bring suffix into source metadata.
+
+## Latest report-format refresh — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-049.
+- Owner refreshed seven format files. Embedded candidates are now named SFG, SFGQA, STAB, FG, MISC, RM, RMQA. Routing sends Product Stability (ST) to STAB.docx and Finished Goods (FG) to FG.docx. Other category/supplier routing remains as previously specified.
+- October Product Stability `Type` header verified at CH. Report resolver supports `{{type}}` from the source field and blocks manual override. Source input mapping still awaits October section-layout support.
+- All seven embedded DOCX packages passed worker token validation; `type` exists only on STAB, and suffix token exists on all. TypeScript typecheck and diff check passed. No rendered comparison possible on this host; formats remain unverified for operational release.
+- Originals and Google sheets were read-only. No external writes or deployment performed.
+- Next actions: map October section geometry including Type and suffix; validate format rendering; rerun report routing tests and deployed sample flow.
+
+## Latest Product Stability template update — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-050.
+- Owner supplied a revised `STAB.docx`. It preserves all prior tags and moves `{{type}}` into parentheses on its own line.
+- Replaced the embedded STAB asset and regenerated the June stability tag-placement preview. Refreshed `output/IPI-tag-placement-previews.zip`.
+- Updated source DOCX passes worker token validation; generated preview has no unresolved placeholders and carries Type `Actual` and MIC-17 from the October Analyst table.
+- Visual render could not run because LibreOffice is unavailable on this Windows host. Six drawings still need a human Word layout review. The original DOCX was read only.
+- Pending: inspect the stability preview in Word and confirm layout before commit.
+
+## Latest report date and suffix display update — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-051.
+- All seven embedded templates were checked: they use `{{d.release}}` for the release date and `{{t.release}}` for release time. Resolver maps these to a date and a time respectively.
+- Source-backed received, manufacturing, and expiry date fields now normalize ISO or M/D/YYYY inputs to MM/DD/YYYY. Empty `sample.name.suffix` removes its surrounding parentheses during DOCX generation.
+- Regenerated seven example DOCX previews and `output/IPI-tag-placement-previews.zip`; incomplete historical received date was cleared rather than guessed. Generated files have no unresolved tags or empty parenthesis pairs.
+- LibreOffice is unavailable, so visual layout review remains outstanding. The test suite was not run.
+
+## Raw Material example timestamp correction — 2026-09-30, Asia/Taipei
+
+- Task: TASK-20260930-052.
+- Read July 2026 row 6 for ML-RM-26-0080 from the incoming logbook. Its received timestamp is `07/01/2026 @ 08:57 AM`, analyst Karen, with source Remarks `FAILED in SPC (Done OOS)`.
+- Updated RM and RMQA previews and the archive with the source values; suffix parentheses remain hidden when blank. No Google Sheet write was made.

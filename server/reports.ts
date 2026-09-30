@@ -17,15 +17,16 @@ async function renderPdf(docx:string,pdf:string){const mode=process.env.PDF_REND
  if(mode!=='word'||process.platform!=='win32')throw new Fault(503,'Configure an available document preview renderer');await new Promise<void>((resolve,reject)=>{const proc=spawn('powershell.exe',['-NoProfile','-NonInteractive','-File',path.resolve('scripts/render-word.ps1'),docx,pdf],{windowsHide:true,stdio:['ignore','pipe','pipe']});let err='';const timer=setTimeout(()=>{proc.kill();reject(new Fault(504,'Word preview timed out'));},90000);proc.stderr.on('data',b=>err+=b);proc.on('error',()=>{clearTimeout(timer);reject(new Fault(503,'Microsoft Word renderer is unavailable'));});proc.on('close',code=>{clearTimeout(timer);code===0?resolve():reject(new Fault(503,`Word preview failed: ${err.slice(-250)}`));});});await access(pdf);}
 
 const normalized=(value:string)=>value.trim().toLocaleLowerCase();
-const blockedSourceFields=new Set(['analysisDate','releaseDate','analyzedBy','readBy','receivedBy','status','remarks','overallRemarks','analyst','reviewedBy','approvedBy','signature']);
+const blockedSourceFields=new Set(['analysisDate','releaseDate','analyzedBy','readBy','receivedBy','status','remarks','overallRemarks','analyst','reviewedBy','approvedBy','signature','type']);
 function reportFieldDefaults(sample:Sample,template:Template){
  const keys=[...new Set([...(template.manifest.requiredFields||[]) as string[],...(template.manifest.tokens||[]) as string[]])];
  const aliases:Record<string,string[]>={'date.mfd':['manufactureDate'],'exp.date':['expiryDate'],'fill.vol':['fillVolume'],'requested.by':['requestedBy'],'batch.size':['batchSize'],'page':['pageNumber'],'mic':['mic']};
- return Object.fromEntries(keys.map(key=>[key,(aliases[key]||[key]).map(source=>String(sample.fields[source]||'').trim()).find(Boolean)||'']).filter(([key,value])=>Boolean(value)&&!blockedSourceFields.has(key)));
+ return Object.fromEntries(keys.map(key=>[key,(aliases[key]||[key]).map(source=>String(sample.fields[source]||'').trim()).find(Boolean)||'']).filter(([key,value])=>Boolean(value)&&!blockedSourceFields.has(key)&&!key.startsWith('sample.')));
 }
 export function reportFormatName(sample:Pick<Sample,'category'|'fields'>,results:Result[]=[]):string|null{
  if(sample.category==='SFG')return results.some(result=>String(result.remarks||'').trim().toLocaleLowerCase()==='failed')?'SFGQA':'SFG';
- if(sample.category==='FG'||sample.category==='ST')return 'STAB, FG';
+ if(sample.category==='ST')return 'STAB';
+ if(sample.category==='FG')return 'FG';
  if(sample.category==='MIS')return 'MISC';
  if(sample.category==='RM'){
   const supplier=firstText(sample.fields.supplier,(sample.fields as any).Supplier).toLocaleLowerCase();
@@ -300,6 +301,16 @@ export async function createDraft(sampleId:string,specId:string,templateId:strin
 }
 export async function saveDraft(id:string,expected:number,results:Result[],fields:Record<string,string>,actor:string){return locked('draft:'+id,async(tx)=>{const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!old)throw new Fault(404,'Draft not found');if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');const keys=old.results.map(resultKey);if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');for(const r of results)if(r.state==='not_tested'&&!r.reason.trim())throw new Fault(400,'Not-tested results require a reason');const d={...old,results,fields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};const templates=(await tx.query('SELECT data FROM templates')).rows.map(row=>row.data as Template);const routed=await routedTemplate(d.sample,d.results,templates);if(routed){d.templateId=routed.id;d.templateRevision=routed.revision;d.templateSnapshot=structuredClone(routed);}await tx.query('BEGIN');try{await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[d.revision,JSON.stringify(d),id]);await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[id,d.revision,JSON.stringify(d)]);await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision,templateId:d.templateId,templateRevision:d.templateRevision});return d;});}
 function firstText(...values:unknown[]){return values.map(value=>String(value??'').trim()).find(Boolean)||'';}
+function formatReportDate(value:unknown,includeTime=false){
+ const text=firstText(value);if(!text)return '';
+ const match=text.match(/^(?:(\d{4})[/-](\d{1,2})[/-](\d{1,2})|(\d{1,2})[/-](\d{1,2})[/-](\d{4}))(.*)$/);
+ if(!match)return text;
+ const year=Number(match[1]||match[6]),month=Number(match[2]||match[4]),day=Number(match[3]||match[5]);
+ const date=new Date(Date.UTC(year,month-1,day));
+ if(date.getUTCFullYear()!==year||date.getUTCMonth()!==month-1||date.getUTCDate()!==day)return text;
+ const formatted=`${String(month).padStart(2,'0')}/${String(day).padStart(2,'0')}/${year}`;
+ return formatted+(includeTime?(match[7]||''):'');
+}
 export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
  const fields:Record<string,string>=Object.fromEntries(((t.manifest.tokens||[]) as string[]).filter(k=>!k.startsWith('result.')).map(k=>[k,'']));
  const timezone=d.configurationSnapshot?.general.timezone||'Asia/Manila';
@@ -315,9 +326,9 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
   'sample.released':firstText(manual['sample.released'],`${releaseDate} @ ${releaseTime}`),
   'logbook':firstText(manual.logbook,manual.logbookReference),
   'logbookReference':firstText(manual.logbook,manual.logbookReference),
-  'date.mfd':firstText(manual['date.mfd'],manual.manufactureDate,sourceFields.manufactureDate),
+  'date.mfd':formatReportDate(firstText(manual['date.mfd'],manual.manufactureDate,sourceFields.manufactureDate)),
   'fill.vol':firstText(manual['fill.vol'],manual.fillVolume,sourceFields.fillVolume),
-  'exp.date':firstText(manual['exp.date'],manual.expiryDate,sourceFields.expiryDate),
+  'exp.date':formatReportDate(firstText(manual['exp.date'],manual.expiryDate,sourceFields.expiryDate)),
   'requested.by':firstText(manual['requested.by'],manual.requestedBy,sourceFields.requestedBy),
   'batch.size':firstText(manual['batch.size'],manual.batchSize,sourceFields.batchSize),
   'page':firstText(manual.page,manual.pageNumber,sourceFields.pageNumber),
@@ -327,11 +338,16 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
   'report.department':d.configurationSnapshot?.general.department||'',
   'report.site':d.configurationSnapshot?.general.site||'',
   'sample.name':d.sample.name,
+  'sample.name.suffix':firstText(sourceFields.sampleNameSuffix),
+  'type':firstText(sourceFields.type,(sourceFields as any).Type,sourceFields.secondaryCategory),
   'sample.ml':d.sample.ml,
   'sample.batch':d.sample.batch,
-  'sample.received':d.sample.received,
+  'sample.received':formatReportDate(d.sample.received,true),
   'sample.category':d.sample.category==='ST'?categories.ST:d.sample.categoryLabel||d.configurationSnapshot?.sampleTypes?.find(t=>t.id===d.sample.category)?.name||categories[d.sample.category]
  },Object.fromEntries(Object.entries(d.configurationSnapshot?.reports||{}).map(([k,v])=>['report.'+k,String(v)])),manual);
+ if(((t.manifest.tokens||[]) as string[]).includes('sample.name'))fields['sample.name']=d.sample.name;
+ if(((t.manifest.tokens||[]) as string[]).includes('sample.name.suffix'))fields['sample.name.suffix']=firstText(sourceFields.sampleNameSuffix);
+ if(((t.manifest.tokens||[]) as string[]).includes('type'))fields.type=firstText(sourceFields.type,(sourceFields as any).Type,sourceFields.secondaryCategory);
  if(((t.manifest.tokens||[]) as string[]).includes('overall.remarks'))fields['overall.remarks']=firstText(sourceFields.remarks);
  return fields;
 }
