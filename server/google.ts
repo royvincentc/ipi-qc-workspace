@@ -53,7 +53,12 @@ export async function readResultsRow(url:string,category:string,ml:string){
 
 export async function readMicForAnalyst(spreadsheetId:string,sheetName:string,analyst:string):Promise<string>{
  if(!analyst.trim())return '';
- const range=`'${sheetName.replaceAll("'","''")}'!DM1:DN1000`;
+ const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,gridProperties)`);
+ const sheet=meta.sheets?.find((item:any)=>item.properties.title===sheetName)?.properties;
+ const rowCount=Number(sheet?.gridProperties?.rowCount||0),columnCount=Number(sheet?.gridProperties?.columnCount||0);
+ // Older monthly tabs may not include the optional MIC / Analyst columns.
+ if(!sheet||rowCount<1||columnCount<118)return '';
+ const range=`'${sheetName.replaceAll("'","''")}'!DM1:DN${Math.min(rowCount,1000)}`;
  const rows=(await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`)).values||[];
  const normalized=(value:unknown)=>String(value??'').trim().toLocaleLowerCase();
  const headers=rows.map((row:unknown[],index:number)=>({row,index})).filter(({row}:any)=>row.some((v:unknown)=>normalized(v)==='mic')&&row.some((v:unknown)=>normalized(v)==='analyst'));
