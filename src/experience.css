@@ -230,6 +230,26 @@ input:not([type="checkbox"]):focus,select:focus,textarea:focus { box-shadow:0 0 
 .lab-pet:hover { transform:translateY(-6px) rotate(-3deg)!important;box-shadow:0 22px 46px rgba(0,0,0,.34),0 0 40px rgba(85,221,189,.28); }
 .pet-antenna { position:absolute;top:-12px;left:29px;width:5px;height:14px;border-radius:4px;background:var(--accent); }.pet-antenna i{position:absolute;top:-5px;left:-3px;width:11px;height:11px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 12px var(--accent-2);animation:status-breathe 2s infinite}
 .pet-face{display:flex;gap:13px;position:relative}.pet-face>i{width:7px;height:10px;border-radius:50%;background:#06221c;animation:pet-blink 5s infinite}.pet-face b{position:absolute;left:10px;top:14px;width:11px;height:5px;border-bottom:2px solid #06221c;border-radius:50%}
+
+/* Keep the same dashboard layout while reducing compositing and animation work on older PCs. */
+.app-low-performance .sidebar,
+.app-low-performance .topbar,
+.app-low-performance .right-rail,
+.app-low-performance .floating-chat,
+.app-low-performance .cmd-palette {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+.app-low-performance .hero-header::before,
+.app-low-performance .hero-lab-mark svg,
+.app-low-performance .hero-lab-mark span,
+.app-low-performance .status-dot,
+.app-low-performance .lab-pet,
+.app-low-performance .pet-antenna i,
+.app-low-performance .pet-face > i {
+  animation: none !important;
+}
+.app-low-performance .hero-lab-mark svg { filter: none; }
 .miss-minutes-face{justify-content:center;align-items:center;width:100%;height:100%;margin-top:2px;}
 .pet-label { position:absolute;right:74px;white-space:nowrap;padding:7px 10px;border:1px solid var(--border);border-radius:9px;background:var(--bg-surface-elevated);color:var(--text-primary);font-size:11px;opacity:0;transform:translateX(6px);pointer-events:none;transition:.2s ease }.lab-pet:hover .pet-label{opacity:1;transform:none}
 @keyframes pet-bob{50%{translate:0 -5px}}@keyframes pet-blink{0%,45%,49%,100%{transform:scaleY(1)}47%{transform:scaleY(.12)}}

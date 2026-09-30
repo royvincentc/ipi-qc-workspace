@@ -1,7 +1,8 @@
 import {useEffect} from 'react';
 
-export function CursorEffects() {
+export function CursorEffects({enabled=true}:{enabled?:boolean}) {
   useEffect(() => {
+    if (!enabled) return;
     const finePointer = window.matchMedia('(pointer: fine)').matches;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!finePointer || reducedMotion) return;
@@ -26,7 +27,8 @@ export function CursorEffects() {
       trailY += (y - trailY) * 0.18;
       cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       trail.style.transform = `translate3d(${trailX}px, ${trailY}px, 0)`;
-      frame = requestAnimationFrame(render);
+      if (Math.abs(x-trailX)>0.35||Math.abs(y-trailY)>0.35) frame=requestAnimationFrame(render);
+      else frame=0;
     };
     const setMode = (target: EventTarget | null) => {
       const element = target instanceof Element ? target : null;
@@ -46,6 +48,7 @@ export function CursorEffects() {
         trail.classList.add('is-visible');
       }
       setMode(event.target);
+      if (!frame) frame=requestAnimationFrame(render);
     };
     const onDown = () => cursor.classList.add('is-pressed');
     const onUp = () => cursor.classList.remove('is-pressed');
@@ -72,7 +75,7 @@ export function CursorEffects() {
       cursor.remove();
       trail.remove();
     };
-  }, []);
+  }, [enabled]);
 
   return null;
 }
