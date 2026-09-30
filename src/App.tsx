@@ -1,4 +1,3 @@
-import FileLibrary from './library';
 import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
@@ -6,14 +5,23 @@ import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
 import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
-import {SampleDetail} from './pages';
-import {Reports,ReportEditor} from './reports';
-import SettingsPage from './settings';
-import { AssistantPage } from './AssistantPage';
 import { FloatingAssistant } from './FloatingAssistant';
 import {AmbientBackdrop,RouteExperience} from './Experience';
 import {CursorEffects} from './CursorEffects';
 const AdminCenter=lazy(()=>import('./admin'));
+const SampleDetailRoute=lazy(()=>import('./pages').then(module=>({default:module.SampleDetail})));
+const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Reports})));
+const ReportEditorRoute=lazy(()=>import('./reports').then(module=>({default:module.ReportEditor})));
+const AssistantRoute=lazy(()=>import('./AssistantPage').then(module=>({default:module.AssistantPage})));
+const FileLibraryRoute=lazy(()=>import('./library'));
+
+function isConstrainedDevice(){
+  if(typeof navigator==='undefined')return false;
+  const device=navigator as Navigator & {deviceMemory?:number;connection?:{saveData?:boolean}};
+  return Boolean(device.connection?.saveData)
+    || (device.hardwareConcurrency>0&&device.hardwareConcurrency<=4)
+    || (typeof device.deviceMemory==='number'&&device.deviceMemory<=4);
+}
 
 const navigation=[
   ['/','Dashboard',LayoutDashboard],
@@ -96,6 +104,7 @@ function Workspace({data}:{data:any}){
   const [mobileNav,setMobileNav]=useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [now,setNow]=useState(()=>new Date());
+  const [lowPerformanceMode]=useState(isConstrainedDevice);
   const location=useLocation();
 
   const notify=(text:string,error=false)=>{setNotice({text,error});};
@@ -123,10 +132,10 @@ function Workspace({data}:{data:any}){
   return (
     <Session.Provider value={data}>
       <Notice.Provider value={notify}>
-        <div className="app">
-          <AmbientBackdrop/>
-          <CursorEffects/>
-          <RouteExperience/>
+        <div className={`app ${lowPerformanceMode?'app-low-performance':''}`}>
+          {lowPerformanceMode?null:<AmbientBackdrop/>}
+          <CursorEffects enabled={!lowPerformanceMode}/>
+          <RouteExperience lowPerformanceMode={lowPerformanceMode}/>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`}>
             <Link to="/" className="brand" title={config.value.general.appName}>
               <div className="brand-icon"><FlaskConical size={24}/></div>
@@ -204,18 +213,18 @@ function Workspace({data}:{data:any}){
 
             <div className="workspace-content">
               <main className="route-stage" key={location.pathname}>
-                <Routes>
+                <Suspense fallback={<Loading/>}><Routes>
                   <Route path="/" element={<Dashboard/>}/>
                   <Route path="/new" element={<Intake/>}/>
                   <Route path="/samples" element={<SampleSearch/>}/>
-                  <Route path="/samples/:id" element={<SampleDetail/>}/>
-                  <Route path="/reports" element={<Reports/>}/>
-                  <Route path="/reports/:id" element={<ReportEditor/>}/>
-                  <Route path="/library" element={<FileLibrary/>}/>
-                  <Route path="/assistant" element={<AssistantPage/>}/>
+                  <Route path="/samples/:id" element={<SampleDetailRoute/>}/>
+                  <Route path="/reports" element={<ReportsRoute/>}/>
+                  <Route path="/reports/:id" element={<ReportEditorRoute/>}/>
+                  <Route path="/library" element={<FileLibraryRoute/>}/>
+                  <Route path="/assistant" element={<AssistantRoute/>}/>
                   <Route path="/settings" element={data.user.role==='administrator'?<Suspense fallback={<Loading/>}><AdminCenter/></Suspense>:<ErrorBox message="Administrator access required"/>}/>
                   <Route path="*" element={<ErrorBox message="Page not found"/>}/>
-                </Routes>
+                </Routes></Suspense>
               </main>
             </div>
           </div>
