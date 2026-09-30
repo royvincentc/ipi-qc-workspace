@@ -158,3 +158,9 @@
 - Scope boundary: these tabs define applicable parameters, not acceptance criteria. Criteria stay in the separately controlled specification records/source. Results tabs are currently blank in searched rows, so actual result parsing is not yet implemented.
 - Verification: TypeScript typecheck and `git diff --check` passed. No server restart or persistent app DB migration run; all Google calls were read-only.
 - Outstanding: validate the new workbook with the app's specification connection test after restart; implement October tab geometry and MIC lookup; wait for populated IPI Results sample/row-format clarification; render-verify all candidate report formats.
+
+## Commit and GitHub push — 2026-09-30, Asia/Taipei
+
+- TASK-20260930-045 through TASK-20260930-047 were committed on `master` as `520909b` (`Add October report source and template routing`) and pushed successfully to `origin/master`.
+- Tracked working tree is clean after the push. Existing unrelated untracked items remain preserved and were not included.
+- No runtime deployment check was performed. TypeScript typecheck and diff check passed before commit; focused test runner remains blocked by the Node host `uv_os_get_passwd returned ENOMEM` issue.
