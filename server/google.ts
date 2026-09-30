@@ -3,7 +3,7 @@ import {GoogleAuth} from 'google-auth-library';
 import {Fault,googleId,column,hash,monthOf,type Sheet} from './domain.js';
 import {demo} from './db.js';
 const auth=new GoogleAuth({scopes:['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive.readonly']});
-export async function google<T=any>(url:string,method='GET',data?:unknown):Promise<T>{if(demo)throw new Fault(400,'Google access is disabled in the de-identified demo');try{const client=await auth.getClient();return (await client.request<T>({url,method:method as any,data,timeout:30000})).data;}catch(e:any){throw new Fault(502,`Google request failed (${e.response?.status||'connection'}). Check server credentials and file access.`);}}
+export async function google<T=any>(url:string,method='GET',data?:unknown):Promise<T>{if(demo)throw new Fault(400,'Google access is disabled in the de-identified demo');try{const client=await auth.getClient();return (await client.request<T>({url,method:method as any,data,timeout:30000})).data;}catch(e:any){const status=e.response?.status;const upstream=e.response?.data?.error;const detail=typeof upstream?.message==='string'?upstream.message:typeof e.message==='string'?e.message:'No response details';throw new Fault(502,`Google API request failed (${status||'connection'}): ${detail.slice(0,400)}`);}}
 export async function readWorkbook(url:string):Promise<{id:string;title:string;sheets:Sheet[]}>{const id=googleId(url);const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=spreadsheetId,properties(title),sheets(properties,merges)`);const sheets:Sheet[]=[];
  for(const s of meta.sheets){if(!monthOf(s.properties.title))continue;if(s.properties.gridProperties.rowCount>5000)throw new Fault(409,'Monthly sheet exceeds the reviewed 5,000-row limit');const range=`'${s.properties.title.replaceAll("'","''")}'!A1:CW${s.properties.gridProperties.rowCount}`;const data=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`);sheets.push({id:s.properties.sheetId,name:s.properties.title,rowCount:s.properties.gridProperties.rowCount,rows:data.values||[],merges:(s.merges||[]).map((m:any)=>`${column(m.startColumnIndex||0)}${(m.startRowIndex||0)+1}:${column(m.endColumnIndex-1)}${m.endRowIndex}`)});}
  if(!sheets.length)throw new Fault(409,'No recognized monthly logbook tabs found');return {id,title:meta.properties.title,sheets};}
@@ -28,7 +28,7 @@ export function mapResultHeaders(headers:unknown[],configuredTests:{id:string;na
 export async function readResultsRow(url:string,category:string,ml:string){
  const id=googleId(url),sheetName=resultTabs[category];
  if(!sheetName)throw new Fault(409,`No Results tab is configured for sample type ${category}`);
- const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets(properties(title,sheetId,gridProperties(rowCount,columnCount)))`);
+ const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets.properties(title,sheetId,gridProperties)`);
  const sheet=meta.sheets?.find((item:any)=>item.properties.title===sheetName)?.properties;
  if(!sheet)throw new Fault(409,`Results workbook is missing the ${sheetName} tab`);
  const rowCount=Number(sheet.gridProperties?.rowCount||0),columnCount=Number(sheet.gridProperties?.columnCount||0);
