@@ -39,7 +39,12 @@ export function reportFormatName(sample:Pick<Sample,'category'|'fields'>,results
 async function routedTemplate(sample:Pick<Sample,'category'|'fields'>,results:Result[],templates:Template[]):Promise<Template|undefined>{
  const name=reportFormatName(sample,results);if(!name)return undefined;
  const matches=templates.filter(template=>template.name===name&&template.verified);
- if(matches.length!==1)throw new Fault(409,`The required ${name}.docx report format is not uniquely registered and verified.`);
+ if(matches.length!==1){
+  const named=templates.filter(template=>template.name===name);
+  if(matches.length===0&&named.length>0)throw new Fault(409,`The ${name}.docx format is registered, but this revision still needs visual verification. An administrator can review and register it under Settings → Standardized templates.`);
+  if(matches.length>1)throw new Fault(409,`More than one verified ${name}.docx format is registered. An administrator must resolve the duplicate under Settings → Standardized templates.`);
+  throw new Fault(409,`No ${name}.docx format is registered. An administrator can add it under Settings → Standardized templates.`);
+ }
  return matches[0];
 }
 function templateAccepts(template:Template,tests:Specification['tests']){

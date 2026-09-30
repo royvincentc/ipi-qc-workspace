@@ -36,6 +36,28 @@
 .evidence summary { cursor:pointer;color:var(--text-secondary); }
 .evidence p { margin:8px 0 3px;color:var(--text-secondary); }
 .panel.padded > h2,.panel.padded > .section-heading h2 { letter-spacing:-.025em; }
+
+/* Saved report drafts keep sample identity and actions on separate rows. */
+.draft-link { display:grid; gap:8px; min-width:0; padding:12px 0; border-bottom:1px solid var(--border); }
+.draft-link:last-child { border-bottom:0; }
+.draft-link > .section-heading { gap:10px; margin:0; }
+.draft-link .draft-open { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; flex:0 0 30px; border-radius:8px; color:var(--accent); }
+.draft-link .draft-open:hover { background:var(--bg-surface-hover); }
+.draft-identity { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:start; gap:4px 12px; min-width:0; color:var(--text-primary); }
+.draft-identity:hover strong { color:var(--accent); }
+.draft-identity strong { min-width:0; line-height:1.4; overflow-wrap:anywhere; }
+.draft-identity .mono { align-self:start; white-space:nowrap; font-size:12px; }
+.draft-identity small { grid-column:1/-1; line-height:1.4; }
+
+.record-strip { display:flex; align-items:center; flex-wrap:wrap; gap:7px 10px; min-width:0; margin:12px 0; padding:10px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.record-strip strong { font-variant-numeric:tabular-nums; }
+.record-strip span { color:var(--text-secondary); }
+.record-strip a { display:inline-flex; align-items:center; gap:4px; }
+
+@media (max-width:420px) {
+  .draft-identity { grid-template-columns:minmax(0,1fr); gap:3px; }
+  .draft-identity .mono,.draft-identity small { grid-column:1; }
+}
 .panel.padded > p:first-of-type { max-width:680px;color:var(--text-secondary); }
 .form-grid { gap:12px; }
 .form-grid .field { margin-bottom:6px; }
