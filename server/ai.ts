@@ -91,11 +91,23 @@ aiRouter.post('/chat', async (req, res) => {
       let functionResponseData: Record<string, unknown>;
       if (call.name === 'query_samples') {
         const { q, category, limit } = sampleArgs.parse(call.args || {});
-        const all = (await db.query('SELECT data FROM samples ORDER BY updated_at DESC')).rows.map(row => row.data as any);
-        const normalized = q?.toLowerCase();
-        const samples = all.filter(sample => (
-          !normalized || [sample.ml, sample.name, sample.batch, sample.received].join(' ').toLowerCase().includes(normalized)
-        ) && (!category || sample.category === category)).slice(0, limit);
+        const args: unknown[] = [];
+        const filters: string[] = [];
+        if (q) {
+          args.push(`%${q.replace(/[\\%_]/g, '\\$&')}%`);
+          filters.push("concat_ws(' ',data->>'ml',data->>'name',data->>'batch',data->>'received') ILIKE $" + args.length);
+        }
+        if (category) {
+          args.push(category);
+          filters.push("data->>'category'=$" + args.length);
+        }
+        args.push(limit);
+        const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+        const rows = (await db.query(
+          `SELECT jsonb_build_object('id',data->'id','category',data->'category','ml',data->'ml','name',data->'name','batch',data->'batch','received',data->'received','status',data->'status','remarks',data->'remarks','context',data->'context','fields',data->'fields') AS data FROM samples ${where} ORDER BY updated_at DESC LIMIT $${args.length}`,
+          args
+        )).rows;
+        const samples = rows.map(row => row.data);
         functionResponseData = { samples };
       } else if (call.name === 'query_audit_logs') {
         const { q, limit } = auditArgs.parse(call.args || {});

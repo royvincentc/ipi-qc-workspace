@@ -30,7 +30,21 @@ export function registerSearch(app:Express){
   res.json({items:rows.map(r=>({...r.data,duplicate:Number(r.duplicates)>1})),total:count,page,limit,statuses});
  });
  app.get('/api/work',async(_req,res)=>{
-  const config=await getConfiguration();const templates=(await db.query('SELECT data FROM templates')).rows.map(r=>r.data);const generated=(await db.query("SELECT data->>'draftId' AS draft, data->>'resultRevision' AS revision FROM files WHERE data->>'kind'='report'")).rows;const drafts=(await db.query("SELECT data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100")).rows.map(r=>{const d=r.data,t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);const referenceIssue=!t?.verified||t.revision!==d.templateRevision;const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;return {id:d.id,sample:{name:d.sample.name,ml:d.sample.ml},revision:d.revision,updatedAt:d.updatedAt,generated:generated.some(f=>f.draft===d.id&&Number(f.revision)===d.revision),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};});
+  const config=await getConfiguration();
+  // The dashboard only needs report-readiness fields. Keep large snapshots,
+  // criteria provenance, template manifests, and historical metadata in Neon.
+  const templates=(await db.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','verified',data->'verified','manifest',jsonb_build_object('requiredFields',data->'manifest'->'requiredFields')) AS data FROM templates")).rows.map(r=>r.data);
+  const generated=(await db.query("SELECT data->>'draftId' AS draft, data->>'resultRevision' AS revision FROM files WHERE data->>'kind'='report'")).rows;
+  const drafts=(await db.query(`SELECT jsonb_build_object(
+    'id',data->'id','sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml'),
+    'revision',data->'revision','updatedAt',data->'updatedAt','templateId',data->'templateId','templateRevision',data->'templateRevision',
+    'fields',data->'fields',
+    'templateSnapshot',CASE WHEN data->'templateSnapshot' IS NULL THEN NULL ELSE jsonb_build_object('manifest',jsonb_build_object('requiredFields',data->'templateSnapshot'->'manifest'->'requiredFields')) END,
+    'specification',jsonb_build_object(
+      'issues',data->'specification'->'issues',
+      'tests',COALESCE((SELECT jsonb_agg(jsonb_build_object('test',t->'test','location',t->'location','stage',t->'stage','replicate',t->'replicate','label',t->'label','criterion',t->'criterion','source',t->'source','date',t->'date','type',t->'type','unit',t->'unit)) FROM jsonb_array_elements(data->'specification'->'tests') t),'[]'::jsonb)),
+    'results',COALESCE((SELECT jsonb_agg(jsonb_build_object('test',r->'test','location',r->'location','stage',r->'stage','replicate',r->'replicate','state',r->'state','value',r->'value','qualifier',r->'qualifier','unit',r->'unit')) FROM jsonb_array_elements(data->'results') r),'[]'::jsonb)
+  ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100`)).rows.map(r=>r.data).map(d=>{const t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);const referenceIssue=!t?.verified||t.revision!==d.templateRevision;const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;return {id:d.id,sample:{name:d.sample.name,ml:d.sample.ml},revision:d.revision,updatedAt:d.updatedAt,generated:generated.some(f=>f.draft===d.id&&Number(f.revision)===d.revision),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};});
   const recent=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>r.data);
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:config.value.general.timezone}).format(new Date());
   const loggedToday=Number((await db.query(`SELECT count(*) FROM samples WHERE ${receivedDay}=$1`,[today])).rows[0].count);
