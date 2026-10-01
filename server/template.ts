@@ -18,6 +18,7 @@ export function validateBindings(tokens:string[], bindings:ResultBinding[]) {
 
 export function reportRows(d:Draft,t:Template){
  const bindings=(t.manifest.resultBindings||[]) as ResultBinding[];
+ const grouped=Boolean((t.manifest as any).rowGrouping);
  const ordered=bindings.length?bindings.map(b=>{
   const criterion=d.specification.tests.find(x=>resultKey(x)===resultKey(b));
   if(!criterion)throw new Fault(422,`Template row ${b.index+1} has no matching applicable test: ${resultKey(b)}`);
@@ -25,5 +26,11 @@ export function reportRows(d:Draft,t:Template){
  }):d.specification.tests;
  if(bindings.length&&ordered.length!==d.specification.tests.length)throw new Fault(422,'Template does not represent every applicable test instance');
  if(bindings.length&&new Set(ordered.map(resultKey)).size!==d.specification.tests.length)throw new Fault(422,'Template result rows do not match applicable tests');
- return ordered.map((test,i)=>{const r=d.results.find(x=>resultKey(x)===resultKey(test));if(!r)throw new Fault(422,`${test.label}: actual result is missing`);return {index:i,test:[({'SPC':'Standard Plate Count','MY':'Molds and Yeast'}[test.label]||reportTestLabel(test.test,test.label)),test.location,test.stage,test.replicate].filter(Boolean).join(' · '),criterion:test.criterion,value:resultDisplayValue(test,r),remarks:r.remarks};});
+ return ordered.map((test,i)=>{
+  const r=d.results.find(x=>resultKey(x)===resultKey(test));if(!r)throw new Fault(422,`${test.label}: actual result is missing`);
+  const label=({'SPC':'Standard Plate Count (SPC)','MY':'Molds and Yeast'}[test.test]||reportTestLabel(test.test,test.label));
+  const location=r.location||test.location||'';
+  if(grouped&&!location.trim())throw new Fault(422,`${label}: approved sampling-plan location is missing`);
+  return {index:i,groupKey:[test.test,test.stage||'',test.criterion].join('|'),test:grouped?label:[label,location,test.stage,test.replicate].filter(Boolean).join(' · '),location,criterion:test.criterion,value:resultDisplayValue(test,r),remarks:r.remarks};
+ });
 }

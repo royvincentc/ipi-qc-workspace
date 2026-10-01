@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IPI Environmental Monitoring Product Report Profile (review draft)",
+  "description": "A product profile routes to one approved document family and separately supplies an approved sampling plan. This is a review specification, not yet supported by the current renderer.",
+  "type": "object",
+  "required": [
+    "profileId",
+    "status",
+    "formatId",
+    "selector",
+    "samplingPlan",
+    "resultEntryPolicy"
+  ],
+  "properties": {
+    "profileId": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "draft-review",
+        "owner-approved",
+        "retired"
+      ]
+    },
+    "formatId": {
+      "enum": [
+        "EM-5C-GROUPED",
+        "EM-GIP-4C",
+        "EM-WATER-4C",
+        "EM-WH-PHASE-7C"
+      ]
+    },
+    "selector": {
+      "type": "object",
+      "required": [
+        "product",
+        "method"
+      ],
+      "properties": {
+        "product": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string"
+        },
+        "processArea": {
+          "type": "string"
+        }
+      }
+    },
+    "samplingPlan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "groupKey",
+          "analysisDesired",
+          "criterion",
+          "rows"
+        ],
+        "properties": {
+          "groupKey": {
+            "type": "string"
+          },
+          "analysisDesired": {
+            "type": "string"
+          },
+          "criterion": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "rowKey",
+                "location"
+              ],
+              "properties": {
+                "rowKey": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "phase": {
+                  "type": "string"
+                },
+                "resultChannels": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "resultEntryPolicy": {
+      "const": "manual-attributable-entry; no historical result prefill"
+    },
+    "approvalReference": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "string"
+    }
+  }
+}

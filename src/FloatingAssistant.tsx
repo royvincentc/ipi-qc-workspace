@@ -4,7 +4,7 @@ import { api } from './api';
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
-  const [showSpeech, setShowSpeech] = useState(true);
+  const [showSpeech, setShowSpeech] = useState(false);
   const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello. I’m Miss Minutes, the QC Smart Assistant for IPI Microbiology. I can help locate authorized QC records, summarize documented results, and review audit history. How can I assist you?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);

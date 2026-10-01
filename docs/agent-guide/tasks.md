@@ -1248,3 +1248,91 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Verification: `tsc --noEmit` and `git diff --check` passed; the Impeccable detector returned no findings. Local browser inspection at 1440×900 and 390×844 showed no horizontal overflow. The local UI reflects the new registration copy, but its pre-existing API process still returns old template statuses; the startup policy migration was not exercised. `npm run build` could not start because the configured npm CLI path is missing. No automated tests or production DB writes were run.
 - Limits: the local browser reported two pre-existing React nested-button hydration errors in the floating assistant, unrelated to this change. Production behavior requires deployment and server restart so the administrator-policy status migration runs.
 - Next: commit and push the scoped changes under the owner's standing authorization, then confirm the deployed Settings → Report templates list shows the refreshed revisions as Admin-approved.
+
+### TASK-20261001-059 — Accept equivalent batch header labels
+
+- Owner request: rewire sample import if the updated Google Sheets use both `Batch No.` and `Batch/Lot No.` for the same batch field.
+- Inspection: the source importer validates positional headers exactly. A `Batch/Lot No.` label at the already mapped batch position would fail synchronization even though the field position remains unchanged. The existing handover separately records that October category sections shifted from the legacy ranges; this alias change does not solve that larger layout migration.
+- Changed: header validation now treats normalized `Batch No.` and `Batch/Lot No.` as equivalent only at the approved mapped column. All other headers, section boundaries, merged cells, and positions remain strict; the importer does not guess or auto-shift columns.
+- Verification: `tsc --noEmit` and `git diff --check` passed. No automated tests were added or run. Google Drive search found an older June-only incoming workbook; only its metadata was inspected. No cell data, Google Sheets, database, or production records were changed.
+- Limit: the active October workbook/connected sheet ID was not identified from the repository or Drive search, and its shifted section geometry remains unsupported. Do not claim October synchronization is production-ready from this alias fix alone.
+- Next: if October synchronization is required, confirm the exact active incoming workbook and read its header rows/ranges before adding a versioned mapping for the shifted category sections.
+
+### TASK-20261001-060 - Environmental monitoring tagged template candidate
+
+- Status: Completed for owner review; operational registration pending
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: User request to analyze the environmental-monitoring archive and linked logbook, then provide a tagged sample template for visual confirmation
+- Goal/rule link: Goal sections Required workflows and Standardized report generation; rules sections Google Sheets source rules, Specifications and criteria, and Report integrity
+- Scope/files: `output/Environmental Monitoring Tagged Template Candidate.docx`; read-only reference archive `C:\Users\Roy\Documents\PF-Environmental Monitoring.zip`; linked Google Sheet `MICRO-QC Environmental Monitoring Logbook 2026`, tab `September(ENVI) 2026`
+- Before: The screenshot shows multiple registered repeating-row layouts; archive and sheet mapping had not yet been compared. The connected Sheet initially denied access; user updated permissions and metadata/range reads then succeeded.
+- Change: Created one universal five-column repeating-row candidate from a 2026 Mama's Love Baby Oil compounding reference. Replaced historical variable data with tags, cleared historical results and people, retained blank external sign-off areas, and sanitized document metadata. No app code, Drive file, Sheet cell, or source report was changed.
+- Data impact: Read-only Sheet metadata, bounded header and sample-row reads, and ZIP inspection; no Google writes. The referenced September row is ongoing; its values were not copied into the candidate.
+- Verification: ZIP inventory: 3,697 DOCX, 2 WPS, 1 PDF, 1 XLSX, 1 PNG; structural scan found the five-column Analysis Desired / Area / Standard Specifications / Results / Remarks family dominant, plus exceptions. Google metadata confirmed the gid maps to `September(ENVI) 2026`; bounded row search found the requested ML record at row 74. `worker/docx_worker.py validate` passed with required sample/result tags and automatic page fields; historical sample text scan returned none.
+- Problems/risks: LibreOffice is unavailable and Microsoft Word COM rendering failed with `80070520`, so the candidate has not passed visual render QA. Six inherited drawings still require human review. `{{location}}` is a proposed per-result tag needed to preserve the archive's separate Area column; the current result builder combines test and location and does not supply a per-row location field. Some template details (manufacture/expiry, fill volume, lot size, requestor, temperature/RH, and release date) are not auto-sourced from this logbook tab. The exact active-template configuration was not read from the application database.
+- Rollback: Remove the candidate DOCX; source archive and Sheet remain unchanged.
+- Evidence: `output/Environmental Monitoring Tagged Template Candidate.docx`; exact ambiguity message is raised in `server/reports.ts` when more than one repeating-row layout remains compatible.
+- Next action/owner: Owner visually reviews the candidate and chooses whether to preserve the five-column table, approve the per-row location tag extension, and decide how to handle the variant layouts before any registration or code change.
+
+### TASK-20261001-061 - Check official ENVI template against the current result renderer
+
+- Status: Completed for compatibility assessment; renderer work pending direction
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: User supplied the official controlled `ENVI.docx` and asked whether the current template can reproduce the common grouped table shown in the screenshot
+- Goal/rule link: Goal section Standardized report generation; rules sections Report integrity and DOCX provenance
+- Scope/files: Read-only inspection of `C:\Users\Roy\Documents\ipi format\ENVI.docx`, the previous candidate, `worker/docx_worker.py`, and `server/template.ts`
+- Before: The previous candidate used a single repeated row with a provisional `{{location}}` tag; grouped-row compatibility was unresolved.
+- Change: Confirmed the official file has a 5-column header and one tagged repeat row. Worker validation passes, but the current server result builder joins test and location into one `test` field; the renderer repeats one row per result and does not create the screenshot's grouped vertical merges.
+- Data impact: Read-only; no file, database, Sheet, or app configuration changed.
+- Verification: `worker/docx_worker.py validate` passed for official ENVI.docx with its sample, result, and page tags. Structural inspection confirmed one repeating row and no grouped merges in the candidate.
+- Problems/risks: `{{location}}` is syntactically accepted but is not populated per result by the current row builder. The logbook's monitored equipment column is a count, not the list of locations. Current output would repeat the test/location label and would not match the grouped screenshot exactly.
+- Rollback: Not applicable; assessment only.
+- Evidence: User-supplied ENVI.docx and screenshot; `server/template.ts` `reportRows`; `worker/docx_worker.py` `render`.
+- Next action/owner: If approved, update result rows to carry test and location separately and add group-aware rendering that repeats locations/results while merging test and criterion cells by group; source each location from a controlled parameter/specification list.
+### TASK-20261001-062 - Environmental Monitoring format-family review package
+
+- Status: Completed for owner review; format/profile approval pending
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: User asked to create the files needed to manually verify shared and unique Environmental Monitoring report formats from the supplied archive analysis
+- Goal/rule link: Goal section Standardized report generation; rules sections Reports and files, ALCOA+, and Scientific data integrity
+- Scope/files: `output/Environmental Monitoring Format Review Package/`; `output/Environmental Monitoring Format Review Package.zip`; read-only archive and controlled DOCX references
+- Before: A five-column tagged candidate existed, but the supported product families, unique structures, product routes, and historical sampling-plan evidence were not bundled for owner review.
+- Change: Created a review package with a format catalog, product/method route worksheet, unconfirmed candidate sampling rows, archive structure evidence, product-profile schema/example, per-format renderer adapter specifications, a workbook, and an exact byte-for-byte copy of the supplied tagged ENVI.docx. The package identifies the common 5-column family and separate GIP 4-column, Water Treatment Validation 4-column, and Warehouse phase/air 7-column patterns. Marked all archive-derived routes and sampling entries for owner review.
+- Data impact: Read-only scan of 3,630 non-lock DOCX entries; 3,625 had a recognizable result table signature. Aggregated existing high-confidence archive activity evidence without including historical result readings. No Google Sheet, source ZIP, or user-supplied ENVI.docx was modified.
+- Verification: DOCX tag validation passed; six inherited drawings still need human review. The packaged DOCX hash matches the source exactly. Workbook opens with five review sheets; both JSON files parse; the review ZIP passes integrity check; `git diff --check` passed. Visual rendering remains unverified.
+- Problems/risks: Current renderer cannot yet populate grouped rows or merged group cells; product profiles are proposals. The logbook provides monitored-equipment counts rather than locations. The scan did not confirm a three-column Open Plate result-table family previously mentioned, so the README flags it as unconfirmed. Historical layouts are evidence and do not establish approved current formats.
+- Rollback: Remove the generated review package and ZIP; all source files remain unchanged.
+- Evidence: `output/Environmental Monitoring Format Review Package/README-REVIEW-ME.md`, workbook, format/profile CSVs, JSON schema/example, exact-copy DOCX, archive evidence sheet.
+- Next action/owner: Owner manually confirms which format families remain active, approves product/method/process routing, confirms locations and criteria against controlled plans, and identifies approved blank masters for unique formats before renderer implementation or production registration.
+
+### TASK-20261001-063 - Environmental Monitoring grouped renderer and routing
+
+- Status: Implemented locally for review; no deployment or production template registration
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: User approved creating product-specific environmental report formats and implementing grouped table population to match the approved screenshot while preserving the controlled document layout.
+- Scope/files: `server/template.ts`, `server/reports.ts`, `server/index.ts`, `shared/model.ts`, `worker/docx_worker.py`, `src/templates.tsx`, `src/styles.css`, `output/Environmental Monitoring Format Review Package/`
+- Before: The template worker repeated flat result rows; `reportRows` combined test and location labels; multiple compatible Environmental Monitoring templates blocked draft creation.
+- Change: Added separate test/location row fields, `groupKey` support and contiguous vertical merges for configured cells, plus deterministic exact/prefix product routing and one optional category fallback. Admin template settings now provide family selection, route-prefix editing, and the fallback control. Warehouse's seven-column phase/air adapter remains visibly pending and is rejected by the server.
+- Data impact: Re-read linked Google Sheet metadata, October headings, and bounded September header/ML search after updated permissions. Confirmed `ML-EM-26-0488` is September row 74, product Mama's Love Baby Oil (P), batch CYI47, Compounding / Regular, monitored count 2, status ON-GOING. Column G contains `N/A` but has no header; it is not mapped. No spreadsheet, Drive document, live database, or production configuration was written.
+- Verification: TypeScript no-emit, Python byte-compilation, worker grouped-row smoke, DOCX tag validation, and `git diff --check` passed. Review ZIP has 11 files and passes integrity. Local isolated demo UI inspected/interacted with at 1440x900 and 390x844; no horizontal overflow and no browser console errors. Impeccable detector showed pre-existing global CSS advisories, no new finding on the routing controls. Manual accessibility/responsive audit found labeled route fields, disabled warehouse option, and readable mobile wrapping.
+- Limits: Generated output still needs visual comparison in Word/WPS against the controlled signed master. Locations and criteria must come from an approved product sampling plan; logbook count alone cannot generate them. GIP/water adapters need their approved master/report verification. The local implementation has not been deployed, and no production template routes were registered.
+- Rollback: Revert only the scoped implementation/package/log edits after reviewing the shared dirty worktree; preserve unrelated pre-existing changes and generated scratch files.
+- Evidence: `output/Environmental Monitoring Format Review Package/09-google-sheet-read-only-crosscheck.md`; `output/playwright/environmental-template-routing-desktop-final.png`; `output/playwright/environmental-template-routing-mobile-final.png`.
+- Next action/owner: Owner reviews the tagged template and the distinct-format workbook, confirms the unresolved column G label, confirms sampling locations/criteria and active unique families, then decides whether to register these locally implemented routes/templates for production.
+
+### TASK-20261001-064 - Record provisional format approval
+
+- Status: Recorded in the review package; implementation remains local
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: Owner said to confirm everything for now and revise later.
+- Change: Added `10-owner-provisional-decision.md` and updated the package README to treat the proposed format families and routes as the provisional working baseline. The decision is explicitly revisable. Historical candidate locations/criteria remain preview-only where the controlled sampling plan or criterion source is missing or conflicting; warehouse remains blocked pending an adapter.
+- Data impact: No Sheet, Drive, database, source DOCX, or production setting changed.
+- Verification: Package ZIP updated and integrity checked; no new app build or report generation occurred.
+- Limits: This records provisional confirmation; it does not constitute visual verification of the generated DOCX, activation of production routes, or approval of unresolved historical acceptance-limit conflicts.
+- Evidence: `output/Environmental Monitoring Format Review Package/10-owner-provisional-decision.md`.
+- Next: Apply later owner revisions to the provisional decision and route review before deployment.

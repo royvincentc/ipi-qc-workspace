@@ -6,7 +6,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {db,locked,setting,demo,audit} from './db.js';
 import {Fault,hash,latestCriteria} from './domain.js';
-import {defaultConnections} from './samples.js';
+import {defaultConnections,fallbackSpecifications} from './samples.js';
 import {readApplicability,readResultsRow,readMicForAnalyst,rangeValues} from './google.js';
 import {categories,reportIssues,resultKey,type Draft,type Sample,type Template,type Specification,type Result,type User,type ReportSetup} from '../shared/model.js';
 import {reportRows} from './template.js';
@@ -37,8 +37,8 @@ export function reportFormatName(sample:Pick<Sample,'category'|'fields'>,results
  }
  return null;
 }
-async function routedTemplate(sample:Pick<Sample,'category'|'fields'>,results:Result[],templates:Template[]):Promise<Template|undefined>{
- const name=reportFormatName(sample,results);if(!name)return undefined;
+async function routedTemplate(sample:Sample,results:Result[],templates:Template[]):Promise<Template|undefined>{
+ const name=reportFormatName(sample,results);if(!name)return sample.category==='EM'?routeEnvironmentalTemplate(sample,templates):undefined;
  const matches=templates.filter(template=>template.name===name);
  if(matches.length!==1){
   const named=templates.filter(template=>template.name===name);
@@ -46,6 +46,26 @@ async function routedTemplate(sample:Pick<Sample,'category'|'fields'>,results:Re
   throw new Fault(409,`No ${name}.docx format is registered. An administrator can add it under Settings → Standardized templates.`);
  }
  return matches[0];
+}
+function routeEnvironmentalTemplate(sample:Sample,templates:Template[]):Template|undefined{
+ const candidates=templates.filter(t=>t.category==='EM');
+ if(!candidates.length)return undefined;
+ const productKeys=[sample.name,String(sample.fields.product||''),String(sample.fields.productName||''),String(sample.fields.reportProfileId||'')].map(normalized).filter(Boolean);
+ const explicit=candidates.map(template=>({template,selectors:((template.manifest as any).appliesToProducts||[]) as string[]}))
+  .filter(({selectors})=>selectors.some(selector=>{
+   const key=normalized(selector);return key&&productKeys.some(product=>product===key||product.startsWith(key+' ')||product.startsWith(key+'('));
+  }));
+ if(explicit.length){
+  const maxSpecificity=Math.max(...explicit.flatMap(x=>x.selectors.map(normalized).filter(key=>productKeys.some(product=>product===key||product.startsWith(key+' ')||product.startsWith(key+'('))).map(key=>key.length)));
+  const best=explicit.filter(x=>x.selectors.some(selector=>normalized(selector).length===maxSpecificity&&productKeys.some(product=>product===normalized(selector)||product.startsWith(normalized(selector)+' ')||product.startsWith(normalized(selector)+'('))));
+  if(best.length!==1)throw new Fault(409,'More than one Environmental Monitoring format is assigned to this product. Keep one active product route in Settings → Standardized templates.');
+  return best[0].template;
+ }
+ const defaults=candidates.filter(t=>(t.manifest as any).defaultForCategory===true);
+ if(defaults.length===1)return defaults[0];
+ if(defaults.length>1)throw new Fault(409,'More than one Environmental Monitoring default format is registered. Keep one category default in Settings → Standardized templates.');
+ if(candidates.length===1)return candidates[0];
+ throw new Fault(409,'Several Environmental Monitoring formats are registered, but none matches this product. Assign a product route or one category default in Settings → Standardized templates.');
 }
 function templateAccepts(template:Template,tests:Specification['tests']){
  return true; // By default, accept any layout to prevent layout resolution blocking
@@ -99,6 +119,12 @@ export function sameSpecificationVariant(sampleName:string,productName:string){
  };
  const sample=qualifiers(sampleName),product=qualifiers(productName);
  return sample.export===product.export&&sample.pro===product.pro&&sample.oldSpecs===product.oldSpecs;
+}
+function isHerbycinCoolingMouthSprayPair(first:string,second:string){
+ const identity=(value:string)=>tokenize(value).filter(token=>token!=='cooling').join(' ');
+ const firstTokens=tokenize(first),secondTokens=tokenize(second);
+ return firstTokens.includes('cooling')!==secondTokens.includes('cooling')&&
+  identity(first)==='herbycin mouth spray'&&identity(second)==='herbycin mouth spray';
 }
 export const matchScore = (sampleName:string, productName:string) => {
    if(!sameSpecificationVariant(sampleName,productName))return 0;
@@ -189,7 +215,37 @@ export function resolveApplicabilityMatches(applicability: any[], product: any, 
   }
   // Returning every equally good row lets the caller block an ambiguous
   // scientific mapping instead of silently taking the first spreadsheet row.
+  // Herbycin Cooling Mouth Spray and Herbycin Mouth Spray are one checklist
+  // product. If both distinct labels are present, combine their checked tests
+  // into one row; duplicate rows with the same label remain ambiguous.
+  if(bestRows.length===1){
+    const siblingRows=applicability.filter(row=>row.sheet===sheetName&&isHerbycinCoolingMouthSprayPair(bestRows[0].product,row.product));
+    if(siblingRows.length===1)return [{...bestRows[0],tests:[...new Set([...(bestRows[0].tests||[]),...(siblingRows[0].tests||[])])]}];
+    if(siblingRows.length>1)return [...bestRows,...siblingRows];
+  }
+  if(bestRows.length===2&&isHerbycinCoolingMouthSprayPair(bestRows[0].product,bestRows[1].product)){
+    return [{...bestRows[0],tests:[...new Set([... (bestRows[0].tests||[]),...(bestRows[1].tests||[])])]}];
+  }
   return bestRows;
+}
+
+async function resolveApplicabilityFromSources(primaryUrl:string,product:any,sheetName:string,sampleName?:string){
+ let primaryError:unknown;
+ try{
+  const primaryMatches=resolveApplicabilityMatches(await readApplicability(primaryUrl),product,sheetName,sampleName);
+  if(primaryMatches.length)return primaryMatches;
+ }catch(error){primaryError=error;}
+ try{
+  const fallbackMatches=resolveApplicabilityMatches(await readApplicability(fallbackSpecifications),product,sheetName,sampleName);
+  if(fallbackMatches.length||!primaryError)return fallbackMatches;
+ }catch(fallbackError){
+  if(!primaryError)throw fallbackError;
+  const primaryMessage=primaryError instanceof Error?primaryError.message:'source unavailable';
+  const fallbackMessage=fallbackError instanceof Error?fallbackError.message:'source unavailable';
+  throw new Fault(503,`Unable to read the configured IPI Results specifications (${primaryMessage}) or the QC Micro Products Specifications fallback (${fallbackMessage}).`);
+ }
+ if(primaryError)throw primaryError;
+ return [];
 }
 
 // The owner reconfirmed these product-specific limits from the historical
@@ -285,9 +341,9 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  }
  const exact=productSpecs.filter(s=>normalized(s.context)===normalized(safeContext!));
  if(!exact.length && type.applicability === 'managed')throw new Fault(409,`Mapped to "${product.name}", but no specification exists for context "${safeContext}". If this mapping is correct, add the specification in Settings. If it mapped to the WRONG product, add the sample's full name as an alias to the CORRECT product in Settings.`);
- const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];
- const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:resolveApplicabilityMatches(applicability, product, ['ST', 'SFG'].includes(sample.category) ? (managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet || type.applicabilitySheet) : type.applicabilitySheet, sample.name);
- if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'The QC Micro Products Specifications checklist has no single applicable-test row for this product, or every test is unchecked.');
+ const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):undefined;
+ const matches=type.applicability==='managed'?[{tests:[...new Set(exact.flatMap(s=>s.tests.map(t=>t.test)))]}]:demo?resolveApplicabilityMatches(applicability||[],product,['ST','SFG'].includes(sample.category)?(managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet||type.applicabilitySheet):type.applicabilitySheet,sample.name):await resolveApplicabilityFromSources(config.specifications||defaultConnections.specifications,product,['ST','SFG'].includes(sample.category)?(managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet||type.applicabilitySheet):type.applicabilitySheet,sample.name);
+ if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'Neither IPI Results nor the QC Micro Products Specifications fallback has one applicable-test row for this product, or every test is unchecked.');
  const tests = exact.length?latestCriteria(specifications,product.name,sample.category,exact[0].context,matches[0].tests):historicalCriteria(product.name,sample.category,safeContext||'Routine',matches[0].tests,managed.value.tests);
  if(!tests.length)throw new Fault(409,`No historical baseline covers the applicable tests for ${product.name} (${safeContext}). Add reviewed product-specific criteria in Settings.`);
  const issues=[...new Set(exact.flatMap(s=>s.issues))];if(issues.length)throw new Fault(409,issues.join('; '));
@@ -314,13 +370,13 @@ async function optionalResultsRow(url:string,category:string,ml:string){
  }
 }
 export async function createDraft(sampleId:string,specId:string,templateId:string,actor:User,injectedSpec?:import('../shared/model.js').Specification){const sample=(await db.query('SELECT data FROM samples WHERE id=$1',[sampleId])).rows[0]?.data as Sample;let template=(await db.query('SELECT data FROM templates WHERE id=$1',[templateId])).rows[0]?.data as Template;const candidate=injectedSpec||(await db.query('SELECT data FROM specifications WHERE id=$1',[specId])).rows[0]?.data as Specification;if(!sample||!template||!candidate)throw new Fault(404,'Sample, specification or template not found');const routed=await routedTemplate(sample,[],(await db.query('SELECT data FROM templates')).rows.map(row=>row.data as Template));if(routed)template=routed;if(candidate.active===false)throw new Fault(409,'This specification is inactive. Select its current revision.');if(candidate.category!==sample.category)throw new Fault(409,'Specification category does not match sample category');
- const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category);if(!type)throw new Fault(409,'Sample type is not configured');const productIsActive=managed.value.products.some(p=>p.active&&p.name===candidate.product&&(p.category===sample.category||(['ST','SFG'].includes(sample.category)&&p.category==='FG')));if(!productIsActive)throw new Fault(409,'This product is not active in Products / materials. Ask an administrator to review it.');const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):config.specifications?await readApplicability(config.specifications):[];const prodObj = managed.value.products.find(p => p.name === candidate.product && (p.category === sample.category || (['ST', 'SFG'].includes(sample.category) && p.category === 'FG'))) || { name: candidate.product, aliases: [] };
- const matches=type.applicability==='managed'?[{tests:candidate.tests.map(t=>t.test)}]:resolveApplicabilityMatches(applicability, prodObj, ['ST', 'SFG'].includes(sample.category) ? (managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet || type.applicabilitySheet) : type.applicabilitySheet, sample.name);if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'Product applicability is missing, ambiguous or all false');
+ const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===sample.category);if(!type)throw new Fault(409,'Sample type is not configured');const productIsActive=managed.value.products.some(p=>p.active&&p.name===candidate.product&&(p.category===sample.category||(['ST','SFG'].includes(sample.category)&&p.category==='FG')));if(!productIsActive)throw new Fault(409,'This product is not active in Products / materials. Ask an administrator to review it.');const config=await setting('connections',defaultConnections);const applicability=demo?await setting<any[]>('applicability',[]):undefined;const prodObj=managed.value.products.find(p=>p.name===candidate.product&&(p.category===sample.category||(['ST','SFG'].includes(sample.category)&&p.category==='FG')))||{name:candidate.product,aliases:[]};const applicabilitySheet=['ST','SFG'].includes(sample.category)?(managed.value.sampleTypes.find(t=>t.id==='FG')?.applicabilitySheet||type.applicabilitySheet):type.applicabilitySheet;
+ const matches=type.applicability==='managed'?[{tests:candidate.tests.map(t=>t.test)}]:demo?resolveApplicabilityMatches(applicability||[],prodObj,applicabilitySheet,sample.name):await resolveApplicabilityFromSources(config.specifications||defaultConnections.specifications,prodObj,applicabilitySheet,sample.name);if(matches.length!==1||!matches[0].tests.length)throw new Fault(409,'Product applicability is missing, ambiguous or all false');
  const all=(await db.query('SELECT data FROM specifications')).rows.map(x=>x.data as Specification);const tests=injectedSpec?injectedSpec.tests:latestCriteria(all.filter(s=>s.active!==false),candidate.product,sample.category,candidate.context,matches[0].tests);if(candidate.issues.length)throw new Fault(409,candidate.issues.join('; '));
- if(tests.some((t: any)=>!managed.value.tests.some(x=>x.id===t.test&&x.active&&(x.categories.includes(sample.category) || (['ST', 'SFG'].includes(sample.category) && x.categories.includes('FG'))))))throw new Fault(409,'An applicable checklist test is inactive or unavailable for this sample type. Ask an administrator to review the specification.');const spec={...candidate,tests,revision:hash(tests)};const now=new Date().toISOString();const resultSource=!demo&&config.specifications?await optionalResultsRow(config.specifications,sample.category,sample.ml):undefined;const reportAnalyst=firstText(resultSource?.analyst,sample.fields.analyzedBy,sample.fields.analyst,actor.name);const mic=(template.manifest.tokens as string[]||[]).includes('mic')&&!demo?await readMicForAnalyst(sample.source.spreadsheetId,sample.source.sheet,reportAnalyst):'';const page=firstText(sample.fields.pageNumber,sample.fields.page).replace(/^p(?:age)?\.?\s*/i,'');const logbook=firstText(sample.fields.logbookReference,sample.fields.logbook,mic&&page?`${mic} p.${page}`:'');const analysisDate=firstText(sample.fields.analysisDate,sample.fields.dateAnalyze,sample.fields.dateAnalyzed);const importedResults=tests.map(t=>{const item=resultSource?.tests[t.test],raw=String(item?.value??'').trim();return {test:t.test,location:t.location,stage:t.stage,replicate:t.replicate,state:raw?'entered':'not_entered',value:raw,sourceValue:raw||undefined,sourceHeader:String(item?.header??'')||undefined,qualifier:'',unit:t.unit,reason:'',remarks:''} as Result;});const draft:Draft={configurationRevision:managed.revision,configurationSnapshot:structuredClone(managed.value),templateSnapshot:structuredClone(template),id:randomUUID(),sampleId,sample:structuredClone(sample),specification:spec,templateId:template.id,templateRevision:template.revision,revision:1,results:importedResults,resultSource:resultSource?{spreadsheetId:resultSource.spreadsheetId,url:resultSource.url,sheetId:resultSource.sheetId,sheet:resultSource.sheet,row:resultSource.row,range:resultSource.range,fingerprint:resultSource.fingerprint,observedAt:resultSource.observedAt,ml:resultSource.ml,raw:resultSource.raw,remarks:resultSource.remarks,analyst:resultSource.analyst}:undefined,fields:{...reportFieldDefaults(sample,template),analysisDate,logbook,logbookReference:logbook,analyst:reportAnalyst,mic,micAnalyst:reportAnalyst},updatedAt:now,analyst:actor.email};reportRows(draft,template);
+ if(tests.some((t: any)=>!managed.value.tests.some(x=>x.id===t.test&&x.active&&(x.categories.includes(sample.category) || (['ST', 'SFG'].includes(sample.category) && x.categories.includes('FG'))))))throw new Fault(409,'An applicable checklist test is inactive or unavailable for this sample type. Ask an administrator to review the specification.');const spec={...candidate,tests,revision:hash(tests)};const now=new Date().toISOString();const resultSource=!demo&&config.specifications?await optionalResultsRow(config.specifications,sample.category,sample.ml):undefined;const reportAnalyst=firstText(resultSource?.analyst,sample.fields.analyzedBy,sample.fields.analyst,actor.name);const templateTokens=(template.manifest.tokens as string[]||[]);const templateRequiredFields=(template.manifest.requiredFields as string[]||[]);const needsMic=templateTokens.includes('mic')||templateRequiredFields.includes('mic');const mic=firstText(needsMic&&!demo?await readMicForAnalyst(sample.source.spreadsheetId,reportAnalyst):'',sample.fields.mic);const analysisDate=firstText(sample.fields.analysisDate,sample.fields.dateAnalyze,sample.fields.dateAnalyzed);const importedResults=tests.map(t=>{const item=resultSource?.tests[t.test],raw=String(item?.value??'').trim();return {test:t.test,location:t.location,stage:t.stage,replicate:t.replicate,state:raw?'entered':'not_entered',value:raw,sourceValue:raw||undefined,sourceHeader:String(item?.header??'')||undefined,qualifier:'',unit:t.unit,reason:'',remarks:''} as Result;});const draft:Draft={configurationRevision:managed.revision,configurationSnapshot:structuredClone(managed.value),templateSnapshot:structuredClone(template),id:randomUUID(),sampleId,sample:structuredClone(sample),specification:spec,templateId:template.id,templateRevision:template.revision,revision:1,results:importedResults,resultSource:resultSource?{spreadsheetId:resultSource.spreadsheetId,url:resultSource.url,sheetId:resultSource.sheetId,sheet:resultSource.sheet,row:resultSource.row,range:resultSource.range,fingerprint:resultSource.fingerprint,observedAt:resultSource.observedAt,ml:resultSource.ml,raw:resultSource.raw,remarks:resultSource.remarks,analyst:resultSource.analyst}:undefined,fields:{...reportFieldDefaults(sample,template),analysisDate,analyst:reportAnalyst,mic,micAnalyst:reportAnalyst},updatedAt:now,analyst:actor.email};reportRows(draft,template);
  await db.query('INSERT INTO drafts(id,revision,data) VALUES($1,1,$2)',[draft.id,JSON.stringify(draft)]);await db.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,1,$2)',[draft.id,JSON.stringify(draft)]);await audit(actor.email,'draft_created',draft.id,{sampleId,specificationRevision:spec.revision,templateRevision:template.revision});return draft;
 }
-export async function saveDraft(id:string,expected:number,results:Result[],fields:Record<string,string>,actor:string){return locked('draft:'+id,async(tx)=>{const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!old)throw new Fault(404,'Draft not found');if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');const keys=old.results.map(resultKey);if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');for(const r of results)if(r.state==='not_tested'&&!r.reason.trim())throw new Fault(400,'Not-tested results require a reason');const preservedResults=results.map(r=>{const original=old.results.find(x=>resultKey(x)===resultKey(r));return {...r,sourceValue:original?.sourceValue,sourceHeader:original?.sourceHeader};});const nextFields={...fields};if(nextFields.analyst!==old.fields.analyst){nextFields.mic=!demo?await readMicForAnalyst(old.sample.source.spreadsheetId,old.sample.source.sheet,nextFields.analyst||''):'';nextFields.micAnalyst=nextFields.analyst||'';}const d={...old,results:preservedResults,fields:nextFields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};const templates=(await tx.query('SELECT data FROM templates')).rows.map(row=>row.data as Template);const routed=await routedTemplate(d.sample,d.results,templates);if(routed){d.templateId=routed.id;d.templateRevision=routed.revision;d.templateSnapshot=structuredClone(routed);}await tx.query('BEGIN');try{await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[d.revision,JSON.stringify(d),id]);await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[id,d.revision,JSON.stringify(d)]);await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision,templateId:d.templateId,templateRevision:d.templateRevision});return d;});}
+export async function saveDraft(id:string,expected:number,results:Result[],fields:Record<string,string>,actor:string){return locked('draft:'+id,async(tx)=>{const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!old)throw new Fault(404,'Draft not found');if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');const keys=old.results.map(resultKey);if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');for(const r of results)if(r.state==='not_tested'&&!r.reason.trim())throw new Fault(400,'Not-tested results require a reason');const preservedResults=results.map(r=>{const original=old.results.find(x=>resultKey(x)===resultKey(r));return {...r,sourceValue:original?.sourceValue,sourceHeader:original?.sourceHeader};});const nextFields={...fields};const oldTemplateTokens=(old.templateSnapshot?.manifest.tokens||[]) as string[];const oldTemplateRequired=(old.templateSnapshot?.manifest.requiredFields||[]) as string[];const micNeeded=oldTemplateTokens.includes('mic')||oldTemplateRequired.includes('mic');const micAnalyst=nextFields.analyst!==old.fields.analyst?(nextFields.analyst||''):(nextFields.analyst||nextFields.micAnalyst||'');if(nextFields.analyst!==old.fields.analyst||(micNeeded&&!nextFields.mic)){nextFields.mic=!demo?await readMicForAnalyst(old.sample.source.spreadsheetId,micAnalyst):'';nextFields.micAnalyst=micAnalyst;}const d={...old,results:preservedResults,fields:nextFields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};const templates=(await tx.query('SELECT data FROM templates')).rows.map(row=>row.data as Template);const routed=await routedTemplate(d.sample,d.results,templates);if(routed){d.templateId=routed.id;d.templateRevision=routed.revision;d.templateSnapshot=structuredClone(routed);}await tx.query('BEGIN');try{await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[d.revision,JSON.stringify(d),id]);await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[id,d.revision,JSON.stringify(d)]);await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision,templateId:d.templateId,templateRevision:d.templateRevision});return d;});}
 function firstText(...values:unknown[]){return values.map(value=>String(value??'').trim()).find(Boolean)||'';}
 function formatReportDate(value:unknown,includeTime=false){
  const text=firstText(value);if(!text)return '';
@@ -340,7 +396,8 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
  const sourceFields=d.sample.fields||{};
  const manual=d.fields||{};
  const page=firstText(manual.page,manual.pageNumber,sourceFields.pageNumber,sourceFields.page).replace(/^p(?:age)?\.?\s*/i,'');
- const logbook=firstText(manual.logbook,manual.logbookReference,sourceFields.logbook,sourceFields.logbookReference,manual.mic&&page?`${manual.mic} p.${page}`:'');
+ const mic=firstText(manual.mic,sourceFields.mic);
+ const logbook=firstText(manual.logbook,manual.logbookReference,sourceFields.logbook,sourceFields.logbookReference,[mic,page?'p.'+page:''].filter(Boolean).join(' '));
  Object.assign(fields,{
   'd.release':releaseDate,
   't.release':releaseTime,
@@ -355,8 +412,8 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
   'exp.date':formatReportDate(firstText(manual['exp.date'],manual.expiryDate,sourceFields.expiryDate)),
   'requested.by':firstText(manual['requested.by'],manual.requestedBy,sourceFields.requestedBy),
   'batch.size':firstText(manual['batch.size'],manual.batchSize,sourceFields.batchSize),
-  'page':firstText(manual.page,manual.pageNumber,sourceFields.pageNumber),
-  'mic':firstText(manual.mic,sourceFields.mic),
+  'page':firstText(manual.page,manual.pageNumber,sourceFields.pageNumber,sourceFields.page),
+  'mic':mic,
   'overall.remarks':firstText(sourceFields.remarks),
   'report.laboratoryName':d.configurationSnapshot?.general.laboratoryName||'',
   'report.department':d.configurationSnapshot?.general.department||'',
@@ -378,8 +435,8 @@ export function reportTemplateFields(d:Draft,t:Template,now=new Date()){
 export async function generate(id:string,revision:number,actor:string){return locked('draft:'+id,async()=>{const d=(await db.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!d)throw new Fault(404,'Draft not found');if(d.revision!==revision)throw new Fault(409,'Save and review the latest draft before generation');const issues=reportIssues(d);if(issues.length)throw new Fault(422,issues.join('; '));const t=d.templateSnapshot||(await db.query('SELECT data FROM templates WHERE id=$1',[d.templateId])).rows[0]?.data as Template;if(!t||t.revision!==d.templateRevision)throw new Fault(409,'Template revision changed; create a new draft with the current registered template');
  if(!demo){const source=d.sample.source;const live=await rangeValues(source.spreadsheetId,source.sheet,source.range);if(hash(Array.from({length:source.raw.length},(_,i)=>live[i]??''))!==source.fingerprint)throw new Fault(409,'Source sample changed; reconcile and create a new draft before generation');if(d.resultSource){const result=await readResultsRow(d.resultSource.url,d.sample.category,d.sample.ml);if(result.fingerprint!==d.resultSource.fingerprint)throw new Fault(409,'The matching Results row changed; create a new draft to capture its current values');}}
  const existing=(await db.query("SELECT data FROM files WHERE data->>'draftId'=$1 AND data->>'resultRevision'=$2 AND data->>'templateRevision'=$3 ORDER BY created_at DESC LIMIT 1",[id,String(revision),d.templateRevision])).rows[0]?.data;if(existing){try{await access(privatePath(existing.path));await access(privatePath(existing.pdf));return existing;}catch{await db.query('DELETE FROM files WHERE id=$1', [existing.id]); console.warn('Regenerating missing file');}}const fileId=randomUUID();await mkdir(privatePath('generated'),{recursive:true});const output=privatePath(`generated/${fileId}.docx`),payloadPath=privatePath(`generated/${fileId}.json`);const fields=reportTemplateFields(d,t);
- const rows=reportRows(d,t).map(({index,...row})=>{for(const [k,v]of Object.entries(row))fields[`result.${index}.${k}`]=v;return row;});
- const missing=((t.manifest.requiredFields||[]) as string[]).filter(k=>!fields[k]?.trim());if(missing.length)throw new Fault(422,'Missing template fields: '+missing.join(', '));await writeFile(payloadPath,JSON.stringify({fields,rows,reportSettings:d.configurationSnapshot?.reports}));const args=['generate','--input',privatePath(t.path),'--payload',payloadPath,'--output',output];await worker(args);const pdf=privatePath(`generated/${fileId}.pdf`);await renderPdf(output,pdf);const file={id:fileId,name:`${d.sample.batch||'Unknown'} - ${d.sample.name||'Unknown'}.docx`.replace(/[<>:"/\\|?*]+/g, '_'),kind:'report',path:`generated/${fileId}.docx`,pdf:`generated/${fileId}.pdf`,createdAt:new Date().toISOString(),sampleId:d.sampleId,ml:d.sample.ml,draftId:id,resultRevision:d.revision,specificationRevision:d.specification.revision,templateRevision:d.templateRevision,sourceSnapshot:d.sample.source,configurationRevision:d.configurationRevision,sha256:createHash('sha256').update(await readFile(output)).digest('hex'),externalReviewRequired:true,demo};await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[fileId,JSON.stringify(file)]);await audit(actor,'report_generated',fileId,{draftId:id,revision});return file;});}
+ const rows=reportRows(d,t).map(({index,...row})=>{for(const [k,v]of Object.entries(row))fields[`result.${index}.${k}`]=String(v??'');return row;});
+ const missing=((t.manifest.requiredFields||[]) as string[]).filter(k=>!fields[k]?.trim());if(missing.length)throw new Fault(422,'Missing template fields: '+missing.join(', '));await writeFile(payloadPath,JSON.stringify({fields,rows,renderOptions:{rowGrouping:(t.manifest as any).rowGrouping},reportSettings:d.configurationSnapshot?.reports}));const args=['generate','--input',privatePath(t.path),'--payload',payloadPath,'--output',output];await worker(args);const pdf=privatePath(`generated/${fileId}.pdf`);await renderPdf(output,pdf);const file={id:fileId,name:`${d.sample.batch||'Unknown'} - ${d.sample.name||'Unknown'}.docx`.replace(/[<>:"/\\|?*]+/g, '_'),kind:'report',path:`generated/${fileId}.docx`,pdf:`generated/${fileId}.pdf`,createdAt:new Date().toISOString(),sampleId:d.sampleId,ml:d.sample.ml,draftId:id,resultRevision:d.revision,specificationRevision:d.specification.revision,templateRevision:d.templateRevision,sourceSnapshot:d.sample.source,configurationRevision:d.configurationRevision,sha256:createHash('sha256').update(await readFile(output)).digest('hex'),externalReviewRequired:true,demo};await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[fileId,JSON.stringify(file)]);await audit(actor,'report_generated',fileId,{draftId:id,revision});return file;});}
 
 
   export async function deleteDraft(id:string,actor:string){return locked('draft:'+id,async(tx)=>{const d=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as any;if(!d)throw new Fault(404,'Draft not found');await tx.query('DELETE FROM draft_revisions WHERE id=$1',[id]);await tx.query('DELETE FROM drafts WHERE id=$1',[id]);const files=(await tx.query("SELECT id, data FROM files WHERE data->>'draftId'=$1",[id])).rows;for(const f of files){await tx.query('DELETE FROM files WHERE id=$1',[f.id]);try{await unlink(privatePath(f.data.path));await unlink(privatePath(f.data.pdf));}catch(e){}}await audit(actor,'draft_deleted',id,{ml:d.sample?.ml});});}

@@ -281,6 +281,44 @@ input[type="checkbox"] {
   gap: var(--space-4);
 }
 
+.template-route {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.template-route summary {
+  width: fit-content;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.template-route[open] summary { margin-bottom: var(--space-3); }
+.template-route .form-grid { align-items: end; }
+.template-route .muted { font-size: 12px; margin: 0 0 var(--space-3); }
+.template-route-entry { margin-top: var(--space-3); }
+
+.file-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.file-row:last-child { border-bottom: 0; }
+.file-row > svg { flex: 0 0 auto; color: var(--text-secondary); margin-top: 2px; }
+.file-row > div { flex: 1 1 auto; min-width: 0; }
+.file-row > div > strong { display: block; overflow-wrap: anywhere; }
+.file-row > div > small { display: block; margin-top: 3px; color: var(--text-tertiary); }
+
+@media (max-width: 640px) {
+  .file-row { flex-wrap: wrap; }
+  .file-row > div { flex-basis: calc(100% - 36px); }
+  .file-row > .badge { margin-left: 36px; }
+}
+
 /* Badges */
 .badge {
   display: inline-flex;

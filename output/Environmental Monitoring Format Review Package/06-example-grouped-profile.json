@@ -1,0 +1,45 @@
+{
+  "profileId": "REVIEW-ONLY-MAMAS-LOVE-SPCMY-COMPOUNDING",
+  "status": "draft-review",
+  "formatId": "EM-5C-GROUPED",
+  "selector": {
+    "product": "Mama's Love Baby Oil",
+    "method": "SPC/MY",
+    "processArea": "Compounding"
+  },
+  "samplingPlan": [
+    {
+      "groupKey": "spc",
+      "analysisDesired": "Standard Plate Count (SPC)",
+      "criterion": "[owner-confirmed criterion]",
+      "rows": [
+        {
+          "rowKey": "spc-location-001",
+          "location": "[owner-confirmed location]"
+        },
+        {
+          "rowKey": "spc-location-002",
+          "location": "[owner-confirmed location]"
+        }
+      ]
+    },
+    {
+      "groupKey": "my",
+      "analysisDesired": "Molds and Yeast",
+      "criterion": "[owner-confirmed criterion]",
+      "rows": [
+        {
+          "rowKey": "my-location-001",
+          "location": "[owner-confirmed location]"
+        },
+        {
+          "rowKey": "my-location-002",
+          "location": "[owner-confirmed location]"
+        }
+      ]
+    }
+  ],
+  "resultEntryPolicy": "manual-attributable-entry; no historical result prefill",
+  "approvalReference": "[controlled sampling plan ID/revision required]",
+  "revision": "draft-1"
+}

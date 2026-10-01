@@ -1,0 +1,138 @@
+{
+  "status": "draft-review; proposed renderer contract, not supported by the current renderer",
+  "routingRule": "Every active product+method+process-area selector must resolve to exactly one profile and one format revision.",
+  "formats": [
+    {
+      "formatId": "EM-5C-GROUPED",
+      "archiveTopology": [
+        "Analysis Desired",
+        "Area",
+        "Standard Specifications",
+        "Results",
+        "Remarks"
+      ],
+      "repeatModel": "groups[] -> rows[]",
+      "cellRoles": {
+        "Analysis Desired": "group.label; merge vertically for the group's rows",
+        "Area": "row.location",
+        "Standard Specifications": "group.criterion; merge vertically for the group's rows",
+        "Results": "row.result",
+        "Remarks": "row.remarks"
+      },
+      "proposedRowTokens": [
+        "{{#groups}}",
+        "{{group.label}}",
+        "{{group.criterion}}",
+        "{{#rows}}",
+        "{{row.location}}",
+        "{{row.result}}",
+        "{{row.remarks}}",
+        "{{/rows}}",
+        "{{/groups}}"
+      ],
+      "evidence": "3,603 populated standard tables plus 13 sparse documents sharing the header topology; Accupoint/SPC-MY are profile differences when the table shape matches."
+    },
+    {
+      "formatId": "EM-GIP-4C",
+      "archiveTopology": [
+        "Analysis Desired",
+        "Standard Specifications",
+        "Results",
+        "Remarks"
+      ],
+      "repeatModel": "groups[] -> rows[]; source has merged group cells",
+      "cellRoles": {
+        "Analysis Desired": "group.label and row.location according to approved master",
+        "Standard Specifications": "group.criterion",
+        "Results": "row.result",
+        "Remarks": "row.remarks"
+      },
+      "proposedRowTokens": [
+        "{{#groups}}",
+        "{{group.label}}",
+        "{{group.criterion}}",
+        "{{#rows}}",
+        "{{row.location}}",
+        "{{row.result}}",
+        "{{row.remarks}}",
+        "{{/rows}}",
+        "{{/groups}}"
+      ],
+      "evidence": "Two Herbycin Syrup GIP archive reports; identify an approved blank master before use."
+    },
+    {
+      "formatId": "EM-WATER-4C",
+      "archiveTopology": [
+        "Analysis Desired",
+        "Standard Specifications",
+        "Results",
+        "Remarks"
+      ],
+      "repeatModel": "tests[] -> one result row per applicable test/stage",
+      "cellRoles": {
+        "Analysis Desired": "test.label",
+        "Standard Specifications": "test.criterion",
+        "Results": "test.result",
+        "Remarks": "test.remarks"
+      },
+      "proposedRowTokens": [
+        "{{#tests}}",
+        "{{test.label}}",
+        "{{test.criterion}}",
+        "{{test.result}}",
+        "{{test.remarks}}",
+        "{{/tests}}"
+      ],
+      "evidence": "Three Water Treatment Validation archive reports (Source, T3 SP, T4 SP); stage selection must be explicitly confirmed."
+    },
+    {
+      "formatId": "EM-WH-PHASE-7C",
+      "archiveTopology": [
+        "Analysis Desired",
+        "Phase",
+        "Area",
+        "Standard Specifications",
+        "Active Air",
+        "Passive Air",
+        "Remarks"
+      ],
+      "repeatModel": "groups[] -> phases[]/locations[]; two-level merged Results header",
+      "cellRoles": {
+        "Analysis Desired": "group.label",
+        "Phase": "row.phase",
+        "Area": "row.location",
+        "Standard Specifications": "group.criterion",
+        "Active Air": "row.activeAirResult",
+        "Passive Air": "row.passiveAirResult",
+        "Remarks": "row.remarks"
+      },
+      "proposedRowTokens": [
+        "{{#groups}}",
+        "{{group.label}}",
+        "{{group.criterion}}",
+        "{{#rows}}",
+        "{{row.phase}}",
+        "{{row.location}}",
+        "{{row.activeAirResult}}",
+        "{{row.passiveAirResult}}",
+        "{{row.remarks}}",
+        "{{/rows}}",
+        "{{/groups}}"
+      ],
+      "evidence": "Three Warehouse 4 qualification reports; dedicated table adapter and approved blank master required."
+    }
+  ],
+  "fieldProvenance": {
+    "sample identifiers and logbook metadata": "selected source logbook row, after owner confirms field mapping",
+    "locations and phases": "current controlled product sampling plan",
+    "criteria": "current approved specification",
+    "actual results and remarks": "manual attributable entry only",
+    "signatures and release": "blank/manual controlled workflow; never copied from archive"
+  },
+  "notImplemented": [
+    "nested repeat blocks",
+    "vertical merge creation from group row counts",
+    "profile routing in app",
+    "unique seven-column multi-level result header adapter"
+  ]
+}

@@ -166,9 +166,42 @@ def replace_tokens(paragraph,values):
             node.text=left+(replacement if not assigned else '')+right
             node.set('{http://www.w3.org/XML/1998/namespace}space','preserve');assigned=True
 
+def set_vertical_merge(cell, mode):
+    props=cell.find(W+'tcPr')
+    if props is None:
+        props=E.Element(W+'tcPr');cell.insert(0,props)
+    merge=props.find(W+'vMerge')
+    if merge is None:
+        merge=E.SubElement(props,W+'vMerge')
+    merge.set(W+'val',mode)
+    if mode=='continue':
+        for paragraph in cell.findall(W+'p'):
+            for child in list(paragraph):
+                if child.tag!=W+'pPr':paragraph.remove(child)
+
+def merge_result_groups(rows, rendered_rows, merge_columns):
+    """Merge configured cells for contiguous result rows with the same groupKey."""
+    if not rendered_rows:return
+    keys=[str(row.get('groupKey') or '') for row in rendered_rows]
+    if any(not key for key in keys):raise ValueError('Grouped report rows need a groupKey')
+    seen=set();start=0
+    for i in range(1,len(keys)+1):
+        if i<len(keys) and keys[i]==keys[start]:continue
+        key=keys[start]
+        if key in seen:raise ValueError('Rows for each report group must be contiguous')
+        seen.add(key)
+        if i-start>1:
+            for column in merge_columns:
+                for row_index in range(start,i):
+                    cells=rows[row_index].findall(W+'tc')
+                    if column<0 or column>=len(cells):raise ValueError('A configured merge column is outside the repeated table row')
+                    set_vertical_merge(cells[column],'restart' if row_index==start else 'continue')
+        start=i
+
 def render(template,payload,output,soffice=None):
     parts=package(Path(template).read_bytes()); docs=roots(parts)
     fields=payload['fields']; observations=payload['rows']
+    row_grouping=payload.get('renderOptions',{}).get('rowGrouping')
     report=payload.get('reportSettings')
     if report:set_noted_by(docs,report['notedBy'],report['notedByRole'])
     repeats=0
@@ -176,10 +209,14 @@ def render(template,payload,output,soffice=None):
         for row in list(root.xpath('.//w:tr',namespaces=NS)):
             if '{{tests}}' not in text(row):continue
             parent=row.getparent();index=parent.index(row);parent.remove(row);repeats+=1
+            clones=[]
             for i,result in enumerate(observations):
                 clone=copy.deepcopy(row)
                 for p in clone.xpath('.//w:p',namespaces=NS):replace_tokens(p,{**fields,**result,'tests':''})
                 parent.insert(index+i,clone)
+                clones.append(clone)
+            if row_grouping:
+                merge_result_groups(clones,observations,row_grouping.get('mergeColumns',[]))
         for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,fields)
         if '{{' in text(root):raise ValueError('Unresolved template tokens remain')
     if repeats>1:raise ValueError('Only one repeating test block is supported per template; use explicit result tokens for complex layouts')
