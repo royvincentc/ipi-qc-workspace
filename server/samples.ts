@@ -1,10 +1,12 @@
 ﻿import {getConfiguration,saveConfiguration,sourceTypes} from './configuration.js';
 import {type SampleType,formatNumber,validateIntake} from '../shared/configuration.js';
 import {randomUUID} from 'node:crypto';
-import {db,locked,setting,setSetting,audit,demo} from './db.js';
+import {db,locked,setting,setSetting,audit,demo,tryLocked} from './db.js';
 import {readWorkbook,rangeValues,writeRange,readApplicability} from './google.js';
 import {allocate,Fault,hash,mappings,validateLayout,sectionRows,column,type Sheet} from './domain.js';
 import {categories,type Category,type Sample,type Source} from '../shared/model.js';
+let lastApplicabilityFingerprint:string|undefined;
+let syncInFlight:Promise<any>|undefined;
 export interface Connections {incoming:string;environmental:string;specifications:string;folders:string[];timezone:string;reservationsReconciled:boolean;manualIntakeCoordinated:boolean;writesEnabled:boolean}
 export const defaultConnections:Connections={incoming:'',environmental:'',specifications:'https://docs.google.com/spreadsheets/d/1MuV-oZd_6EO89usUdeqhgozrzsR15zDIFWxT8rRLjxs/edit',folders:[],timezone:'Asia/Manila',reservationsReconciled:false,manualIntakeCoordinated:false,writesEnabled:false};
 export const fallbackSpecifications='https://docs.google.com/spreadsheets/d/1JsvC5LIjxu1Hf5Yh7f1bi2XLqfxKTfSAM1taBQlMgr0/edit';
@@ -45,7 +47,8 @@ async function autoCreateProducts(actor:string){
   return 0;
  }
 }
-export async function syncSources(actor:string){if(demo)return {count:0,message:'De-identified demo; live synchronization is disabled'};const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;
+export async function syncSources(actor:string){if(demo)return {count:0,message:'De-identified demo; live synchronization is disabled'};if(syncInFlight)return syncInFlight;const running=tryLocked('source-sync',()=>syncSourcesOnce(actor)).then(result=>{if(result)return result;if(actor==='system')return {count:0,skipped:true,message:'Source synchronization is already running on another instance'};return {count:0,skipped:true,message:'Source synchronization is already running. Try again shortly.'};});syncInFlight=running;try{return await running;}finally{if(syncInFlight===running)syncInFlight=undefined;}}
+async function syncSourcesOnce(actor:string){const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;
  for(const [url,cs] of [[config.incoming,sourceCatalog.filter(t=>t.register==='incoming').map(t=>t.id)],[config.environmental,sourceCatalog.filter(t=>t.register==='environmental').map(t=>t.id)]] as [string,Category[]][]){if(!url)continue;const book=await readWorkbook(url);await locked(book.id,async()=>{const records:Sample[]=[];for(const sheet of book.sheets)for(const c of cs){const type=managed.value.sampleTypes.find(t=>t.id===c)!;validateLayout(sheet,c,type);for(const r of sectionRows(sheet,c,type))if(r.occupied&&!r.reserved&&r.ml.trim())records.push(sourceSample(book.id,sheet,c,r.row,r.values,type,managed.revision));}
   // Validate identity for the entire import before persisting any changed rows.
   const existing = (await db.query('SELECT id, data->>\'ml\' as ml, data->\'source\'->>\'sheet\' as sheet, data->\'source\'->>\'sheetId\' as sheet_id, data->>\'category\' as category, data->\'source\'->>\'row\' as row, data->\'source\'->>\'fingerprint\' as fingerprint, data->>\'configurationRevision\' as rev FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1', [book.id])).rows.filter(r => r.ml?.trim());
@@ -58,10 +61,10 @@ export async function syncSources(actor:string){if(demo)return {count:0,message:
       count++;
     }
  });}
- if(config.specifications)await setSetting('applicability',await readApplicability(config.specifications));
+ if(config.specifications){const applicability=await readApplicability(config.specifications);const fingerprint=hash({url:config.specifications,applicability});if(fingerprint!==lastApplicabilityFingerprint){await setSetting('applicability',applicability);lastApplicabilityFingerprint=fingerprint;}}
  // Auto-create managed products for any sample names without a matching product entry
- const added=await autoCreateProducts(actor);
- await setSetting('sync',{lastSuccess:new Date().toISOString(),count,error:null});await audit(actor,'synchronize','sources',{count,productsAutoCreated:added});return {count,productsAutoCreated:added};
+ const added=count?await autoCreateProducts(actor):0;
+ await setSetting('sync',{lastSuccess:new Date().toISOString(),count,error:null});if(actor!=='system'||count||added)await audit(actor,'synchronize','sources',{count,productsAutoCreated:added});return {count,productsAutoCreated:added};
 }
 export async function submitSample(actor:string,input:{submissionId:string;category:Category;fields:Record<string,string>}){const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===input.category);if(!type?.active)throw new Fault(400,'Choose an active sample type');const issues=validateIntake(type,input.fields,managed.value);if(issues.length)throw new Fault(400,issues.join('; '));if(demo)return submitDemo(actor,input,type,managed.revision,managed.value.general.timezone);const config=await setting('connections',defaultConnections);if(!config.writesEnabled||!config.reservationsReconciled||!config.manualIntakeCoordinated)throw new Fault(409,'An administrator must validate connections, reconcile reservations and coordinate manual intake before enabling writes');const url=type.register==='environmental'?config.environmental:config.incoming;if(!url)throw new Fault(409,'Configure the logbook connection first');const payloadHash=hash(input);const book=await readWorkbook(url);
  return locked(book.id,async()=>{const old=(await db.query('SELECT * FROM submissions WHERE id=$1',[input.submissionId])).rows[0];if(old){if(old.payload_hash!==payloadHash)throw new Fault(409,'Submission ID was already used with different values');if(old.state==='complete')return old.data.sample;throw new Fault(409,'This submission requires reconciliation; it will not be sent again automatically');}
