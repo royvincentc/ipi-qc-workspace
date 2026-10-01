@@ -54,6 +54,10 @@ export async function locked<T>(key:string,fn:(tx:DB)=>Promise<T>):Promise<T>{
  if(embedded){const before=demoLock;let release!:()=>void;demoLock=new Promise(r=>release=r);await before;try{return await fn(db);}finally{release();}}
  const client=await pool!.connect();try{await client.query('SELECT pg_advisory_lock(hashtext($1))',[key]);return await fn(client);}finally{await client.query('SELECT pg_advisory_unlock(hashtext($1))',[key]);client.release();}
 }
+export async function tryLocked<T>(key:string,fn:()=>Promise<T>):Promise<T|undefined>{
+ if(embedded){const before=demoLock;let release!:()=>void;demoLock=new Promise(r=>release=r);await before;try{return await fn();}finally{release();}}
+ const client=await pool!.connect();try{const acquired=(await client.query('SELECT pg_try_advisory_lock(hashtext($1)) AS acquired',[key])).rows[0]?.acquired;if(!acquired)return undefined;try{return await fn();}finally{await client.query('SELECT pg_advisory_unlock(hashtext($1))',[key]);}}finally{client.release();}
+}
 export async function migrate(){const sql=await readFile(new URL('./schema.sql',import.meta.url),'utf8');if(embedded)await embedded.exec(sql);else await pool!.query(sql);}
 export async function setting<T>(key:string,fallback:T):Promise<T>{return (await db.query('SELECT value FROM settings WHERE key=$1',[key])).rows[0]?.value??fallback;}
 export async function setSetting(key:string,value:unknown){await db.query('INSERT INTO settings(key,value) VALUES($1,$2) ON CONFLICT(key) DO UPDATE SET value=$2',[key,JSON.stringify(value)]);}

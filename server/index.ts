@@ -67,15 +67,24 @@ if (Number((await db.query('SELECT count(*) FROM templates')).rows[0].count) ===
   }
 await getConfiguration();await migrateConfigurationColumns();
 export const app=express();app.disable('x-powered-by');app.use(helmet({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'",'data:'],frameSrc:["'self'"],objectSrc:["'none'"]},},crossOriginEmbedderPolicy:false}));app.use(express.json({limit:'18mb'}));app.use(cookieParser());app.use('/api',sameOrigin);
-app.get('/api/health',(_req,res)=>res.json({ok:true,demo}));app.get('/api/auth/login',beginAuth);app.get('/api/auth/callback',finishAuth);app.use('/api',authenticate);
+app.get('/api/health',(_req,res)=>res.json({ok:true,demo}));app.get('/api/build',(_req,res)=>res.json({id:deploymentBuildId||null}));app.get('/api/auth/login',beginAuth);app.get('/api/auth/callback',finishAuth);app.use('/api',authenticate);
 app.get('/api/configuration',async(_req,res)=>res.json(await getConfiguration()));
 app.put('/api/configuration',requireRole('administrator'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),value:z.unknown()}).parse(req.body);res.json(await saveConfiguration(b.value,b.revision,req.user.email));});
 app.get('/api/me',(req,res)=>res.json({user:req.user,demo}));app.post('/api/auth/logout',signOut);
-app.get('/api/build',(_req,res)=>res.json({id:deploymentBuildId||null}));
 registerSearch(app);
 app.use('/api/ai', aiRouter);
 app.get('/api/overview',async(_req,res)=>{const samples=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>r.data);const drafts=(await db.query('SELECT data FROM drafts ORDER BY data->>\'updatedAt\' DESC LIMIT 5')).rows.map(r=>r.data);res.json({samples,drafts,count:Number((await db.query('SELECT count(*) FROM samples')).rows[0].count),draftCount:Number((await db.query('SELECT count(*) FROM drafts')).rows[0].count),sync:await setting('sync',{lastSuccess:null,error:null}),connections:await setting('connections',defaultConnections)});});
-app.get('/api/samples',async(req,res)=>{const q=String(req.query.q||'').toLowerCase(),category=String(req.query.category||''),status=String(req.query.status||''),from=String(req.query.from||''),to=String(req.query.to||'');const all=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC')).rows.map(x=>x.data as Sample);const counts=new Map<string,number>();all.forEach(s=>counts.set(s.ml,(counts.get(s.ml)||0)+1));res.json(all.filter(s=>(!q||[s.ml,s.name,s.batch,s.received].join(' ').toLowerCase().includes(q))&&(!category||s.category===category)&&(!status||s.status===status)&&(!from||s.received.slice(0,10)>=from)&&(!to||s.received.slice(0,10)<=to)).map(s=>({...s,duplicate:(counts.get(s.ml)||0)>1})));});
+app.get('/api/samples',async(req,res)=>{
+ const q=String(req.query.q||'').trim().toLowerCase(),category=String(req.query.category||''),status=String(req.query.status||''),from=String(req.query.from||''),to=String(req.query.to||'');
+ const receivedDay="CASE WHEN data->>'received' ~ '^\\d{4}-\\d{2}-\\d{2}' THEN substring(data->>'received',1,10) WHEN data->>'received' ~ '^\\d{2}/\\d{2}/\\d{4}' THEN substring(data->>'received',7,4)||'-'||substring(data->>'received',1,2)||'-'||substring(data->>'received',4,2) ELSE NULL END";
+ const args:any[]=[];const where:string[]=[];const param=(value:unknown)=>{args.push(value);return '$'+args.length;};
+ if(q)where.push(`concat_ws(' ',data->>'ml',data->>'name',data->>'batch',data->>'received') ILIKE ${param('%'+q.replace(/[\\%_]/g,'\\$&')+'%')}`);
+ if(category)where.push(`data->>'category'=${param(category)}`);if(status)where.push(`data->>'status'=${param(status)}`);
+ if(from)where.push(`${receivedDay}>=${param(from)}`);if(to)where.push(`${receivedDay}<=${param(to)}`);
+ const filter=where.length?'WHERE '+where.join(' AND '):'';
+ const rows=(await db.query(`SELECT data,(SELECT count(*) FROM samples other WHERE other.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples ${filter} ORDER BY updated_at DESC`,args)).rows;
+ res.json(rows.map(({data,duplicates})=>({...data,duplicate:Number(duplicates)>1})));
+});
 app.get('/api/samples/:id',async(req,res)=>{const data=(await db.query('SELECT data FROM samples WHERE id=$1',[req.params.id])).rows[0]?.data;if(!data)throw new Fault(404,'Sample not found');res.json({sample:data,history:(await db.query('SELECT data,created_at FROM source_history WHERE sample_id=$1 ORDER BY created_at DESC',[req.params.id])).rows,drafts:(await db.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','updatedAt',data->'updatedAt') AS data FROM drafts WHERE data->>'sampleId'=$1",[req.params.id])).rows.map(r=>r.data)});});
 const categorySchema=z.string().min(1).max(50);
 app.post('/api/samples',requireRole('administrator','analyst'),async(req,res)=>{const input=z.object({submissionId:z.string().uuid(),category:categorySchema,fields:z.record(z.string().max(1000))}).parse(req.body);const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===input.category);if(!type)throw new Fault(400,'Choose a configured sample type');const issues=validateIntake(type,input.fields,managed.value);if(issues.length)throw new Fault(400,issues.join('; '));res.status(201).json(await submitSample(req.user.email,input));});
@@ -87,7 +96,17 @@ app.put('/api/settings',requireRole('administrator'),async(req,res)=>{const c=co
 app.post('/api/settings/test',requireRole('administrator'),async(req,res)=>{const {kind,url}=z.object({kind:z.enum(['incoming','environmental','specifications']),url:z.string()}).parse(req.body);const managed=await getConfiguration();let details:any;if(kind==='specifications'){const rows=await readApplicability(url);details={rows:rows.length};}else{const book=await readWorkbook(url);const catalog=await sourceTypes();for(const s of book.sheets)for(const t of catalog.filter(t=>t.register===kind))validateLayout(s,t.id,t);details={title:book.title,tabs:book.sheets.map(s=>s.name)};}const tests=await setting<any>('connectionTests',{});tests[kind]={url,time:new Date().toISOString(),fingerprint:connectionFingerprint(managed.value,kind),configurationRevision:managed.revision,details};await setSetting('connectionTests',tests);await audit(req.user.email,'connection_tested',kind,{...details,configurationRevision:managed.revision});res.json(details);});
 app.post('/api/settings/users',requireRole('administrator'),async(req,res)=>{const u=z.object({email:z.string().email(),name:z.string().min(1),role:z.enum(['administrator','analyst','viewer']),active:z.boolean()}).parse(req.body);const email=u.email.toLowerCase();if(email===req.user.email.toLowerCase()&&(u.role!=='administrator'||!u.active))throw new Fault(400,'You cannot remove your own administrator access');const current=(await db.query('SELECT role,active FROM users WHERE email=$1',[email])).rows[0];if(current?.role==='administrator'&&current.active&&(u.role!=='administrator'||!u.active)){const count=Number((await db.query("SELECT count(*) FROM users WHERE role='administrator' AND active=true AND email<>$1",[email])).rows[0].count);if(count===0)throw new Fault(400,'At least one active administrator is required.');}await db.query('INSERT INTO users(email,name,role,active) VALUES($1,$2,$3,$4) ON CONFLICT(email) DO UPDATE SET name=$2,role=$3,active=$4',[email,u.name,u.role,u.active]);await audit(req.user.email,'user_updated',email,{role:u.role,active:u.active});res.json({ok:true});});
 app.post('/api/submissions/:id/reconcile',requireRole('administrator'),async(req,res)=>res.json(await reconcileSubmission(String(req.params.id),req.user.email)));
-app.get('/api/references',async(_req,res)=>res.json({specifications:(await db.query('SELECT data FROM specifications')).rows.map(r=>r.data),templates:(await db.query('SELECT data FROM templates')).rows.map(r=>{const {path,...safe}=r.data;return safe;}),documents:(await db.query('SELECT data FROM files')).rows.map(r=>r.data).filter(f=>['reference','template-candidate'].includes(f.kind)).map(({path,evidence,...safe})=>({...safe,evidenceSummary:evidence?{family:evidence.family,candidateCriteria:evidence.candidateCriteria?.length}:undefined}))}));
+app.get('/api/references',async(_req,res)=>{
+ const specifications=_req.query.scope==='templates'?[]:(await db.query('SELECT data FROM specifications')).rows.map(r=>r.data);
+ const templates=(await db.query("SELECT data-'path' AS data FROM templates")).rows.map(r=>r.data);
+ const documents=(await db.query(`SELECT (data-'path'-'evidence') || CASE
+   WHEN data->'evidence' IS NULL OR data->'evidence'='null'::jsonb THEN '{}'::jsonb
+   ELSE jsonb_build_object('evidenceSummary',jsonb_strip_nulls(jsonb_build_object(
+     'family',data->'evidence'->'family',
+     'candidateCriteria',CASE WHEN jsonb_typeof(data->'evidence'->'candidateCriteria')='array' THEN jsonb_array_length(data->'evidence'->'candidateCriteria') END
+   ))) END AS data FROM files WHERE data->>'kind' IN ('reference','template-candidate')`)).rows.map(r=>r.data);
+ res.json({specifications,templates,documents});
+});
 
   app.delete('/api/drafts/:id', requireRole('administrator'), async (req, res) => {
     await deleteDraft(req.params.id as string, req.user.email);
@@ -104,7 +123,7 @@ const resultSchema=z.object({test:z.string(),location:z.string().optional(),stag
 app.put('/api/drafts/:id',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),results:z.array(resultSchema).max(200),fields:z.record(z.string().max(2000))}).parse(req.body);res.json(await saveDraft(String(req.params.id),b.revision,b.results,b.fields,req.user.email));});
 app.get('/api/drafts/:id/history',async(req,res)=>res.json((await db.query('SELECT revision,data FROM draft_revisions WHERE id=$1 ORDER BY revision DESC',[req.params.id])).rows));
 app.post('/api/drafts/:id/generate',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive()}).parse(req.body);const f=await generate(String(req.params.id),b.revision,req.user.email);const {path,pdf,...safe}=f;res.json({...safe,hasPreview:!!pdf});});
-app.get('/api/files',async(req,res)=>{const q=String(req.query.q||'').toLowerCase();const list=(await db.query('SELECT data FROM files')).rows.map(r=>r.data).filter(f=>!q||[f.name,f.ml,f.kind].join(' ').toLowerCase().includes(q));list.sort((a,b)=>String(a.ml||a.name).localeCompare(String(b.ml||b.name),undefined,{numeric:true}));res.json(list.map(({path,pdf,...f})=>({...f,hasPreview:!!pdf})));});
+app.get('/api/files',async(req,res)=>{const q=String(req.query.q||'').trim();const where=q?"WHERE concat_ws(' ',data->>'name',data->>'ml',data->>'kind') ILIKE $1":'';const args=q?[`%${q.replace(/[\\%_]/g,'\\$&')}%`]:[];const list=(await db.query(`SELECT (data-'path'-'pdf') || jsonb_build_object('hasPreview',COALESCE(jsonb_typeof(data->'pdf')='string',false)) AS data FROM files ${where}`,args)).rows.map(r=>r.data);list.sort((a,b)=>String(a.ml||a.name).localeCompare(String(b.ml||b.name),undefined,{numeric:true}));res.json(list);});
 app.get('/api/files/:id/:action',async(req,res)=>{const file=(await db.query('SELECT data FROM files WHERE id=$1',[req.params.id])).rows[0]?.data;if(!file)throw new Fault(404,'File not found');const preview=req.params.action==='preview',pdfDownload=req.params.action==='download-pdf';if(!preview&&!pdfDownload&&req.params.action!=='download')throw new Fault(404,'Unknown file action');if((preview||pdfDownload)&&!file.pdf)throw new Fault(409,'PDF file is unavailable');await audit(req.user.email,preview?'file_preview':pdfDownload?'pdf_download':'file_download',file.id);res.setHeader('Cache-Control','private, no-store');if(file.driveId){const config=await setting('connections',defaultConnections);const meta=await google<any>(`https://www.googleapis.com/drive/v3/files/${file.driveId}?fields=id,name,parents,capabilities(canDownload),mimeType`);if(!(meta.parents||[]).some((p:string)=>config.folders.some(f=>googleId(f,'folder')===p))||!meta.capabilities?.canDownload)throw new Fault(403,'File access is no longer authorized');throw new Fault(409,'Open this source in Google Drive to preview or download with its native permissions');}if(preview)res.type('pdf').sendFile(privatePath(file.pdf));else if(pdfDownload)res.download(privatePath(file.pdf),String(file.name).replace(/\.docx$/i,'.pdf'));else res.download(privatePath(file.path),file.name);});
 app.post('/api/library/sync',requireRole('administrator'),async(req,res)=>{const c=await setting('connections',defaultConnections);let count=0;for(const f of c.folders){let token='';do{const params=new URLSearchParams({q:`'${googleId(f,'folder')}' in parents and trashed = false`,fields:'nextPageToken,files(id,name,mimeType,modifiedTime,webViewLink,capabilities(canDownload))',pageSize:'100',...(token?{pageToken:token}:{})});const page=await google<any>(`https://www.googleapis.com/drive/v3/files?${params}`);for(const item of page.files){const data={id:`drive-${item.id}`,driveId:item.id,name:item.name,kind:'library',sourceUrl:item.webViewLink,modifiedAt:item.modifiedTime,mimeType:item.mimeType,canDownload:item.capabilities?.canDownload};await db.query('INSERT INTO files(id,data) VALUES($1,$2) ON CONFLICT(id) DO UPDATE SET data=$2',[data.id,JSON.stringify(data)]);count++;}token=page.nextPageToken||'';}while(token);}await audit(req.user.email,'library_synchronized','library',{count});res.json({count});});
 app.post('/api/references/inspect',requireRole('administrator'),async(req,res)=>{const b=z.object({name:z.string().max(200),base64:z.string().max(16_000_000)}).parse(req.body);if(!b.name.toLowerCase().endsWith('.docx'))throw new Fault(400,'Upload one DOCX at a time');const id=randomUUID();await mkdir(privatePath('references'),{recursive:true});const file=`references/${id}.docx`;await writeFile(privatePath(file),Buffer.from(b.base64,'base64'));const evidence=await worker(['inventory','--input',privatePath(file)]);await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[id,JSON.stringify({id,path:file,name:b.name,kind:'reference',evidence,createdAt:new Date().toISOString()})]);await audit(req.user.email,'reference_inspected',id);res.json({id,evidence});});
@@ -165,13 +184,12 @@ import { REPORT_FORMATS } from './report-formats.b64.js';
 setTimeout(async () => {
   try {
     const customP = 'templates/custom-template.docx';
-    await writeFile(privatePath(customP), Buffer.from(CUSTOM_TEMPLATE_B64, 'base64'));
-    await db.query("DELETE FROM templates WHERE data->>'name' = 'IPI Standardized Micro Layout'");
-    const v2 = await worker(['validate', '--input', privatePath(customP)]);
     const current = (await db.query("SELECT id,data FROM templates WHERE data->>'name' = 'Roy Custom Template' LIMIT 1")).rows[0];
+    if (current) return;
+    await writeFile(privatePath(customP), Buffer.from(CUSTOM_TEMPLATE_B64, 'base64'));
+    const v2 = await worker(['validate', '--input', privatePath(customP)]);
     const t2 = {
-      ...current?.data,
-      id: current?.id || randomUUID(),
+      id: randomUUID(),
       name: 'Roy Custom Template',
       family: 'standard',
       category: 'Routine',
@@ -180,57 +198,42 @@ setTimeout(async () => {
       verified: true,
       manifest: { ...v2, requiredFields: [] }
     };
-    if (current) {
-      await db.query('UPDATE templates SET data=$1 WHERE id=$2', [JSON.stringify(t2), t2.id]);
-      console.log('Updated Roy Custom Template.');
-    } else {
-      await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [t2.id, JSON.stringify(t2)]);
-      console.log('Seeded Roy Custom Template!');
-    }
+    await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [t2.id, JSON.stringify(t2)]);
+    console.log('Seeded Roy Custom Template.');
   } catch(e) { console.error('Failed seeding custom', e); }
 }, 2000);
 
 setTimeout(async () => {
   try {
     await mkdir(privatePath('templates/report-formats'), { recursive: true });
+    const bundledNames = REPORT_FORMATS.map(format => format.name);
+    const existingRows = (await db.query("SELECT data->>'name' AS name FROM templates WHERE data->>'name'=ANY($1::text[])", [bundledNames])).rows;
+    const existingNames = new Set(existingRows.map(row => row.name));
     for (const format of REPORT_FORMATS) {
+      if (existingNames.has(format.name)) continue;
       const slug = format.name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
       const filePath = `templates/report-formats/${slug}.docx`;
       await writeFile(privatePath(filePath), Buffer.from(format.base64, 'base64'));
       const manifest = await worker(['validate', '--input', privatePath(filePath)]);
-      const existing = (await db.query("SELECT id,data FROM templates WHERE data->>'name'=$1 LIMIT 1", [format.name])).rows[0];
       const revision = hash(format.base64);
-      const approvalRequired = existing?.data?.revision !== revision || existing?.data?.verified !== true;
-      const approval = approvalRequired
-        ? { approvedBy: 'system:administrator-template-policy', approvedAt: new Date().toISOString(), sanitizationAttested: true, visualReviewWaived: true }
-        : existing?.data?.manifest?.administratorApproval;
       const template = {
-        ...existing?.data,
-        id: existing?.id || randomUUID(),
+        id: randomUUID(),
         name: format.name,
         family: 'standard',
         category: format.category,
         revision,
         path: filePath,
         verified: true,
-        manifest: { ...manifest, requiredFields: [], ...(approval ? { administratorApproval: approval } : {}) }
+        manifest: { ...manifest, requiredFields: [] }
       };
-      if (existing) await db.query('UPDATE templates SET data=$1 WHERE id=$2', [JSON.stringify(template), template.id]);
-      else await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [template.id, JSON.stringify(template)]);
-      if (approvalRequired) await audit('system:administrator-template-policy', 'template_visual_review_waived', template.id, { name: template.name, revision, category: template.category, sanitizationAttested: true });
+      await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [template.id, JSON.stringify(template)]);
+      existingNames.add(format.name);
+      await audit('system:bundled-template-seed', 'template_seeded', template.id, { name: template.name, revision, category: template.category });
     }
-    const legacyPending = (await db.query("SELECT id,data FROM templates WHERE COALESCE((data->>'verified')::boolean,FALSE)=FALSE")).rows;
-    for (const row of legacyPending) {
-      const old = row.data as Template;
-      const approvedAt = new Date().toISOString();
-      const updated = { ...old, verified: true, manifest: { ...old.manifest, administratorApproval: { approvedBy: 'system:administrator-template-policy', approvedAt, sanitizationAttested: true, visualReviewWaived: true } } };
-      await db.query('UPDATE templates SET data=$1 WHERE id=$2', [JSON.stringify(updated), row.id]);
-      await audit('system:administrator-template-policy', 'template_visual_review_waived', row.id, { name: old.name, revision: old.revision, category: old.category, sanitizationAttested: true });
-    }
-    console.log('Loaded administrator-approved report formats.');
+    console.log('Loaded bundled report formats.');
   } catch(e) { console.error('Failed loading owner-selected report formats', e); }
 }, 2200);
 
 const server=app.listen(Number(process.env.PORT||3001),demo?'127.0.0.1':'0.0.0.0',()=>console.log(`IPI API listening on ${process.env.PORT||3001}${demo?' (de-identified demo)':''}`));
-const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},900000);interval.unref();
+const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},4*60*60*1000);interval.unref();
 
