@@ -14,8 +14,14 @@ export const mappings:Record<Category,Mapping>={SFG:goods(0,'Semi-Finished Goods
 export interface Sheet {id:number;name:string;rows:unknown[][];merges:string[];rowCount:number}
 export function monthOf(name:string){const m=name.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s*(?:\(ENVI\))?\s+(\d{4})$/i);return m?{month:['january','february','march','april','may','june','july','august','september','october','november','december'].indexOf(m[1].toLowerCase())+1,year:Number(m[2])}:null;}
 export function currentMonth(now:Date,zone:string){const parts=new Intl.DateTimeFormat('en',{timeZone:zone,month:'numeric',year:'numeric'}).formatToParts(now);return {month:Number(parts.find(p=>p.type==='month')!.value),year:Number(parts.find(p=>p.type==='year')!.value)};}
+function sameSourceHeader(expected:unknown,actual:unknown){
+ const key=(value:unknown)=>normalized(value).replace(/[^a-z0-9]/g,'');
+ const expectedKey=key(expected),actualKey=key(actual);
+ const batchHeaders=new Set(['batchno','batchlotno']);
+ return expectedKey===actualKey||(batchHeaders.has(expectedKey)&&batchHeaders.has(actualKey));
+}
 export function validateLayout(s:Sheet,category:Category,type?:SampleType){const m=type?.layout||mappings[category];const row=s.rows[m.header-1]||[];
- for(let i=0;i<m.headers.length;i++)if(normalized(row[m.start+i])!==normalized(m.headers[i]))throw new Fault(409,`${s.name}: ${column(m.start+i)}${m.header} does not match the approved ${type?.name||categories[category]} header`);
+ for(let i=0;i<m.headers.length;i++)if(!sameSourceHeader(m.headers[i],row[m.start+i]))throw new Fault(409,`${s.name}: ${column(m.start+i)}${m.header} does not match the approved ${type?.name||categories[category]} header`);
  if(!s.merges.includes(m.merge))throw new Fault(409,`${s.name}: section boundary ${m.merge} has changed`);
  const acceptedTitles=[m.title,...(type?.layout.acceptedTitles||[])].map(normalized);
  if((type?.register|| (category==='EM'?'environmental':'incoming'))!=='environmental'&&!acceptedTitles.includes(normalized(s.rows[1]?.[m.start])))throw new Fault(409,`${s.name}: section title has changed`);
