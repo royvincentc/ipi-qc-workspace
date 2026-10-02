@@ -15,7 +15,12 @@ export interface Sheet {id:number;name:string;rows:unknown[][];merges:string[];r
 export function monthOf(name:string){const m=name.match(/^(January|February|March|April|May|June|July|August|September|October|November|December)\s*(?:\(ENVI\))?\s+(\d{4})$/i);return m?{month:['january','february','march','april','may','june','july','august','september','october','november','december'].indexOf(m[1].toLowerCase())+1,year:Number(m[2])}:null;}
 export function currentMonth(now:Date,zone:string){const parts=new Intl.DateTimeFormat('en',{timeZone:zone,month:'numeric',year:'numeric'}).formatToParts(now);return {month:Number(parts.find(p=>p.type==='month')!.value),year:Number(parts.find(p=>p.type==='year')!.value)};}
 function sameSourceHeader(expected:unknown,actual:unknown){
- const key=(value:unknown)=>normalized(value).replace(/[^a-z0-9]/g,'');
+ const key=(value:unknown)=>{
+  const compact=normalized(value).replace(/[^a-z0-9]/g,'');
+  // Older logbooks use the misspelling "Recieved"; accept its corrected
+  // spelling without weakening validation for unrelated header changes.
+  return compact==='daterecieved'?'datereceived':compact;
+ };
  const expectedKey=key(expected),actualKey=key(actual);
  const batchHeaders=new Set(['batchno','batchlotno']);
  return expectedKey===actualKey||(batchHeaders.has(expectedKey)&&batchHeaders.has(actualKey));

@@ -393,6 +393,7 @@ input[type="checkbox"] {
 .sidebar-collapsed .brand span,
 .sidebar-collapsed .nav-label,
 .sidebar-collapsed nav a span,
+.sidebar-collapsed nav button span,
 .sidebar-collapsed .user > div {
   opacity: 0;
   visibility: hidden;
@@ -448,6 +449,30 @@ input[type="checkbox"] {
   transition: all var(--transition-fast);
   white-space: nowrap;
 }
+
+.sidebar nav .nav-sync-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  justify-content: flex-start;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.sidebar nav .nav-sync-button:hover:not(:disabled) {
+  background: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.nav-sync-button svg { flex: 0 0 auto; }
+.syncing-icon { animation: sync-turn 900ms linear infinite; }
+@keyframes sync-turn { to { transform: rotate(360deg); } }
 
 .sidebar nav a:hover {
   background: var(--bg-surface-hover);
@@ -682,7 +707,7 @@ main {
 @media (max-width: 768px) {
   .mobile-menu-button { display: inline-flex; flex-shrink: 0; }
   .sidebar.mobile-open { transform: translateX(0); width: min(84vw, 300px); z-index: 120; box-shadow: 12px 0 36px rgba(0,0,0,.35); }
-  .sidebar.mobile-open .brand-text, .sidebar.mobile-open .user-text, .sidebar.mobile-open nav a span, .sidebar.mobile-open .nav-label { display: initial; opacity: 1; visibility: visible; width: auto; height: auto; }
+  .sidebar.mobile-open .brand-text, .sidebar.mobile-open .user-text, .sidebar.mobile-open nav a span, .sidebar.mobile-open nav button span, .sidebar.mobile-open .nav-label { display: initial; opacity: 1; visibility: visible; width: auto; height: auto; }
   .sidebar.mobile-open .user-text { display: flex; }
   .mobile-nav-backdrop { display: block; position: fixed; inset: 0; z-index: 110; width: 100%; border-radius: 0; background: rgba(3,12,16,.62); }
   .topbar { padding: 10px 12px; gap: 8px; }
