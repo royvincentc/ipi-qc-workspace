@@ -104,9 +104,24 @@ function Workspace({data}:{data:any}){
   const [cmdOpen, setCmdOpen] = useState(false);
   const [now,setNow]=useState(()=>new Date());
   const [lowPerformanceMode]=useState(isConstrainedDevice);
+  const [syncing,setSyncing]=useState(false);
   const location=useLocation();
 
   const notify=(text:string,error=false)=>{setNotice({text,error});};
+
+  const syncWithDatabase=async()=>{
+    if(syncing)return;
+    setSyncing(true);
+    try{
+      const result=await api<{sources?:{count?:number;message?:string};library?:{count?:number;removed?:number};errors?:string[]}>('/sync-all','POST');
+      window.dispatchEvent(new Event('ipi:sync-complete'));
+      const summary=result.errors?.length
+        ?`Sync finished with issues: ${result.errors.join(' · ')}`
+        :result.sources?.message||`Synced ${result.sources?.count||0} sheet records and ${result.library?.count||0} Drive files${result.library?.removed?`; removed ${result.library.removed} no longer in Drive`:''}.`;
+      notify(summary,Boolean(result.errors?.length));
+    }catch(e:any){notify(e.message,true);}
+    finally{setSyncing(false);}
+  };
 
   useEffect(() => {
     if (notice) {
@@ -157,6 +172,10 @@ function Workspace({data}:{data:any}){
             
             <div className="nav-label" style={{marginTop: '32px'}}>SYSTEM</div>
             <nav aria-label="System navigation">
+              <button type="button" className="nav-sync-button" title="Sync with Database" aria-label="Sync with Database" disabled={syncing} onClick={()=>void syncWithDatabase()}>
+                <RefreshCw size={18} className={syncing?'syncing-icon':''}/>
+                <span>{syncing?'Syncing…':'Sync with Database'}</span>
+              </button>
               {data.user.role==='administrator' && (
                 <NavLink to="/settings" title="Settings" aria-label="Settings" onClick={()=>setMobileNav(false)}>
                   <Settings size={18}/>
