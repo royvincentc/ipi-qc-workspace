@@ -51,18 +51,23 @@ export async function readResultsRow(url:string,category:string,ml:string){
  return {spreadsheetId:id,url,sheetId:Number(sheet.sheetId),sheet:sheetName,row:match.index+1,range:`A${match.index+1}:${endColumn}${match.index+1}`,fingerprint:hash(raw),observedAt:new Date().toISOString(),ml:ml.trim(),raw,remarks:String(match.row[remarksColumn]??''),analyst:String(match.row[headers.findIndex(cell=>normalizedHeader(cell)==='analyzedby')]??''),tests};
 }
 
-export async function readMicForAnalyst(spreadsheetId:string,analyst:string):Promise<string>{
+export async function readMicForAnalyst(spreadsheetUrl:string,analyst:string):Promise<string>{
  if(!analyst.trim())return '';
+ const spreadsheetId=googleId(spreadsheetUrl);
  const meta=await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties(title,gridProperties)`);
- const sheetName='October 2026';
- if(!meta.sheets?.some((item:any)=>item.properties.title===sheetName))return '';
- const range=`'${sheetName}'!DQ2:DR8`;
+ const sheet=meta.sheets?.find((item:any)=>item.properties.title==='MIC')?.properties;
+ if(!sheet)return '';
+ const rowCount=Number(sheet.gridProperties?.rowCount||0),columnCount=Number(sheet.gridProperties?.columnCount||0);
+ if(rowCount<2||rowCount>5000||columnCount<1||columnCount>100)throw new Fault(409,'MIC: lookup tab is outside the reviewed size limit');
+ const endColumn=column(Math.min(columnCount,26)-1);
+ const range=`'MIC'!A1:${endColumn}${rowCount}`;
  const rows=(await google<any>(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}?valueRenderOption=FORMATTED_VALUE`)).values||[];
  const normalized=(value:unknown)=>String(value??'').normalize('NFKC').replace(/[^a-z0-9]/gi,'').toLocaleLowerCase();
- const headers=rows.map((row:unknown[],index:number)=>({row,index})).filter(({row}:any)=>row.some((v:unknown)=>normalized(v)==='mic')&&row.some((v:unknown)=>normalized(v)==='analyst'));
+ const headers=rows.slice(0,10).map((row:unknown[],index:number)=>({row,index})).filter(({row}:any)=>row.some((v:unknown)=>normalized(v)==='mic')&&row.some((v:unknown)=>normalized(v)==='analyst'));
  if(headers.length!==1)return '';
- const {row,index}=headers[0],micColumn=row.findIndex((v:unknown)=>normalized(v)==='mic'),analystColumn=row.findIndex((v:unknown)=>normalized(v)==='analyst');
- const matches=rows.slice(index+1).filter((row:unknown[])=>normalized(row[analystColumn])===normalized(analyst)).map((row:unknown[])=>String(row[micColumn]??'').trim()).filter(Boolean);
+ const {row,index}=headers[0],micColumn=row.findIndex((v:unknown)=>normalized(v)==='mic'),analystColumn=row.findIndex((v:unknown)=>normalized(v)==='analyst'),tagColumn=row.findIndex((v:unknown)=>normalized(v)==='tag');
+ const analystKey=normalized(analyst);
+ const matches=rows.slice(index+1).filter((row:unknown[])=>normalized(row[analystColumn])===analystKey||(tagColumn>=0&&normalized(row[tagColumn])===analystKey)).map((row:unknown[])=>String(row[micColumn]??'').trim()).filter(Boolean);
  const distinct:string[]=[...new Set<string>(matches)];
  if(distinct.length>1)throw new Fault(409,`MIC/Analyst lookup has conflicting MIC values for ${analyst}`);
  return String(distinct[0]||'');

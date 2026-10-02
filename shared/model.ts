@@ -9,7 +9,7 @@ export interface Criterion {test:string;label:string;type:'numeric'|'finding';un
 export interface Specification {active?:boolean;previousId?:string;id:string;product:string;category:Category;context:string;revision:string;tests:Criterion[];issues:string[];source:string}
 export interface ResultSource {spreadsheetId:string;url:string;sheetId:number;sheet:string;row:number;range:string;fingerprint:string;observedAt:string;ml:string;raw:string[];remarks?:string;analyst?:string}
 export interface Result {test:string;location?:string;stage?:string;replicate?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
-export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;fields:Record<string,string>;updatedAt:string;analyst:string}
+export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;resultLookup?:'matched'|'not_found'|'demo';fields:Record<string,string>;updatedAt:string;analyst:string}
 export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>};
 export interface TemplateManifest extends Record<string,unknown>{appliesToProducts?:string[];defaultForCategory?:boolean;rowGrouping?:{mergeColumns:number[]}}
 export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:TemplateManifest;verified:boolean;demo?:boolean}
@@ -64,7 +64,7 @@ export function reportIssues(d:Draft):string[]{
  const sourceFields=d.sample?.fields||{};
  const page=[d.fields.page,d.fields.pageNumber,sourceFields.pageNumber,sourceFields.page].map(value=>String(value??'').trim()).find(Boolean)||'';
  const mic=[d.fields.mic,sourceFields.mic].map(value=>String(value??'').trim()).find(Boolean)||'';
- if((reportTokens.includes('mic')||reportRequired.includes('mic'))&&!mic)issues.push('MIC could not be found in the October 2026 MIC lookup.');
+ if((reportTokens.includes('mic')||reportRequired.includes('mic'))&&!mic)issues.push('MIC could not be found in the IPI Results MIC tab.');
  if((reportTokens.includes('page')||reportRequired.includes('page'))&&!page)issues.push('Page number is required');
  for(const key of reportRequired){if(['analysisDate','logbook','logbookReference','mic','page'].includes(key))continue;const value=d.fields[key];if(!value?.trim())issues.push(`${key.replace(/([A-Z])/g,' $1')}: required report detail`);}
  return issues;
