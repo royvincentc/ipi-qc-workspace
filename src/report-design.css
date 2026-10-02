@@ -24,6 +24,7 @@
 .test-title { display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:14px; }
 .test-title h3 { margin:0;font-size:18px;letter-spacing:-.015em; }
 .test-title p { margin:4px 0 0;color:var(--text-tertiary);font-size:12px; }
+.result-source-status { display:block;margin-top:6px;color:var(--color-success);font-size:11px;line-height:1.45; }
 .criterion { min-width:min(38%,280px);padding-left:14px;border-left:1px solid var(--border); }
 .criterion small { display:block;margin-bottom:4px;color:var(--text-tertiary);font-size:12px;font-weight:700;letter-spacing:.08em; }
 .criterion strong { display:block;color:var(--text-secondary);font-size:12px;font-weight:550; }
