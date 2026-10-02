@@ -259,20 +259,60 @@ export default function App(){
     if(!error) return <Loading/>;
     const signIn=error==='Sign in to access the workspace'||error.includes('session expired');
     return (
-      <div className="login" style={{maxWidth: '400px', margin: '15vh auto', textAlign: 'center'}}>
-        <FlaskConical size={48} color="var(--accent)" style={{marginBottom: '24px'}} />
-        <h1 style={{marginBottom: '16px'}}>IPI Micro-QC</h1>
-        {signIn ? (
-          <>
-            <p>Sign in with Google. New accounts start with viewer access; an administrator can grant additional permissions.</p>
-            <a className="button primary" href="/api/auth/login" style={{marginTop: '24px'}}>Continue with Google</a>
-          </>
-        ) : (
-          <>
-            <ErrorBox message={error}/>
-            <button className="button primary" onClick={reload} style={{marginTop: '16px'}}>Try again</button>
-          </>
-        )}
+      <div className="login-screen login-screen-split">
+        <aside className="login-story" aria-labelledby="login-story-heading">
+          <div className="login-story-brand">
+            <span className="login-story-mark" aria-hidden="true"><FlaskConical size={20} strokeWidth={1.7}/></span>
+            <span>IPI <b>MICROBIOLOGY</b></span>
+          </div>
+          <div className="login-story-copy">
+            <h2 id="login-story-heading">A workspace for microbiology QC.</h2>
+            <p>Sample intake, review, and report preparation in one traceable workspace.</p>
+          </div>
+          <svg className="login-petri-visual" viewBox="0 0 600 410" aria-hidden="true" focusable="false">
+            <ellipse className="petri-shadow" cx="302" cy="219" rx="215" ry="122"/>
+            <ellipse className="petri-rim petri-rim-back" cx="302" cy="197" rx="215" ry="122"/>
+            <path className="petri-wall" d="M87 197v25c0 67 96 122 215 122s215-55 215-122v-25"/>
+            <ellipse className="petri-rim" cx="302" cy="197" rx="215" ry="122"/>
+            <ellipse className="petri-inner" cx="302" cy="197" rx="194" ry="103"/>
+            <path className="petri-axis" d="M76 197h452M302 58v280"/>
+            <path className="petri-orbit" d="M105 111c51-66 144-91 224-76m134 39c44 26 75 67 91 113M156 332c-41-22-72-55-91-94m432 61c-41 55-105 89-175 98"/>
+            <circle className="petri-colony colony-one" cx="205" cy="174" r="12"/><circle className="petri-colony-core" cx="205" cy="174" r="4"/>
+            <circle className="petri-colony colony-two" cx="333" cy="227" r="18"/><circle className="petri-colony-core" cx="333" cy="227" r="6"/>
+            <circle className="petri-colony colony-three" cx="389" cy="162" r="9"/><circle className="petri-colony-core" cx="389" cy="162" r="3"/>
+            <circle className="petri-colony colony-four" cx="257" cy="252" r="7"/><circle className="petri-colony-core" cx="257" cy="252" r="2.5"/>
+            <circle className="petri-colony colony-five" cx="279" cy="143" r="5"/>
+            <circle className="petri-node" cx="85" cy="197" r="3"/><circle className="petri-node" cx="519" cy="197" r="3"/>
+            <circle className="petri-node" cx="302" cy="75" r="3"/><circle className="petri-node" cx="302" cy="319" r="3"/>
+          </svg>
+          <p className="login-story-footer">INTERNATIONAL PHARMACEUTICALS, INC.</p>
+        </aside>
+        <section className="login-panel" aria-label="Sign in to IPI Micro-QC">
+          <main className="login-card" aria-labelledby="login-heading">
+            <div className="login-brand-mark" aria-hidden="true"><FlaskConical size={23} strokeWidth={1.8}/></div>
+            <h1 id="login-heading">IPI Micro-QC</h1>
+            {signIn ? (
+              <>
+                <p className="login-description">Sign in with your Google account to continue.</p>
+                <a className="login-google-button" href="/api/auth/login">
+                  <svg className="google-mark" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8V33A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4V15H5.8a20 20 0 0 0 0 17.9l6.8-5.2Z"/><path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.8 29.5 4 24 4A20 20 0 0 0 5.8 15l6.8 5.3c1.6-4.8 6.1-8.4 11.4-8.4Z"/></svg>
+                  <span>Continue with Google</span>
+                  <ArrowRight className="login-button-arrow" size={15} aria-hidden="true" />
+                </a>
+                <div className="login-access-note">
+                  <span className="login-access-indicator" aria-hidden="true" />
+                  <p>New accounts start with viewer access. An administrator can grant additional permissions.</p>
+                </div>
+              </>
+            ) : (
+              <div className="login-error-state">
+                <ErrorBox message={error}/>
+                <button className="button primary" onClick={reload}>Try again</button>
+              </div>
+            )}
+            <div className="login-card-footer"><span>AUTHORIZED ACCESS</span><span>GOOGLE SIGN-IN</span></div>
+          </main>
+        </section>
       </div>
     );
   }
