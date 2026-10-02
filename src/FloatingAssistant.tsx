@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User, Sparkles, Clock } from 'lucide-react';
+import { X, Send, User, Sparkles } from 'lucide-react';
 import { api } from './api';
+import { MissMinutesAvatar } from './MissMinutesAvatar';
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
-  const [showSpeech, setShowSpeech] = useState(false);
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hello. I’m Miss Minutes, the QC Smart Assistant for IPI Microbiology. I can help locate authorized QC records, summarize documented results, and review audit history. How can I assist you?' }] }]);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hi, I’m Miss Minutes, your QC lab companion. I can help find authorized records, summarize documented results, and review audit history. What are you working on?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -17,14 +17,6 @@ export function FloatingAssistant() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, open]);
-
-  useEffect(() => {
-    // Auto-hide the speech bubble after 1 minute (60000 ms)
-    const timer = setTimeout(() => {
-      setShowSpeech(false);
-    }, 60000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -49,23 +41,10 @@ export function FloatingAssistant() {
     return (
       <button
         className="lab-pet miss-minutes"
-        onClick={() => { setOpen(true); setShowSpeech(false); }}
+        onClick={() => setOpen(true)}
         aria-label="Open Miss Minutes Assistant"
       >
-        <img src="/miss-minutes-mini.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{ objectFit: 'contain', objectPosition: 'center', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
-        {showSpeech && (
-          <div className="miss-minutes-speech" style={{ position: 'absolute', right: '90px', bottom: '20px' }}>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setShowSpeech(false); }} 
-              style={{ position: 'absolute', top: '8px', right: '8px', background: 'transparent', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}
-              aria-label="Close message"
-            >
-              <X size={14} />
-            </button>
-            <b style={{ paddingRight: '12px' }}>IPI QC Assistant</b>
-            Hello. I’m Miss Minutes, the QC Smart Assistant for IPI Microbiology. I can help locate authorized QC records, summarize documented results, and review audit history. How can I assist you?
-          </div>
-        )}
+        <MissMinutesAvatar />
       </button>
     );
   }
@@ -74,7 +53,7 @@ export function FloatingAssistant() {
     <div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
-            <span className="chat-pet"><img src="/miss-minutes-mini.png" alt="Miss Minutes" className="miss-minutes-avatar" style={{width:"100%",height:"100%",objectFit:"contain",objectPosition:"center"}} /></span><span><strong>Miss Minutes</strong><small><i/> QC records assistant</small></span>
+            <span className="chat-pet"><MissMinutesAvatar /></span><span><strong>Miss Minutes</strong><small><i/> QC lab companion</small></span>
           </div>
           <button className="icon-button" onClick={() => setOpen(false)} aria-label="Close assistant"><X size={18} /></button>
         </div>
@@ -82,7 +61,7 @@ export function FloatingAssistant() {
           {messages.map((m, i) => (
             <div key={i} className={`floating-message ${m.role}`}>
               <div className="floating-message-label">
-                {m.role === 'user' ? <><User size={12}/> You</> : <><img src="/miss-minutes-mini.png" alt="" style={{width: "16px", height: "16px", objectFit: "contain", objectPosition: "center", borderRadius: "50%", display: "inline-block", verticalAlign: "middle"}}/> Miss Minutes</>}
+                {m.role === 'user' ? <><User size={12}/> You</> : <><MissMinutesAvatar className="floating-message-mark"/> Miss Minutes</>}
               </div>
               <div className="floating-bubble">
                 {m.parts.map(p => p.text).join('')}

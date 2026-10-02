@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Search, RefreshCw, Sparkles, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import { api } from './api';
+import { MissMinutesAvatar } from './MissMinutesAvatar';
 
 type Message = {role: 'user' | 'model', parts: {text: string}[]};
 type Conversation = {id: string; title: string; updatedAt: string; messages: Message[]};
-const greeting: Message = { role: 'model', parts: [{ text: 'Hello. I’m Miss Minutes, the QC Smart Assistant for IPI Microbiology. I can help locate authorized QC records, summarize documented results, and review audit history. How can I assist you?' }] };
+const greeting: Message = { role: 'model', parts: [{ text: 'Hi, I’m Miss Minutes, your QC lab companion. I can help find authorized records, summarize documented results, and review audit history. What are you working on?' }] };
 const historyKey = 'ipi.assistant.conversations';
 
 function readHistory(): Conversation[] {
@@ -79,8 +80,8 @@ export function AssistantPage() {
       <div className="assistant-history-list">{history.length ? history.map(item => <div key={item.id} className={`assistant-history-row ${item.id === conversationId ? 'active' : ''}`}><button className="assistant-history-item" onClick={() => openConversation(item)}><strong>{item.title}</strong><small>{new Date(item.updatedAt).toLocaleDateString([], {month:'short', day:'numeric'})}</small></button><button className="icon-button assistant-delete-chat" onClick={() => deleteConversation(item.id)} aria-label={`Delete ${item.title}`} title="Delete conversation"><Trash2 size={14}/></button></div>) : <p className="assistant-history-empty">Your previous conversations will appear here.</p>}</div>
     </aside>
     <div className="assistant-page">
-      <div className="assistant-header"><div className="assistant-heading"><div className="assistant-avatar"><img src="/miss-minutes-mini.png" alt="Miss Minutes" /></div><div><div className="eyebrow"><Sparkles size={12}/> QC records assistant</div><h2>Miss Minutes</h2><small>Searches authorized QC records and audit history</small></div></div><button className="button secondary" onClick={newConversation}><RefreshCw size={14}/> New chat</button></div>
-      <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <img src="/miss-minutes-mini.png" alt=""/>}</div><div className="assistant-bubble">{m.parts.map(p => p.text).join('')}</div></div>)}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><img src="/miss-minutes-mini.png" alt=""/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
+      <div className="assistant-header"><div className="assistant-heading"><div className="assistant-avatar"><MissMinutesAvatar /></div><div><div className="eyebrow"><Sparkles size={12}/> QC lab companion</div><h2>Miss Minutes</h2><small>Searches authorized QC records and audit history</small></div></div><button className="button secondary" onClick={newConversation}><RefreshCw size={14}/> New chat</button></div>
+      <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <MissMinutesAvatar className="assistant-message-mark"/>}</div><div className="assistant-bubble">{m.parts.map(p => p.text).join('')}</div></div>)}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><MissMinutesAvatar className="assistant-message-mark"/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
       <div className="assistant-composer"><form onSubmit={handleSend}><div className="assistant-input-wrap"><Search size={18}/><input type="text" className="input" placeholder="Ask about QC samples, results, or audit history…" value={input} onChange={e => setInput(e.target.value)} disabled={loading} autoFocus /></div><button type="submit" className="button primary assistant-send" disabled={loading || !input.trim()}><Send size={16}/> Send</button></form></div>
     </div>
   </div>;

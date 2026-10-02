@@ -2,7 +2,7 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw} from 'lucide-react';
+import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
@@ -97,7 +97,7 @@ function CommandPalette({open, onClose}: {open: boolean, onClose: () => void}) {
 }
 
 function Workspace({data}:{data:any}){
-  const {config}=useConfiguration();
+  const {config,theme,setTheme}=useConfiguration();
   const [notice,setNotice]=useState<{text:string;error:boolean}|null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [mobileNav,setMobileNav]=useState(false);
@@ -121,7 +121,7 @@ function Workspace({data}:{data:any}){
         e.preventDefault();
         setCmdOpen(o => !o);
       }
-      if (e.key === 'Escape') setCmdOpen(false);
+      if (e.key === 'Escape') { setCmdOpen(false); setMobileNav(false); }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -134,7 +134,7 @@ function Workspace({data}:{data:any}){
         <div className={`app ${lowPerformanceMode?'app-low-performance':''}`}>
           {lowPerformanceMode?null:<AmbientBackdrop/>}
           <RouteExperience lowPerformanceMode={lowPerformanceMode}/>
-          <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`}>
+          <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`} aria-label="Workspace navigation">
             <Link to="/" className="brand" title={config.value.general.appName}>
               <div className="brand-icon"><FlaskConical size={24}/></div>
               <div className="brand-text">
@@ -142,13 +142,13 @@ function Workspace({data}:{data:any}){
                 <span>{config.value.general.department}</span>
               </div>
             </Link>
-            <button className="icon-button collapse-btn" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            <button className="icon-button collapse-btn" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
               {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>
             
-            <nav className="main-nav">
+            <nav className="main-nav" aria-label="Primary navigation">
               {navigation.map(([url,label,Icon])=>
-                <NavLink end={url==='/'} to={url} key={url} title={label} onClick={()=>setMobileNav(false)}>
+                <NavLink end={url==='/'} to={url} key={url} title={label} aria-label={label} onClick={()=>setMobileNav(false)}>
                   <Icon size={18}/>
                   <span>{label}</span>
                 </NavLink>
@@ -156,9 +156,9 @@ function Workspace({data}:{data:any}){
             </nav>
             
             <div className="nav-label" style={{marginTop: '32px'}}>SYSTEM</div>
-            <nav>
+            <nav aria-label="System navigation">
               {data.user.role==='administrator' && (
-                <NavLink to="/settings" title="Settings" onClick={()=>setMobileNav(false)}>
+                <NavLink to="/settings" title="Settings" aria-label="Settings" onClick={()=>setMobileNav(false)}>
                   <Settings size={18}/>
                   <span>Settings</span>
                 </NavLink>
@@ -166,6 +166,14 @@ function Workspace({data}:{data:any}){
             </nav>
 
             <div className="sidebar-bottom">
+              <div className="theme-control">
+                <span className="theme-control-label">Appearance</span>
+                <button type="button" className="theme-toggle" role="switch" aria-label="Dark theme" aria-checked={theme==='dark'} data-mode={theme} title={`Switch to ${theme==='light'?'dark':'light'} theme`} onClick={()=>setTheme(theme==='light'?'dark':'light')}>
+                  <span className="theme-toggle-icon light"><Sun size={14}/></span>
+                  <span className="theme-toggle-icon dark"><Moon size={13}/></span>
+                  <span className="theme-toggle-thumb" aria-hidden="true"><Sun className="toggle-sun" size={15}/><Moon className="toggle-moon" size={14}/></span>
+                </button>
+              </div>
               <div className="user" style={{marginBottom: collapsed ? '0' : '12px'}}>
                 <span className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</span>
                 <div className="user-text">
