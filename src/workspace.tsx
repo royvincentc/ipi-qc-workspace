@@ -1,6 +1,6 @@
 import {useContext,useEffect,useState} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
-import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,FolderOpen,Sparkles,Activity,Clock3,ShieldCheck} from 'lucide-react';
+import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,FolderOpen,Activity} from 'lucide-react';
 import {api} from './api';
 import {useConfiguration,useUnsaved} from './configuration';
 import {PageTitle,Field,ErrorBox,Loading,Badge,Empty,Notice,Session,useLoad,useCanEdit,SampleList} from './ui';
@@ -30,160 +30,148 @@ export function Dashboard(){
   const ready = openDrafts.filter((d:any)=>!d.missing);
   const categories=[...new Set(data.recent.map((sample:any)=>sample.category).filter(Boolean))] as string[];
   const statuses=[...new Set(data.recent.map((sample:any)=>sample.status||'Not recorded'))] as string[];
-  const visibleSamples=data.recent.filter((sample:any)=>{
+  const matchesDashboardFilters=(sample:any)=>{
     const haystack=`${sample.ml||''} ${sample.name||''} ${sample.batch||''}`.toLowerCase();
     return (!dashboardQuery||haystack.includes(dashboardQuery.toLowerCase()))&&(!dashboardType||sample.category===dashboardType)&&(!dashboardStatus||(sample.status||'Not recorded')===dashboardStatus);
-  });
+  };
+  const visibleSamples=data.recent.filter(matchesDashboardFilters);
+  const visibleReady=ready.filter((draft:any)=>matchesDashboardFilters(draft.sample||{}));
+  const hasDashboardFilters=Boolean(dashboardQuery||dashboardType||dashboardStatus);
   
   return (
-    <div className="dashboard-layout animate-entrance">
-      <div className="dashboard-main">
-        {/* Header / Hero */}
-        <div className="hero-header stagger-1">
-          <div className="hero-header-bg"></div>
-          <div className="hero-lab-mark" aria-hidden="true"><span/><span/><span/><FlaskConical/></div>
-          <div className="hero-content">
-            <div className="hero-eyebrow"><Sparkles size={13}/> Microbiology Quality Control</div>
-            <h1>Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}, {user.name.split(' ')[0]}</h1>
-            <p className="hero-typing">Keep today&apos;s samples moving with clarity.</p>
-            <div className="hero-pulse"><span/> Workspace synchronized · ready for focused work</div>
+    <div className="dashboard-layout dashboard-redesign">
+      <section className="dashboard-hero" aria-labelledby="dashboard-welcome-heading">
+        <div className="dashboard-hero-copy">
+          <h1 id="dashboard-welcome-heading">Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}, {user.name.split(' ')[0]}</h1>
+          <p>Sample intake, review and report preparation — in one traceable workspace.</p>
+          <div className="dashboard-hero-actions">
+            {edit ? <Link className="button primary" to="/new"><Plus size={17}/> Log a sample</Link> : null}
+            <Link className="dashboard-quiet-link" to="/reports">Open results &amp; reports <ArrowRight size={15}/></Link>
           </div>
         </div>
+        <div className="dashboard-lab-visual" aria-hidden="true">
+          <svg viewBox="0 0 360 220" role="presentation">
+            <ellipse className="lab-dish-outer" cx="188" cy="116" rx="116" ry="67"/>
+            <ellipse className="lab-dish-inner" cx="188" cy="116" rx="91" ry="49"/>
+            <path className="lab-trace" d="M72 116h38c18 0 22-32 43-32h38c20 0 25 49 47 49h50"/>
+            <path className="lab-trace lab-trace-secondary" d="M95 150h46c18 0 22-22 40-22h22"/>
+            <circle className="lab-node" cx="110" cy="116" r="4"/>
+            <circle className="lab-node" cx="191" cy="84" r="4"/>
+            <circle className="lab-node lab-node-muted" cx="238" cy="133" r="4"/>
+            <circle className="lab-orbit-point" cx="188" cy="49" r="3"/>
+            <path className="lab-measure" d="M188 30v18m-7-9h14M188 184v10m-5-5h10"/>
+          </svg>
+        </div>
+      </section>
 
-        {/* Metrics Strip */}
-        <div className="metrics-strip stagger-2">
-          <div className="metric-item">
-            <span className="metric-icon"><Activity size={15}/></span>
-            <span className="metric-value">{data.loggedToday}</span>
-            <span className="metric-label">Received today</span>
-            <span className="metric-sub">Laboratory timezone</span>
+      <section className="dashboard-overview" aria-label="Current work and quick actions">
+        <div className="dashboard-metrics" aria-label="Current work summary">
+          <div className="dashboard-metric">
+            <span>Received today</span>
+            <strong>{data.loggedToday}</strong>
           </div>
-          <div className="metric-item">
-            <span className="metric-icon amber"><Clock3 size={15}/></span>
-            <span className="metric-value">{missing.length}</span>
-            <span className="metric-label">Awaiting results</span>
-            <span className="metric-sub">In progress</span>
+          <div className="dashboard-metric">
+            <span>Awaiting results</span>
+            <strong>{missing.length}</strong>
           </div>
-          <div className="metric-item">
-            <span className="metric-icon blue"><ShieldCheck size={15}/></span>
-            <span className="metric-value">{ready.length}</span>
-            <span className="metric-label">Ready to generate</span>
-            <span className="metric-sub">Reports</span>
+          <div className="dashboard-metric">
+            <span>Ready for report</span>
+            <strong>{ready.length}</strong>
           </div>
-          {edit && (
-            <div className="metrics-actions">
-              <Link className="button primary" to="/new"><Plus size={16}/> Log sample</Link>
+        </div>
+        <nav className="dashboard-shortcuts" aria-label="Quick actions">
+          <Link to="/new"><Plus size={16}/> Log sample</Link>
+          <Link to="/reports"><FlaskConical size={16}/> Enter results</Link>
+          <Link to="/reports"><FileText size={16}/> Prepare report</Link>
+          <Link to="/library"><FolderOpen size={16}/> File library</Link>
+        </nav>
+      </section>
+
+      <div className="dashboard-workspace">
+        <section className="dashboard-queue" aria-labelledby="dashboard-queue-heading">
+          <div className="dashboard-queue-heading">
+            <div>
+              <h2 id="dashboard-queue-heading">Your workbench</h2>
+              <p>Recent samples and reports ready for review.</p>
             </div>
-          )}
-        </div>
-
-        {/* Tabs & Filters */}
-        <div className="tabs stagger-3">
-          <button className={`tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>
-            Active Samples <span className="tab-badge">{data.recent.length}</span>
-          </button>
-          <button className={`tab ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
-            Ready for Report <span className="tab-badge">{ready.length}</span>
-          </button>
-        </div>
-        
-        <div className="filters-bar stagger-3">
-          <div className="search dashboard-search">
-            <Search size={14}/>
-            <input aria-label="Search active samples" placeholder="Search active samples..." value={dashboardQuery} onChange={event=>setDashboardQuery(event.target.value)}/>
+            <Link className="dashboard-queue-all" to={activeTab === 'active' ? '/samples' : '/reports'}>View all <ArrowRight size={14}/></Link>
           </div>
-          <select aria-label="Filter dashboard by sample type" value={dashboardType} onChange={event=>setDashboardType(event.target.value)}><option value="">All types</option>{categories.map(category=><option key={category}>{category}</option>)}</select>
-          <select aria-label="Filter dashboard by status" value={dashboardStatus} onChange={event=>setDashboardStatus(event.target.value)}><option value="">All status</option>{statuses.map(status=><option key={status}>{status}</option>)}</select>
-        </div>
 
-        {/* Data Table */}
-        <div className="data-table-container dashboard-table stagger-3">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Control No.</th>
-                <th>Sample Name</th>
-                <th>Type</th>
-                <th>Batch No.</th>
-                <th>Status</th>
-                <th><span className="sr-only">Actions</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeTab === 'active' ? (
-                visibleSamples.length ? visibleSamples.slice(0, 8).map((s:any) => (
-                  <tr key={s.id}>
-                    <td className="td-id mono">{s.ml}</td>
-                    <td><Link to={`/samples/${s.id}`}>{s.name || 'Incomplete record'}</Link></td>
-                    <td>{s.category}</td>
-                    <td className="mono">{s.batch || '—'}</td>
-                    <td><Badge tone={s.status==='RELEASED'?'green':'neutral'}>{s.status || 'Not recorded'}</Badge></td>
-                    <td>
-                      <div className="table-actions">
-                        <Link to={`/samples/${s.id}`} className="text-button" aria-label={`View sample ${s.ml}`}>View</Link>
-                      </div>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={6} style={{textAlign: 'center', padding: '32px'}}><Empty title="No active samples">Log a new sample to get started.</Empty></td></tr>
-                )
-              ) : (
-                ready.length ? ready.map((d:any) => (
-                  <tr key={d.id}>
-                    <td className="td-id mono">{d.sample.ml}</td>
-                    <td><Link to={`/reports/${d.id}`}>{d.sample.name}</Link></td>
-                    <td>{d.sample.category}</td>
-                    <td className="mono">{d.sample.batch || '—'}</td>
-                    <td><Badge tone="green">Ready for review</Badge></td>
-                    <td>
-                      <div className="table-actions">
-                        <Link to={`/reports/${d.id}`} className="text-button" aria-label={`Review report for ${d.sample.ml}`}>Review</Link>
-                      </div>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan={6} style={{textAlign: 'center', padding: '32px'}}><Empty title="No reports ready">Finish result entry for open drafts.</Empty></td></tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Right Intelligence Rail */}
-      <aside className="right-rail stagger-3" aria-label="Workspace intelligence">
-        
-        <div className="rail-section">
-          <div className="rail-heading">Quick Actions</div>
-          <div className="quick-action-grid">
-            <Link to="/new" className="quick-action-btn"><Plus size={16}/> Log Sample</Link>
-            <Link to="/reports" className="quick-action-btn"><FlaskConical size={16}/> Enter Results</Link>
-            <Link to="/reports" className="quick-action-btn"><FileText size={16}/> Gen. Report</Link>
-            <Link to="/library" className="quick-action-btn"><FolderOpen size={16}/> File Library</Link>
+          <div className="tabs dashboard-tabs" aria-label="Workbench records">
+            <button type="button" aria-pressed={activeTab === 'active'} className={`tab ${activeTab === 'active' ? 'active' : ''}`} onClick={() => setActiveTab('active')}>
+              Active samples <span className="tab-badge">{data.recent.length}</span>
+            </button>
+            <button type="button" aria-pressed={activeTab === 'reports'} className={`tab ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
+              Ready for report <span className="tab-badge">{ready.length}</span>
+            </button>
           </div>
-        </div>
 
-        <div className="rail-section">
-          <div className="rail-heading">Recent Activity</div>
-          <div className="timeline">
-            {data.recent.slice(0,4).map((s:any, i:number) => (
-              <div key={`act-${s.id}`} className={`timeline-item ${i===0 ? 'active' : ''}`}>
-                <div className="timeline-time">{(parseActivityDate(s.received) || parseActivityDate(s.source?.observedAt))?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '—'}</div>
-                <div className="timeline-content">
-                  <div className="timeline-title">Sample logged</div>
-                  <div className="timeline-desc mono">{s.ml}</div>
+          <div className="filters-bar dashboard-filters">
+            <div className="search dashboard-search">
+              <Search size={15}/>
+              <input aria-label="Search workbench records" placeholder="Search samples…" value={dashboardQuery} onChange={event=>setDashboardQuery(event.target.value)}/>
+            </div>
+            <select aria-label="Filter dashboard by sample type" value={dashboardType} onChange={event=>setDashboardType(event.target.value)}><option value="">All types</option>{categories.map(category=><option key={category}>{category}</option>)}</select>
+            <select aria-label="Filter dashboard by status" value={dashboardStatus} onChange={event=>setDashboardStatus(event.target.value)}><option value="">All statuses</option>{statuses.map(status=><option key={status}>{status}</option>)}</select>
+            {hasDashboardFilters?<button type="button" className="text-button dashboard-clear-filters" onClick={()=>{setDashboardQuery('');setDashboardType('');setDashboardStatus('');}}>Clear filters</button>:null}
+          </div>
+
+          <div className="data-table-container dashboard-table">
+            <table className="data-table">
+              <thead>
+                <tr><th>Control No.</th><th>Sample name</th><th>Type</th><th>Batch No.</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr>
+              </thead>
+              <tbody>
+                {activeTab === 'active' ? (
+                  visibleSamples.length ? visibleSamples.slice(0, 8).map((s:any, i:number) => (
+                    <tr key={s.id ?? `${s.ml || 'sample'}-${i}`}>
+                      <td className="td-id mono" data-label="Control No.">{s.ml}</td>
+                      <td data-label="Sample name"><Link to={`/samples/${s.id}`}>{s.name || 'Incomplete record'}</Link></td>
+                      <td data-label="Type">{s.category}</td>
+                      <td className="mono" data-label="Batch No.">{s.batch || '—'}</td>
+                      <td data-label="Status"><Badge tone={s.status==='RELEASED'?'green':'neutral'}>{s.status || 'Not recorded'}</Badge></td>
+                      <td data-label="Action"><Link to={`/samples/${s.id}`} className="text-button" aria-label={`View sample ${s.ml}`}>View</Link></td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={6} style={{textAlign: 'center', padding: '32px'}}><Empty title={hasDashboardFilters?"No samples match these filters":"No active samples"}>{hasDashboardFilters?"Clear the filters to see all recent samples.":"Log a new sample to get started."}</Empty></td></tr>
+                  )
+                ) : (
+                  visibleReady.length ? visibleReady.map((d:any, i:number) => (
+                    <tr key={d.id ?? `${d.sample?.ml || 'draft'}-${i}`}>
+                      <td className="td-id mono" data-label="Control No.">{d.sample.ml}</td>
+                      <td data-label="Sample name"><Link to={`/reports/${d.id}`}>{d.sample.name}</Link></td>
+                      <td data-label="Type">{d.sample.category}</td>
+                      <td className="mono" data-label="Batch No.">{d.sample.batch || '—'}</td>
+                      <td data-label="Status"><Badge tone="green">Ready for review</Badge></td>
+                      <td data-label="Action"><Link to={`/reports/${d.id}`} className="text-button" aria-label={`Review report for ${d.sample.ml}`}>Review</Link></td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan={6} style={{textAlign: 'center', padding: '32px'}}><Empty title={hasDashboardFilters?"No reports match these filters":"No reports ready"}>{hasDashboardFilters?"Clear the filters to see all reports ready for review.":"Finish result entry for open drafts."}</Empty></td></tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <aside className="right-rail dashboard-activity" aria-label="Recent activity">
+          <div className="rail-section">
+            <div className="dashboard-activity-heading"><h2>Recent activity</h2><Activity size={16} aria-hidden="true"/></div>
+            {data.recent.length ? <div className="timeline">
+              {data.recent.slice(0,4).map((s:any, i:number) => (
+                <div key={`act-${s.id ?? `${s.ml || 'sample'}-${i}`}`} className={`timeline-item ${i===0 ? 'active' : ''}`}>
+                  <div className="timeline-time">{(parseActivityDate(s.received) || parseActivityDate(s.source?.observedAt))?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '—'}</div>
+                  <div className="timeline-content">
+                    <div className="timeline-title">Sample logged</div>
+                    <Link className="timeline-desc mono" to={`/samples/${s.id}`}>{s.ml}</Link>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div> : <Empty title="No recent activity">New sample entries will appear here.</Empty>}
           </div>
-        </div>
-        
-        <div className="rail-section rail-system">
-          <div className="ascii-loader">
-            {`> system active\n> db connected\n> sources synced\n_`}
-          </div>
-        </div>
-      </aside>
+          <Link className="dashboard-activity-all" to="/samples">Browse sample history <ArrowRight size={14}/></Link>
+        </aside>
+      </div>
     </div>
   );
 }
