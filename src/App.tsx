@@ -279,7 +279,16 @@ export default function App(){
     const signIn=error==='Sign in to access the workspace'||error.includes('session expired');
     return (
       <div className="login-screen login-screen-split">
-        <aside className="login-story" aria-labelledby="login-story-heading">
+        <aside className="login-story" aria-labelledby="login-story-heading" onPointerMove={event=>{
+          if(event.pointerType!=='mouse'&&event.pointerType!=='pen')return;
+          const bounds=event.currentTarget.getBoundingClientRect();
+          event.currentTarget.style.setProperty('--petri-pointer-x',`${((event.clientX-bounds.left)/bounds.width-.5)*15}px`);
+          event.currentTarget.style.setProperty('--petri-pointer-y',`${((event.clientY-bounds.top)/bounds.height-.5)*10}px`);
+        }} onPointerLeave={event=>{
+          event.currentTarget.style.setProperty('--petri-pointer-x','0px');
+          event.currentTarget.style.setProperty('--petri-pointer-y','0px');
+        }}>
+          <AmbientBackdrop landing/>
           <div className="login-story-brand">
             <span className="login-story-mark" aria-hidden="true"><FlaskConical size={20} strokeWidth={1.7}/></span>
             <span>IPI <b>MICROBIOLOGY</b></span>
@@ -294,6 +303,7 @@ export default function App(){
             <path className="petri-wall" d="M87 197v25c0 67 96 122 215 122s215-55 215-122v-25"/>
             <ellipse className="petri-rim" cx="302" cy="197" rx="215" ry="122"/>
             <ellipse className="petri-inner" cx="302" cy="197" rx="194" ry="103"/>
+            <ellipse className="petri-scan-ring" cx="302" cy="197" rx="215" ry="122"/>
             <path className="petri-axis" d="M76 197h452M302 58v280"/>
             <path className="petri-orbit" d="M105 111c51-66 144-91 224-76m134 39c44 26 75 67 91 113M156 332c-41-22-72-55-91-94m432 61c-41 55-105 89-175 98"/>
             <circle className="petri-colony colony-one" cx="205" cy="174" r="12"/><circle className="petri-colony-core" cx="205" cy="174" r="4"/>
@@ -303,6 +313,7 @@ export default function App(){
             <circle className="petri-colony colony-five" cx="279" cy="143" r="5"/>
             <circle className="petri-node" cx="85" cy="197" r="3"/><circle className="petri-node" cx="519" cy="197" r="3"/>
             <circle className="petri-node" cx="302" cy="75" r="3"/><circle className="petri-node" cx="302" cy="319" r="3"/>
+            <circle className="petri-signal" cx="302" cy="197" r="3"/>
           </svg>
           <p className="login-story-footer">INTERNATIONAL PHARMACEUTICALS, INC.</p>
         </aside>
