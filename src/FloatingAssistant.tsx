@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, User, Sparkles } from 'lucide-react';
 import { api } from './api';
 import { MissMinutesAvatar } from './MissMinutesAvatar';
+import { AssistantMarkdown } from './AssistantMarkdown';
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
@@ -64,7 +65,9 @@ export function FloatingAssistant() {
                 {m.role === 'user' ? <><User size={12}/> You</> : <><MissMinutesAvatar className="floating-message-mark"/> Miss Minutes</>}
               </div>
               <div className="floating-bubble">
-                {m.parts.map(p => p.text).join('')}
+                {m.role === 'model'
+                  ? m.parts.map((p, partIndex) => <AssistantMarkdown key={partIndex} text={p.text}/>)
+                  : m.parts.map(p => p.text).join('')}
               </div>
             </div>
           ))}

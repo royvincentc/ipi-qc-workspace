@@ -233,3 +233,391 @@ main [aria-selected="true"] { color: var(--ink-primary); }
     --border-strong: currentColor;
   }
 }
+
+/* File library: a compact register that keeps the documents in the foreground. */
+.library-page { min-width: 0; }
+.library-page .page-heading { margin-bottom: 20px; }
+.library-page .page-heading-copy p { max-width: 76ch; }
+.library-panel { overflow: hidden; white-space: normal; }
+.library-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, 190px) minmax(205px, 245px);
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+.library-toolbar .search { min-width: 0; width: 100%; }
+.library-toolbar .search-field { min-height: 38px; }
+.library-toolbar .search-field input { min-width: 0; }
+.library-filter { display: block; min-width: 0; }
+.library-filter select { min-height: 38px; font-size: 12px; }
+.library-list-heading,
+.library-row {
+  display: grid;
+  grid-template-columns: 22px minmax(240px, 1.45fr) minmax(175px, .8fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+.library-list-heading {
+  min-height: 36px;
+  padding: 0 18px;
+  color: var(--text-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+.library-list-heading span:first-child { grid-column: 1 / 3; }
+.library-list-heading span:nth-child(2) { grid-column: 3; }
+.library-list-heading span:last-child { grid-column: 4; }
+.library-list { min-width: 0; }
+.library-row {
+  min-height: 68px;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 140ms ease-out;
+}
+.library-row:hover { background: color-mix(in srgb, var(--bg-surface-hover) 46%, transparent); }
+.library-file-icon { color: var(--text-tertiary); }
+.library-document { min-width: 0; }
+.library-document strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.4;
+  white-space: normal;
+}
+.library-document small { display: block; margin-top: 3px; font-size: 11px; }
+.library-record-state { min-width: 0; }
+.library-record-state .badge { max-width: 100%; white-space: normal; }
+.library-state-quiet { color: var(--text-tertiary); font-size: 12px; }
+.library-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+.library-actions .button { white-space: nowrap; }
+.library-pagination { padding: 12px 18px; }
+.library-pagination > span { margin-right: auto; }
+.library-page-position { color: var(--text-tertiary); }
+.library-page-actions { display: flex; gap: 7px; }
+
+/* The dashboard starts with the lab's real work sequence, then moves into records. */
+.dashboard-redesign .dashboard-heading {
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  margin:0 0 18px; padding:0 0 17px; border-bottom:1px solid var(--border);
+}
+.dashboard-redesign .dashboard-heading h1 {
+  margin:0; color:var(--text-primary); font-size:clamp(25px,2.4vw,32px);
+  font-weight:610; letter-spacing:-.035em; line-height:1.15;
+}
+.dashboard-redesign .dashboard-heading p { margin:6px 0 0; color:var(--text-secondary); font-size:13px; }
+.dashboard-redesign .dashboard-heading .button { min-height:42px; }
+@keyframes workflow-arrive {
+  from { opacity:.84; transform:translateY(5px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.dashboard-redesign .dashboard-heading { animation:workflow-arrive 280ms cubic-bezier(.16,1,.3,1) both; }
+@media (max-width:680px) {
+  .dashboard-redesign .dashboard-heading { align-items:flex-start; gap:10px; margin-bottom:12px; padding-bottom:13px; }
+  .dashboard-redesign .dashboard-heading h1 { font-size:25px; }
+  .dashboard-redesign .dashboard-heading p { max-width:30ch; font-size:12px; }
+  .dashboard-redesign .dashboard-heading .button { flex:0 0 auto; min-width:0; min-height:42px; justify-content:center; gap:6px; padding:0 10px; font-size:12px; white-space:nowrap; }
+  .dashboard-redesign .dashboard-heading .button svg { flex:0 0 auto; }
+}
+
+/* Motion system: the sample journey is the visual thread across the workspace. */
+:root {
+  --motion-quick: 140ms;
+  --motion-state: 220ms;
+  --motion-enter: 280ms;
+  --motion-ease-out: cubic-bezier(.16,1,.3,1);
+  --motion-ease-inout: cubic-bezier(.65,0,.35,1);
+}
+@keyframes route-notebook-enter {
+  from { opacity:.9; transform:translateY(4px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes record-line-enter {
+  from { opacity:.7; transform:translateX(-7px); }
+  to { opacity:1; transform:translateX(0); }
+}
+@keyframes status-chip-enter {
+  from { opacity:.45; transform:scale(.94); }
+  to { opacity:1; transform:scale(1); }
+}
+@keyframes dialog-lab-enter {
+  from { opacity:0; transform:translateY(12px) scale(.985); clip-path:inset(4% 0 0); }
+  to { opacity:1; transform:translateY(0) scale(1); clip-path:inset(0); }
+}
+.route-stage { animation:route-notebook-enter var(--motion-enter) var(--motion-ease-out) both; }
+
+/* Every control carries the same soft, quick laboratory-instrument response. */
+.app button:not(:disabled),.app a,.app summary,[role="tab"],.intake-toggle span {
+  transition-timing-function:var(--motion-ease-out);
+}
+.app button:not(:disabled):active,.app .button:not(:disabled):active,.app .icon-button:not(:disabled):active {
+  transition-duration:90ms;
+  transform:scale(.975);
+}
+.app button:not(:disabled) svg,.app a svg,.app summary::marker {
+  transition:transform var(--motion-state) var(--motion-ease-out),color var(--motion-quick) ease-out;
+}
+.app button:not(:disabled):hover svg,.app a:hover svg { transform:translateX(2px); }
+.app button:not(:disabled):active svg { transform:scale(.92); }
+
+/* The active workspace indicator tracks the current destination. */
+.sidebar nav a::before { transform:scaleY(.45); opacity:0; transition:transform var(--motion-state) var(--motion-ease-out),opacity var(--motion-quick) ease-out; }
+.sidebar nav a.active::before { transform:scaleY(1); opacity:1; }
+.sidebar nav a:hover svg,.sidebar nav button:hover svg { transform:translateX(2px) rotate(-4deg); }
+.sidebar nav a.active svg { animation:status-chip-enter 280ms var(--motion-ease-out) both; }
+.theme-toggle-thumb { transition:transform 320ms var(--motion-ease-out),background-color var(--motion-state) ease-out,box-shadow var(--motion-state) ease-out; }
+
+/* Rows arrive as a short, capped sequence so IDs and status read as one record. */
+.app .data-table tbody tr { animation:record-line-enter 260ms var(--motion-ease-out) both; }
+.app .data-table tbody tr:nth-child(1) { animation-delay:20ms; }
+.app .data-table tbody tr:nth-child(2) { animation-delay:45ms; }
+.app .data-table tbody tr:nth-child(3) { animation-delay:55ms; }
+.app .data-table tbody tr:nth-child(4) { animation-delay:75ms; }
+.app .data-table tbody tr:nth-child(5) { animation-delay:95ms; }
+.app .data-table tbody tr:nth-child(n+6) { animation-delay:110ms; }
+.app .timeline-item { animation:record-line-enter 260ms var(--motion-ease-out) both; }
+.app .timeline-item:nth-child(1) { animation-delay:40ms; }
+.app .timeline-item:nth-child(2) { animation-delay:80ms; }
+.app .timeline-item:nth-child(3) { animation-delay:70ms; }
+.app .timeline-item:nth-child(n+4) { animation-delay:90ms; }
+.app .badge { transition:background-color var(--motion-state) ease-out,color var(--motion-state) ease-out,border-color var(--motion-state) ease-out; }
+.app .data-table tbody tr .badge { animation:status-chip-enter 300ms var(--motion-ease-out) both; animation-delay:inherit; }
+.app .data-table tbody tr:hover .badge { transform:translateY(-1px); }
+
+/* Tabs use a drawn underline to show where a change in view has landed. */
+.app .tabs button,.app [role="tab"] { position:relative; overflow:hidden; }
+.app .tabs button::after,.app [role="tab"]::after {
+  position:absolute; right:10px; bottom:0; left:10px; height:2px; content:"";
+  background:var(--accent); transform:scaleX(0); transform-origin:left center;
+  transition:transform 300ms var(--motion-ease-out),opacity var(--motion-quick) ease-out;
+  opacity:.72; pointer-events:none;
+}
+.app .tabs button.active::after,.app [role="tab"][aria-selected="true"]::after { transform:scaleX(1); opacity:1; }
+.app .tabs button:hover::after,.app [role="tab"]:hover::after { transform:scaleX(.32); }
+.app .tabs button.active:hover::after,.app [role="tab"][aria-selected="true"]:hover::after { transform:scaleX(1); }
+
+/* Focus, field state, and choices get a visible but quiet pulse. */
+.app .field:has(input:focus-visible) > span,.app .field:has(select:focus-visible) > span,.app .field:has(textarea:focus-visible) > span {
+  color:var(--accent); transition:color var(--motion-state) ease-out;
+}
+.app input:not([type="checkbox"]),.app select,.app textarea,.app .intake-toggle span {
+  transition:border-color var(--motion-state) ease-out,background-color var(--motion-state) ease-out,box-shadow var(--motion-state) ease-out,color var(--motion-state) ease-out;
+}
+.app input[type="checkbox"],.app input[type="radio"] { transition:filter var(--motion-quick) ease-out,transform var(--motion-quick) var(--motion-ease-out); }
+.app input[type="checkbox"]:checked,.app input[type="radio"]:checked { transform:scale(1.08); }
+.app .intake-toggle span { transition:transform var(--motion-quick) var(--motion-ease-out),background-color var(--motion-state) ease-out,border-color var(--motion-state) ease-out; }
+.app .intake-toggle:hover span { transform:translateY(-1px); }
+
+/* Choose and inspect surfaces communicate their depth on pointer and keyboard. */
+.app .category-card,.app .entity-items > button,.app .library-row,.app .test-card,.app .intake-review-row {
+  transition:transform var(--motion-state) var(--motion-ease-out),background-color var(--motion-state) ease-out,border-color var(--motion-state) ease-out,box-shadow var(--motion-state) ease-out;
+}
+.app .category-card:hover,.app .category-card:focus-visible { transform:translateY(-3px); }
+.app .category-card:hover svg:first-child,.app .category-card:focus-visible svg:first-child { transform:translateY(-2px) rotate(-5deg); }
+.app .entity-items > button:hover,.app .entity-items > button:focus-visible { transform:translateX(3px); }
+.app .library-row:hover { transform:translateX(2px); }
+.app .test-card:focus-within { border-color:var(--border-strong); }
+.app .intake-review-row:hover { background:color-mix(in srgb,var(--bg-surface-hover) 36%,transparent); }
+.app .text-button { transition:color var(--motion-quick) ease-out,background-color var(--motion-quick) ease-out,transform var(--motion-quick) var(--motion-ease-out); }
+.app .text-button:hover { transform:translateX(2px); }
+
+/* Dialogs, menus, and the assistant arrive as a layer above the work. */
+.app .cmd-palette { animation:dialog-lab-enter 300ms var(--motion-ease-out) both; }
+.app .cmd-palette-backdrop { animation:status-chip-enter 170ms ease-out both; }
+.app .cmd-results > a { animation:record-line-enter 220ms var(--motion-ease-out) both; }
+.app .cmd-results > a:nth-child(2) { animation-delay:35ms; }
+.app .cmd-results > a:nth-child(3) { animation-delay:70ms; }
+.app .mobile-nav-backdrop { transition:opacity 180ms ease-out; }
+.app .sidebar.mobile-open { transition:transform 260ms var(--motion-ease-out); }
+.app .toast,.app .floating-chat,.app [role="dialog"] { animation:dialog-lab-enter 320ms var(--motion-ease-out) both; }
+
+@media (hover:hover) {
+  .app .button.primary:hover:not(:disabled) { box-shadow:0 5px 18px color-mix(in srgb,var(--accent) 24%,transparent); }
+  .app .global-search:hover svg { transform:scale(1.08); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .app *, .app *::before, .app *::after {
+    animation-duration:.01ms!important; animation-iteration-count:1!important;
+    transition-duration:.12s!important; scroll-behavior:auto!important;
+  }
+  .app .data-table tbody tr,.app .timeline-item { transform:none!important; }
+  .app .button.primary:hover:not(:disabled) { box-shadow:none; }
+  .dashboard-redesign .dashboard-heading,.workflow-node { animation:none!important; }
+  .workflow-node,.workflow-connector i { transition:none!important; }
+}
+.app-low-performance .route-stage,.app-low-performance .data-table tbody tr,.app-low-performance .timeline-item { animation:none!important; }
+.app-low-performance .category-card,.app-low-performance .entity-items > button,.app-low-performance .library-row { transition-duration:120ms; }
+@media (prefers-reduced-motion:reduce) {
+  .dashboard-redesign .dashboard-heading,.workflow-node { animation:none; }
+  .workflow-node,.workflow-connector i { transition:none; }
+}
+
+/* One connected work map, with stage detail that follows the selected step. */
+.workflow-board {
+  margin:0 0 26px;
+  padding:18px 20px 0;
+  border:1px solid var(--border-subtle);
+  border-radius:var(--radius-panel);
+  background:var(--bg-surface);
+  box-shadow:var(--surface-shadow);
+}
+.workflow-board-heading,.workflow-context-heading { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+.workflow-board-heading { padding:0 2px 14px; }
+.workflow-board-heading h2 { margin:0; font-size:18px; font-weight:620; letter-spacing:-.025em; }
+.workflow-board-heading p,.workflow-context-heading p { margin:4px 0 0; color:var(--text-secondary); font-size:12px; }
+.workflow-history-link,.workflow-context-heading > a { display:inline-flex; min-height:40px; flex:0 0 auto; align-items:center; gap:6px; color:var(--text-secondary); font-size:12px; text-decoration:none; }
+.workflow-history-link:hover,.workflow-context-heading > a:hover { color:var(--accent); }
+.workflow-track { display:grid; grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr) 46px minmax(0,1fr); align-items:center; padding:9px 0 15px; }
+.workflow-node { position:relative; display:grid; grid-template-columns:34px minmax(0,1fr) auto; align-items:center; gap:10px; min-width:0; min-height:68px; padding:9px 11px; border:1px solid transparent; border-radius:var(--radius-control); background:transparent; text-align:left; transition:background-color var(--motion-quick) ease-out,border-color var(--motion-quick) ease-out,box-shadow var(--motion-quick) ease-out; }
+.workflow-node:hover { background:var(--bg-surface-hover); }
+.workflow-node.is-selected { border-color:var(--border-strong); background:color-mix(in srgb,var(--accent-soft) 70%,var(--bg-surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 7%,transparent); }
+.workflow-node:focus-visible { z-index:1; outline-offset:1px; }
+.workflow-node-icon { display:grid; width:32px; height:32px; place-items:center; border:1px solid var(--border-subtle); border-radius:9px; background:var(--bg-surface-elevated); color:var(--text-secondary); }
+.workflow-node.is-selected .workflow-node-icon { border-color:color-mix(in srgb,var(--accent) 25%,var(--border)); background:var(--accent-action); color:var(--accent-ink); }
+.workflow-node-copy { display:grid; gap:3px; min-width:0; }
+.workflow-node-copy strong { overflow:hidden; color:var(--text-primary); font-size:13px; font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.workflow-node-copy small { overflow:hidden; color:var(--text-tertiary); font-size:10px; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
+.workflow-node-count { display:grid; justify-items:end; color:var(--text-primary); font-size:16px; font-variant-numeric:tabular-nums; font-weight:620; line-height:1.1; }
+.workflow-node-count small { margin-top:3px; color:var(--text-tertiary); font-size:9px; font-weight:500; }
+.workflow-connector { display:block; height:1px; background:var(--border-strong); }
+.workflow-connector i { display:block; width:38%; height:1px; background:var(--accent); transform:scaleX(.35); transform-origin:left; transition:transform 260ms var(--motion-ease-out); }
+.workflow-track:has(.workflow-node:nth-of-type(1).is-selected) .workflow-connector:first-of-type i,.workflow-track:has(.workflow-node:nth-of-type(3).is-selected) .workflow-connector:last-of-type i { transform:scaleX(1); }
+.workflow-context { min-height:108px; padding:15px 2px 17px; border-top:1px solid var(--border-subtle); }
+.workflow-context-copy { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:7px 22px; }
+.workflow-context-copy h3,.workflow-context-heading h3 { margin:0; font-size:14px; font-weight:610; letter-spacing:-.015em; }
+.workflow-context-copy p { grid-column:1; max-width:68ch; margin:0; color:var(--text-secondary); font-size:12px; }
+.workflow-context-copy .button { grid-column:2; grid-row:1 / span 2; min-height:42px; }
+.workflow-readonly { grid-column:2; grid-row:1 / span 2; color:var(--text-tertiary); font-size:12px; }
+.workflow-context-heading { align-items:center; margin-bottom:10px; }
+.workflow-context-heading > div { min-width:0; }
+.workflow-context-records { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0 14px; }
+.workflow-context-record { display:grid; gap:3px; min-width:0; padding:8px 9px; border-top:1px solid var(--border-subtle); color:var(--text-primary); text-decoration:none; transition:background-color var(--motion-quick) ease-out; }
+.workflow-context-record:hover { background:var(--bg-surface-hover); }
+.workflow-context-record .mono { overflow:hidden; color:var(--accent); font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.workflow-context-record strong { overflow:hidden; font-size:12px; font-weight:570; text-overflow:ellipsis; white-space:nowrap; }
+.workflow-record-meta { overflow:hidden; color:var(--text-tertiary); font-size:10px; text-overflow:ellipsis; white-space:nowrap; }
+.workflow-record-meta.attention { color:var(--color-warning); }
+.workflow-empty { grid-column:1/-1; margin:4px 0; color:var(--text-secondary); font-size:12px; }
+.workflow-boundary-note { margin:10px 0 0; color:var(--text-tertiary); font-size:10px; }
+.dashboard-redesign .dashboard-workspace { gap:24px; }
+main { max-width:1800px; }
+
+@media (max-width:1120px) {
+  .workflow-track { grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) 24px minmax(0,1fr); }
+  .workflow-node { grid-template-columns:30px minmax(0,1fr); gap:8px; padding-inline:8px; }
+  .workflow-node-count { grid-column:2; display:flex; align-items:baseline; justify-items:start; gap:5px; font-size:11px; }
+  .workflow-node-count small { margin:0; }
+}
+@media (max-width:760px) {
+  .workflow-board { margin-bottom:20px; padding:15px 13px 0; }
+  .workflow-board-heading { align-items:flex-start; }
+  .workflow-board-heading p { max-width:42ch; }
+  .workflow-history-link { width:38px; min-width:38px; overflow:hidden; justify-content:flex-end; gap:0; font-size:0; }
+  .workflow-history-link svg { flex:0 0 auto; }
+  .workflow-track { grid-template-columns:minmax(0,1fr); justify-items:stretch; gap:0; padding:2px 0 10px; }
+  .workflow-node,.workflow-node:hover { grid-template-columns:34px minmax(0,1fr) auto; min-height:56px; padding:7px 8px; }
+  .workflow-node-count { grid-column:auto; display:grid; justify-items:end; gap:0; font-size:15px; }
+  .workflow-node-count small { margin-top:3px; }
+  .workflow-connector { width:1px; height:12px; margin-left:23px; }
+  .workflow-connector i { width:1px; height:55%; transform:scaleY(.5); transform-origin:top; }
+  .workflow-track:has(.workflow-node:nth-of-type(1).is-selected) .workflow-connector:first-of-type i,.workflow-track:has(.workflow-node:nth-of-type(3).is-selected) .workflow-connector:last-of-type i { transform:scaleY(1); }
+  .workflow-context { min-height:0; padding:13px 1px 14px; }
+  .workflow-context-records { grid-template-columns:minmax(0,1fr); gap:6px; }
+}
+@media (max-width:520px) {
+  .workflow-context-copy { grid-template-columns:minmax(0,1fr) auto; gap:7px 12px; }
+  .workflow-context-copy .button { min-height:42px; padding-inline:10px; font-size:12px; }
+  .workflow-context-heading { align-items:flex-start; }
+  .workflow-context-heading > a { width:38px; min-width:38px; overflow:hidden; justify-content:flex-end; gap:0; font-size:0; }
+  .workflow-context-heading > a svg { flex:0 0 auto; }
+}
+
+@media (max-width: 980px) {
+  .library-list-heading { display: none; }
+  .library-row { grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px 12px; }
+  .library-record-state { grid-column: 2; grid-row: 2; align-self: start; }
+  .library-actions { grid-column: 3; grid-row: 1 / span 2; align-self: center; flex-wrap: wrap; max-width: 220px; }
+}
+@media (max-width: 680px) {
+  .library-page .page-heading { align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .library-page .page-heading-action { flex: 0 0 auto; }
+  .library-page .page-heading-action .button { width: 44px; min-height: 44px; overflow: hidden; padding: 0; font-size: 0; gap: 0; }
+  .library-page .page-heading-action .button svg { flex: 0 0 auto; }
+  .library-toolbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 12px; }
+  .library-toolbar .search { grid-column: 1 / -1; }
+  .library-toolbar .search-field, .library-toolbar .search-field input { min-height: 44px; }
+  .library-filter select { min-height: 44px; padding-left: 9px; padding-right: 28px; font-size: 11px; }
+  .library-row { grid-template-columns: 20px minmax(0, 1fr); gap: 4px 10px; padding: 13px 12px; }
+  .library-file-icon { grid-column: 1; grid-row: 1; width: 18px; }
+  .library-document { grid-column: 2; grid-row: 1; }
+  .library-document strong { overflow-wrap: anywhere; white-space: normal; }
+  .library-document small { line-height: 1.45; }
+  .library-record-state { grid-column: 2; grid-row: 2; }
+  .library-actions { grid-column: 2; grid-row: 3; justify-content: flex-start; max-width: none; margin-top: 5px; }
+  .library-actions .button { min-height: 44px; padding-inline: 12px; }
+  .library-pagination { gap: 10px; padding: 12px; }
+  .library-pagination > span { flex: 1 1 100%; }
+  .library-page-actions { width: 100%; }
+  .library-page-actions .button { flex: 1; }
+}
+
+/* A small, living agar illustration orients every authenticated work surface. */
+.page-motion-mark {
+  width:68px;
+  height:68px;
+  flex:0 0 68px;
+  overflow:visible;
+  color:var(--accent);
+  transition:transform 320ms var(--motion-ease-out),color var(--motion-state) ease-out;
+}
+.page-heading:hover .page-motion-mark,
+.page-heading:focus-within .page-motion-mark,
+.dashboard-redesign > .dashboard-heading:hover .page-motion-mark { transform:rotate(-4deg) scale(1.035); }
+.page-motion-dish { fill:var(--bg-surface-elevated); stroke:var(--border); stroke-width:1; }
+.page-motion-rim { fill:none; stroke:var(--border-strong); stroke-width:1; }
+.page-motion-agar { fill:color-mix(in srgb,var(--accent-soft) 48%,var(--bg-surface)); stroke:var(--border-subtle); stroke-width:.8; }
+.page-motion-scan {
+  fill:none;
+  stroke:var(--accent);
+  stroke-opacity:.48;
+  stroke-width:.8;
+  stroke-dasharray:2 5;
+  transform-box:fill-box;
+  transform-origin:center;
+  animation:agar-scan 22s linear infinite;
+}
+.page-motion-colonies circle { fill:var(--accent); fill-opacity:.54; transform-box:fill-box; transform-origin:center; animation:colony-bloom 4.8s ease-in-out infinite alternate; }
+.page-motion-colonies circle:nth-child(2) { animation-delay:-1.1s; }
+.page-motion-colonies circle:nth-child(3) { animation-delay:-2.5s; }
+.page-motion-colonies circle:nth-child(4) { animation-delay:-3.2s; }
+.page-motion-colonies circle:nth-child(5) { animation-delay:-.6s; }
+.page-motion-line { stroke-dasharray:100; stroke-dashoffset:100; animation:assay-trace 720ms var(--motion-ease-out) 90ms forwards; }
+.page-motion-node { animation:assay-read 2.8s ease-in-out 800ms infinite; }
+.page-motion-signal { fill:var(--accent); transform-box:fill-box; transform-origin:center; animation:assay-read 2.8s ease-in-out 1.1s infinite; }
+@keyframes agar-scan { to { transform:rotate(360deg); } }
+@keyframes colony-bloom { from { opacity:.52; scale:.82; } to { opacity:.94; scale:1.12; } }
+@keyframes assay-trace { to { stroke-dashoffset:0; } }
+@keyframes assay-read { 0%,100% { opacity:.7; scale:.9; } 50% { opacity:1; scale:1.5; } }
+.dashboard-redesign > .dashboard-heading .page-motion-mark { width:78px; height:78px; flex-basis:78px; }
+.workflow-node:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+@media (max-width:760px) {
+  .page-heading .page-motion-mark { width:44px; height:44px; flex-basis:44px; }
+  .dashboard-redesign > .dashboard-heading .page-motion-mark { width:52px; height:52px; flex-basis:52px; }
+}
+@media (max-width:520px) {
+  .dashboard-redesign > .dashboard-heading .page-motion-mark { width:44px; height:44px; flex-basis:44px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .page-motion-mark,.page-motion-scan,.page-motion-colonies circle,.page-motion-line,.page-motion-node,.page-motion-signal { animation:none!important; transition:none!important; }
+  .page-motion-line { stroke-dashoffset:0; }
+  .page-motion-mark { transform:none!important; }
+}
+.app-low-performance .page-motion-mark,.app-low-performance .page-motion-scan,.app-low-performance .page-motion-colonies circle,.app-low-performance .page-motion-line,.app-low-performance .page-motion-node,.app-low-performance .page-motion-signal { animation:none!important; transition:none!important; }
+.app-low-performance .page-motion-line { stroke-dashoffset:0; }

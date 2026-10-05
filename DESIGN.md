@@ -47,6 +47,16 @@ typography:
     fontWeight: 500
     lineHeight: 1.3
     letterSpacing: "0.01em"
+  small:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    fontSize: "11px"
+    fontWeight: 400
+    lineHeight: 1.4
+  micro:
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
+    fontSize: "10px"
+    fontWeight: 500
+    lineHeight: 1.35
   data:
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
     fontSize: "12px"
@@ -58,6 +68,8 @@ rounded:
   lg: "12px"
   control: "8px"
   panel: "12px"
+  journey-board: "26px"
+  journey-board-compact: "21px"
 spacing:
   1: "4px"
   2: "8px"
@@ -107,7 +119,7 @@ components:
 
 The interface should feel like a well-kept laboratory notebook translated into a fast digital workbench: legible, traceable, immediately useful, and quietly alive. The visual system serves routine QC work rather than marketing, but it is allowed to have atmosphere. Hierarchy comes from typography, alignment, state, and motion that supports the sense of a living laboratory system.
 
-The current visual direction is Graphite + Lab Paper + Soft Lime: graphite navigation, quiet paper-like surfaces in light mode, charcoal surfaces in dark mode, precise separators, compact controls, and a soft lime primary action. The existing Inter/system typography, route-specific assay SVGs, responsive shell, and short transition cues keep the interface grounded in laboratory operations. The supplied references informed density, alignment, and restrained accent use; their map, warehouse, and CRM layouts are not copied.
+The current visual direction is Graphite + Lab Paper + Soft Lime: graphite navigation, quiet paper-like surfaces in light mode, charcoal surfaces in dark mode, precise separators, compact controls, and a soft lime primary action. The existing Inter/system typography, route-specific assay SVGs, and responsive shell keep the interface grounded in laboratory operations. On the dashboard, a connected journey canvas adapts the CRM reference's left-to-right task flow to actual sample intake, source records, and report drafts; its records remain traceable links rather than invented people or workflow statuses.
 
 **Key Characteristics:**
 
@@ -116,6 +128,7 @@ The current visual direction is Graphite + Lab Paper + Soft Lime: graphite navig
 - Fewer, clearer surfaces with restrained borders.
 - One obvious primary action per workflow.
 - Motion used as atmosphere, feedback, and orientation—with a deliberate budget.
+- The dashboard journey draws its route on entry; each node exposes a real destination, and prefers-reduced-motion removes entrance choreography.
 - Responsive rows designed for touch rather than compressed desktop tables.
 
 **The Work-First Rule.** The current attention queue and next safe action must appear before decorative context.
@@ -251,13 +264,14 @@ The shape language is gently rounded but controlled. Controls use `6–8px` corn
 ### Motion system
 
 - **Atmospheric layer:** Slow ambient gradients, particles, orbital geometry, and soft laboratory light may establish the dashboard mood. Keep them behind content, low contrast, and GPU-friendly.
-- **Hero motion:** The home dashboard may use a restrained animated hero with a laboratory mark, orbital motion, soft floating elements, or a short text reveal. It should establish orientation without delaying the work queue.
+- **Workflow motion:** Dashboard arrival traces the sample journey from intake through records to reports. Keep content visible immediately and cap the sequence at `400ms` including stagger.
 - **Route motion:** Use a short route-arrival transition to preserve spatial continuity. Prefer transform, opacity, and modest blur; keep it under `300ms`.
-- **Interaction motion:** Buttons, filters, tabs, drawers, and assistant states should respond immediately. Use `100–200ms` transitions and subtle press feedback.
+- **Surface motion:** Navigation, cards, tables, tabs, filters, form fields, status, and assistant controls each get a state-specific response. Use `100–220ms` for routine feedback and avoid moving static reference copy.
+- **Record motion:** Stagger rows and timeline items by no more than `110ms`; their shared arrival should make sample identity and status scan as a unit.
 - **Expressive motion:** The assistant character and occasional status moments may have personality, but must never obscure a sample action, input, or table row.
 - **Reduction:** `prefers-reduced-motion` removes ambient drift, typing effects, bobbing, and nonessential route reveals while preserving state changes and focus feedback.
 
-**The Motion Budget Rule.** Use one strong atmospheric layer, one clear hero moment, and small responsive interactions. Do not stack multiple competing animations in the same visual region.
+**The Motion Budget Rule.** Motion should be present throughout the working surface, with one active focal area at a time. Keep atmosphere behind the data, use short responses on each control, and reserve continuous loops for the low-contrast ambient layer and meaningful live states.
 
 ### Work queue / sample row
 

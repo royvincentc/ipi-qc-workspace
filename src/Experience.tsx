@@ -103,7 +103,10 @@ export function AmbientBackdrop({landing=false}:{landing?:boolean}){
 export function RouteExperience(){
   const location=useLocation();
   useEffect(()=>{
-    window.scrollTo({top:0,behavior:'auto'});
+    const reset=()=>window.scrollTo({top:0,left:0,behavior:'instant'});
+    reset();
+    const frame=requestAnimationFrame(reset);
+    return()=>cancelAnimationFrame(frame);
   },[location.pathname]);
   return null;
 }

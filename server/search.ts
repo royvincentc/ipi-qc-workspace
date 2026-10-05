@@ -43,14 +43,24 @@ export function registerSearch(app:Express){
   const templates=(await db.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','verified',data->'verified','manifest',jsonb_build_object('requiredFields',data->'manifest'->'requiredFields')) AS data FROM templates")).rows.map(r=>r.data);
   const generated=(await db.query("SELECT data->>'draftId' AS draft, data->>'resultRevision' AS revision FROM files WHERE data->>'kind'='report'")).rows;
   const generatedRevisions=new Set(generated.map(f=>`${f.draft}:${f.revision}`));
-  const drafts=(await db.query(`SELECT jsonb_build_object(
-    'id',data->'id','sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml'),
+  const draftRows=(await db.query(`SELECT jsonb_build_object(
+    'id',data->'id','sampleId',data->'sampleId','sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml'),
     'revision',data->'revision','updatedAt',data->'updatedAt','templateId',data->'templateId','templateRevision',data->'templateRevision',
     'fields',data->'fields',
     'templateSnapshot',CASE WHEN data->'templateSnapshot' IS NULL THEN NULL ELSE jsonb_build_object('manifest',jsonb_build_object('requiredFields',data->'templateSnapshot'->'manifest'->'requiredFields')) END,
     'specification',data->'specification',
     'results',data->'results'
-  ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100`)).rows.map(r=>r.data).map(d=>{const t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);const referenceIssue=!t||t.revision!==d.templateRevision;const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;return {id:d.id,sample:{name:d.sample.name,ml:d.sample.ml},revision:d.revision,updatedAt:d.updatedAt,generated:generatedRevisions.has(`${d.id}:${d.revision}`),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};});
+  ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100`)).rows.map(r=>r.data);
+  const sourceIds=[...new Set(draftRows.map((draft:any)=>draft.sampleId).filter(Boolean))];
+  const sourceRows=sourceIds.length?(await db.query('SELECT id,data FROM samples WHERE id=ANY($1)',[sourceIds])).rows:[];
+  const sourceById=new Map(sourceRows.map((row:any)=>[row.id,row.data]));
+  const drafts=draftRows.map((d:any)=>{
+    const t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);
+    const referenceIssue=!t||t.revision!==d.templateRevision;
+    const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;
+    const source=sourceById.get(d.sampleId);
+    return {id:d.id,sample:{...d.sample,...(source?{id:d.sampleId,category:source.category,batch:source.batch,status:source.status}: {})},revision:d.revision,updatedAt:d.updatedAt,generated:generatedRevisions.has(`${d.id}:${d.revision}`),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};
+  });
   const recent=(await db.query('SELECT id,data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>({...r.data,id:r.id}));
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:config.value.general.timezone}).format(new Date());
   const loggedToday=Number((await db.query(`SELECT count(*) FROM samples WHERE ${receivedDay}=$1`,[today])).rows[0].count);

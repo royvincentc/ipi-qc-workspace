@@ -8,19 +8,20 @@ export const Session=createContext<{user:User;demo:boolean}>({user:{email:'',nam
 export const Notice=createContext<(message:string,error?:boolean)=>void>(()=>{});
 export function useLoad<T>(fetcher:()=>Promise<T>,deps:unknown[]=[]){const [data,setData]=useState<T>(),[error,setError]=useState(''),[version,setVersion]=useState(0);useEffect(()=>{const refresh=()=>setVersion(v=>v+1);window.addEventListener('ipi:sync-complete',refresh);return()=>window.removeEventListener('ipi:sync-complete',refresh);},[]);useEffect(()=>{let active=true;setError('');setData(undefined);fetcher().then(d=>{if(active)setData(d);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[...deps,version]);return {data,setData,error,reload:()=>setVersion(v=>v+1)};}
 const pageMotifs:{match:RegExp;label:string;path:string}[]=[
-  {match:/^\/new(?:\/|$)/,label:'Sample intake',path:'M12 4v15m-4-7 4 4 4-4M5 20h14'},
-  {match:/^\/samples\/[^/]+/,label:'Sample trace',path:'M5 12h4l3-6 4 12 3-6h4'},
-  {match:/^\/samples(?:\/|$)/,label:'Sample lookup',path:'M16 16l4 4M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z'},
-  {match:/^\/reports\/[^/]+/,label:'Report preparation',path:'M7 4h8l4 4v12H7zM15 4v5h5M10 13h6M10 16h6'},
-  {match:/^\/reports(?:\/|$)/,label:'Results review',path:'M4 17h4l3-9 4 12 3-8h4'},
-  {match:/^\/library(?:\/|$)/,label:'Reference library',path:'M6 4h9l4 4v12H6zM15 4v5h4M9 13h7M9 16h5'},
-  {match:/^\/assistant(?:\/|$)/,label:'Assistant',path:'M5 6h14v10H10l-5 4zM8 10h8M8 13h5'},
-  {match:/^\/settings(?:\/|$)/,label:'Settings',path:'M5 7h14M5 12h14M5 17h14M9 5v4m6 1v4m-3 1v4'},
+  {match:/^\/new(?:\/|$)/,label:'Sample intake',path:'M36 11v21m-8-7 8 8 8-8M25 45h22m-18 5h14'},
+  {match:/^\/samples\/[^/]+/,label:'Sample trace',path:'M11 37h14l8-14 9 28 9-14h10'},
+  {match:/^\/samples(?:\/|$)/,label:'Sample lookup',path:'M49 48l11 11M42 15a18 18 0 1 1 0 36 18 18 0 0 1 0-36Z'},
+  {match:/^\/reports\/[^/]+/,label:'Report preparation',path:'M25 12h17l8 8v34H25zM42 12v10h9M31 32h13M31 39h13M31 46h9'},
+  {match:/^\/reports(?:\/|$)/,label:'Results review',path:'M12 47h11l6-20 8 25 8-19 7 14h8'},
+  {match:/^\/library(?:\/|$)/,label:'Reference library',path:'M22 15h22l8 7v32H22zM44 15v10h8M29 34h16M29 41h16M29 48h12'},
+  {match:/^\/assistant(?:\/|$)/,label:'Assistant',path:'M17 19h38v28H34L20 57l2-10h-5zM25 29h22M25 36h15'},
+  {match:/^\/settings(?:\/|$)/,label:'Settings',path:'M17 21h38M17 36h38M17 51h38M27 16v10m18 5v10m-9 5v10'},
 ];
+export function LabMotionMark({path}:{path:string}){return <svg className="page-motion-mark" viewBox="0 0 72 72" aria-hidden="true" focusable="false"><circle className="page-motion-dish" cx="36" cy="36" r="32"/><circle className="page-motion-rim" cx="36" cy="36" r="30.5"/><circle className="page-motion-agar" cx="36" cy="36" r="24.5"/><ellipse className="page-motion-scan" cx="36" cy="36" rx="24.5" ry="9"/><g className="page-motion-colonies"><circle cx="25" cy="26" r="2.3"/><circle cx="46" cy="23" r="1.5"/><circle cx="48" cy="43" r="2.7"/><circle cx="31" cy="48" r="1.7"/><circle cx="20" cy="39" r="1.2"/></g><path className="page-motion-line" pathLength="100" d={path}/><circle className="page-motion-node" cx="36" cy="36" r="2.5"/><circle className="page-motion-signal" cx="58" cy="36" r="2"/></svg>;}
 export function PageTitle({eyebrow,title,description,action}:{eyebrow?:string;title:string;description:string;action?:ReactNode}){
   const {pathname}=useLocation();
   const motif=pageMotifs.find(item=>item.match.test(pathname))||{label:'Workspace',path:'M4 12h5l3-7 4 14 3-7h5'};
-  return <div className="page-heading"><div className="page-heading-copy">{eyebrow?<div className="eyebrow">{eyebrow}</div>:null}<h1>{title}</h1><p>{description}</p></div><svg className="page-motion-mark" viewBox="0 0 28 28" aria-hidden="true" focusable="false"><circle className="page-motion-ring" cx="14" cy="14" r="12"/><path className="page-motion-line" pathLength="44" d={motif.path}/><circle className="page-motion-node" cx="14" cy="14" r="1.5"/></svg>{action?<div className="page-heading-action">{action}</div>:null}</div>;
+  return <div className="page-heading"><div className="page-heading-copy">{eyebrow?<div className="eyebrow">{eyebrow}</div>:null}<h1>{title}</h1><p>{description}</p></div><LabMotionMark path={motif.path}/>{action?<div className="page-heading-action">{action}</div>:null}</div>;
 }
 export function Empty({title,children}:{title:string;children?:ReactNode}){return <div className="empty"><FlaskConical size={32}/><h3>{title}</h3><p>{children}</p></div>;}
 export function ErrorBox({message}:{message:string}){return message?<div className="error" role="alert">{message}</div>:null;}

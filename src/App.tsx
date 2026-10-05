@@ -162,16 +162,26 @@ function Workspace({data}:{data:any}){
               {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
             </button>
             
-            <nav className="main-nav" aria-label="Primary navigation">
-              {navigation.map(([url,label,Icon])=>
+            <div className="nav-label">WORK</div>
+            <nav className="main-nav" aria-label="Workspaces">
+              {navigation.slice(0,4).map(([url,label,Icon])=>
                 <NavLink end={url==='/'} to={url} key={url} title={label} aria-label={label} onClick={()=>setMobileNav(false)}>
                   <Icon size={18}/>
                   <span>{label}</span>
                 </NavLink>
               )}
             </nav>
+            <div className="nav-label">REFERENCES &amp; SUPPORT</div>
+            <nav aria-label="References and support">
+              {navigation.slice(4).map(([url,label,Icon])=>
+                <NavLink to={url} key={url} title={label} aria-label={label} onClick={()=>setMobileNav(false)}>
+                  <Icon size={18}/>
+                  <span>{label}</span>
+                </NavLink>
+              )}
+            </nav>
             
-            <div className="nav-label" style={{marginTop: '32px'}}>SYSTEM</div>
+            <div className="nav-label">SYSTEM</div>
             <nav aria-label="System navigation">
               <button type="button" className="nav-sync-button" title="Sync with Database" aria-label="Sync with Database" disabled={syncing} onClick={()=>void syncWithDatabase()}>
                 <RefreshCw size={18} className={syncing?'syncing-icon':''}/>
