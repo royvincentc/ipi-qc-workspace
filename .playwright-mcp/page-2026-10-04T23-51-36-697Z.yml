@@ -1,0 +1,91 @@
+- generic [ref=f12e12]:
+  - complementary "Workspace navigation" [ref=f12e13]:
+    - link "IPI Micro-QC Quality Control" [ref=f12e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f12e20]:
+        - text: IPI Micro-QC
+        - generic [ref=f12e21]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f12e22] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f12e26]:
+      - link "Dashboard" [ref=f12e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f12e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f12e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f12e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f12e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f12e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f12e56]: SYSTEM
+    - navigation "System navigation" [ref=f12e57]:
+      - button "Sync with Database" [ref=f12e58] [cursor=pointer]
+      - link "Settings" [ref=f12e65] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f12e70]:
+      - generic [ref=f12e71]:
+        - generic [ref=f12e72]: Appearance
+        - switch "Dark theme" [checked] [ref=f12e73] [cursor=pointer]
+      - generic [ref=f12e97]:
+        - generic "Demo Analyst" [ref=f12e98]: DE
+        - generic [ref=f12e99]:
+          - strong [ref=f12e100]: Demo Analyst
+          - generic [ref=f12e101]: administrator
+  - generic [ref=f12e102]:
+    - banner [ref=f12e103]:
+      - button "Open global sample search" [ref=f12e104] [cursor=pointer]:
+        - generic [ref=f12e108]: Search a sample, batch, or control number...
+        - generic [ref=f12e109]: ⌘K
+      - generic [ref=f12e110]:
+        - generic [ref=f12e111]: Demo workspace
+        - generic [ref=f12e114]:
+          - generic [ref=f12e115]: Mon, Oct 5, 2026
+          - strong [ref=f12e116]: 07:51 AM
+        - generic "Demo Analyst" [ref=f12e117]: DE
+    - generic [ref=f12e118]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f12e120]:
+      - generic [ref=f12e122]:
+        - heading "Log a sample" [level=1] [ref=f12e123]
+        - paragraph [ref=f12e124]: Choose the sample type, confirm its identifiers, then record receipt.
+      - generic [ref=f12e129]:
+        - button "← Change sample type" [ref=f12e130] [cursor=pointer]
+        - heading "Environmental Monitoring" [level=2] [ref=f12e131]
+        - paragraph [ref=f12e132]: The control number is assigned when you submit. Only the current laboratory month is used.
+        - generic [ref=f12e133]:
+          - generic [ref=f12e134]:
+            - generic [ref=f12e135]: Date and time received *
+            - textbox "Date and time received *" [ref=f12e136]
+          - generic [ref=f12e137]:
+            - generic [ref=f12e138]: Facility *
+            - textbox "Facility *" [ref=f12e139]
+          - generic [ref=f12e140]:
+            - generic [ref=f12e141]: Sample / product name *
+            - combobox "Sample / product name *" [ref=f12e142]
+          - generic [ref=f12e143]:
+            - generic [ref=f12e144]: Area *
+            - textbox "Area *" [ref=f12e145]
+          - generic [ref=f12e146]:
+            - generic [ref=f12e147]: Testing context
+            - textbox "Testing context" [ref=f12e148]
+          - generic [ref=f12e149]:
+            - generic [ref=f12e150]: Secondary source field
+            - textbox "Secondary source field Preserved separately; leave blank if unused." [ref=f12e151]
+            - generic [ref=f12e152]: Preserved separately; leave blank if unused.
+          - generic [ref=f12e153]:
+            - generic [ref=f12e154]: Batch / lot number *
+            - textbox "Batch / lot number *" [ref=f12e155]
+          - generic [ref=f12e156]:
+            - generic [ref=f12e157]: Area / equipment count
+            - spinbutton "Area / equipment count" [ref=f12e158]
+          - generic [ref=f12e159]:
+            - generic [ref=f12e160]: Accupoint samplers
+            - spinbutton "Accupoint samplers" [ref=f12e161]
+          - generic [ref=f12e162]:
+            - generic [ref=f12e163]: Plates used
+            - spinbutton "Plates used" [ref=f12e164]
+        - generic [ref=f12e165]:
+          - generic [ref=f12e166]: Practice entry · de-identified data only
+          - button "Confirm and log sample" [ref=f12e167] [cursor=pointer]
+  - button "Open Miss Minutes Assistant" [ref=f12e168] [cursor=pointer]

@@ -2,11 +2,51 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, User, Search, RefreshCw, Sparkles, Plus, MessageSquare, Trash2 } from 'lucide-react';
 import { api } from './api';
 import { MissMinutesAvatar } from './MissMinutesAvatar';
+import { PageTitle } from './ui';
 
-type Message = {role: 'user' | 'model', parts: {text: string}[]};
+type Message = {role: 'user' | 'model', parts: {text: string}[], error?: boolean};
 type Conversation = {id: string; title: string; updatedAt: string; messages: Message[]};
 const greeting: Message = { role: 'model', parts: [{ text: 'Hi, I’m Miss Minutes, your QC lab companion. I can help find authorized records, summarize documented results, and review audit history. What are you working on?' }] };
 const historyKey = 'ipi.assistant.conversations';
+
+function renderInlineMarkdown(text: string, keyPrefix: string) {
+  const tokenPattern = /(\*\*.+?\*\*|__.+?__|`[^`]+`|\*[^*\n]+\*|_[^_\n]+_)/g;
+  return text.split(tokenPattern).filter(Boolean).map((token, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if ((token.startsWith('**') && token.endsWith('**')) || (token.startsWith('__') && token.endsWith('__'))) {
+      return <strong key={key}>{token.slice(2, -2)}</strong>;
+    }
+    if (token.startsWith('`') && token.endsWith('`')) return <code key={key}>{token.slice(1, -1)}</code>;
+    if ((token.startsWith('*') && token.endsWith('*')) || (token.startsWith('_') && token.endsWith('_'))) {
+      return <em key={key}>{token.slice(1, -1)}</em>;
+    }
+    return <React.Fragment key={key}>{token}</React.Fragment>;
+  });
+}
+
+function AssistantMarkdown({ text }: { text: string }) {
+  const blocks = text.replace(/\r\n?/g, '\n').trim().split(/\n\s*\n/).filter(Boolean);
+  return <div className="assistant-markdown">{blocks.map((block, index) => {
+    const key = `block-${index}`;
+    const heading = block.match(/^#{1,3}\s+(.+)$/);
+    if (heading) return <h3 key={key}>{renderInlineMarkdown(heading[1], key)}</h3>;
+
+    const lines = block.split('\n');
+    const unordered = lines.every(line => /^\s*[-*+]\s+/.test(line));
+    const ordered = lines.every(line => /^\s*\d+[.)]\s+/.test(line));
+    if (unordered || ordered) {
+      const List = ordered ? 'ol' : 'ul';
+      return <List key={key}>{lines.map((line, lineIndex) => {
+        const item = line.replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/, '');
+        return <li key={`${key}-${lineIndex}`}>{renderInlineMarkdown(item, `${key}-${lineIndex}`)}</li>;
+      })}</List>;
+    }
+
+    return <p key={key}>{lines.map((line, lineIndex) => <React.Fragment key={`${key}-${lineIndex}`}>
+      {lineIndex > 0 ? <br/> : null}{renderInlineMarkdown(line, `${key}-${lineIndex}`)}
+    </React.Fragment>)}</p>;
+  })}</div>;
+}
 
 function readHistory(): Conversation[] {
   try {
@@ -32,7 +72,7 @@ export function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }); }, [messages]);
   useEffect(() => {
     if (!messages.some(message => message.role === 'user' && message.parts.some(part => part.text.trim()))) return;
     setHistory(previous => {
@@ -59,7 +99,7 @@ export function AssistantPage() {
         } catch { /* The first-request title remains a useful local fallback. */ }
       }
     }
-    catch (err: any) { setMessages([...newMessages, { role: 'model', parts: [{ text: `Error: ${err.message}` }] }]); }
+    catch (err: any) { setMessages([...newMessages, { role: 'model', error: true, parts: [{ text: err.message || 'Smart Assistant could not process this request because of a server problem. Please try again.' }] }]); }
     finally { setLoading(false); }
   };
   const newConversation = () => { setConversationId(crypto.randomUUID()); setMessages([greeting]); setInput(''); };
@@ -73,7 +113,7 @@ export function AssistantPage() {
     if (id === conversationId) newConversation();
   };
 
-  return <div className="assistant-shell">
+  return <><PageTitle title="Smart Assistant" description="Search authorized QC records and audit history."/><div className="assistant-shell">
     <aside className="assistant-history" aria-label="Conversation history">
       <div className="assistant-history-heading"><div><span className="eyebrow"><MessageSquare size={12}/> Workspace memory</span><h2>Conversations</h2></div><button className="icon-button" onClick={newConversation} aria-label="Start a new conversation" title="Start a new conversation"><Plus size={17}/></button></div>
       <button className="assistant-new-chat" onClick={newConversation}><Plus size={15}/> New conversation</button>
@@ -81,8 +121,8 @@ export function AssistantPage() {
     </aside>
     <div className="assistant-page">
       <div className="assistant-header"><div className="assistant-heading"><div className="assistant-avatar"><MissMinutesAvatar /></div><div><div className="eyebrow"><Sparkles size={12}/> QC lab companion</div><h2>Miss Minutes</h2><small>Searches authorized QC records and audit history</small></div></div><button className="button secondary" onClick={newConversation}><RefreshCw size={14}/> New chat</button></div>
-      <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <MissMinutesAvatar className="assistant-message-mark"/>}</div><div className="assistant-bubble">{m.parts.map(p => p.text).join('')}</div></div>)}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><MissMinutesAvatar className="assistant-message-mark"/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
+      <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}${m.error ? ' is-error' : ''}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <MissMinutesAvatar className="assistant-message-mark"/>}</div><div className="assistant-bubble" role={m.error ? 'alert' : undefined}>{m.parts.map((p, partIndex) => <AssistantMarkdown key={partIndex} text={p.text}/>)}</div></div>)}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><MissMinutesAvatar className="assistant-message-mark"/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
       <div className="assistant-composer"><form onSubmit={handleSend}><div className="assistant-input-wrap"><Search size={18}/><input type="text" className="input" placeholder="Ask about QC samples, results, or audit history…" value={input} onChange={e => setInput(e.target.value)} disabled={loading} autoFocus /></div><button type="submit" className="button primary assistant-send" disabled={loading || !input.trim()}><Send size={16}/> Send</button></form></div>
     </div>
-  </div>;
+  </div></>;
 }

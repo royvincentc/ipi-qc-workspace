@@ -1,0 +1,36 @@
+[     489ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=df471efa:22164
+[     814ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <DataRoutes2 routes={[...]} manifest={{...}} future={{}} state={{...}} isStatic={false} onError={undefined}>
+      <RenderErrorBoundary location={{pathname:"/", ...}} revalidation="idle" component={<div>} error={undefined} ...>
+        <RenderedRoute match={{params:{*:""}, ...}} routeContext={{outlet:null, ...}}>
+          <App>
+            <ConfigurationProvider>
+              <NavigationGuard>
+              <Workspace data={{user:{...}, ...}}>
+                <div className={"app "}>
+                  <AmbientBackdrop>
+                  <RouteExperience>
+                  <aside>
+                  <div>
+                  <CommandPalette>
+                  <FloatingAssistant>
+>                   <button
+>                     className="lab-pet miss-minutes"
+>                     onClick={function onClick}
+>                     aria-label="Open Miss Minutes Assistant"
+>                   >
+                      <img>
+                      <div className="miss-minut..." style={{position:"...", ...}}>
+>                       <button
+>                         onClick={function onClick}
+>                         style={{position:"absolute",top:"8px",right:"8px",background:"transparent",border:"none",cursor:"pointer",color:"inherit", ...}}
+>                         aria-label="Close message"
+>                       >
+                        ...
+                  ...
+ @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=df471efa:2296
+[     814ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=df471efa:2303

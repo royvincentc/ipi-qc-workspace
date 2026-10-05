@@ -1,0 +1,54 @@
+[      71ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=df471efa:22164
+[     160ms] [ERROR] In HTML, %s cannot be a descendant of <%s>.
+This will cause a hydration error.%s <button> button 
+
+  ...
+    <DataRoutes2 routes={[...]} manifest={{...}} future={{}} state={{...}} isStatic={false} onError={undefined}>
+      <RenderErrorBoundary location={{pathname:"...", ...}} revalidation="idle" component={<div>} error={undefined} ...>
+        <RenderedRoute match={{...}} routeContext={{outlet:null, ...}}>
+          <App>
+            <ConfigurationProvider>
+              <NavigationGuard>
+              <Workspace data={{user:{...}, ...}}>
+                <div className={"app "}>
+                  <AmbientBackdrop>
+                  <RouteExperience>
+                  <aside>
+                  <div>
+                  <CommandPalette>
+                  <FloatingAssistant>
+>                   <button
+>                     className="lab-pet miss-minutes"
+>                     onClick={function onClick}
+>                     aria-label="Open Miss Minutes Assistant"
+>                   >
+                      <img>
+                      <div className="miss-minut..." style={{position:"...", ...}}>
+>                       <button
+>                         onClick={function onClick}
+>                         style={{position:"absolute",top:"8px",right:"8px",background:"transparent",border:"none",cursor:"pointer",color:"inherit", ...}}
+>                         aria-label="Close message"
+>                       >
+                        ...
+                  ...
+ @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=df471efa:2296
+[     160ms] [ERROR] <%s> cannot contain a nested %s.
+See this log for the ancestor stack trace. button <button> @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=df471efa:2303
+[   44651ms] [ERROR] Failed to load resource: the server responded with a status of 409 (Conflict) @ http://127.0.0.1:5173/api/report-setup/demo-ST:0
+[   89698ms] [ERROR] Failed to load resource: the server responded with a status of 409 (Conflict) @ http://127.0.0.1:5173/api/report-setup/demo-FG:0
+[  185679ms] [LOG] [vite] server connection lost. Polling for restart... @ http://127.0.0.1:5173/@vite/client:963
+[  185684ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  186704ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  187720ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  188738ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  189754ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  190760ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  191770ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  192779ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  193791ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  194804ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  195813ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  196820ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  197832ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  198836ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034
+[  199840ms] [ERROR] WebSocket connection to 'ws://127.0.0.1:5173/' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:5173/@vite/client:1034

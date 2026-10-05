@@ -1,0 +1,12 @@
+- generic [ref=f4e3]:
+  - main [ref=f4e4]:
+    - paragraph [ref=f4e8]: IPI MICROBIOLOGY
+    - heading "IPI Micro-QC" [level=1] [ref=f4e9]
+    - paragraph [ref=f4e10]: A focused workspace for microbiology quality control.
+    - link "Continue with Google" [ref=f4e11] [cursor=pointer]:
+      - /url: /api/auth/login
+    - paragraph [ref=f4e22]: New accounts start with viewer access. An administrator can grant additional permissions.
+    - generic [ref=f4e23]:
+      - generic [ref=f4e24]: QUALITY CONTROL
+      - generic [ref=f4e25]: MICROBIOLOGY
+  - paragraph [ref=f4e26]: INTERNATIONAL PHARMACEUTICALS, INC.

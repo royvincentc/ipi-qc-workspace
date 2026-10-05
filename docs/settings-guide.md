@@ -13,7 +13,7 @@ Open **Settings** using an administrator account. Search the settings menu by ta
 | Change an ML prefix or number format | Control numbers |
 | Change the standing signatory or filename prefix | Report defaults |
 | Choose light, dark or device theme | Appearance |
-| Connect spreadsheets and library folders | Connections |
+| Connect spreadsheets, library folders and the generated report archive | Connections |
 | Prepare a copy of a historical report layout | Reference documents, then Report templates |
 | Manage authorized accounts | Users & permissions |
 | Find who changed a setting | Audit history |
@@ -36,7 +36,7 @@ Actual results are always entered manually. Not entered, not tested, zero and ne
 
 New drafts snapshot their sample, specification, template and relevant configuration revision. Later settings changes apply to new work. Historical drafts whose original template is unavailable are flagged for review rather than silently moved to another layout. Generated files remain stored unchanged.
 
-Report title, laboratory metadata and footer settings populate matching tokens only where a verified template provides them. Fixed form text and standardized geometry are preserved. The standing “Noted by” default is Celeste P. Yandug. Page X of Y remains automatic; logbook/page reference is entered separately. Report review and signatures remain outside the app.
+Report title, laboratory metadata and footer settings populate matching tokens only where a verified template provides them. Fixed form text and standardized geometry are preserved. The standing “Noted by” default is Celeste P. Yandug. Page X of Y remains automatic; logbook/page reference is entered separately. When a writable Drive report archive is configured, generated DOCX files are uploaded to `Analyst Name (email) / Year / Month`; the local copy remains available for preview and recovery. Report review and signatures remain outside the app.
 
 ## Development and live operation
 

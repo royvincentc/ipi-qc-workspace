@@ -1,0 +1,193 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - link "IPI Micro-QC Quality Control" [ref=e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e20]:
+        - text: IPI Micro-QC
+        - generic [ref=e21]: Quality Control
+    - button "Collapse sidebar" [ref=e22] [cursor=pointer]
+    - navigation [ref=e26]:
+      - link "Dashboard" [ref=e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=e56]: SYSTEM
+    - navigation [ref=e57]:
+      - link "Settings" [ref=e58] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=e64]:
+      - generic "Demo Analyst" [ref=e65]: DE
+      - generic [ref=e66]:
+        - strong [ref=e67]: Demo Analyst
+        - generic [ref=e68]: administrator
+  - generic [ref=e69]:
+    - banner [ref=e70]:
+      - button "Open global sample search" [ref=e71] [cursor=pointer]:
+        - generic [ref=e75]: Search a sample, batch, or control number...
+        - generic [ref=e76]: ⌘K
+      - generic [ref=e77]:
+        - generic [ref=e78]: Demo workspace
+        - generic [ref=e81]:
+          - generic [ref=e82]: Thu, Oct 1, 2026
+          - strong [ref=e83]: 02:42 PM
+        - generic "Demo Analyst" [ref=e84]: DE
+    - generic [ref=e85]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=e266]:
+      - generic [ref=e267]:
+        - generic [ref=e268]:
+          - generic [ref=e269]: QUALITY CONTROL
+          - heading "Settings center" [level=1] [ref=e270]
+          - paragraph [ref=e271]: Manage your laboratory’s daily workflow without changing the application.
+        - generic [ref=e272]:
+          - button "Toggle settings sidebar" [ref=e273] [cursor=pointer]
+          - generic [ref=e277]: Revision 4
+      - generic [ref=e278]:
+        - complementary [ref=e279]:
+          - textbox "Search settings" [ref=e284]:
+            - /placeholder: Find a setting…
+          - button "General Application name, laboratory, location and dates" [ref=e285] [cursor=pointer]:
+            - strong [ref=e286]: General
+            - generic [ref=e287]: Application name, laboratory, location and dates
+          - button "Sample types Categories, availability and test applicability" [ref=e288] [cursor=pointer]:
+            - strong [ref=e289]: Sample types
+            - generic [ref=e290]: Categories, availability and test applicability
+          - button "Form fields Labels, required fields, defaults and source columns" [ref=e291] [cursor=pointer]:
+            - strong [ref=e292]: Form fields
+            - generic [ref=e293]: Labels, required fields, defaults and source columns
+          - button "Products / materials Names, aliases and active products" [ref=e294] [cursor=pointer]:
+            - strong [ref=e295]: Products / materials
+            - generic [ref=e296]: Names, aliases and active products
+          - button "Tests Manual result controls, units and report labels" [ref=e297] [cursor=pointer]:
+            - strong [ref=e298]: Tests
+            - generic [ref=e299]: Manual result controls, units and report labels
+          - button "Specifications Applicable tests and versioned acceptance criteria" [ref=e300] [cursor=pointer]:
+            - strong [ref=e301]: Specifications
+            - generic [ref=e302]: Applicable tests and versioned acceptance criteria
+          - button "Lookup values Reusable dropdown options" [ref=e303] [cursor=pointer]:
+            - strong [ref=e304]: Lookup values
+            - generic [ref=e305]: Reusable dropdown options
+          - button "Control numbers Prefixes and annual sequence formatting" [ref=e306] [cursor=pointer]:
+            - strong [ref=e307]: Control numbers
+            - generic [ref=e308]: Prefixes and annual sequence formatting
+          - button "Report defaults Standing signatory and document metadata" [ref=e309] [cursor=pointer]:
+            - strong [ref=e310]: Report defaults
+            - generic [ref=e311]: Standing signatory and document metadata
+          - button "Appearance Theme, density and list size" [ref=e312] [cursor=pointer]:
+            - strong [ref=e313]: Appearance
+            - generic [ref=e314]: Theme, density and list size
+          - button "Connections Google logbooks and file library" [ref=e315] [cursor=pointer]:
+            - strong [ref=e316]: Connections
+            - generic [ref=e317]: Google logbooks and file library
+          - button "Reference documents Inspect historical reports" [ref=e318] [cursor=pointer]:
+            - strong [ref=e319]: Reference documents
+            - generic [ref=e320]: Inspect historical reports
+          - button "Report templates Standardized DOCX layouts" [active] [ref=e321] [cursor=pointer]:
+            - strong [ref=e322]: Report templates
+            - generic [ref=e323]: Standardized DOCX layouts
+          - button "Users & permissions Authorized accounts and roles" [ref=e324] [cursor=pointer]:
+            - strong [ref=e325]: Users & permissions
+            - generic [ref=e326]: Authorized accounts and roles
+          - button "Audit history Who changed what and when" [ref=e327] [cursor=pointer]:
+            - strong [ref=e328]: Audit history
+            - generic [ref=e329]: Who changed what and when
+        - generic [ref=e330]:
+          - generic [ref=e352]:
+            - heading "Prepare the repeated report layout" [level=2] [ref=e353]
+            - paragraph [ref=e354]: Choose an inspected historical DOCX. The workspace copies its layout and replaces recognized sample fields, criteria and results with blank placeholders.
+            - generic [ref=e355]:
+              - combobox "Inspected report" [ref=e356]:
+                - option "Choose an inspected report…" [selected]
+              - button "Prepare copy" [disabled] [ref=e357]
+          - generic [ref=e358]:
+            - heading "Register a standardized template" [level=2] [ref=e359]
+            - paragraph [ref=e360]: Use the prepared copy or upload a blank DOCX. Registration checks the document structure and records the selected product route.
+            - generic [ref=e361]:
+              - generic [ref=e362]:
+                - generic [ref=e363]: Template name
+                - textbox "Template name" [ref=e364]
+              - generic [ref=e365]:
+                - generic [ref=e366]: Category
+                - combobox "Category" [ref=e367]:
+                  - option "Semi-Finished Goods"
+                  - option "Finished Goods" [selected]
+                  - option "Water"
+                  - option "Raw Material"
+                  - option "Product Stability"
+                  - option "Miscellaneous"
+                  - option "Environmental Monitoring"
+              - generic [ref=e368]:
+                - generic [ref=e369]: Report family
+                - combobox "Report family" [ref=e370]:
+                  - option "routine" [selected]
+                  - option "raw-material-packaging"
+                  - option "stability"
+                  - option "container-location"
+                  - option "water"
+                  - option "environmental"
+                  - option "EM grouped table · 5 columns"
+                  - option "EM GIP · 4 columns"
+                  - option "EM water validation · 4 columns"
+                  - option "EM warehouse phase/air · 7 columns · pending adapter" [disabled]
+              - generic [ref=e371]:
+                - generic [ref=e372]: Required field names
+                - textbox "Required field names" [ref=e373]: analysisDate, logbook
+            - generic [ref=e374]:
+              - generic [ref=e375]: Blank DOCX upload (only when not using a prepared copy)
+              - button "Blank DOCX upload (only when not using a prepared copy)" [ref=e376]
+            - generic [ref=e377]:
+              - checkbox "I checked that historical sample identifiers, results, passing remarks, dates and signatures are absent." [ref=e378] [cursor=pointer]
+              - text: I checked that historical sample identifiers, results, passing remarks, dates and signatures are absent.
+            - button "Register template" [disabled] [ref=e379]
+          - generic [ref=e383]:
+            - heading "Template revisions" [level=2] [ref=e384]
+            - paragraph [ref=e385]: Admin-approved means DOCX checks passed. It does not certify visual layout.
+            - generic [ref=e386]:
+              - generic [ref=e390]:
+                - strong [ref=e391]: Roy Custom Template
+                - generic [ref=e392]: standard · · b788889eb917
+              - generic [ref=e393]: Verified
+            - generic [ref=e394]:
+              - generic [ref=e398]:
+                - strong [ref=e399]: SFG
+                - generic [ref=e400]: standard · Semi-Finished Goods · 5ac807498517
+              - generic [ref=e401]: Not approved
+            - generic [ref=e402]:
+              - generic [ref=e406]:
+                - strong [ref=e407]: SFGQA
+                - generic [ref=e408]: standard · Semi-Finished Goods · 77f05b3c03c3
+              - generic [ref=e409]: Not approved
+            - generic [ref=e410]:
+              - generic [ref=e414]:
+                - strong [ref=e415]: STAB
+                - generic [ref=e416]: standard · Product Stability · be090f932ef0
+              - generic [ref=e417]: Not approved
+            - generic [ref=e418]:
+              - generic [ref=e422]:
+                - strong [ref=e423]: FG
+                - generic [ref=e424]: standard · Finished Goods · a1588ab4c455
+              - generic [ref=e425]: Not approved
+            - generic [ref=e426]:
+              - generic [ref=e430]:
+                - strong [ref=e431]: MISC
+                - generic [ref=e432]: standard · Miscellaneous · b9bd783675b0
+              - generic [ref=e433]: Not approved
+            - generic [ref=e434]:
+              - generic [ref=e438]:
+                - strong [ref=e439]: RM
+                - generic [ref=e440]: standard · Raw Material · 9cbbbfe273fa
+              - generic [ref=e441]: Not approved
+            - generic [ref=e442]:
+              - generic [ref=e446]:
+                - strong [ref=e447]: RMQA
+                - generic [ref=e448]: standard · Raw Material · 9dd7f9a14b45
+              - generic [ref=e449]: Not approved
+  - button "Open Miss Minutes Assistant" [ref=e264] [cursor=pointer]:
+    - img "Miss Minutes" [ref=e265]

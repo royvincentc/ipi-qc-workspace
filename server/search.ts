@@ -29,7 +29,7 @@ export function registerSearch(app:Express){
   // original source row and field map, which can be much larger and belong in
   // the single-record endpoint rather than every keystroke/search page.
   const rows=(await db.query(`SELECT jsonb_build_object(
-    'id',data->'id','name',data->'name','ml',data->'ml','category',data->'category',
+    'id',COALESCE(data->'id',to_jsonb(samples.id)),'name',data->'name','ml',data->'ml','category',data->'category',
     'categoryLabel',data->'categoryLabel','batch',data->'batch','received',data->'received',
     'status',data->'status','remarks',data->'remarks','context',data->'context'
   ) AS data,(SELECT count(*) FROM samples b WHERE b.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
@@ -51,7 +51,7 @@ export function registerSearch(app:Express){
     'specification',data->'specification',
     'results',data->'results'
   ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100`)).rows.map(r=>r.data).map(d=>{const t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);const referenceIssue=!t||t.revision!==d.templateRevision;const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;return {id:d.id,sample:{name:d.sample.name,ml:d.sample.ml},revision:d.revision,updatedAt:d.updatedAt,generated:generatedRevisions.has(`${d.id}:${d.revision}`),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};});
-  const recent=(await db.query('SELECT data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>r.data);
+  const recent=(await db.query('SELECT id,data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>({...r.data,id:r.id}));
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:config.value.general.timezone}).format(new Date());
   const loggedToday=Number((await db.query(`SELECT count(*) FROM samples WHERE ${receivedDay}=$1`,[today])).rows[0].count);
   const reports=Number((await db.query("SELECT count(*) FROM files WHERE data->>'kind'='report'")).rows[0].count);

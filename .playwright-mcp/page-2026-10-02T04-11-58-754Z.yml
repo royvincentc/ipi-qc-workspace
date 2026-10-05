@@ -1,0 +1,244 @@
+- generic [ref=f2e304]:
+  - complementary "Workspace navigation" [ref=f2e305]:
+    - link "IPI Micro-QC Quality Control" [ref=f2e306] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f2e312]:
+        - text: IPI Micro-QC
+        - generic [ref=f2e313]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f2e314] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f2e318]:
+      - link "Dashboard" [ref=f2e319] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f2e326] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f2e329] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f2e334] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f2e339] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f2e343] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f2e348]: SYSTEM
+    - navigation "System navigation" [ref=f2e349]:
+      - button "Sync with Database" [ref=f2e350] [cursor=pointer]
+      - link "Settings" [ref=f2e357] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f2e362]:
+      - generic [ref=f2e363]:
+        - generic [ref=f2e364]: Appearance
+        - switch "Dark theme" [checked] [ref=f2e365] [cursor=pointer]
+      - generic [ref=f2e389]:
+        - generic "Demo Analyst" [ref=f2e390]: DE
+        - generic [ref=f2e391]:
+          - strong [ref=f2e392]: Demo Analyst
+          - generic [ref=f2e393]: administrator
+  - generic [ref=f2e394]:
+    - banner [ref=f2e395]:
+      - button "Open global sample search" [ref=f2e396] [cursor=pointer]:
+        - generic [ref=f2e400]: Search a sample, batch, or control number...
+        - generic [ref=f2e401]: ⌘K
+      - generic [ref=f2e402]:
+        - generic [ref=f2e403]: Demo workspace
+        - generic [ref=f2e406]:
+          - generic [ref=f2e407]: Fri, Oct 2, 2026
+          - strong [ref=f2e408]: 12:11 PM
+        - generic "Demo Analyst" [ref=f2e409]: DE
+    - generic [ref=f2e410]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f2e412]:
+      - generic [ref=f2e413]:
+        - generic [ref=f2e414]:
+          - generic [ref=f2e415]: QUALITY CONTROL
+          - heading "Samples & history" [level=1] [ref=f2e416]
+          - paragraph [ref=f2e417]: Search every month while keeping each source record separate.
+        - button "Refresh sources" [ref=f2e418] [cursor=pointer]
+      - generic [ref=f2e424]:
+        - generic [ref=f2e425]:
+          - textbox "Search samples" [ref=f2e430]:
+            - /placeholder: Search by ML number, product, or batch
+          - combobox "Sample type filter" [ref=f2e431]:
+            - option "All sample types" [selected]
+            - option "Semi-Finished Goods"
+            - option "Finished Goods"
+            - option "Water"
+            - option "Raw Material"
+            - option "Product Stability"
+            - option "Miscellaneous"
+            - option "Environmental Monitoring"
+          - combobox "Source status filter" [ref=f2e432]:
+            - option "All source statuses" [selected]
+            - option "ON-GOING"
+            - option "RELEASED"
+          - combobox "Sort samples" [ref=f2e433]:
+            - option "Recently updated" [selected]
+            - option "ML number ↑"
+            - option "Sample name ↑"
+            - option "Received date ↓"
+        - generic [ref=f2e434]:
+          - generic [ref=f2e435]:
+            - generic [ref=f2e436]: Received from
+            - textbox "Received from" [ref=f2e437]
+          - generic [ref=f2e438]:
+            - generic [ref=f2e439]: Received through
+            - textbox "Received through" [ref=f2e440]
+          - group [ref=f2e441]:
+            - generic "Visible columns" [ref=f2e442]
+          - button "Clear filters" [ref=f2e443] [cursor=pointer]
+        - table [ref=f2e445]:
+          - rowgroup [ref=f2e446]:
+            - row [ref=f2e447]:
+              - columnheader "Sample / control number" [ref=f2e448]
+              - columnheader "Sample type" [ref=f2e449]
+              - columnheader "Batch / lot" [ref=f2e450]
+              - columnheader "Received" [ref=f2e451]
+              - columnheader "Source status" [ref=f2e452]
+              - columnheader "Action" [ref=f2e453]
+          - rowgroup [ref=f2e455]:
+            - row [ref=f2e456]:
+              - cell [ref=f2e457]:
+                - link "Test product 2" [ref=f2e458] [cursor=pointer]:
+                  - /url: /samples/null
+                  - strong [ref=f2e459]: Test product
+                  - generic [ref=f2e460]: "2"
+              - cell "Environmental Monitoring" [ref=f2e461]
+              - cell "—" [ref=f2e462]
+              - cell "Not recorded" [ref=f2e463]
+              - cell "Not recorded" [ref=f2e464]
+              - cell [ref=f2e466]:
+                - link "Open →" [ref=f2e467] [cursor=pointer]:
+                  - /url: /samples/null
+            - row [ref=f2e468]:
+              - cell [ref=f2e469]:
+                - link "Test Product 1" [ref=f2e470] [cursor=pointer]:
+                  - /url: /samples/null
+                  - strong [ref=f2e471]: Test Product
+                  - generic [ref=f2e472]: "1"
+              - cell "Environmental Monitoring" [ref=f2e473]
+              - cell "—" [ref=f2e474]
+              - cell "Not recorded" [ref=f2e475]
+              - cell "Not recorded" [ref=f2e476]
+              - cell [ref=f2e478]:
+                - link "Open →" [ref=f2e479] [cursor=pointer]:
+                  - /url: /samples/null
+            - row [ref=f2e480]:
+              - cell [ref=f2e481]:
+                - link "OPK-Export - Filling - EYA02 ML-EM-26-0037" [ref=f2e482] [cursor=pointer]:
+                  - /url: /samples/demo-em-trouble
+                  - strong [ref=f2e483]: OPK-Export - Filling - EYA02
+                  - generic [ref=f2e484]: ML-EM-26-0037
+              - cell "Environmental Monitoring" [ref=f2e485]
+              - cell "EYA02" [ref=f2e486]
+              - cell "2026-09-25 09:00" [ref=f2e487]
+              - cell "Not recorded" [ref=f2e488]
+              - cell [ref=f2e490]:
+                - link "Open →" [ref=f2e491] [cursor=pointer]:
+                  - /url: /samples/demo-em-trouble
+            - row [ref=f2e492]:
+              - cell [ref=f2e493]:
+                - link "De-identified monitoring check ML-EM-26-0008" [ref=f2e494] [cursor=pointer]:
+                  - /url: /samples/eeda770b-3958-49ce-b08a-091ad9294219
+                  - strong [ref=f2e495]: De-identified monitoring check
+                  - generic [ref=f2e496]: ML-EM-26-0008
+              - cell "Environmental Monitoring" [ref=f2e497]
+              - cell "UX-CHECK-001" [ref=f2e498]
+              - cell "2026-09-24T11:00" [ref=f2e499]
+              - cell "Not recorded" [ref=f2e500]
+              - cell [ref=f2e502]:
+                - link "Open →" [ref=f2e503] [cursor=pointer]:
+                  - /url: /samples/eeda770b-3958-49ce-b08a-091ad9294219
+            - row [ref=f2e504]:
+              - cell [ref=f2e505]:
+                - link "De-identified Product A · 100 units ML-FG-26-0001" [ref=f2e506] [cursor=pointer]:
+                  - /url: /samples/demo-FG
+                  - strong [ref=f2e507]: De-identified Product A · 100 units
+                  - generic [ref=f2e508]: ML-FG-26-0001
+              - cell "Finished Goods" [ref=f2e509]
+              - cell "DEMO-001" [ref=f2e510]
+              - cell "2026-09-23 09:00" [ref=f2e511]
+              - cell "ON-GOING" [ref=f2e512]
+              - cell [ref=f2e514]:
+                - link "Open →" [ref=f2e515] [cursor=pointer]:
+                  - /url: /samples/demo-FG
+            - row [ref=f2e516]:
+              - cell [ref=f2e517]:
+                - link "Production Area F ML-EM-26-0007" [ref=f2e518] [cursor=pointer]:
+                  - /url: /samples/demo-EM
+                  - strong [ref=f2e519]: Production Area F
+                  - generic [ref=f2e520]: ML-EM-26-0007
+              - cell "Environmental Monitoring" [ref=f2e521]
+              - cell "DEMO-007" [ref=f2e522]
+              - cell "2026-09-23 09:00" [ref=f2e523]
+              - cell "ON-GOING" [ref=f2e524]
+              - cell [ref=f2e526]:
+                - link "Open →" [ref=f2e527] [cursor=pointer]:
+                  - /url: /samples/demo-EM
+            - row [ref=f2e528]:
+              - cell [ref=f2e529]:
+                - link "Laboratory Sample E ML-MIS-26-0006" [ref=f2e530] [cursor=pointer]:
+                  - /url: /samples/demo-MIS
+                  - strong [ref=f2e531]: Laboratory Sample E
+                  - generic [ref=f2e532]: ML-MIS-26-0006
+              - cell "Miscellaneous" [ref=f2e533]
+              - cell "DEMO-006" [ref=f2e534]
+              - cell "2026-09-23 09:00" [ref=f2e535]
+              - cell "ON-GOING" [ref=f2e536]
+              - cell [ref=f2e538]:
+                - link "Open →" [ref=f2e539] [cursor=pointer]:
+                  - /url: /samples/demo-MIS
+            - row [ref=f2e540]:
+              - cell [ref=f2e541]:
+                - link "Stability Sample D ML-ST-26-0005" [ref=f2e542] [cursor=pointer]:
+                  - /url: /samples/demo-ST
+                  - strong [ref=f2e543]: Stability Sample D
+                  - generic [ref=f2e544]: ML-ST-26-0005
+              - cell "Product Stability" [ref=f2e545]
+              - cell "DEMO-005" [ref=f2e546]
+              - cell "2026-09-23 09:00" [ref=f2e547]
+              - cell "ON-GOING" [ref=f2e548]
+              - cell [ref=f2e550]:
+                - link "Open →" [ref=f2e551] [cursor=pointer]:
+                  - /url: /samples/demo-ST
+            - row [ref=f2e552]:
+              - cell [ref=f2e553]:
+                - link "Base Material C ML-RM-26-0004" [ref=f2e554] [cursor=pointer]:
+                  - /url: /samples/demo-RM
+                  - strong [ref=f2e555]: Base Material C
+                  - generic [ref=f2e556]: ML-RM-26-0004
+              - cell "Raw Material" [ref=f2e557]
+              - cell "DEMO-004" [ref=f2e558]
+              - cell "2026-09-23 09:00" [ref=f2e559]
+              - cell "ON-GOING" [ref=f2e560]
+              - cell [ref=f2e562]:
+                - link "Open →" [ref=f2e563] [cursor=pointer]:
+                  - /url: /samples/demo-RM
+            - row [ref=f2e564]:
+              - cell [ref=f2e565]:
+                - link "Purified Water · Point 03 ML-WS-26-0003" [ref=f2e566] [cursor=pointer]:
+                  - /url: /samples/demo-WS
+                  - strong [ref=f2e567]: Purified Water · Point 03
+                  - generic [ref=f2e568]: ML-WS-26-0003
+              - cell "Water" [ref=f2e569]
+              - cell "DEMO-003" [ref=f2e570]
+              - cell "2026-09-23 09:00" [ref=f2e571]
+              - cell "RELEASED" [ref=f2e572]
+              - cell [ref=f2e574]:
+                - link "Open →" [ref=f2e575] [cursor=pointer]:
+                  - /url: /samples/demo-WS
+            - row [ref=f2e576]:
+              - cell [ref=f2e577]:
+                - link "Botanical Sample B ML-SFG-26-0002" [ref=f2e578] [cursor=pointer]:
+                  - /url: /samples/demo-SFG
+                  - strong [ref=f2e579]: Botanical Sample B
+                  - generic [ref=f2e580]: ML-SFG-26-0002
+              - cell "Semi-Finished Goods" [ref=f2e581]
+              - cell "DEMO-002" [ref=f2e582]
+              - cell "2026-09-23 09:00" [ref=f2e583]
+              - cell "ON-GOING" [ref=f2e584]
+              - cell [ref=f2e586]:
+                - link "Open →" [ref=f2e587] [cursor=pointer]:
+                  - /url: /samples/demo-SFG
+        - generic [ref=f2e588]:
+          - generic [ref=f2e589]: 11 matching samples · Page 1 of 1
+          - button "Previous" [disabled] [ref=f2e590]
+          - button "Next" [disabled] [ref=f2e591]
+  - button "Open Miss Minutes Assistant" [ref=f2e592] [cursor=pointer]

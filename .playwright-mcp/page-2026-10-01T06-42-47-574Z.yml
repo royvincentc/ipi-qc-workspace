@@ -1,0 +1,126 @@
+- generic [ref=e12]:
+  - complementary [ref=e13]:
+    - link "IPI Micro-QC Quality Control" [ref=e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e20]:
+        - text: IPI Micro-QC
+        - generic [ref=e21]: Quality Control
+    - button "Collapse sidebar" [ref=e22] [cursor=pointer]
+    - navigation [ref=e26]:
+      - link "Dashboard" [ref=e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=e56]: SYSTEM
+    - navigation [ref=e57]:
+      - link "Settings" [active] [ref=e58] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=e64]:
+      - generic "Demo Analyst" [ref=e65]: DE
+      - generic [ref=e66]:
+        - strong [ref=e67]: Demo Analyst
+        - generic [ref=e68]: administrator
+  - generic [ref=e69]:
+    - banner [ref=e70]:
+      - button "Open global sample search" [ref=e71] [cursor=pointer]:
+        - generic [ref=e75]: Search a sample, batch, or control number...
+        - generic [ref=e76]: ⌘K
+      - generic [ref=e77]:
+        - generic [ref=e78]: Demo workspace
+        - generic [ref=e81]:
+          - generic [ref=e82]: Thu, Oct 1, 2026
+          - strong [ref=e83]: 02:42 PM
+        - generic "Demo Analyst" [ref=e84]: DE
+    - generic [ref=e85]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=e266]:
+      - generic [ref=e267]:
+        - generic [ref=e268]:
+          - generic [ref=e269]: QUALITY CONTROL
+          - heading "Settings center" [level=1] [ref=e270]
+          - paragraph [ref=e271]: Manage your laboratory’s daily workflow without changing the application.
+        - generic [ref=e272]:
+          - button "Toggle settings sidebar" [ref=e273] [cursor=pointer]
+          - generic [ref=e277]: Revision 4
+      - generic [ref=e278]:
+        - complementary [ref=e279]:
+          - textbox "Search settings" [ref=e284]:
+            - /placeholder: Find a setting…
+          - button "General Application name, laboratory, location and dates" [ref=e285] [cursor=pointer]:
+            - strong [ref=e286]: General
+            - generic [ref=e287]: Application name, laboratory, location and dates
+          - button "Sample types Categories, availability and test applicability" [ref=e288] [cursor=pointer]:
+            - strong [ref=e289]: Sample types
+            - generic [ref=e290]: Categories, availability and test applicability
+          - button "Form fields Labels, required fields, defaults and source columns" [ref=e291] [cursor=pointer]:
+            - strong [ref=e292]: Form fields
+            - generic [ref=e293]: Labels, required fields, defaults and source columns
+          - button "Products / materials Names, aliases and active products" [ref=e294] [cursor=pointer]:
+            - strong [ref=e295]: Products / materials
+            - generic [ref=e296]: Names, aliases and active products
+          - button "Tests Manual result controls, units and report labels" [ref=e297] [cursor=pointer]:
+            - strong [ref=e298]: Tests
+            - generic [ref=e299]: Manual result controls, units and report labels
+          - button "Specifications Applicable tests and versioned acceptance criteria" [ref=e300] [cursor=pointer]:
+            - strong [ref=e301]: Specifications
+            - generic [ref=e302]: Applicable tests and versioned acceptance criteria
+          - button "Lookup values Reusable dropdown options" [ref=e303] [cursor=pointer]:
+            - strong [ref=e304]: Lookup values
+            - generic [ref=e305]: Reusable dropdown options
+          - button "Control numbers Prefixes and annual sequence formatting" [ref=e306] [cursor=pointer]:
+            - strong [ref=e307]: Control numbers
+            - generic [ref=e308]: Prefixes and annual sequence formatting
+          - button "Report defaults Standing signatory and document metadata" [ref=e309] [cursor=pointer]:
+            - strong [ref=e310]: Report defaults
+            - generic [ref=e311]: Standing signatory and document metadata
+          - button "Appearance Theme, density and list size" [ref=e312] [cursor=pointer]:
+            - strong [ref=e313]: Appearance
+            - generic [ref=e314]: Theme, density and list size
+          - button "Connections Google logbooks and file library" [ref=e315] [cursor=pointer]:
+            - strong [ref=e316]: Connections
+            - generic [ref=e317]: Google logbooks and file library
+          - button "Reference documents Inspect historical reports" [ref=e318] [cursor=pointer]:
+            - strong [ref=e319]: Reference documents
+            - generic [ref=e320]: Inspect historical reports
+          - button "Report templates Standardized DOCX layouts" [ref=e321] [cursor=pointer]:
+            - strong [ref=e322]: Report templates
+            - generic [ref=e323]: Standardized DOCX layouts
+          - button "Users & permissions Authorized accounts and roles" [ref=e324] [cursor=pointer]:
+            - strong [ref=e325]: Users & permissions
+            - generic [ref=e326]: Authorized accounts and roles
+          - button "Audit history Who changed what and when" [ref=e327] [cursor=pointer]:
+            - strong [ref=e328]: Audit history
+            - generic [ref=e329]: Who changed what and when
+        - generic [ref=e331]:
+          - heading "General" [level=2] [ref=e332]
+          - generic [ref=e333]:
+            - generic [ref=e334]:
+              - generic [ref=e335]: Application name
+              - textbox "Application name" [ref=e336]: IPI Micro-QC
+            - generic [ref=e337]:
+              - generic [ref=e338]: Laboratory name
+              - textbox "Laboratory name" [ref=e339]: IPI Microbiology Laboratory
+            - generic [ref=e340]:
+              - generic [ref=e341]: Department
+              - textbox "Department" [ref=e342]: Quality Control
+            - generic [ref=e343]:
+              - generic [ref=e344]: Site / location
+              - textbox "Site / location" [ref=e345]: International Pharmaceuticals, Inc.
+            - generic [ref=e346]:
+              - generic [ref=e347]: Laboratory timezone
+              - textbox "Laboratory timezone" [ref=e348]: Asia/Manila
+            - generic [ref=e349]:
+              - generic [ref=e350]: Date display
+              - combobox "Date display" [ref=e351]:
+                - option "Philippines" [selected]
+                - option "Day / month / year"
+                - option "Month / day / year"
+  - button "Open Miss Minutes Assistant" [ref=e264] [cursor=pointer]:
+    - img "Miss Minutes" [ref=e265]

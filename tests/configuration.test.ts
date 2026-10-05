@@ -7,10 +7,10 @@ process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=folder;
 const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('../server/configuration.js');
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
-const {allocate}=await import('../server/domain.js');
+const {allocate,normalizeHeader,resolveHeaderMap}=await import('../server/domain.js');
 const {reportTestLabel,reportIssues,resultDisplayValue}=await import('../shared/model.js');
 const {mapResultHeaders}=await import('../server/google.js');
-const {submitSample}=await import('../server/samples.js');
+const {submitSample,prepareSample,commitPreparedBatch,cancelPreparedBatch,sourceSample}=await import('../server/samples.js');
 const {createDraft,createAutomaticDraft,resolveReportSetup,reportTemplateFields,reportFormatName,resolveApplicabilityMatches,matchScore,sameSpecificationVariant}=await import('../server/reports.js');
 const {requireRole}=await import('../server/auth.js');
 await migrate();after(close);
@@ -51,8 +51,35 @@ test('configured numbering recognizes legacy series and still appends only in th
  const result=allocate([{id:1,name:'September 2026',rows,rowCount:15,merges:[m.merge,...m.extraMerges]}],'FG',new Date('2026-09-24T00:00Z'),'Asia/Manila',[],type);assert.equal(result.ml,'IPI-FG/2026/00043');assert.equal(result.row,7);
 });
 test('simultaneous demo intake and retry preserve unique numbers and one record per submission',async()=>{
- const {randomUUID}=await import('node:crypto');const first={submissionId:randomUUID(),category:'FG',fields:{name:'Example',batch:'TEST',received:'2026-09-24T09:00'}};
+ await getConfiguration();const {randomUUID}=await import('node:crypto');const first={submissionId:randomUUID(),category:'FG',fields:{name:'Example',batch:'TEST',received:'2026-09-24T09:00'}};
  const [a,b]=await Promise.all([submitSample('admin@example.test',first),submitSample('admin@example.test',{...first,submissionId:randomUUID()})]);assert.notEqual(a.ml,b.ml);assert.equal((await submitSample('admin@example.test',first)).id,a.id);
+});
+test('header normalization handles Unicode and punctuation and refuses duplicate aliases',()=>{
+ assert.equal(normalizeHeader('  DATE\nRECEIVED — μ '),'datereceivedμ');
+ assert.equal(normalizeHeader('Batch/Lot No.'),normalizeHeader('batch lot no'));
+ const mapped=resolveHeaderMap(['Date Recieved','Batch/Lot No.','Batch No.','Unknown'],{received:['Date Received','Date Recieved'],batch:['Batch/Lot No.','Batch No.']});
+ assert.equal(mapped.fields.received,0);assert.equal(mapped.ambiguous.batch?.length,2);assert.deepEqual(mapped.unknown,[{index:1,header:'Batch/Lot No.'},{index:2,header:'Batch No.'},{index:3,header:'Unknown'}]);
+});
+test('sample snapshots preserve raw blanks, zero, N/A and date-time values',async()=>{
+ const type=(await getConfiguration()).value.sampleTypes.find(t=>t.id==='FG')!;const values=Array.from({length:type.layout.end-type.layout.start+1},()=>'' as unknown);values[type.layout.fields.ml]='ML-FG-26-0042';values[type.layout.fields.name]='N/A';values[type.layout.fields.batch]=0;values[type.layout.fields.received]='2026-10-05T11:50';values[values.length-1]='N/A';
+ const sheet={id:101,name:'October 2026',rowCount:20,rows:Array.from({length:3},(_,i)=>i===2?type.layout.headers:[])} as any;const sample=sourceSample('fixture-workbook',sheet,'FG',5,values,type,7);
+ assert.deepEqual(sample.source.raw,values);assert.equal(sample.fields.name,'N/A');assert.equal(sample.fields.batch,'0');assert.equal(sample.fields.received,'2026-10-05T11:50');assert.equal(sample.source.mappingRevision,'7');
+});
+test('batch review holds server numbers and commit/retry is idempotent per row',async()=>{
+ const {randomUUID}=await import('node:crypto');const batchId=randomUUID(),category='FG';const items=[
+  {submissionId:randomUUID(),category,fields:{name:'Review A',batch:'B-1',received:'2026-10-05T08:00'}},
+  {submissionId:randomUUID(),category,fields:{name:'Review B',batch:'B-2',received:'2026-10-05T08:15'}},
+ ] as any[];
+ await getConfiguration();const prepared=[];for(let index=0;index<items.length;index++)prepared.push(await prepareSample('analyst@example.test',items[index],batchId,index));const [first,second]=prepared;
+ assert.equal(first.state,'ready');assert.equal(second.state,'ready');assert.notEqual(first.ml,second.ml);assert.equal((await prepareSample('analyst@example.test',items[0],batchId,0)).ml,first.ml);
+ const outcomes=await commitPreparedBatch('analyst@example.test',items.map(i=>i.submissionId));assert.deepEqual(outcomes.map(x=>x.state),['complete','complete']);assert.equal(outcomes[0].sample.ml,first.ml);
+ const retried=await commitPreparedBatch('analyst@example.test',items.map(i=>i.submissionId));assert.deepEqual(retried.map(x=>x.sample.id),outcomes.map(x=>x.sample.id));
+ assert.equal(Number((await db.query("SELECT count(*) FROM submissions WHERE state='complete' AND data->>'batchId'=$1",[batchId])).rows[0].count),2);
+});
+test('prepared rows can be cancelled before commit and retain their audit identity',async()=>{
+ const {randomUUID}=await import('node:crypto');const batchId=randomUUID(),submissionId=randomUUID();const item={submissionId,category:'FG',fields:{name:'Review cancel',batch:'B-C',received:'2026-10-05T09:00'}} as any;
+ const prepared=await prepareSample('analyst@example.test',item,batchId,0);assert.deepEqual(await cancelPreparedBatch('analyst@example.test',batchId),{cancelled:1});const cancelled=(await db.query('SELECT state,ml FROM submissions WHERE id=$1',[submissionId])).rows[0];assert.equal(cancelled.state,'cancelled');assert.equal(cancelled.ml,null);const auditRow=(await db.query("SELECT details FROM audit WHERE entity=$1 AND action='sample_logging_review_cancelled'",[submissionId])).rows[0].details;assert.equal(auditRow.ml,prepared.ml);assert.equal(auditRow.reservationReleased,true);
+ const replacement=await prepareSample('analyst@example.test',{...item,submissionId:randomUUID()},batchId,0);assert.equal(replacement.ml,prepared.ml);
 });
 test('draft pins template, criteria, manual empty results and configuration revision',async()=>{
  let current=await getConfiguration();const value=structuredClone(current.value);value.sampleTypes.find(t=>t.id==='FG')!.applicability='managed';value.products.push({id:'example-product',name:'Example',category:'FG',code:'',aliases:[],active:true});current=await saveConfiguration(value,current.revision,'admin@example.test');

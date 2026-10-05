@@ -4,6 +4,8 @@ import {categories,type Category,type Criterion,type Specification} from '../sha
 export class Fault extends Error {constructor(public status:number,message:string){super(message);}}
 export const hash=(v:unknown)=>createHash('sha256').update(JSON.stringify(v)).digest('hex');
 export const normalized=(s:unknown)=>String(s??'').replace(/\s+/g,' ').trim().toLowerCase();
+export const normalizeHeader=(value:unknown)=>String(value??'').normalize('NFKC').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase().replace(/[^\p{L}\p{N}]/gu,'');
+export function resolveHeaderMap(headers:unknown[],aliases:Record<string,string[]>){const fields:Record<string,number>={},ambiguous:Record<string,number[]>={},claimed=new Set<number>();for(const [field,names] of Object.entries(aliases)){const accepted=new Set(names.map(normalizeHeader));const hits=headers.flatMap((header,index)=>accepted.has(normalizeHeader(header))?[index]:[]);if(hits.length===1){fields[field]=hits[0];claimed.add(hits[0]);}else if(hits.length>1)ambiguous[field]=hits;}const unknown=headers.flatMap((header,index)=>String(header??'').trim()&&!claimed.has(index)?[{index,header:String(header)}]:[]);return {fields,ambiguous,unknown};}
 export function column(n:number){let s='';for(n++;n;n=Math.floor((n-1)/26))s=String.fromCharCode(65+(n-1)%26)+s;return s;}
 const common=['Date Recieve','Sample Name','Batch No.','ML Number','RECIEVED BY','ANALYZED BY','DATE ANALYZED','PROCEED BY / READ BY','DATE RELEASED','STATUS','REMARKS'];
 export interface Mapping {start:number;end:number;ml:number;header:number;first:number;title:string;merge:string;fields:Record<string,number>;headers:string[];extraMerges?:string[]}
@@ -16,7 +18,7 @@ export function monthOf(name:string){const m=name.match(/^(January|February|Marc
 export function currentMonth(now:Date,zone:string){const parts=new Intl.DateTimeFormat('en',{timeZone:zone,month:'numeric',year:'numeric'}).formatToParts(now);return {month:Number(parts.find(p=>p.type==='month')!.value),year:Number(parts.find(p=>p.type==='year')!.value)};}
 function sameSourceHeader(expected:unknown,actual:unknown){
  const key=(value:unknown)=>{
-  const compact=normalized(value).replace(/[^a-z0-9]/g,'');
+  const compact=normalizeHeader(value);
   // Older logbooks use the misspelling "Recieved"; accept its corrected
   // spelling without weakening validation for unrelated header changes.
   return compact==='daterecieved'?'datereceived':compact;

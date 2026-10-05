@@ -1,0 +1,16 @@
+- generic [ref=f6e3]:
+  - complementary [ref=f6e4]:
+    - generic [ref=f6e5]: IPI MICROBIOLOGY
+    - generic [ref=f6e10]:
+      - heading "A workspace for microbiology QC." [level=2] [ref=f6e11]
+      - paragraph [ref=f6e12]: Sample intake, review, and report preparation in one traceable workspace.
+  - region "Sign in to IPI Micro-QC" [ref=f6e13]:
+    - main [ref=f6e14]:
+      - heading "IPI Micro-QC" [level=1] [ref=f6e18]
+      - paragraph [ref=f6e19]: Sign in with your Google account to continue.
+      - link "Continue with Google" [ref=f6e20] [cursor=pointer]:
+        - /url: /api/auth/login
+      - paragraph [ref=f6e31]: New accounts start with viewer access. An administrator can grant additional permissions.
+      - generic [ref=f6e32]:
+        - generic [ref=f6e33]: AUTHORIZED ACCESS
+        - generic [ref=f6e34]: GOOGLE SIGN-IN

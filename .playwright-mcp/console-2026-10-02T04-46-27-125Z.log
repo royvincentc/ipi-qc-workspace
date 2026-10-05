@@ -1,0 +1,2 @@
+[      95ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:22164
+[   96224ms] [ERROR] Failed to load resource: the server responded with a status of 503 (Service Unavailable) @ http://127.0.0.1:5173/api/drafts/c2c38bba-efe7-4d2d-8e44-59c0642c57a2/generate:0

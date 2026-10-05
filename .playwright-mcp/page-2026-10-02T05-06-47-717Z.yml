@@ -1,0 +1,161 @@
+- generic [ref=f7e12]:
+  - complementary "Workspace navigation" [ref=f7e13]:
+    - link "IPI Micro-QC Quality Control" [ref=f7e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f7e20]:
+        - text: IPI Micro-QC
+        - generic [ref=f7e21]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f7e22] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f7e26]:
+      - link "Dashboard" [ref=f7e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f7e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f7e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f7e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f7e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f7e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f7e56]: SYSTEM
+    - navigation "System navigation" [ref=f7e57]:
+      - button "Sync with Database" [ref=f7e58] [cursor=pointer]
+      - link "Settings" [ref=f7e65] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f7e70]:
+      - generic [ref=f7e71]:
+        - generic [ref=f7e72]: Appearance
+        - switch "Dark theme" [checked] [ref=f7e73] [cursor=pointer]
+      - generic [ref=f7e97]:
+        - generic "Demo Analyst" [ref=f7e98]: DE
+        - generic [ref=f7e99]:
+          - strong [ref=f7e100]: Demo Analyst
+          - generic [ref=f7e101]: administrator
+  - generic [ref=f7e102]:
+    - banner [ref=f7e103]:
+      - button "Open global sample search" [ref=f7e104] [cursor=pointer]:
+        - generic [ref=f7e108]: Search a sample, batch, or control number...
+        - generic [ref=f7e109]: ⌘K
+      - generic [ref=f7e110]:
+        - generic [ref=f7e111]: Demo workspace
+        - generic [ref=f7e114]:
+          - generic [ref=f7e115]: Fri, Oct 2, 2026
+          - strong [ref=f7e116]: 01:06 PM
+        - generic "Demo Analyst" [ref=f7e117]: DE
+    - generic [ref=f7e118]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f7e120]:
+      - link "← Analysis reports" [ref=f7e121] [cursor=pointer]:
+        - /url: /reports
+      - generic [ref=f7e122]:
+        - generic [ref=f7e123]:
+          - generic [ref=f7e124]: REPORT DRAFT · REVISION 4
+          - heading "Enter actual results" [level=1] [ref=f7e125]
+          - paragraph [ref=f7e126]: For external review and signature. Sample release remains a separate process.
+        - button "Revision history" [ref=f7e127] [cursor=pointer]
+      - generic [ref=f7e132]:
+        - generic [ref=f7e133]:
+          - generic [ref=f7e134]: FG
+          - strong [ref=f7e135]: De-identified Product A · 100 units
+          - generic [ref=f7e136]: ML-FG-26-0001
+          - generic [ref=f7e137]: Batch DEMO-001
+        - link "Confirm source" [ref=f7e138] [cursor=pointer]:
+          - /url: /samples/demo-FG
+        - generic [ref=f7e143]: September 2026 · FG · row 6
+      - generic [ref=f7e144]:
+        - button "01 1. Results and report details" [ref=f7e145] [cursor=pointer]
+        - button "02 2. Review and document preview" [ref=f7e146] [cursor=pointer]
+      - generic [ref=f7e147]:
+        - generic [ref=f7e148]:
+          - heading "Applicable tests" [level=2] [ref=f7e149]
+          - generic [ref=f7e150]: Routine
+        - paragraph [ref=f7e151]: Results are copied from IPI Results when a matching ML number is found. Fill in any values that are missing; standard specifications are shown beside each test.
+        - generic [ref=f7e152]:
+          - generic [ref=f7e153]:
+            - generic [ref=f7e154]:
+              - heading "Standard Plate Count (SPC)" [level=3] [ref=f7e155]
+              - paragraph
+              - generic [ref=f7e156]: Entered manually
+            - generic [ref=f7e157]:
+              - generic [ref=f7e158]: STANDARD SPECIFICATION
+              - strong [ref=f7e159]: Nmt 50 cfu/g
+          - generic [ref=f7e160]:
+            - generic [ref=f7e161]:
+              - generic [ref=f7e162]: Entry state
+              - combobox "Entry state" [ref=f7e163]:
+                - option "Not entered"
+                - option "Result entered" [selected]
+                - option "Not tested"
+            - generic [ref=f7e164]:
+              - generic [ref=f7e165]: Qualifier
+              - combobox "Qualifier" [ref=f7e166]:
+                - option "Nmt 100 cfu/mL"
+                - option "Actual Result" [selected]
+            - generic [ref=f7e167]:
+              - generic [ref=f7e168]: value
+              - textbox "value cfu/mL will be added to the report" [ref=f7e169]:
+                - /placeholder: Enter value
+                - text: "0"
+              - generic [ref=f7e170]: cfu/mL will be added to the report
+            - generic [ref=f7e171]:
+              - generic [ref=f7e172]: Analyst remarks
+              - combobox "Analyst remarks" [ref=f7e173]:
+                - option "Select outcome…" [selected]
+                - option "Passed"
+                - option "Failed"
+          - group [ref=f7e174]:
+            - generic "Specification source · 2026-09-01" [ref=f7e175] [cursor=pointer]
+        - generic [ref=f7e176]:
+          - generic [ref=f7e177]:
+            - generic [ref=f7e178]:
+              - heading "Molds and Yeast" [level=3] [ref=f7e179]
+              - paragraph
+              - generic [ref=f7e180]: Entered manually
+            - generic [ref=f7e181]:
+              - generic [ref=f7e182]: STANDARD SPECIFICATION
+              - strong [ref=f7e183]: Nmt 10 cfu/g
+          - generic [ref=f7e184]:
+            - generic [ref=f7e185]:
+              - generic [ref=f7e186]: Entry state
+              - combobox "Entry state" [ref=f7e187]:
+                - option "Not entered"
+                - option "Result entered" [selected]
+                - option "Not tested"
+            - generic [ref=f7e188]:
+              - generic [ref=f7e189]: Qualifier
+              - combobox "Qualifier" [ref=f7e190]:
+                - option "Nmt 10 cfu/mL"
+                - option "Actual Result" [selected]
+            - generic [ref=f7e191]:
+              - generic [ref=f7e192]: value
+              - textbox "value cfu/mL will be added to the report" [ref=f7e193]:
+                - /placeholder: Enter value
+                - text: "0"
+              - generic [ref=f7e194]: cfu/mL will be added to the report
+            - generic [ref=f7e195]:
+              - generic [ref=f7e196]: Analyst remarks
+              - combobox "Analyst remarks" [ref=f7e197]:
+                - option "Select outcome…" [selected]
+                - option "Passed"
+                - option "Failed"
+          - group [ref=f7e198]:
+            - generic "Specification source · 2026-09-01" [ref=f7e199] [cursor=pointer]
+      - region "Report details" [ref=f7e200]:
+        - paragraph [ref=f7e201]:
+          - generic [ref=f7e205]: Sample details are copied from the source sheet. Release date and time are added when the report is generated.
+        - generic [ref=f7e206]:
+          - heading "Report details" [level=2] [ref=f7e207]
+          - paragraph [ref=f7e208]: Optional details are prefilled when available. Missing values will be noted and may appear blank in the generated report.
+          - generic [ref=f7e210]:
+            - generic [ref=f7e211]: Page number
+            - textbox "Page number Only enter a page number if the source sheet has none." [active] [ref=f7e212]:
+              - /placeholder: Page number
+              - text: "255"
+            - generic [ref=f7e213]: Only enter a page number if the source sheet has none.
+      - generic [ref=f7e214]:
+        - generic [ref=f7e215]: Unsaved changes
+        - generic [ref=f7e216]:
+          - button "Save draft" [ref=f7e217] [cursor=pointer]
+          - button "Review report" [ref=f7e222] [cursor=pointer]
+  - button "Open Miss Minutes Assistant" [ref=f7e225] [cursor=pointer]

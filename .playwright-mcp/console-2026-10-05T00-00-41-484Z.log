@@ -1,0 +1,28 @@
+[      74ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:22164
+[  319438ms] [ERROR] %o
+
+%s
+
+%s
+ ReferenceError: PageTitle is not defined
+    at Workspace (http://127.0.0.1:5173/src/App.tsx?t=1791158760743:792:34)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:20259:20)
+    at renderWithHooks (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:5918:24)
+    at updateFunctionComponent (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:7763:21)
+    at beginWork (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:8843:20)
+    at runWithFiberInDEV (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:1133:72)
+    at performUnitOfWork (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:13598:98)
+    at workLoopSync (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:13461:43)
+    at renderRootSync (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:13445:13)
+    at performWorkOnRoot (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:12861:37) The above error occurred in the <Workspace> component. React will try to recreate this component tree from scratch using the error boundary you provided, RenderErrorBoundary. @ http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:7275
+[  319439ms] [ERROR] React Router caught the following error during render ReferenceError: PageTitle is not defined
+    at Workspace (http://127.0.0.1:5173/src/App.tsx?t=1791158760743:792:34)
+    at Object.react_stack_bottom_frame (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:20259:20)
+    at renderWithHooks (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:5918:24)
+    at updateFunctionComponent (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:7763:21)
+    at beginWork (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:8843:20)
+    at runWithFiberInDEV (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:1133:72)
+    at performUnitOfWork (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:13598:98)
+    at workLoopSync (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:13461:43)
+    at renderRootSync (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:13445:13)
+    at performWorkOnRoot (http://127.0.0.1:5173/node_modules/.vite/deps/react-dom_client.js?v=78be68b7:12861:37) @ http://127.0.0.1:5173/node_modules/.vite/deps/react-router-dom.js?v=78be68b7:6691

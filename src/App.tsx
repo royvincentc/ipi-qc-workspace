@@ -4,7 +4,7 @@ import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
 import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon} from 'lucide-react';
 import {api} from './api';
-import {Session,Notice,useLoad,Loading,ErrorBox} from './ui';
+import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
 import {AmbientBackdrop,RouteExperience} from './Experience';
 const AdminCenter=lazy(()=>import('./admin'));
@@ -106,6 +106,8 @@ function Workspace({data}:{data:any}){
   const [lowPerformanceMode]=useState(isConstrainedDevice);
   const [syncing,setSyncing]=useState(false);
   const location=useLocation();
+  const platform=(navigator as Navigator & {userAgentData?:{platform?:string}}).userAgentData?.platform||navigator.platform;
+  const searchShortcut=/mac|iphone|ipad/i.test(platform)?'⌘K':'Ctrl+K';
 
   const notify=(text:string,error=false)=>{setNotice({text,error});};
 
@@ -147,8 +149,7 @@ function Workspace({data}:{data:any}){
     <Session.Provider value={data}>
       <Notice.Provider value={notify}>
         <div className={`app ${lowPerformanceMode?'app-low-performance':''}`}>
-          {lowPerformanceMode?null:<AmbientBackdrop/>}
-          <RouteExperience lowPerformanceMode={lowPerformanceMode}/>
+          <RouteExperience/>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`} aria-label="Workspace navigation">
             <Link to="/" className="brand" title={config.value.general.appName}>
               <div className="brand-icon"><FlaskConical size={24}/></div>
@@ -214,13 +215,14 @@ function Workspace({data}:{data:any}){
               <button type="button" className="global-search" onClick={() => setCmdOpen(true)} aria-label="Open global sample search">
                 <Search size={16} />
                 <span style={{flex: 1, textAlign: 'left'}}>Search a sample, batch, or control number...</span>
-                <kbd>⌘K</kbd>
+                <kbd>{searchShortcut}</kbd>
               </button>
               <div className="topbar-right">
                 <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px'}}>
                   <span className={`status-dot ${data.demo ? 'pending' : ''}`}/>
                   {data.demo?'Demo workspace':'Live workspace'}
                 </div>
+                {syncing?<div className="sync-progress-inline" role="status" aria-live="polite"><span>Syncing sources</span><div className="sync-progress-track" role="progressbar" aria-label="Database synchronization progress" aria-valuetext="A reliable percentage is not available yet"><span/></div><span className="sr-only">Synchronization is in progress. Percentage is unavailable until completion.</span></div>:null}
                 <div className="topbar-divider"></div>
                 <div className="topbar-date">
                   <span>{new Intl.DateTimeFormat(config.value.general.dateFormat,{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:config.value.general.timezone}).format(now)}</span>
@@ -247,8 +249,8 @@ function Workspace({data}:{data:any}){
                   <Route path="/reports/:id" element={<ReportEditorRoute/>}/>
                   <Route path="/library" element={<FileLibraryRoute/>}/>
                   <Route path="/assistant" element={<AssistantRoute/>}/>
-                  <Route path="/settings" element={data.user.role==='administrator'?<Suspense fallback={<Loading/>}><AdminCenter/></Suspense>:<ErrorBox message="Administrator access required"/>}/>
-                  <Route path="*" element={<ErrorBox message="Page not found"/>}/>
+                  <Route path="/settings" element={data.user.role==='administrator'?<Suspense fallback={<Loading/>}><AdminCenter/></Suspense>:<><PageTitle title="Settings" description="Administrator access is required to manage this workspace."/><ErrorBox message="Administrator access required"/></>}/>
+                  <Route path="*" element={<><PageTitle title="Page not found" description="This address does not match a workspace page." action={<Link className="button secondary" to="/">Return to dashboard</Link>}/><ErrorBox message="Page not found"/></>}/>
                 </Routes></Suspense>
               </main>
             </div>
@@ -348,3 +350,4 @@ export default function App(){
   }
   return <ConfigurationProvider><Workspace data={data}/></ConfigurationProvider>;
 }
+

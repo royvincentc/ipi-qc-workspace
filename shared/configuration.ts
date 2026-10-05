@@ -1,5 +1,10 @@
 import {z} from 'zod';
 
+export const environmentalCategoryOptions:Record<string,string[]>={
+ context:['Regular','Demo','Pilot','Backtrack','Process Validation','N/A','TRIAL'],
+ secondaryCategory:['N/A','1','2','3'],
+};
+
 const id=z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,49}$/, 'Use letters, numbers, hyphens or underscores, starting with a letter');
 const text=z.string().trim().min(1).max(200);
 export const fieldSchema=z.object({key:id,label:text,type:z.enum(['text','number','date','datetime-local','dropdown','checkbox','longtext','generated']),integer:z.boolean().optional(),required:z.boolean(),active:z.boolean(),order:z.number().int().min(0),help:z.string().max(500),defaultValue:z.string().max(1000),options:z.array(text).max(100),lookup:z.string(),column:z.number().int().min(0).max(100).nullable()});
@@ -47,10 +52,11 @@ export function validateIntake(type:SampleType,fields:Record<string,string>,conf
  if(config.products.some(p=>!p.active&&p.category===type.id&&[p.name,...p.aliases].some(n=>n.toLowerCase()===(fields.name||'').trim().toLowerCase())))issues.push('This product is inactive. Ask an administrator to review it before logging.');
  const enabled=type.fields.filter(f=>f.active&&f.type!=='generated');
  for(const key of Object.keys(fields))if(!enabled.some(f=>f.key===key))issues.push('This form has changed. Reload it before logging.');
- for(const f of enabled){const v=fields[f.key]??'';if(f.required&&!v.trim())issues.push(`${f.label} is required`);if(!v)continue;
+ for(const f of enabled){const v=fields[f.key]??'';const environmentalCategory=type.register==='environmental'?environmentalCategoryOptions[f.key]:undefined;if((f.required||environmentalCategory)&&!v.trim())issues.push(`${f.label} is required`);if(!v)continue;
   if(f.type==='number'&&(!/^\d+(\.\d+)?$/.test(v)||!Number.isFinite(Number(v))||(f.integer!==false&&!Number.isInteger(Number(v)))))issues.push(`${f.label}: enter a non-negative ${f.integer!==false?'whole number':'number'}`);
   if(['date','datetime-local'].includes(f.type)&&(!/^\d{4}-\d{2}-\d{2}/.test(v)||!Number.isFinite(Date.parse(v))||!Number.isFinite(Date.parse(v.slice(0,10)+'T00:00:00Z'))||new Date(v.slice(0,10)+'T00:00:00Z').toISOString().slice(0,10)!==v.slice(0,10)))issues.push(`${f.label}: enter a valid date`);
-  if(f.type==='dropdown'){const opts=f.lookup?config.lookups.find(l=>l.id===f.lookup&&l.active)?.options||[]:f.options;if(!opts.includes(v))issues.push(`${f.label}: choose an available option`);}
+  if(environmentalCategory&&!environmentalCategory.includes(v))issues.push(`${f.label}: choose an available option`);
+  else if(f.type==='dropdown'){const opts=f.lookup?config.lookups.find(l=>l.id===f.lookup&&l.active)?.options||[]:f.options;if(!opts.includes(v))issues.push(`${f.label}: choose an available option`);}
   if(f.type==='checkbox'&&!['true','false'].includes(v))issues.push(`${f.label}: choose yes or no`);
  }return [...new Set(issues)];
 }

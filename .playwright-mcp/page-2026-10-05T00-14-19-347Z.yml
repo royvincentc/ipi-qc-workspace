@@ -1,0 +1,222 @@
+- generic [ref=f18e12]:
+  - complementary "Workspace navigation" [ref=f18e13]:
+    - link "IPI Micro-QC Quality Control" [ref=f18e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f18e20]:
+        - text: IPI Micro-QC
+        - generic [ref=f18e21]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f18e22] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f18e26]:
+      - link "Dashboard" [ref=f18e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f18e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f18e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f18e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f18e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f18e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f18e56]: SYSTEM
+    - navigation "System navigation" [ref=f18e57]:
+      - button "Sync with Database" [disabled] [ref=f18e58]:
+        - generic [ref=f18e64]: Syncing…
+      - link "Settings" [ref=f18e65] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f18e70]:
+      - generic [ref=f18e71]:
+        - generic [ref=f18e72]: Appearance
+        - switch "Dark theme" [checked] [ref=f18e73] [cursor=pointer]
+      - generic [ref=f18e97]:
+        - generic "Demo Analyst" [ref=f18e98]: DE
+        - generic [ref=f18e99]:
+          - strong [ref=f18e100]: Demo Analyst
+          - generic [ref=f18e101]: administrator
+  - generic [ref=f18e102]:
+    - banner [ref=f18e103]:
+      - button "Open global sample search" [ref=f18e104] [cursor=pointer]:
+        - generic [ref=f18e108]: Search a sample, batch, or control number...
+        - generic [ref=f18e109]: ⌘K
+      - generic [ref=f18e110]:
+        - generic [ref=f18e111]: Demo workspace
+        - status [ref=f18e113]:
+          - generic [ref=f18e114]: Syncing sources
+          - progressbar "Database synchronization progress" [ref=f18e115]
+          - generic [ref=f18e117]: Synchronization is in progress. Percentage is unavailable until completion.
+        - generic [ref=f18e119]:
+          - generic [ref=f18e120]: Mon, Oct 5, 2026
+          - strong [ref=f18e121]: 08:13 AM
+        - generic "Demo Analyst" [ref=f18e122]: DE
+    - generic [ref=f18e123]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f18e125]:
+      - generic [ref=f18e126]:
+        - region [ref=f18e127]:
+          - generic [ref=f18e128]:
+            - heading "Good morning, Demo" [level=1] [ref=f18e129]
+            - paragraph [ref=f18e130]: Sample intake, review and report preparation — in one traceable workspace.
+            - generic [ref=f18e131]:
+              - link "Log a sample" [ref=f18e132] [cursor=pointer]:
+                - /url: /new
+              - link "Open results & reports" [ref=f18e134] [cursor=pointer]:
+                - /url: /reports
+        - generic [ref=f18e147]:
+          - region [ref=f18e148]:
+            - generic [ref=f18e149]:
+              - generic [ref=f18e150]:
+                - heading "Your workbench" [level=2] [ref=f18e151]
+                - paragraph [ref=f18e152]: Recent samples and reports ready for review.
+              - link "View all" [ref=f18e153] [cursor=pointer]:
+                - /url: /samples
+            - generic "Workbench records" [ref=f18e156]:
+              - button "Active samples 6" [pressed] [ref=f18e157] [cursor=pointer]:
+                - text: Active samples
+                - generic [ref=f18e158]: "6"
+              - button "Ready for report 0" [ref=f18e159] [cursor=pointer]:
+                - text: Ready for report
+                - generic [ref=f18e160]: "0"
+            - generic [ref=f18e161]:
+              - textbox "Search workbench records" [ref=f18e166]:
+                - /placeholder: Search samples…
+              - combobox "Filter dashboard by sample type" [ref=f18e167]:
+                - option "All types" [selected]
+                - option "EM"
+                - option "FG"
+              - combobox "Filter dashboard by status" [ref=f18e168]:
+                - option "All statuses" [selected]
+                - option "Not recorded"
+                - option "ON-GOING"
+            - table [ref=f18e170]:
+              - rowgroup [ref=f18e171]:
+                - row [ref=f18e172]:
+                  - columnheader "Control No." [ref=f18e173]
+                  - columnheader "Sample name" [ref=f18e174]
+                  - columnheader "Type" [ref=f18e175]
+                  - columnheader "Batch No." [ref=f18e176]
+                  - columnheader "Status" [ref=f18e177]
+                  - columnheader "Actions" [ref=f18e178]
+              - rowgroup [ref=f18e180]:
+                - row [ref=f18e181]:
+                  - cell "2" [ref=f18e182]
+                  - cell [ref=f18e183]:
+                    - link "Test product" [ref=f18e184] [cursor=pointer]:
+                      - /url: /samples/s2
+                  - cell "EM" [ref=f18e185]
+                  - cell "—" [ref=f18e186]
+                  - cell "Not recorded" [ref=f18e187]
+                  - cell [ref=f18e189]:
+                    - link "View sample 2" [ref=f18e190] [cursor=pointer]:
+                      - /url: /samples/s2
+                      - text: View →
+                - row [ref=f18e191]:
+                  - cell "1" [ref=f18e192]
+                  - cell [ref=f18e193]:
+                    - link "Test Product" [ref=f18e194] [cursor=pointer]:
+                      - /url: /samples/s1
+                  - cell "EM" [ref=f18e195]
+                  - cell "—" [ref=f18e196]
+                  - cell "Not recorded" [ref=f18e197]
+                  - cell [ref=f18e199]:
+                    - link "View sample 1" [ref=f18e200] [cursor=pointer]:
+                      - /url: /samples/s1
+                      - text: View →
+                - row [ref=f18e201]:
+                  - cell "ML-EM-26-0037" [ref=f18e202]
+                  - cell [ref=f18e203]:
+                    - link "OPK-Export - Filling - EYA02" [ref=f18e204] [cursor=pointer]:
+                      - /url: /samples/demo-em-trouble
+                  - cell "EM" [ref=f18e205]
+                  - cell "EYA02" [ref=f18e206]
+                  - cell "Not recorded" [ref=f18e207]
+                  - cell [ref=f18e209]:
+                    - link "View sample ML-EM-26-0037" [ref=f18e210] [cursor=pointer]:
+                      - /url: /samples/demo-em-trouble
+                      - text: View →
+                - row [ref=f18e211]:
+                  - cell "ML-EM-26-0008" [ref=f18e212]
+                  - cell [ref=f18e213]:
+                    - link "De-identified monitoring check" [ref=f18e214] [cursor=pointer]:
+                      - /url: /samples/eeda770b-3958-49ce-b08a-091ad9294219
+                  - cell "EM" [ref=f18e215]
+                  - cell "UX-CHECK-001" [ref=f18e216]
+                  - cell "Not recorded" [ref=f18e217]
+                  - cell [ref=f18e219]:
+                    - link "View sample ML-EM-26-0008" [ref=f18e220] [cursor=pointer]:
+                      - /url: /samples/eeda770b-3958-49ce-b08a-091ad9294219
+                      - text: View →
+                - row [ref=f18e221]:
+                  - cell "ML-FG-26-0001" [ref=f18e222]
+                  - cell [ref=f18e223]:
+                    - link "De-identified Product A · 100 units" [ref=f18e224] [cursor=pointer]:
+                      - /url: /samples/demo-FG
+                  - cell "FG" [ref=f18e225]
+                  - cell "DEMO-001" [ref=f18e226]
+                  - cell "ON-GOING" [ref=f18e227]
+                  - cell [ref=f18e229]:
+                    - link "View sample ML-FG-26-0001" [ref=f18e230] [cursor=pointer]:
+                      - /url: /samples/demo-FG
+                      - text: View →
+                - row [ref=f18e231]:
+                  - cell "ML-EM-26-0007" [ref=f18e232]
+                  - cell [ref=f18e233]:
+                    - link "Production Area F" [ref=f18e234] [cursor=pointer]:
+                      - /url: /samples/demo-EM
+                  - cell "EM" [ref=f18e235]
+                  - cell "DEMO-007" [ref=f18e236]
+                  - cell "ON-GOING" [ref=f18e237]
+                  - cell [ref=f18e239]:
+                    - link "View sample ML-EM-26-0007" [ref=f18e240] [cursor=pointer]:
+                      - /url: /samples/demo-EM
+                      - text: View →
+          - complementary "Recent activity" [ref=f18e241]:
+            - generic [ref=f18e242]:
+              - heading "Recent activity" [level=2] [ref=f18e244]
+              - generic [ref=f18e247]:
+                - generic [ref=f18e248]:
+                  - generic [ref=f18e249]: —
+                  - generic [ref=f18e250]:
+                    - generic [ref=f18e251]: Sample logged
+                    - link "2" [ref=f18e252] [cursor=pointer]:
+                      - /url: /samples/s2
+                - generic [ref=f18e253]:
+                  - generic [ref=f18e254]: —
+                  - generic [ref=f18e255]:
+                    - generic [ref=f18e256]: Sample logged
+                    - link "1" [ref=f18e257] [cursor=pointer]:
+                      - /url: /samples/s1
+                - generic [ref=f18e258]:
+                  - generic [ref=f18e259]: 09:00 AM
+                  - generic [ref=f18e260]:
+                    - generic [ref=f18e261]: Sample logged
+                    - link "ML-EM-26-0037" [ref=f18e262] [cursor=pointer]:
+                      - /url: /samples/demo-em-trouble
+                - generic [ref=f18e263]:
+                  - generic [ref=f18e264]: 11:00 AM
+                  - generic [ref=f18e265]:
+                    - generic [ref=f18e266]: Sample logged
+                    - link "ML-EM-26-0008" [ref=f18e267] [cursor=pointer]:
+                      - /url: /samples/eeda770b-3958-49ce-b08a-091ad9294219
+            - link "Browse sample history" [ref=f18e268] [cursor=pointer]:
+              - /url: /samples
+        - region "Current work and quick actions" [ref=f18e271]:
+          - generic "Current work summary" [ref=f18e272]:
+            - generic [ref=f18e273]:
+              - generic [ref=f18e274]: Received today
+              - strong [ref=f18e275]: "0"
+            - generic [ref=f18e276]:
+              - generic [ref=f18e277]: Awaiting results
+              - strong [ref=f18e278]: "1"
+            - generic [ref=f18e279]:
+              - generic [ref=f18e280]: Ready for report
+              - strong [ref=f18e281]: "0"
+          - navigation "Quick actions" [ref=f18e282]:
+            - link "Log sample" [ref=f18e283] [cursor=pointer]:
+              - /url: /new
+            - link "Enter results" [ref=f18e285] [cursor=pointer]:
+              - /url: /reports
+            - link "Prepare report" [ref=f18e288] [cursor=pointer]:
+              - /url: /reports
+            - link "File library" [ref=f18e292] [cursor=pointer]:
+              - /url: /library
+  - button "Open Miss Minutes Assistant" [ref=f18e295] [cursor=pointer]

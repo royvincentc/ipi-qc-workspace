@@ -1,0 +1,52 @@
+- generic [ref=f3e3]:
+  - complementary "Workspace navigation" [ref=f3e4]:
+    - link "IPI Micro-QC Quality Control" [ref=f3e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f3e9]:
+        - text: IPI Micro-QC
+        - generic [ref=f3e10]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f3e11] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f3e15]:
+      - link "Dashboard" [ref=f3e16] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f3e23] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f3e26] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f3e31] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f3e36] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f3e40] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f3e45]: SYSTEM
+    - navigation "System navigation" [ref=f3e46]:
+      - button "Sync with Database" [ref=f3e47] [cursor=pointer]
+      - link "Settings" [ref=f3e54] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f3e59]:
+      - generic [ref=f3e60]:
+        - generic [ref=f3e61]: Appearance
+        - switch "Dark theme" [ref=f3e62] [cursor=pointer]
+      - generic [ref=f3e82]:
+        - generic "Demo Analyst" [ref=f3e83]: DE
+        - generic [ref=f3e84]:
+          - strong [ref=f3e85]: Demo Analyst
+          - generic [ref=f3e86]: administrator
+  - generic [ref=f3e87]:
+    - banner [ref=f3e88]:
+      - button "Open global sample search" [ref=f3e89] [cursor=pointer]:
+        - generic [ref=f3e93]: Search a sample, batch, or control number...
+        - generic [ref=f3e94]: ⌘K
+      - generic [ref=f3e95]:
+        - generic [ref=f3e96]: Demo workspace
+        - generic [ref=f3e99]:
+          - generic [ref=f3e100]: Mon, Oct 5, 2026
+          - strong [ref=f3e101]: 07:35 AM
+        - generic "Demo Analyst" [ref=f3e102]: DE
+    - generic [ref=f3e103]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f3e105]:
+      - status [ref=f3e106]:
+        - strong [ref=f3e113]: Preparing your workspace
+        - generic [ref=f3e114]: Checking samples and records …
+  - button "Open Miss Minutes Assistant" [ref=f3e115] [cursor=pointer]

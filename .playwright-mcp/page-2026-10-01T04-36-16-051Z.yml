@@ -1,0 +1,160 @@
+- generic [ref=f7e3]:
+  - complementary [ref=f7e4]:
+    - link "IPI Micro-QC Quality Control" [ref=f7e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f7e11]:
+        - text: IPI Micro-QC
+        - generic [ref=f7e12]: Quality Control
+    - navigation [ref=f7e13]:
+      - link "Dashboard" [ref=f7e14] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f7e21] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f7e24] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f7e29] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f7e34] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f7e38] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f7e43]: SYSTEM
+    - navigation [ref=f7e44]:
+      - link "Settings" [ref=f7e45] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f7e51]:
+      - generic "Demo Analyst" [ref=f7e52]: DE
+      - generic [ref=f7e53]:
+        - strong [ref=f7e54]: Demo Analyst
+        - generic [ref=f7e55]: administrator
+  - generic [ref=f7e56]:
+    - banner [ref=f7e57]:
+      - button "Open navigation" [ref=f7e58] [cursor=pointer]
+      - button "Open global sample search" [ref=f7e60] [cursor=pointer]:
+        - generic [ref=f7e64]: Search a sample, batch, or control number...
+    - generic [ref=f7e65]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f7e67]:
+      - link "← Analysis reports" [ref=f7e68] [cursor=pointer]:
+        - /url: /reports
+      - generic [ref=f7e69]:
+        - generic [ref=f7e70]:
+          - generic [ref=f7e71]: REPORT DRAFT · REVISION 2
+          - heading "Enter actual results" [level=1] [ref=f7e72]
+          - paragraph [ref=f7e73]: For external review and signature. Sample release remains a separate process.
+        - button "Revision history" [ref=f7e74] [cursor=pointer]
+      - generic [ref=f7e79]:
+        - generic [ref=f7e80]:
+          - generic [ref=f7e81]: ST
+          - strong [ref=f7e82]: Omega Pain Killer Liniment
+          - generic [ref=f7e83]: ML-ST-26-0280
+          - generic [ref=f7e84]: Batch EXC01
+        - link "Confirm source" [ref=f7e85] [cursor=pointer]:
+          - /url: /samples/fixture-sample
+        - generic [ref=f7e90]: September 2026 · ST · row 58
+      - generic [ref=f7e91]:
+        - button "01 1. Results and report details" [ref=f7e92] [cursor=pointer]
+        - button "02 2. Review and document preview" [ref=f7e93] [cursor=pointer]
+      - generic [ref=f7e94]:
+        - generic [ref=f7e95]:
+          - heading "Applicable tests" [level=2] [ref=f7e96]
+          - generic [ref=f7e97]: Routine
+        - paragraph [ref=f7e98]: Enter this sample’s observations. Standard specifications are shown beside each test.
+        - generic [ref=f7e99]:
+          - generic [ref=f7e100]:
+            - generic [ref=f7e101]:
+              - heading "Standard Plate Count (SPC)" [level=3] [ref=f7e102]
+              - paragraph
+            - generic [ref=f7e103]:
+              - generic [ref=f7e104]: STANDARD SPECIFICATION
+              - strong [ref=f7e105]: Nmt 100 cfu/mL
+          - generic [ref=f7e106]:
+            - generic [ref=f7e107]:
+              - generic [ref=f7e108]: Entry state
+              - combobox "Entry state" [ref=f7e109]:
+                - option "Not entered"
+                - option "Enter result" [selected]
+                - option "Not tested"
+            - generic [ref=f7e110]:
+              - generic [ref=f7e111]: Qualifier
+              - combobox "Qualifier" [ref=f7e112]:
+                - option "Nmt 100 cfu/mL" [selected]
+                - option "Actual Result"
+            - generic [ref=f7e113]:
+              - generic [ref=f7e114]: Analyst remarks
+              - combobox "Analyst remarks" [ref=f7e115]:
+                - option "Select outcome…"
+                - option "Passed" [selected]
+                - option "Failed"
+          - group [ref=f7e116]:
+            - generic "Specification source · 2026-09-30" [ref=f7e117] [cursor=pointer]
+        - generic [ref=f7e118]:
+          - generic [ref=f7e119]:
+            - generic [ref=f7e120]:
+              - heading "Molds and Yeast" [level=3] [ref=f7e121]
+              - paragraph
+            - generic [ref=f7e122]:
+              - generic [ref=f7e123]: STANDARD SPECIFICATION
+              - strong [ref=f7e124]: Nmt 10 cfu/mL
+          - generic [ref=f7e125]:
+            - generic [ref=f7e126]:
+              - generic [ref=f7e127]: Entry state
+              - combobox "Entry state" [ref=f7e128]:
+                - option "Not entered"
+                - option "Enter result" [selected]
+                - option "Not tested"
+            - generic [ref=f7e129]:
+              - generic [ref=f7e130]: Qualifier
+              - combobox "Qualifier" [ref=f7e131]:
+                - option "Nmt 10 cfu/mL" [selected]
+                - option "Actual Result"
+            - generic [ref=f7e132]:
+              - generic [ref=f7e133]: Analyst remarks
+              - combobox "Analyst remarks" [ref=f7e134]:
+                - option "Select outcome…"
+                - option "Passed" [selected]
+                - option "Failed"
+          - group [ref=f7e135]:
+            - generic "Specification source · 2026-09-30" [ref=f7e136] [cursor=pointer]
+        - generic [ref=f7e137]:
+          - generic [ref=f7e138]:
+            - generic [ref=f7e139]:
+              - heading "Coliform" [level=3] [ref=f7e140]
+              - paragraph
+            - generic [ref=f7e141]:
+              - generic [ref=f7e142]: STANDARD SPECIFICATION
+              - strong [ref=f7e143]: Negative
+          - generic [ref=f7e144]:
+            - generic [ref=f7e145]:
+              - generic [ref=f7e146]: Entry state
+              - combobox "Entry state" [ref=f7e147]:
+                - option "Not entered"
+                - option "Enter result" [selected]
+                - option "Not tested"
+            - generic [ref=f7e148]:
+              - generic [ref=f7e149]: Actual finding
+              - combobox "Actual finding" [ref=f7e150]:
+                - option "Select finding…"
+                - option "Positive"
+                - option "Negative" [selected]
+            - generic [ref=f7e151]:
+              - generic [ref=f7e152]: Analyst remarks
+              - combobox "Analyst remarks" [ref=f7e153]:
+                - option "Select outcome…"
+                - option "Passed" [selected]
+                - option "Failed"
+          - group [ref=f7e154]:
+            - generic "Specification source · 2026-09-30" [ref=f7e155] [cursor=pointer]
+      - region "Report details" [ref=f7e156]:
+        - paragraph [ref=f7e157]:
+          - generic [ref=f7e161]: Sample details are copied from the source sheet. Release date and time are added when the report is generated.
+        - generic [ref=f7e162]:
+          - heading "Required report details" [level=2] [ref=f7e163]
+          - paragraph [ref=f7e164]: Enter or correct these values before generating the report.
+          - generic [ref=f7e166]:
+            - generic [ref=f7e167]: Logbook reference
+            - textbox "Logbook reference" [ref=f7e168]
+      - generic [ref=f7e169]:
+        - generic [ref=f7e170]: Saved revision 2
+        - generic [ref=f7e171]:
+          - button "Save draft" [disabled] [ref=f7e172]
+          - button "Review report" [ref=f7e177] [cursor=pointer]

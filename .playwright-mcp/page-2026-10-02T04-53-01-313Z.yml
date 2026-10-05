@@ -1,0 +1,107 @@
+- generic [ref=e14]:
+  - complementary "Workspace navigation" [ref=e15]:
+    - link "IPI Micro-QC Quality Control" [ref=e16] [cursor=pointer]:
+      - /url: /
+      - generic [ref=e22]:
+        - text: IPI Micro-QC
+        - generic [ref=e23]: Quality Control
+    - navigation "Primary navigation" [ref=e24]:
+      - link "Dashboard" [ref=e25] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=e32] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=e35] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=e40] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=e45] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=e49] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=e54]: SYSTEM
+    - navigation "System navigation" [ref=e55]:
+      - button "Sync with Database" [ref=e56] [cursor=pointer]
+      - link "Settings" [ref=e63] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=e68]:
+      - generic [ref=e69]:
+        - generic [ref=e70]: Appearance
+        - switch "Dark theme" [checked] [ref=e71] [cursor=pointer]
+      - generic [ref=e95]:
+        - generic "Demo Analyst" [ref=e96]: DE
+        - generic [ref=e97]:
+          - strong [ref=e98]: Demo Analyst
+          - generic [ref=e99]: administrator
+  - generic [ref=e100]:
+    - banner [ref=e101]:
+      - button "Open navigation" [ref=e102] [cursor=pointer]
+      - button "Open global sample search" [ref=e104] [cursor=pointer]:
+        - generic [ref=e108]: Search a sample, batch, or control number...
+    - generic [ref=e109]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=e111]:
+      - link "← Analysis reports" [ref=e112] [cursor=pointer]:
+        - /url: /reports
+      - generic [ref=e113]:
+        - generic [ref=e114]:
+          - generic [ref=e115]: REPORT DRAFT · REVISION 4
+          - heading "Review your report" [level=1] [ref=e216]
+          - paragraph [ref=e117]: For external review and signature. Sample release remains a separate process.
+        - button "Revision history" [ref=e118] [cursor=pointer]
+      - generic [ref=e123]:
+        - generic [ref=e124]:
+          - generic [ref=e125]: FG
+          - strong [ref=e126]: De-identified Product A · 100 units
+          - generic [ref=e127]: ML-FG-26-0001
+          - generic [ref=e128]: Batch DEMO-001
+        - link "Confirm source" [ref=e129] [cursor=pointer]:
+          - /url: /samples/demo-FG
+        - generic [ref=e134]: September 2026 · FG · row 6
+      - generic [ref=e135]:
+        - button "01 1. Results and report details" [ref=e136] [cursor=pointer]
+        - button "02 2. Review and document preview" [active] [ref=e137] [cursor=pointer]
+      - generic [ref=e217]:
+        - generic [ref=e218]:
+          - heading "Review checklist" [level=2] [ref=e219]
+          - generic [ref=e220]: 2 items to complete
+        - list [ref=e221]:
+          - listitem [ref=e222]: MIC could not be found in the October 2026 MIC lookup.
+          - listitem [ref=e223]: Page number is required
+        - generic [ref=e224]: Some results or report details are incomplete. You can still generate the report; blank fields will remain blank.
+        - region "Report details" [ref=e225]:
+          - paragraph [ref=e226]:
+            - generic [ref=e230]: Sample details are copied from the source sheet. Release date and time are added when the report is generated.
+          - generic [ref=e231]:
+            - heading "Report details" [level=2] [ref=e232]
+            - paragraph [ref=e233]: Optional details are prefilled when available. Missing values will be noted and may appear blank in the generated report.
+            - generic [ref=e235]:
+              - generic [ref=e236]: Page number
+              - textbox "Page number Only enter a page number if the source sheet has none." [ref=e237]:
+                - /placeholder: Page number
+              - generic [ref=e238]: Only enter a page number if the source sheet has none.
+        - table [ref=e240]:
+          - rowgroup [ref=e241]:
+            - row [ref=e242]:
+              - columnheader "Test / sample unit" [ref=e243]
+              - columnheader "Standard specification" [ref=e244]
+              - columnheader "Actual result" [ref=e245]
+              - columnheader "Remarks" [ref=e246]
+          - rowgroup [ref=e247]:
+            - row [ref=e248]:
+              - cell "Standard Plate Count (SPC)" [ref=e249]
+              - cell "Nmt 50 cfu/g" [ref=e250]
+              - cell "0 cfu/mL" [ref=e251]
+              - cell "—" [ref=e252]
+            - row [ref=e253]:
+              - cell "Molds and Yeast" [ref=e254]
+              - cell "Nmt 10 cfu/g" [ref=e255]
+              - cell "0 cfu/mL" [ref=e256]
+              - cell "—" [ref=e257]
+        - paragraph [ref=e258]: "Analysis date: 2026-09-24 · MIC: Not found · Page: Not entered"
+        - generic [ref=e259]:
+          - generic [ref=e260]: Standard specifications and source details are pinned to this draft.
+          - button "Generate document preview" [ref=e261] [cursor=pointer]
+      - generic [ref=e205]:
+        - generic [ref=e206]: Saved revision 4
+        - generic [ref=e207]:
+          - button "Save draft" [disabled] [ref=e208]
+          - button "Back to results" [ref=e265] [cursor=pointer]

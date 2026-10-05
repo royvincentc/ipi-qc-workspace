@@ -1,0 +1,125 @@
+- generic [ref=f12e12]:
+  - complementary "Workspace navigation" [ref=f12e13]:
+    - link "IPI Micro-QC Quality Control" [ref=f12e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f12e20]:
+        - text: IPI Micro-QC
+        - generic [ref=f12e21]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f12e22] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f12e26]:
+      - link "Dashboard" [ref=f12e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f12e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f12e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f12e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f12e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f12e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f12e56]: SYSTEM
+    - navigation "System navigation" [ref=f12e57]:
+      - button "Sync with Database" [ref=f12e58] [cursor=pointer]
+      - link "Settings" [ref=f12e65] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f12e70]:
+      - generic [ref=f12e71]:
+        - generic [ref=f12e72]: Appearance
+        - switch "Dark theme" [checked] [ref=f12e73] [cursor=pointer]
+      - generic [ref=f12e97]:
+        - generic "Demo Analyst" [ref=f12e98]: DE
+        - generic [ref=f12e99]:
+          - strong [ref=f12e100]: Demo Analyst
+          - generic [ref=f12e101]: administrator
+  - generic [ref=f12e102]:
+    - banner [ref=f12e103]:
+      - button "Open global sample search" [ref=f12e104] [cursor=pointer]:
+        - generic [ref=f12e108]: Search a sample, batch, or control number...
+        - generic [ref=f12e109]: ⌘K
+      - generic [ref=f12e110]:
+        - generic [ref=f12e111]: Demo workspace
+        - generic [ref=f12e114]:
+          - generic [ref=f12e115]: Mon, Oct 5, 2026
+          - strong [ref=f12e116]: 08:09 AM
+        - generic "Demo Analyst" [ref=f12e117]: DE
+    - generic [ref=f12e118]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f12e120]:
+      - generic [ref=f12e121]:
+        - generic [ref=f12e122]:
+          - heading "Settings center" [level=1] [ref=f12e123]
+          - paragraph [ref=f12e124]: Manage your laboratory’s daily workflow without changing the application.
+        - generic [ref=f12e130]:
+          - button "Toggle settings sidebar" [ref=f12e131] [cursor=pointer]
+          - generic [ref=f12e135]: Revision 9
+      - generic [ref=f12e136]:
+        - complementary [ref=f12e137]:
+          - textbox "Search settings" [ref=f12e142]:
+            - /placeholder: Find a setting…
+          - button "General Application name, laboratory, location and dates" [ref=f12e143] [cursor=pointer]:
+            - strong [ref=f12e144]: General
+            - generic [ref=f12e145]: Application name, laboratory, location and dates
+          - button "Sample types Categories, availability and test applicability" [ref=f12e146] [cursor=pointer]:
+            - strong [ref=f12e147]: Sample types
+            - generic [ref=f12e148]: Categories, availability and test applicability
+          - button "Form fields Labels, required fields, defaults and source columns" [ref=f12e149] [cursor=pointer]:
+            - strong [ref=f12e150]: Form fields
+            - generic [ref=f12e151]: Labels, required fields, defaults and source columns
+          - button "Products / materials Names, aliases and active products" [ref=f12e152] [cursor=pointer]:
+            - strong [ref=f12e153]: Products / materials
+            - generic [ref=f12e154]: Names, aliases and active products
+          - button "Tests Manual result controls, units and report labels" [ref=f12e155] [cursor=pointer]:
+            - strong [ref=f12e156]: Tests
+            - generic [ref=f12e157]: Manual result controls, units and report labels
+          - button "Specifications Applicable tests and versioned acceptance criteria" [ref=f12e158] [cursor=pointer]:
+            - strong [ref=f12e159]: Specifications
+            - generic [ref=f12e160]: Applicable tests and versioned acceptance criteria
+          - button "Lookup values Reusable dropdown options" [ref=f12e161] [cursor=pointer]:
+            - strong [ref=f12e162]: Lookup values
+            - generic [ref=f12e163]: Reusable dropdown options
+          - button "Control numbers Prefixes and annual sequence formatting" [ref=f12e164] [cursor=pointer]:
+            - strong [ref=f12e165]: Control numbers
+            - generic [ref=f12e166]: Prefixes and annual sequence formatting
+          - button "Report defaults Standing signatory and document metadata" [ref=f12e167] [cursor=pointer]:
+            - strong [ref=f12e168]: Report defaults
+            - generic [ref=f12e169]: Standing signatory and document metadata
+          - button "Appearance Theme, density and list size" [active] [ref=f12e170] [cursor=pointer]:
+            - strong [ref=f12e171]: Appearance
+            - generic [ref=f12e172]: Theme, density and list size
+          - button "Connections Google logbooks and file library" [ref=f12e173] [cursor=pointer]:
+            - strong [ref=f12e174]: Connections
+            - generic [ref=f12e175]: Google logbooks and file library
+          - button "Reference documents Inspect historical reports" [ref=f12e176] [cursor=pointer]:
+            - strong [ref=f12e177]: Reference documents
+            - generic [ref=f12e178]: Inspect historical reports
+          - button "Report templates Standardized DOCX layouts" [ref=f12e179] [cursor=pointer]:
+            - strong [ref=f12e180]: Report templates
+            - generic [ref=f12e181]: Standardized DOCX layouts
+          - button "Users & permissions Authorized accounts and roles" [ref=f12e182] [cursor=pointer]:
+            - strong [ref=f12e183]: Users & permissions
+            - generic [ref=f12e184]: Authorized accounts and roles
+          - button "Audit history Who changed what and when" [ref=f12e185] [cursor=pointer]:
+            - strong [ref=f12e186]: Audit history
+            - generic [ref=f12e187]: Who changed what and when
+        - generic [ref=f12e189]:
+          - heading "Appearance" [level=2] [ref=f12e190]
+          - generic [ref=f12e191]:
+            - generic [ref=f12e192]:
+              - generic [ref=f12e193]: Theme
+              - combobox "Theme" [ref=f12e194]:
+                - option "Follow device" [selected]
+                - option "Light"
+                - option "Dark"
+            - generic [ref=f12e195]:
+              - generic [ref=f12e196]: Spacing
+              - combobox "Spacing" [ref=f12e197]:
+                - option "Comfortable" [selected]
+                - option "Compact"
+            - generic [ref=f12e198]:
+              - generic [ref=f12e199]: Samples per page
+              - combobox "Samples per page" [ref=f12e200]:
+                - option "10"
+                - option "25" [selected]
+                - option "50"
+  - button "Open Miss Minutes Assistant" [ref=f12e201] [cursor=pointer]

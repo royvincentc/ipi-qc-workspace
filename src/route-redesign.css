@@ -1,0 +1,235 @@
+/* IPI QC Microbiology: shared visual system, layered over the existing UI. */
+:root {
+  color-scheme: dark;
+  --bg-app: #121613;
+  --bg-surface: #191e1a;
+  --bg-surface-elevated: #202620;
+  --bg-surface-hover: #282f27;
+  --border-subtle: rgba(227, 235, 216, .10);
+  --border-strong: rgba(227, 235, 216, .18);
+  --ink-primary: #f1f3eb;
+  --ink-secondary: #bdc3b7;
+  --ink-tertiary: #8c9386;
+  --accent: #d8e987;
+  --accent-strong: #e3f1a0;
+  --accent-action: #d8e987;
+  --accent-action-hover: #e3f1a0;
+  --accent-ink: #20251b;
+  --selection-ink: #20251b;
+  --focus-ring: #d8e987;
+  --surface-shadow: 0 1px 2px rgba(0, 0, 0, .16);
+  --radius-control: 8px;
+  --radius-panel: 10px;
+  /* Existing application tokens used by the shared component styles. */
+  --border: rgba(227, 235, 216, .14);
+  --text-primary: #f1f3eb;
+  --text-secondary: #bdc3b7;
+  --text-tertiary: #8c9386;
+  --accent-hover: #e3f1a0;
+  --accent-soft: rgba(216, 233, 135, .11);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .16);
+  --sidebar-expanded: 244px;
+  --sidebar-collapsed: 92px;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg-app: #f1f2ed;
+  --bg-surface: #f8f9f5;
+  --bg-surface-elevated: #fcfcf8;
+  --bg-surface-hover: #ecefe6;
+  --border-subtle: rgba(39, 47, 37, .11);
+  --border-strong: rgba(39, 47, 37, .20);
+  --ink-primary: #20241f;
+  --ink-secondary: #4e574a;
+  --ink-tertiary: #697164;
+  --accent: #53652a;
+  --accent-strong: #465721;
+  --accent-action: #d8e987;
+  --accent-action-hover: #cddd78;
+  --accent-ink: #20241f;
+  --selection-ink: #ffffff;
+  --focus-ring: #53652a;
+  --surface-shadow: 0 1px 2px rgba(29, 37, 26, .04);
+  --border: rgba(39, 47, 37, .16);
+  --text-primary: #20241f;
+  --text-secondary: #4e574a;
+  --text-tertiary: #697164;
+  --accent-hover: #465721;
+  --accent-soft: rgba(131, 151, 71, .12);
+  --shadow-sm: 0 1px 2px rgba(29, 37, 26, .04);
+}
+
+html, body, #root { background: var(--bg-app); color: var(--ink-primary); }
+::selection { color: var(--selection-ink); background: var(--accent); }
+* { scrollbar-color: var(--ink-tertiary) transparent; }
+*:focus-visible { outline: 2px solid var(--focus-ring) !important; outline-offset: 2px; }
+
+/* Keep the navigation a stable graphite instrument rail in both themes. */
+.app-shell, .app-main, .app-content, .page-shell { background-color: var(--bg-app); }
+.sidebar, .app-sidebar, aside[aria-label*="navigation" i] {
+  background: #171b18;
+  border-color: rgba(235, 241, 224, .10);
+}
+.sidebar a, .app-sidebar a, .sidebar button, .app-sidebar button {
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+.sidebar a:hover, .app-sidebar a:hover, .sidebar button:hover, .app-sidebar button:hover {
+  background: #252b25;
+}
+.sidebar nav a:hover { transform: none; border-color: transparent; }
+.sidebar nav a.active {
+  color: #e5f2a6;
+  background: #30372c;
+  border-color: rgba(216, 233, 135, .18);
+  box-shadow: none;
+}
+.sidebar nav a.active svg { color: #e5f2a6; filter: none; }
+.sidebar .brand-icon {
+  color: var(--accent-ink);
+  background: var(--accent-action);
+  border-radius: 10px;
+  box-shadow: none;
+}
+.sidebar [aria-current="page"], .app-sidebar [aria-current="page"] {
+  color: #e5f2a6;
+  background: #30372c;
+  border-color: rgba(216, 233, 135, .22);
+}
+
+/* Shared surfaces stay flat so status, records, and actions carry the hierarchy. */
+main :is(section, article, [role="region"], .panel, .card, .surface) {
+  border-color: var(--border-subtle);
+}
+main :is(.panel, .card, .surface, [data-surface]) {
+  box-shadow: var(--surface-shadow);
+}
+main :is(h1, h2, h3) { color: var(--ink-primary); letter-spacing: -.025em; }
+main :is(p, small, .muted, [data-muted]) { color: var(--ink-secondary); }
+main :is(.eyebrow, .caption, .overline) { color: var(--ink-tertiary); }
+
+/* Shared controls: tactile, quiet, legible. */
+main :is(button, [role="button"], a.button, input, select, textarea) { border-radius: var(--radius-control); }
+main :is(input, select, textarea) {
+  color: var(--ink-primary);
+  background: var(--bg-surface-elevated);
+  border-color: var(--border-strong);
+}
+main :is(input, select, textarea)::placeholder { color: var(--ink-tertiary); opacity: 1; }
+main button, main [role="button"], main a.button {
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+main :is(button, [role="button"], a.button):active { transform: translateY(1px); }
+main :is(button, [role="button"], a.button)[disabled], main :is(button, [role="button"], a.button)[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: .52;
+  transform: none;
+}
+main :is(button, [role="button"], a.button)[data-variant="primary"],
+main button.primary, main .button-primary, main .btn-primary, main .button.primary {
+  color: var(--accent-ink);
+  background: var(--accent-action);
+  border-color: var(--accent-action);
+}
+main :is(button, [role="button"], a.button)[data-variant="primary"]:hover,
+main button.primary:hover, main .button-primary:hover, main .btn-primary:hover, main .button.primary:hover { background: var(--accent-action-hover); }
+
+/* Data remains compact, with visible row boundaries and horizontal access on phones. */
+main table { border-collapse: separate; border-spacing: 0; color: var(--ink-primary); }
+main thead th {
+  color: var(--ink-tertiary);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-strong);
+  font-weight: 600;
+}
+main tbody td { border-bottom: 1px solid var(--border-subtle); }
+main tbody tr:hover td { background: color-mix(in srgb, var(--bg-surface-hover) 70%, transparent); }
+main :is([role="tablist"], .tabs) { border-color: var(--border-subtle); }
+main [aria-selected="true"] { color: var(--ink-primary); }
+
+/* Route identity marks retain the existing assay SVGs and their static fallback. */
+.route-mark, .page-title-mark, [data-route-mark] { color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+@media (max-width: 720px) {
+  main { min-width: 0; }
+  main :is(table, [role="table"]) { min-width: 640px; }
+  main :is(.table-wrap, .table-scroll, [data-table-scroll]) { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+}
+@media (min-width: 761px) {
+  main { padding-top: 24px; }
+  .dashboard-redesign .dashboard-hero { min-height: 120px; margin-bottom: 10px; padding-block: 4px 8px; }
+  .dashboard-redesign .dashboard-hero h1 { max-width: none; font-size: 27px; }
+  .dashboard-redesign .dashboard-lab-visual { width: min(100%, 136px); opacity: .68; }
+  .dashboard-redesign .dashboard-queue-heading { margin-bottom: 10px; }
+}
+@media (max-width: 760px) {
+  .dashboard-redesign .dashboard-hero { min-height: 112px; padding-block: 8px 10px; }
+  .dashboard-redesign .dashboard-lab-visual { width: 120px; bottom: -24px; opacity: .25; }
+}
+@media (max-width: 640px) {
+  /* Keep the report's full sample identity visible when its desktop row collapses. */
+  main .sample-confirm { padding: 12px 14px; gap: 8px; }
+  main .sample-confirm > div:first-child > strong {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  main .sample-confirm + .tabs button { min-height: 48px; padding: 7px 12px; column-gap: 8px; }
+  main .panel.padded { padding: 14px; }
+  main .test-card { margin-top: 10px; padding: 12px; }
+  main .test-title { display: grid; grid-template-columns: minmax(0, 1fr) minmax(108px, 38%); gap: 10px; margin-bottom: 10px; }
+  main .test-title h3 { font-size: 16px; }
+  main .criterion { min-width: 0; margin-top: 0; padding: 0 0 0 9px; border-top: 0; border-left: 1px solid var(--border-subtle); }
+  main .result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  main .result-grid .field > span { font-size: 11px; }
+  main .result-grid .field input, main .result-grid .field select { min-height: 44px; }
+}
+@media (max-width: 640px) {
+  /* Surface the first report field earlier while retaining source, revision, and review context. */
+  main .page-heading { margin-bottom: 12px; padding-bottom: 8px; }
+  main .page-heading-copy > p { margin-top: 5px; font-size: 12px; line-height: 1.4; }
+  main .page-heading-action .button { min-height: 36px; padding: 6px 10px; }
+  main .sample-confirm { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 8px; margin-bottom: 12px; padding: 8px 10px; }
+  main .sample-confirm > div:first-child { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 7px; align-items: center; }
+  main .sample-confirm > div:first-child > strong { grid-column: 2; grid-row: 1; line-height: 1.2; }
+  main .sample-confirm > div:first-child > .badge { grid-column: 1; grid-row: 1; }
+  main .sample-confirm > div:first-child > .mono { grid-column: 1; grid-row: 2; font-size: 11px; }
+  main .sample-confirm > div:first-child > .mono::before { content: "Sample ID · "; color: var(--ink-tertiary); font-family: var(--font-sans); font-size: 10px; letter-spacing: normal; }
+  main .sample-confirm > div:first-child > span:last-child { grid-column: 2; grid-row: 2; font-size: 11px; }
+  main .sample-confirm > a { grid-column: 2; grid-row: 1; font-size: 11px; }
+  main .sample-confirm > small { grid-column: 1 / -1; font-size: 10px; line-height: 1.2; }
+  main .sample-confirm + .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 12px; }
+  main .sample-confirm + .tabs button { min-height: 58px; grid-template-columns: 1fr; grid-template-rows: auto auto; justify-items: start; gap: 2px; padding: 6px 8px; font-size: 11px; line-height: 1.2; }
+  main .sample-confirm + .tabs button::before { display: none; }
+  main .sample-confirm + .tabs button > span { grid-row: auto; width: 20px; height: 20px; border-radius: 6px; font-size: 10px; }
+  main .sample-confirm + .tabs button:last-child { border-bottom: 0; border-right: 0; }
+  main .panel.padded > p { margin-block: 8px; font-size: 12px; line-height: 1.4; }
+  main .panel.padded .section-heading { margin-bottom: 8px; }
+}
+@media (max-width: 420px) {
+  main .sample-confirm { grid-template-columns: minmax(0, 1fr); }
+  main .sample-confirm > div:first-child { grid-column: 1; }
+  main .sample-confirm > a { grid-column: 1; grid-row: auto; justify-self: start; }
+}
+@media (max-width: 360px) {
+  main .page-heading { margin-bottom: 8px; padding-bottom: 4px; }
+  main .sample-confirm { grid-template-columns: minmax(0, 1fr); }
+  main .sample-confirm { margin-bottom: 8px; }
+  main .sample-confirm > div:first-child { grid-column: 1; }
+  main .sample-confirm > a { grid-column: 1; grid-row: auto; justify-self: start; }
+  main .sample-confirm + .tabs { margin-bottom: 8px; }
+  main .sample-confirm + .tabs button { min-height: 52px; }
+  main .panel.padded > p { margin-block: 4px; font-size: 11px; line-height: 1.3; }
+  main .panel.padded .section-heading { margin-bottom: 4px; }
+  main .test-card { margin-top: 6px; }
+  main .result-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-contrast: more) {
+  :root, [data-theme="light"], .theme-light, html[data-color-mode="light"] {
+    --border-subtle: currentColor;
+    --border-strong: currentColor;
+  }
+}

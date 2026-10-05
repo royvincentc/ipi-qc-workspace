@@ -1336,3 +1336,56 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Limits: This records provisional confirmation; it does not constitute visual verification of the generated DOCX, activation of production routes, or approval of unresolved historical acceptance-limit conflicts.
 - Evidence: `output/Environmental Monitoring Format Review Package/10-owner-provisional-decision.md`.
 - Next: Apply later owner revisions to the provisional decision and route review before deployment.
+
+### TASK-20261005-001 — Add reviewed sample intake and batch submission
+
+- Status: UI/API workflow implemented and de-identified demo verified; live workbook activation remains gated pending validated October mapping and read-only reconciliation.
+- Authorization: User request in `Pasted text.txt` to extend the existing IPI sample logger. User later clarified that Incoming `Column 1` is headed `No.` and Environmental G is a second part of Category; keep those source columns distinct.
+- Changed: `/new` now supports single and batch entry, keyboard review, independent blank rows, editable pre-submit review with server-assigned ML numbers, per-item outcomes, retry, cancel, and focus transfer. Added bounded prepare/commit/cancel APIs with submission ownership, idempotent demo commits, sequential processing and held/uncertain states. Added normalized header resolution helper that exposes ambiguous/unmapped headers, and raw snapshot preservation coverage. Fixed the demo submission test deadlock by moving product auto-creation outside the sample-allocation lock.
+- Source findings: Read the supplied October Incoming and Environmental workbooks only. Incoming has six independent October sections (SFG A:T, FG V:AO, Water AR:BH, Raw BJ:CB, Stability CD:CV, Misc CX:DO), distinct sheet Category values in some sections, and the former `Column 1` is now headed `No.`. Environmental column G shares the Category meaning with F. Read-only Google Sheets metadata confirms F choices `Regular`, `Demo`, `Pilot`, `Backtrack`, `Process Validation`, `N/A`, `TRIAL`; G choices `N/A`, `1`, `2`, `3`. Environmental October visible title still says September. October Water and Environmental have partial/near-boundary rows in bounded scans; sequence/reservation reconciliation is still needed. Existing application configuration/layout remains the legacy geometry; dynamic October section mapping and exact field/dropdown mapping are not implemented, so live prepare/commit correctly remains blocked rather than guessing.
+- Data impact: No operational Google cells were changed, no production DB was used, no migrations were required, and live-write settings were not enabled. API exercise used only `.data/intake-qa.db` in DEMO_MODE, with de-identified QA rows. No credentials were read or emitted.
+- Verification: `tsc --noEmit` and Vite production build (`--configLoader runner`) passed after the reservation fix. New focused header/raw-preservation/batch/idempotency/cancel tests passed (4/4); Python worker unittest suite passed earlier (7 tests). Full Node suite previously reported 51 passed and 6 unrelated existing failures (configuration product-name uniqueness fixture, report date-format expectation, applicability variant match, two result-validation expectations, and template unit expectation). Isolated DEMO_MODE browser flow committed one sample and a two-row batch; edited a reviewed row, recalculated, then committed both with the same assigned ML numbers and no duplicates (2 logged, 0 needing attention). Desktop entry mode and batch-row interaction were inspected, and screenshots were captured at 1280×720 and 390×844; the mobile chooser is a single column with no visible horizontal spill. Direct Playwright CLI wrapper could not resolve its package due restricted package cache/network; browser interaction used CUA Playwright. Impeccable detector reported legacy layout-transition warnings and design-token advisories, with no significant intake-specific issue. Final focused checks passed; `git diff --check` flags only trailing blank lines in unrelated dirty `DESIGN.md` and `src/main.tsx`, which were left untouched.
+- Limits/next: Before live use, implement/review versioned header-driven mappings for every active workbook section and field, capture exact formats/formulas/merges, reconcile occupied/reserved/partial rows and ML sequences, then test the read-only connection, coordinate manual intake, and enable writes only through the controlled administrator setting. Keep `No.` as its own source field and Category F/G as two separate controlled values. No live-write smoke test, deployment, commit, or push was performed. Existing dirty working tree was preserved.
+
+### TASK-20261005-004 — Expose Environmental Category values as toggle groups
+
+- Status: Implemented locally; UI inspected at desktop and mobile widths; live workbook writes remain gated under TASK-20261005-001.
+- Authorization: User clarified that Incoming `Column 1` is named `No.`, Environmental column G is part of Category, and Environmental intake should use multiple toggles for the category values.
+- Changed: Environmental intake now shows two keyboard-accessible, single-choice toggle groups mapped to the existing Category F and G data fields. The option lists match the October sheet's strict validation rules. SFG/FG's secondary source field is labeled `No.` without merging it into Category.
+- Data impact: Read-only Google Sheets range/cell metadata inspection only; no workbook cell was changed. Isolated UI was run in DEMO_MODE. No production DB or Google write occurred.
+- Verification: TypeScript no-emit and Vite production build passed. Browser inspection confirmed two radio groups with the exact F/G choices, selected values, and no horizontal overflow at 1280px or 390px viewport widths.
+- Limits/next: October mappings remain blocked on section geometry, formulas/format/merge review, occupied/reserved/partial row reconciliation, and ML sequence reconciliation. The visible Environmental October title/date disagreement still needs correction/review outside this UI change.
+
+### TASK-20261005-002 — Render assistant formatting and correct failure classification
+
+- Status: Implemented; verification not run.
+- Priority: P1
+- Actor/tool: Codex (GPT-6)
+- Authorization: Project-owner request in chat to fix Smart Assistant formatting and the misleading “could not reach Gemini” error.
+- Goal/rule link: Read-only assistant behavior, actionable non-sensitive errors, responsive/accessible interface.
+- Scope/files: `src/AssistantPage.tsx`, `src/experience.css`, `server/ai.ts`, `server/ai-support.ts`, this ledger, active handover.
+- Before: Assistant responses were rendered as plain text, leaving Markdown markers such as `**...**` and `* ...` visible. The `/api/ai/chat` catch mapped all unhandled failures—including local server/tool processing errors—to a Gemini connectivity message.
+- Change: Added safe React rendering for Markdown headings, paragraphs, unordered/ordered lists, bold/italic, and inline code. Distinguished errors thrown during Gemini request calls from application-side failures; local failures now receive an internal server-problem message, while provider failures retain the existing sanitized Gemini categories. Error messages are exposed to assistive technology and receive a semantic error treatment.
+- Data impact: No live database, laboratory record, Gemini credential, Google source, or deployment was accessed or changed.
+- Verification: Not run in this task. No tests or build were run.
+- Problems/risks: The Markdown renderer intentionally supports common text/list formatting, not every Markdown extension (for example tables). The working tree contains inherited edits; no commit or push was made.
+- Rollback: Revert only the scoped assistant rendering and failure-classification changes after reviewing their diff; retain all unrelated work.
+- Evidence: Scoped source changes in the files listed above; UI behavior remains unverified in a browser.
+- Next action/owner: Run a local assistant UI/API check and inspect the live service after an authorized deployment; confirm a provider outage still gets a Gemini-specific message and a local processing failure gets the server-problem message.
+
+### TASK-20261005-003 — Handle multiple Gemini function calls in one response
+
+- Status: Implemented; verification not run.
+- Priority: P1
+- Actor/tool: Codex (GPT-6)
+- Authorization: User supplied production log lines showing Gemini returned two `functionCall` parts before the Smart Assistant returned 502.
+- Goal/rule link: Read-only assistant behavior, accurate failure reporting, actionable non-sensitive errors.
+- Scope/files: `server/ai.ts`, `server/ai-support.ts`, this ledger, active handover.
+- Before: `/api/ai/chat` executed only `response.functionCalls[0]`, sent one function result, then accessed `response.text`. When Gemini returned multiple function calls, the remaining calls were not answered; the SDK warned that the response contained non-text parts and the empty text was converted into a generic upstream 502.
+- Change: Process every function call returned in a model turn, preserve each call ID in its corresponding response, and send all function results together before continuing the chat. Continue handling later tool-call turns up to a five-round limit; only read response text after the model returns a text response.
+- Data impact: Used only the log excerpt supplied by the user. No live Render query, API request, database, laboratory record, credential, or deployment was accessed or changed.
+- Verification: Not run. No tests or build were run.
+- Problems/risks: The new multi-call path remains unverified by an API/browser run. The five-round cap deliberately returns a sanitized internal error if the model does not finish its tool loop.
+- Rollback: Revert the scoped multi-function-call loop and plural response helper; retain the separately requested formatting/error-message changes.
+- Evidence: User-provided production logs at `2026-10-05T04:00:19Z` and `2026-10-05T04:16:55Z`; scoped source diff.
+- Next action/owner: Run a de-identified assistant request that triggers two tools and confirm it returns a formatted text reply without a Gemini non-text warning.

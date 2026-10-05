@@ -2,21 +2,22 @@
 name: IPI QC Microbiology Operations Dashboard
 description: A calm, traceable laboratory operations console for sample intake, review, and report preparation.
 colors:
-  app-bg: "#081117"
-  surface: "#101B23"
-  surface-elevated: "#15242E"
-  surface-hover: "#1A2C38"
-  text-primary: "#F5F7F8"
-  text-secondary: "#A7B1BA"
-  text-tertiary: "#75818B"
-  accent-teal: "#2DD4BF"
-  accent-teal-hover: "#26B2A0"
+  app-bg: "#121613"
+  surface: "#191e1a"
+  surface-elevated: "#202620"
+  surface-hover: "#282f27"
+  text-primary: "#f1f3eb"
+  text-secondary: "#bdc3b7"
+  text-tertiary: "#8c9386"
+  accent: "#53652a"
+  accent-action: "#d8e987"
+  accent-hover: "#465721"
   success: "#34D399"
   warning: "#FBBF24"
   critical: "#F87171"
   info: "#60A5FA"
-  border: "rgba(255, 255, 255, 0.08)"
-  border-strong: "rgba(255, 255, 255, 0.15)"
+  border: "rgba(227, 235, 216, 0.10)"
+  border-strong: "rgba(227, 235, 216, 0.18)"
 typography:
   display:
     fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif"
@@ -69,7 +70,7 @@ spacing:
   12: "48px"
 components:
   button-primary:
-    backgroundColor: "{colors.accent-teal}"
+    backgroundColor: "{colors.accent-action}"
     textColor: "{colors.app-bg}"
     rounded: "{rounded.control}"
     padding: "0 14px"
@@ -106,7 +107,7 @@ components:
 
 The interface should feel like a well-kept laboratory notebook translated into a fast digital workbench: legible, traceable, immediately useful, and quietly alive. The visual system serves routine QC work rather than marketing, but it is allowed to have atmosphere. Hierarchy comes from typography, alignment, state, and motion that supports the sense of a living laboratory system.
 
-The approved redesign direction is a laboratory operations console with a cinematic motion layer. It keeps the current dashboard’s animated hero, atmospheric background, laboratory mark, soft glow, and assistant personality while improving work-queue hierarchy and responsive ergonomics. Linear informs information density and calm navigation; Vercel informs contrast and action restraint; Raycast informs command-first search and compact result handling. Their branding and layouts are not copied.
+The current visual direction is Graphite + Lab Paper + Soft Lime: graphite navigation, quiet paper-like surfaces in light mode, charcoal surfaces in dark mode, precise separators, compact controls, and a soft lime primary action. The existing Inter/system typography, route-specific assay SVGs, responsive shell, and short transition cues keep the interface grounded in laboratory operations. The supplied references informed density, alignment, and restrained accent use; their map, warehouse, and CRM layouts are not copied.
 
 **Key Characteristics:**
 
@@ -121,12 +122,13 @@ The approved redesign direction is a laboratory operations console with a cinema
 
 ## Colors
 
-The palette is a deep teal-navy neutral field with cool text and a scarce mint-teal action color. Semantic colors communicate laboratory state and must not become decoration.
+The palette is graphite with calm lab-paper surfaces and a scarce soft-lime action. A deeper moss accent is used for small text and icons in light mode; lime fills carry dark text for clear action contrast. Semantic colors communicate laboratory state and must not become decoration.
 
 ### Primary
 
-- **Operational teal** (`#2DD4BF`): Primary actions, active controls, focus emphasis, and verified positive state.
-- **Operational teal hover** (`#26B2A0`): Hover and pressed-state refinement for primary actions.
+- **Soft lime action** (`#D8E987`): Primary action fills and active emphasis; dark graphite text sits on the fill.
+- **Moss accent** (`#53652A`): Link, icon, and focus emphasis in light mode.
+- **Moss hover** (`#465721`): Hover state for light-mode accent text.
 
 ### Secondary
 
@@ -137,16 +139,15 @@ The palette is a deep teal-navy neutral field with cool text and a scarce mint-t
 
 ### Neutral
 
-- **App field** (`#081117`): Overall canvas and recessed input backgrounds.
-- **Surface** (`#101B23`): Primary working surface.
-- **Elevated surface** (`#15242E`): Menus, selected controls, and elevated context.
-- **Hover surface** (`#1A2C38`): Interactive hover and selected-row treatment.
-- **Primary text** (`#F5F7F8`): Record identity and headings.
-- **Secondary text** (`#A7B1BA`): Supporting descriptions and metadata.
-- **Tertiary text** (`#75818B`): Hints, timestamps, and low-priority labels.
+- **App field** (`#121613`): Dark-mode canvas.
+- **Surface** (`#191E1A`): Primary working surface.
+- **Elevated surface** (`#202620`): Menus and selected controls.
+- **Hover surface** (`#282F27`): Interactive hover and selected-row treatment.
+- **Primary text** (`#F1F3EB`): Record identity and headings.
+- **Secondary text** (`#BDC3B7`): Supporting descriptions and metadata.
+- **Tertiary text** (`#8C9386`): Hints, timestamps, and low-priority labels.
 
-**The One Voice Rule.** Teal is scarce. It should identify the next action or a meaningful operational state, not outline every container.
-
+**The One Voice Rule.** Lime is scarce. Use filled lime for primary actions; use the darker moss accent for small text, icons, links, and focus in light mode. Do not outline every container.
 ## Typography
 
 **Display Font:** Inter with system sans fallbacks.
@@ -303,3 +304,16 @@ The shape language is gently rounded but controlled. Controls use `6–8px` corn
 - **Don't** animate frequent keyboard-driven actions.
 - **Don't** fabricate operational metrics, due dates, progress, or laboratory conclusions.
 - **Don't** copy Linear, Vercel, or Raycast branding or page layouts; use only the documented interaction principles.
+
+## Visual system update — 2026-10-05
+
+The selected direction is **Graphite + Lab Paper + Soft Lime**. The lab workbench is neutral and precise: graphite navigation, quiet paper-like working surfaces in light mode, charcoal surfaces in dark mode, thin boundaries, and a soft lime accent reserved for active navigation, focus, and primary actions. Existing semantic colors continue to communicate operational status.
+
+The existing Inter/system typography, 4px spacing rhythm, route-specific assay SVGs, and workflow behavior remain the foundation. Surfaces are flat by default; shadows are limited to small structural separation. Existing motion and low-performance hooks remain in place, and reduced-motion settings retain a static route mark. The design reference screenshots informed density, alignment, compact controls, and restrained accent use; their map, warehouse, and CRM content is not part of IPI.
+
+This update changes visual presentation only. It does not change record meaning, sample release, report approval, signature state, permissions, integrations, or persisted data.
+
+
+
+
+

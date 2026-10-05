@@ -299,6 +299,54 @@ input[type="checkbox"] {
 .template-route .muted { font-size: 12px; margin: 0 0 var(--space-3); }
 .template-route-entry { margin-top: var(--space-3); }
 
+/* Intake is a high-frequency work surface: keep its state cues compact and its
+   fields in one predictable keyboard sequence. */
+.intake-mode { display: inline-flex; gap: 3px; padding: 3px; margin: 0 0 var(--space-4); border: 1px solid var(--border); border-radius: 7px; background: var(--bg-surface); }
+.intake-mode button { min-height: 34px; padding: 0 13px; border: 0; border-radius: 5px; color: var(--text-secondary); background: transparent; cursor: pointer; font: inherit; }
+.intake-mode button.selected { color: var(--text-primary); background: var(--bg-surface-elevated); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.intake-mode button:focus-visible, .intake-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.intake-form, .intake-review { display: grid; gap: var(--space-4); }
+.intake-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.intake-topline > span { color: var(--text-secondary); font-size: 13px; }
+.intake-row { padding-top: var(--space-4); border-top: 1px solid var(--border); }
+.intake-row-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: var(--space-4); }
+.intake-row-heading small, .intake-review-ml small { color: var(--text-tertiary); font-size: 11px; }
+.intake-row-heading h2 { margin: 3px 0 0; font-size: 17px; }
+.intake-add { justify-self: start; }
+.intake-review-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.intake-review-heading h2 { margin: 14px 0 4px; }
+.intake-review-heading p { margin: 0; color: var(--text-secondary); }
+.intake-review-row { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(150px, auto) auto auto; align-items: center; gap: 12px 20px; padding: 16px 0; border-top: 1px solid var(--border); }
+.intake-review-identity { min-width: 0; }
+.intake-review-identity strong, .intake-review-identity span { display: block; overflow-wrap: anywhere; }
+.intake-review-identity span { margin-top: 4px; color: var(--text-tertiary); font-size: 12px; }
+.intake-review-ml code { display: block; margin-top: 4px; color: var(--text-primary); font-size: 14px; font-variant-numeric: tabular-nums; }
+.intake-review-error { grid-column: 1 / -1; margin: 0; color: var(--color-critical); font-size: 13px; }
+.intake-review-fields { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding-top: 4px; }
+.intake-review-fields .field > span { font-size: 11px; }
+.intake-review-fields input[readonly] { opacity: .74; }
+.intake-toggle-field { grid-column: 1 / -1; min-width: 0; }
+.intake-toggle-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.intake-toggle { position: relative; display: inline-flex; cursor: pointer; }
+.intake-toggle input { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; }
+.intake-toggle span { display: inline-flex; min-height: 36px; align-items: center; padding: 0 11px; border: 1px solid var(--border); border-radius: 7px; color: var(--text-secondary); background: var(--bg-surface); font-size: 13px; line-height: 1.25; transition: color 140ms ease, border-color 140ms ease, background-color 140ms ease; }
+.intake-toggle input:checked + span { border-color: var(--border-strong); color: var(--text-primary); background: var(--bg-surface-elevated); box-shadow: inset 0 0 0 1px var(--border-strong); }
+.intake-toggle input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.intake-toggle-field small { margin-top: 5px; }
+.intake-review-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.intake-review .form-footer { gap: 14px; }
+@media (max-width: 700px) {
+  .intake-mode { display: flex; width: 100%; }
+  .intake-mode button { flex: 1; }
+  .intake-topline, .intake-review-heading { align-items: flex-start; flex-direction: column; }
+  .intake-review-row { grid-template-columns: minmax(0, 1fr) auto; gap: 9px 12px; }
+  .intake-review-identity { grid-column: 1 / -1; }
+  .intake-review-ml { grid-column: 1; }
+  .intake-review-row > a { justify-self: end; }
+  .intake-review-actions { width: 100%; flex-wrap: wrap; }
+  .intake-review-actions .button { flex: 1 1 150px; }
+}
+
 .file-row {
   display: flex;
   align-items: flex-start;

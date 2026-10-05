@@ -3,7 +3,7 @@ import { db } from './db.js';
 import { z } from 'zod';
 import { Fault } from './domain.js';
 import express from 'express';
-import { createGeminiFunctionResponse, prepareAssistantChat, publicGeminiError } from './ai-support.js';
+import { createGeminiFunctionResponses, prepareAssistantChat, publicAssistantError, requestGemini, GeminiRequestFailure } from './ai-support.js';
 
 const querySamples: FunctionDeclaration = {
   name: 'query_samples',
@@ -72,8 +72,17 @@ aiRouter.post('/chat', async (req, res) => {
     throw new Fault(503, 'Smart Assistant is not configured. Ask an administrator to add GEMINI_API_KEY and redeploy the service.');
   }
 
+  let input: z.infer<typeof inputSchema>;
   try {
-    const input = inputSchema.parse(req.body);
+    input = inputSchema.parse(req.body);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Fault(400, 'The assistant request was malformed. Clear the chat and try again.');
+    }
+    throw error;
+  }
+
+  try {
     const { history, lastMessage } = prepareAssistantChat(input.messages);
     const ai = new GoogleGenAI({ apiKey });
     const chat = ai.chats.create({
@@ -85,58 +94,66 @@ aiRouter.post('/chat', async (req, res) => {
       }
     });
 
-    let response = await chat.sendMessage({ message: lastMessage.parts });
-    const call = response.functionCalls?.[0];
-    if (call) {
-      let functionResponseData: Record<string, unknown>;
-      if (call.name === 'query_samples') {
-        const { q, category, limit } = sampleArgs.parse(call.args || {});
-        const args: unknown[] = [];
-        const filters: string[] = [];
-        if (q) {
-          args.push(`%${q.replace(/[\\%_]/g, '\\$&')}%`);
-          filters.push("concat_ws(' ',data->>'ml',data->>'name',data->>'batch',data->>'received') ILIKE $" + args.length);
+    let response = await requestGemini(() => chat.sendMessage({ message: lastMessage.parts }));
+    let toolRounds = 0;
+    while (response.functionCalls?.length) {
+      if (toolRounds >= 5) throw new Error('Gemini exceeded the assistant tool-call limit');
+      toolRounds += 1;
+      const functionResponses: Array<{ call: { id?: string; name?: string }; response: Record<string, unknown> }> = [];
+
+      for (const call of response.functionCalls) {
+        let functionResponseData: Record<string, unknown>;
+        if (call.name === 'query_samples') {
+          const { q, category, limit } = sampleArgs.parse(call.args || {});
+          const args: unknown[] = [];
+          const filters: string[] = [];
+          if (q) {
+            args.push(`%${q.replace(/[\\%_]/g, '\\$&')}%`);
+            filters.push("concat_ws(' ',data->>'ml',data->>'name',data->>'batch',data->>'received') ILIKE $" + args.length);
+          }
+          if (category) {
+            args.push(category);
+            filters.push("data->>'category'=$" + args.length);
+          }
+          args.push(limit);
+          const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+          const rows = (await db.query(
+            `SELECT jsonb_build_object('id',data->'id','category',data->'category','ml',data->'ml','name',data->'name','batch',data->'batch','received',data->'received','status',data->'status','remarks',data->'remarks','context',data->'context','fields',data->'fields') AS data FROM samples ${where} ORDER BY updated_at DESC LIMIT $${args.length}`,
+            args
+          )).rows;
+          functionResponseData = { samples: rows.map(row => row.data) };
+        } else if (call.name === 'query_audit_logs') {
+          const { q, limit } = auditArgs.parse(call.args || {});
+          const search = q ? `%${q.toLowerCase()}%` : '%';
+          const logs = (await db.query(
+            `SELECT id,actor,action,created_at FROM audit WHERE concat_ws(' ',actor,action) ILIKE $1 ORDER BY created_at DESC LIMIT $2`,
+            [search, limit]
+          )).rows;
+          functionResponseData = { logs };
+        } else {
+          functionResponseData = { error: 'Unsupported assistant function' };
         }
-        if (category) {
-          args.push(category);
-          filters.push("data->>'category'=$" + args.length);
-        }
-        args.push(limit);
-        const where = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
-        const rows = (await db.query(
-          `SELECT jsonb_build_object('id',data->'id','category',data->'category','ml',data->'ml','name',data->'name','batch',data->'batch','received',data->'received','status',data->'status','remarks',data->'remarks','context',data->'context','fields',data->'fields') AS data FROM samples ${where} ORDER BY updated_at DESC LIMIT $${args.length}`,
-          args
-        )).rows;
-        const samples = rows.map(row => row.data);
-        functionResponseData = { samples };
-      } else if (call.name === 'query_audit_logs') {
-        const { q, limit } = auditArgs.parse(call.args || {});
-        const search = q ? `%${q.toLowerCase()}%` : '%';
-        const logs = (await db.query(
-          `SELECT id,actor,action,created_at FROM audit WHERE concat_ws(' ',actor,action) ILIKE $1 ORDER BY created_at DESC LIMIT $2`,
-          [search, limit]
-        )).rows;
-        functionResponseData = { logs };
-      } else {
-        functionResponseData = { error: 'Unsupported assistant function' };
+        functionResponses.push({ call, response: functionResponseData });
       }
 
-      response = await chat.sendMessage({
-        // The SDK's runtime accepts a Content wrapper for tool responses, but
-        // its message type is still narrower than the supported wire shape.
-        message: createGeminiFunctionResponse(call, functionResponseData) as unknown as Parameters<typeof chat.sendMessage>[0]['message']
-      });
+      response = await requestGemini(() => chat.sendMessage({
+        // Gemini may issue several function calls in one turn; return one result
+        // for every call ID before asking it to continue.
+        message: createGeminiFunctionResponses(functionResponses) as unknown as Parameters<typeof chat.sendMessage>[0]['message']
+      }));
     }
 
     const text = response.text?.trim();
     if (!text) throw new Error('Gemini returned an empty response');
     res.json({ role: 'model', parts: [{ text }] });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Fault(400, 'The assistant request was malformed. Clear the chat and try again.');
-    }
-    const publicError = publicGeminiError(error);
-    console.error('Gemini request failed', { category: publicError.category, status: publicError.status });
+    if (error instanceof Fault) throw error;
+    const publicError = publicAssistantError(error);
+    console.error('Smart Assistant request failed', {
+      source: error instanceof GeminiRequestFailure ? 'gemini' : 'application',
+      category: publicError.category,
+      status: publicError.status
+    });
     throw new Fault(publicError.status, publicError.message);
   }
 });

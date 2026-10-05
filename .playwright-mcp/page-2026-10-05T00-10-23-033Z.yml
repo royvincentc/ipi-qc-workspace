@@ -1,0 +1,112 @@
+- generic [ref=f13e12]:
+  - complementary "Workspace navigation" [ref=f13e13]:
+    - link "IPI Micro-QC Quality Control" [ref=f13e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f13e20]:
+        - text: IPI Micro-QC
+        - generic [ref=f13e21]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f13e22] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f13e26]:
+      - link "Dashboard" [ref=f13e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f13e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f13e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f13e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f13e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f13e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f13e56]: SYSTEM
+    - navigation "System navigation" [ref=f13e57]:
+      - button "Sync with Database" [ref=f13e58] [cursor=pointer]
+      - link "Settings" [ref=f13e65] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f13e70]:
+      - generic [ref=f13e71]:
+        - generic [ref=f13e72]: Appearance
+        - switch "Dark theme" [checked] [ref=f13e73] [cursor=pointer]
+      - generic [ref=f13e97]:
+        - generic "Demo Analyst" [ref=f13e98]: DE
+        - generic [ref=f13e99]:
+          - strong [ref=f13e100]: Demo Analyst
+          - generic [ref=f13e101]: administrator
+  - generic [ref=f13e102]:
+    - banner [ref=f13e103]:
+      - button "Open global sample search" [ref=f13e104] [cursor=pointer]:
+        - generic [ref=f13e108]: Search a sample, batch, or control number...
+        - generic [ref=f13e109]: ⌘K
+      - generic [ref=f13e110]:
+        - generic [ref=f13e111]: Demo workspace
+        - generic [ref=f13e114]:
+          - generic [ref=f13e115]: Mon, Oct 5, 2026
+          - strong [ref=f13e116]: 08:10 AM
+        - generic "Demo Analyst" [ref=f13e117]: DE
+    - generic [ref=f13e118]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f13e120]:
+      - generic [ref=f13e122]:
+        - heading "Files & documents" [level=1] [ref=f13e123]
+        - paragraph [ref=f13e124]: Find generated reports, historical references and authorized library files.
+      - generic [ref=f13e129]:
+        - generic [ref=f13e130]:
+          - textbox "Find a document or control number…" [ref=f13e135]
+          - combobox "Document type" [ref=f13e136]:
+            - option "All documents" [selected]
+            - option "Generated reports"
+            - option "Historical references"
+            - option "Prepared templates"
+            - option "Drive library"
+          - combobox "Document order" [ref=f13e137]:
+            - option "Identifier / numeric order ↑" [selected]
+            - option "Newest first"
+        - generic [ref=f13e138]:
+          - generic [ref=f13e142]:
+            - strong [ref=f13e143]: ML-FG-26-0001-draft-r2.docx
+            - generic [ref=f13e144]: Generated report · Result revision 2
+            - generic [ref=f13e145]: External review required
+          - button "Preview" [ref=f13e146] [cursor=pointer]
+          - link "Download" [ref=f13e147] [cursor=pointer]:
+            - /url: /api/files/2efa6d1c-094e-4502-992f-87599a78605f/download
+        - generic [ref=f13e148]:
+          - generic [ref=f13e152]:
+            - strong [ref=f13e153]: ML-FG-26-0001-draft-r2.docx
+            - generic [ref=f13e154]: Generated report · Result revision 2
+            - generic [ref=f13e155]: External review required
+          - button "Preview" [ref=f13e156] [cursor=pointer]
+          - link "Download" [ref=f13e157] [cursor=pointer]:
+            - /url: /api/files/fe4af072-e9cd-4079-a136-6e5bf2100521/download
+        - generic [ref=f13e158]:
+          - generic [ref=f13e162]:
+            - strong [ref=f13e163]: Retired generic demo · ML-FG-26-0001-draft-r3.docx
+            - generic [ref=f13e164]: Generated report · Result revision 3
+            - generic [ref=f13e165]: External review required
+          - link "Download" [ref=f13e166] [cursor=pointer]:
+            - /url: /api/files/51b3269e-d2c8-4c05-8977-48d7d2a592cf/download
+        - generic [ref=f13e167]:
+          - generic [ref=f13e171]:
+            - strong [ref=f13e172]: Retired generic demo · ML-FG-26-0001-draft-r3.docx
+            - generic [ref=f13e173]: Generated report · Result revision 3
+            - generic [ref=f13e174]: External review required
+          - button "Preview" [ref=f13e175] [cursor=pointer]
+          - link "Download" [ref=f13e176] [cursor=pointer]:
+            - /url: /api/files/b3cedc65-31b0-4542-944e-f9ea8aa05c48/download
+        - generic [ref=f13e177]:
+          - generic [ref=f13e181]:
+            - strong [ref=f13e182]: Retired generic demo · ML-FG-26-0001-draft-r3.docx
+            - generic [ref=f13e183]: Generated report · Result revision 3
+            - generic [ref=f13e184]: External review required
+          - button "Preview" [ref=f13e185] [cursor=pointer]
+          - link "Download" [ref=f13e186] [cursor=pointer]:
+            - /url: /api/files/bbf43938-0bd6-4f99-8944-32b52b737a67/download
+        - generic [ref=f13e187]:
+          - generic [ref=f13e188]: 5 documents · Page 1 of 1
+          - button "Previous" [disabled] [ref=f13e189]
+          - button "Next" [disabled] [ref=f13e190]
+      - dialog [ref=f13e191]:
+        - generic [ref=f13e192]:
+          - heading "ML-FG-26-0001-draft-r2.docx" [level=2] [ref=f13e193]
+          - button "Close" [active] [ref=f13e194] [cursor=pointer]
+        - iframe [ref=f13e195]
+  - button "Open Miss Minutes Assistant" [ref=f13e196] [cursor=pointer]

@@ -1,0 +1,73 @@
+- generic [ref=f1e14]:
+  - complementary [ref=f1e15]:
+    - link "IPI Micro-QC Quality Control" [ref=f1e16] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f1e22]:
+        - text: IPI Micro-QC
+        - generic [ref=f1e23]: Quality Control
+    - button "Collapse sidebar" [ref=f1e24] [cursor=pointer]
+    - navigation [ref=f1e28]:
+      - link "Dashboard" [ref=f1e29] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f1e36] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f1e39] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f1e44] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f1e49] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f1e53] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f1e58]: SYSTEM
+    - navigation [ref=f1e59]:
+      - link "Settings" [ref=f1e60] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f1e66]:
+      - generic "Demo Analyst" [ref=f1e67]: DE
+      - generic [ref=f1e68]:
+        - strong [ref=f1e69]: Demo Analyst
+        - generic [ref=f1e70]: administrator
+  - generic [ref=f1e71]:
+    - banner [ref=f1e72]:
+      - button "Open global sample search" [ref=f1e73] [cursor=pointer]:
+        - generic [ref=f1e77]: Search a sample, batch, or control number...
+        - generic [ref=f1e78]: ⌘K
+      - generic [ref=f1e79]:
+        - generic [ref=f1e80]: Demo workspace
+        - generic [ref=f1e83]:
+          - generic [ref=f1e84]: Thu, Oct 1, 2026
+          - strong [ref=f1e85]: 12:16 PM
+        - generic "Demo Analyst" [ref=f1e86]: DE
+    - generic [ref=f1e87]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f1e89]:
+      - generic [ref=f1e91]:
+        - generic [ref=f1e92]: QUALITY CONTROL
+        - heading "Analysis reports" [level=1] [ref=f1e93]
+        - paragraph [ref=f1e94]: Choose a logged sample. Its checklist tests, sample details and registered report layout are resolved automatically.
+      - generic [ref=f1e95]:
+        - generic [ref=f1e96]:
+          - heading "Prepare a report" [level=2] [ref=f1e98]
+          - paragraph [ref=f1e102]: The QC Micro Products Specifications checklist determines the parameter rows. Sample information comes from the incoming logger; actual results remain manual.
+          - textbox "Find sample by ML number, product or batch…" [ref=f1e107]
+          - generic [ref=f1e108]:
+            - generic [ref=f1e109]: Select a logged sample
+            - combobox "Select a logged sample" [active] [ref=f1e110]:
+              - option "Choose from the logbook…" [selected]
+              - option "ML-EM-26-0007 · Production Area F · DEMO-007"
+              - option "ML-MIS-26-0006 · Laboratory Sample E · DEMO-006"
+              - option "ML-ST-26-0005 · Stability Sample D · DEMO-005"
+              - option "ML-RM-26-0004 · Base Material C · DEMO-004"
+              - option "ML-WS-26-0003 · Purified Water · Point 03 · DEMO-003"
+              - option "ML-SFG-26-0002 · Botanical Sample B · DEMO-002"
+              - option "ML-FG-26-0001 · De-identified Product A · 100 units · DEMO-001"
+          - button "Create result draft" [disabled] [ref=f1e111]
+        - generic [ref=f1e114]:
+          - generic [ref=f1e115]:
+            - heading "Saved drafts" [level=2] [ref=f1e116]
+            - generic [ref=f1e117]: "0"
+          - generic [ref=f1e118]:
+            - heading "No drafts yet" [level=3] [ref=f1e121]
+            - paragraph [ref=f1e122]: Your manual results are saved here, ready to resume.
+  - button "Open Miss Minutes Assistant" [ref=f1e123] [cursor=pointer]:
+    - img "Miss Minutes" [ref=f1e124]

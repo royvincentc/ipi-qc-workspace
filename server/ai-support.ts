@@ -3,6 +3,21 @@ export interface AssistantMessage {
   parts: Array<{ text: string }>;
 }
 
+export class GeminiRequestFailure extends Error {
+  constructor(readonly upstream: unknown) {
+    super('Gemini request failed');
+    this.name = 'GeminiRequestFailure';
+  }
+}
+
+export async function requestGemini<T>(request: () => Promise<T>): Promise<T> {
+  try {
+    return await request();
+  } catch (error) {
+    throw new GeminiRequestFailure(error);
+  }
+}
+
 export function createGeminiFunctionResponse(
   call: { id?: string; name?: string },
   response: Record<string, unknown>
@@ -13,6 +28,19 @@ export function createGeminiFunctionResponse(
   return {
     role: 'user' as const,
     parts: [{ functionResponse: { id: call.id, name: call.name || 'unknown', response } }]
+  };
+}
+
+export function createGeminiFunctionResponses(
+  responses: Array<{ call: { id?: string; name?: string }; response: Record<string, unknown> }>
+) {
+  if (!responses.length) throw new Error('Gemini function responses cannot be empty');
+  return {
+    role: 'user' as const,
+    parts: responses.map(({ call, response }) => {
+      if (!call.id) throw new Error('Gemini function call did not include an id');
+      return { functionResponse: { id: call.id, name: call.name || 'unknown', response } };
+    })
   };
 }
 
@@ -53,4 +81,21 @@ export function publicGeminiError(error: unknown) {
     return { category: 'history', status: 400, message: 'This chat history is invalid. Clear the chat and try again.' };
   }
   return { category: 'upstream', status: 502, message: 'Smart Assistant could not reach Gemini. Please try again shortly; administrators can review the server log category for details.' };
+}
+
+export function publicAssistantError(error: unknown) {
+  if (error instanceof GeminiRequestFailure) {
+    return publicGeminiError(error.upstream);
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  if (/history|role|last assistant message/i.test(message)) {
+    return { category: 'history', status: 400, message: 'This chat history is invalid. Clear the chat and try again.' };
+  }
+
+  return {
+    category: 'internal',
+    status: 500,
+    message: 'Smart Assistant could not process this request because of a server problem. Please try again. If it continues, ask an administrator to review the Smart Assistant server logs.'
+  };
 }

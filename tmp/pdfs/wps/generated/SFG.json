@@ -1,0 +1,67 @@
+{
+  "fields": {
+    "batch.size": "25,000 units (3 drums)",
+    "overall.remarks": "VISUAL QA ONLY — no actual laboratory result",
+    "t.release": "08:15 AM",
+    "analyst": "VISUAL QA ONLY",
+    "sample.received": "09/30/2026 @ 07:35 AM",
+    "sample.batch": "QA-LOT-260930",
+    "type": "VISUAL QA ONLY",
+    "page": "123",
+    "sample.name": "VISUAL QA ONLY SAMPLE — EXTENDED SAMPLE NAME FOR WRAP CHECK",
+    "sample.category": "VISUAL QA ONLY",
+    "fill.vol": "60 mL",
+    "sample.ml": "QA-ML-0001",
+    "sample.name.suffix": "Long descriptive suffix for layout checking",
+    "d.release": "09/30/2026",
+    "date.mfd": "08/15/2026",
+    "mic": "VISUAL QA ONLY",
+    "requested.by": "QA Example Requester",
+    "remarks": "VISUAL QA ONLY",
+    "exp.date": "08/14/2028"
+  },
+  "rows": [
+    {
+      "remarks": "VISUAL QA ONLY",
+      "criterion": "VISUAL QA SPECIFICATION — WRAP CHECK",
+      "index": 0,
+      "value": "VISUAL QA ONLY — EXAMPLE VALUE",
+      "test": "Standard Plate Count (SPC)"
+    },
+    {
+      "remarks": "VISUAL QA ONLY",
+      "criterion": "VISUAL QA SPECIFICATION — WRAP CHECK",
+      "index": 1,
+      "value": "VISUAL QA ONLY — EXAMPLE VALUE",
+      "test": "Molds and Yeast"
+    },
+    {
+      "remarks": "VISUAL QA ONLY",
+      "criterion": "VISUAL QA SPECIFICATION — WRAP CHECK",
+      "index": 2,
+      "value": "VISUAL QA ONLY — EXAMPLE VALUE",
+      "test": "Salmonella"
+    },
+    {
+      "remarks": "VISUAL QA ONLY",
+      "criterion": "VISUAL QA SPECIFICATION — WRAP CHECK",
+      "index": 3,
+      "value": "VISUAL QA ONLY — EXAMPLE VALUE",
+      "test": "P. aeruginosa"
+    },
+    {
+      "remarks": "VISUAL QA ONLY",
+      "criterion": "VISUAL QA SPECIFICATION — WRAP CHECK",
+      "index": 4,
+      "value": "VISUAL QA ONLY — EXAMPLE VALUE",
+      "test": "S. aureus"
+    },
+    {
+      "remarks": "VISUAL QA ONLY",
+      "criterion": "VISUAL QA SPECIFICATION — WRAP CHECK",
+      "index": 5,
+      "value": "VISUAL QA ONLY — EXAMPLE VALUE",
+      "test": "C. albicans"
+    }
+  ]
+}

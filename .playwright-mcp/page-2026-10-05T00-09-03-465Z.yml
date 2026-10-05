@@ -1,0 +1,101 @@
+- generic [ref=f11e12]:
+  - complementary "Workspace navigation" [ref=f11e13]:
+    - link "IPI Micro-QC Quality Control" [ref=f11e14] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f11e20]:
+        - text: IPI Micro-QC
+        - generic [ref=f11e21]: Quality Control
+    - button "Collapse sidebar" [expanded] [ref=f11e22] [cursor=pointer]
+    - navigation "Primary navigation" [ref=f11e26]:
+      - link "Dashboard" [ref=f11e27] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f11e34] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f11e37] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f11e42] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f11e47] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f11e51] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f11e56]: SYSTEM
+    - navigation "System navigation" [ref=f11e57]:
+      - button "Sync with Database" [ref=f11e58] [cursor=pointer]
+      - link "Settings" [ref=f11e65] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f11e70]:
+      - generic [ref=f11e71]:
+        - generic [ref=f11e72]: Appearance
+        - switch "Dark theme" [checked] [ref=f11e73] [cursor=pointer]
+      - generic [ref=f11e97]:
+        - generic "Demo Analyst" [ref=f11e98]: DE
+        - generic [ref=f11e99]:
+          - strong [ref=f11e100]: Demo Analyst
+          - generic [ref=f11e101]: administrator
+  - generic [ref=f11e102]:
+    - banner [ref=f11e103]:
+      - button "Open global sample search" [ref=f11e104] [cursor=pointer]:
+        - generic [ref=f11e108]: Search a sample, batch, or control number...
+        - generic [ref=f11e109]: ⌘K
+      - generic [ref=f11e110]:
+        - generic [ref=f11e111]: Demo workspace
+        - generic [ref=f11e114]:
+          - generic [ref=f11e115]: Mon, Oct 5, 2026
+          - strong [ref=f11e116]: 08:08 AM
+        - generic "Demo Analyst" [ref=f11e117]: DE
+    - generic [ref=f11e118]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f11e120]:
+      - generic [ref=f11e122]:
+        - heading "Analysis reports" [level=1] [ref=f11e123]
+        - paragraph [ref=f11e124]: Choose a logged sample. Its checklist tests, sample details and registered report layout are resolved automatically.
+      - generic [ref=f11e129]:
+        - generic [ref=f11e130]:
+          - heading "Prepare a report" [level=2] [ref=f11e132]
+          - paragraph [ref=f11e136]: IPI Results determines the parameter rows; QC Micro Products Specifications is used only when the product has no row there. Sample information comes from the incoming logger; actual results are matched by ML number in IPI Results; unmatched values stay open for entry.
+          - textbox "Find sample by ML number, product or batch…" [ref=f11e141]
+          - generic [ref=f11e142]:
+            - generic [ref=f11e143]: Select a logged sample
+            - combobox "Select a logged sample" [ref=f11e144]:
+              - option "Choose from the logbook…" [selected]
+          - generic [ref=f11e145]: Matching the product, testing context, checklist parameters and registered layout…
+          - button "Create result draft" [disabled] [ref=f11e146]
+        - generic [ref=f11e149]:
+          - generic [ref=f11e150]:
+            - heading "Saved drafts" [level=2] [ref=f11e151]
+            - generic [ref=f11e152]: "3"
+            - button "Clear all" [ref=f11e153] [cursor=pointer]
+          - generic [ref=f11e154]:
+            - generic [ref=f11e155]:
+              - generic [ref=f11e156]: Draft · r4
+              - button "Delete draft for De-identified Product A · 100 units" [ref=f11e157] [cursor=pointer]
+              - link "Open draft for De-identified Product A · 100 units" [ref=f11e161] [cursor=pointer]:
+                - /url: /reports/c2c38bba-efe7-4d2d-8e44-59c0642c57a2
+            - link "De-identified Product A · 100 units ML-FG-26-0001 10/2/2026, 12:51:07 PM" [ref=f11e164] [cursor=pointer]:
+              - /url: /reports/c2c38bba-efe7-4d2d-8e44-59c0642c57a2
+              - strong [ref=f11e165]: De-identified Product A · 100 units
+              - generic [ref=f11e166]: ML-FG-26-0001
+              - generic [ref=f11e167]: 10/2/2026, 12:51:07 PM
+          - generic [ref=f11e168]:
+            - generic [ref=f11e169]:
+              - generic [ref=f11e170]: Draft · r2
+              - button "Delete draft for De-identified Product A · 100 units" [ref=f11e171] [cursor=pointer]
+              - link "Open draft for De-identified Product A · 100 units" [ref=f11e175] [cursor=pointer]:
+                - /url: /reports/b67256f4-44d7-404a-8f79-40896b8cad5c
+            - link "De-identified Product A · 100 units ML-FG-26-0001 9/24/2026, 4:52:06 AM" [ref=f11e178] [cursor=pointer]:
+              - /url: /reports/b67256f4-44d7-404a-8f79-40896b8cad5c
+              - strong [ref=f11e179]: De-identified Product A · 100 units
+              - generic [ref=f11e180]: ML-FG-26-0001
+              - generic [ref=f11e181]: 9/24/2026, 4:52:06 AM
+          - generic [ref=f11e182]:
+            - generic [ref=f11e183]:
+              - generic [ref=f11e184]: Draft · r3
+              - button "Delete draft for Cotton Sample A · 100 tips" [ref=f11e185] [cursor=pointer]
+              - link "Open draft for Cotton Sample A · 100 tips" [ref=f11e189] [cursor=pointer]:
+                - /url: /reports/9d28ce65-f5c4-44ec-b96a-a5ef1afed642
+            - link "Cotton Sample A · 100 tips ML-FG-26-0001 9/23/2026, 11:53:34 PM" [ref=f11e192] [cursor=pointer]:
+              - /url: /reports/9d28ce65-f5c4-44ec-b96a-a5ef1afed642
+              - strong [ref=f11e193]: Cotton Sample A · 100 tips
+              - generic [ref=f11e194]: ML-FG-26-0001
+              - generic [ref=f11e195]: 9/23/2026, 11:53:34 PM
+  - button "Open Miss Minutes Assistant" [ref=f11e196] [cursor=pointer]

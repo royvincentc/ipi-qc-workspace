@@ -1,0 +1,109 @@
+- generic [ref=f7e3]:
+  - complementary [ref=f7e4]:
+    - link "IPI Micro-QC Quality Control" [ref=f7e5] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f7e11]:
+        - text: IPI Micro-QC
+        - generic [ref=f7e12]: Quality Control
+    - navigation [ref=f7e13]:
+      - link "Dashboard" [ref=f7e14] [cursor=pointer]:
+        - /url: /
+      - link "Log Sample" [ref=f7e21] [cursor=pointer]:
+        - /url: /new
+      - link "Samples" [ref=f7e24] [cursor=pointer]:
+        - /url: /samples
+      - link "Results & Reports" [ref=f7e29] [cursor=pointer]:
+        - /url: /reports
+      - link "File Library" [ref=f7e34] [cursor=pointer]:
+        - /url: /library
+      - link "Smart Assistant" [ref=f7e38] [cursor=pointer]:
+        - /url: /assistant
+    - generic [ref=f7e43]: SYSTEM
+    - navigation [ref=f7e44]:
+      - link "Settings" [ref=f7e45] [cursor=pointer]:
+        - /url: /settings
+    - generic [ref=f7e51]:
+      - generic "Demo Analyst" [ref=f7e52]: DE
+      - generic [ref=f7e53]:
+        - strong [ref=f7e54]: Demo Analyst
+        - generic [ref=f7e55]: administrator
+  - generic [ref=f7e56]:
+    - banner [ref=f7e57]:
+      - button "Open navigation" [ref=f7e58] [cursor=pointer]
+      - button "Open global sample search" [ref=f7e60] [cursor=pointer]:
+        - generic [ref=f7e64]: Search a sample, batch, or control number...
+    - generic [ref=f7e65]: DEMO MODE — Practice records only. No Google writes enabled.
+    - main [ref=f7e67]:
+      - link "← Analysis reports" [ref=f7e68] [cursor=pointer]:
+        - /url: /reports
+      - generic [ref=f7e69]:
+        - generic [ref=f7e70]:
+          - generic [ref=f7e71]: REPORT DRAFT · REVISION 2
+          - heading "Review your report" [level=1] [ref=f7e180]
+          - paragraph [ref=f7e73]: For external review and signature. Sample release remains a separate process.
+        - button "Revision history" [ref=f7e74] [cursor=pointer]
+      - generic [ref=f7e79]:
+        - generic [ref=f7e80]:
+          - generic [ref=f7e81]: ST
+          - strong [ref=f7e82]: Omega Pain Killer Liniment
+          - generic [ref=f7e83]: ML-ST-26-0280
+          - generic [ref=f7e84]: Batch EXC01
+        - link "Confirm source" [ref=f7e85] [cursor=pointer]:
+          - /url: /samples/fixture-sample
+        - generic [ref=f7e90]: September 2026 · ST · row 58
+      - generic [ref=f7e91]:
+        - button "01 1. Results and report details" [ref=f7e92] [cursor=pointer]
+        - button "02 2. Review and document preview" [active] [ref=f7e93] [cursor=pointer]
+      - generic [ref=f7e181]:
+        - generic [ref=f7e182]:
+          - heading "Review checklist" [level=2] [ref=f7e183]
+          - generic [ref=f7e184]: 2 items to complete
+        - list [ref=f7e185]:
+          - listitem [ref=f7e186]: "Analysis date: enter a valid date"
+          - listitem [ref=f7e187]: Logbook is required
+        - region "Report details" [ref=f7e188]:
+          - paragraph [ref=f7e189]:
+            - generic [ref=f7e193]: Sample details are copied from the source sheet. Release date and time are added when the report is generated.
+          - generic [ref=f7e194]:
+            - heading "Required report details" [level=2] [ref=f7e195]
+            - paragraph [ref=f7e196]: Enter or correct these values before generating the report.
+            - generic [ref=f7e197]:
+              - generic [ref=f7e198]:
+                - generic [ref=f7e199]: Analysis date
+                - textbox "Analysis date Saved value “09/21/2026” is not a valid date. Choose a date to replace it." [ref=f7e200]
+                - generic [ref=f7e201]: Saved value “09/21/2026” is not a valid date. Choose a date to replace it.
+              - generic [ref=f7e202]:
+                - generic [ref=f7e203]: Logbook reference
+                - textbox "Logbook reference" [ref=f7e204]
+        - table [ref=f7e206]:
+          - rowgroup [ref=f7e207]:
+            - row [ref=f7e208]:
+              - columnheader "Test / sample unit" [ref=f7e209]
+              - columnheader "Standard specification" [ref=f7e210]
+              - columnheader "Actual result" [ref=f7e211]
+              - columnheader "Remarks" [ref=f7e212]
+          - rowgroup [ref=f7e213]:
+            - row [ref=f7e214]:
+              - cell "Standard Plate Count (SPC)" [ref=f7e215]
+              - cell "Nmt 100 cfu/mL" [ref=f7e216]
+              - cell "Nmt 100 cfu/mL" [ref=f7e217]
+              - cell "Passed" [ref=f7e218]
+            - row [ref=f7e219]:
+              - cell "Molds and Yeast" [ref=f7e220]
+              - cell "Nmt 10 cfu/mL" [ref=f7e221]
+              - cell "Nmt 10 cfu/mL" [ref=f7e222]
+              - cell "Passed" [ref=f7e223]
+            - row [ref=f7e224]:
+              - cell "Coliform" [ref=f7e225]
+              - cell "Negative" [ref=f7e226]
+              - cell "Negative" [ref=f7e227]
+              - cell "Passed" [ref=f7e228]
+        - paragraph [ref=f7e229]: "Analysis date: 09/21/2026 · Logbook: Not entered"
+        - generic [ref=f7e230]:
+          - generic [ref=f7e231]: Standard specifications and source details are pinned to this draft.
+          - button "Generate document preview" [disabled] [ref=f7e232]
+      - generic [ref=f7e169]:
+        - generic [ref=f7e170]: Saved revision 2
+        - generic [ref=f7e171]:
+          - button "Save draft" [disabled] [ref=f7e172]
+          - button "Back to results" [ref=f7e236] [cursor=pointer]
