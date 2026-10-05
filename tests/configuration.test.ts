@@ -5,7 +5,7 @@ import path from 'node:path';
 const folder=await mkdtemp(path.resolve('.data/config-test-'));
 process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=folder;
 const {db,migrate,close}=await import('../server/db.js');
-const {getConfiguration,saveConfiguration,connectionFingerprint}=await import('../server/configuration.js');
+const {getConfiguration,saveConfiguration,connectionFingerprint,migrateConfigurationColumns}=await import('../server/configuration.js');
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
 const {allocate,normalizeHeader,resolveHeaderMap}=await import('../server/domain.js');
 const {reportTestLabel,reportIssues,resultDisplayValue}=await import('../shared/model.js');
@@ -35,6 +35,12 @@ test('migration seeds existing categories once and configuration survives reload
  await assert.rejects(()=>saveConfiguration(value,first.revision,'admin@example.test'),/another session/);
  assert.equal(Number((await db.query('SELECT count(*) FROM configuration_revisions')).rows[0].count),2);
  const event=(await db.query("SELECT details FROM audit WHERE entity='configuration'")).rows[0].details;assert.equal(event.previous.general.appName,'IPI Micro-QC');assert.equal(event.newValue.general.appName,'Configured laboratory');
+});
+test('legacy Finished Goods mapping migrates to the current twenty-column source section',async()=>{
+ const current=await getConfiguration();const value=structuredClone(current.value);const type=value.sampleTypes.find(t=>t.id==='FG')!;
+ type.layout={start:21,end:33,ml:26,header:5,first:6,title:'Finished Goods',acceptedTitles:['FINISHED'],merge:'V2:AH4',headers:['Date Recieved','Sample Name','Batch No.','Category','','ML Number','RECIEVED BY','ANALYZED BY','DATE ANALYZED','PROCEED BY / READ BY','DATE RELEASED','STATUS','REMARKS'],fields:{received:0,name:1,batch:2,context:3,secondaryCategory:4,ml:5,receivedBy:6,analyzedBy:7,analysisDate:8,readBy:9,releaseDate:10,status:11,remarks:12},extraMerges:['Y5:Z5']};
+ await db.query('UPDATE configuration SET data=$1 WHERE id=1',[JSON.stringify(value)]);await migrateConfigurationColumns();const migrated=(await getConfiguration()).value.sampleTypes.find(t=>t.id==='FG')!;
+ assert.equal(migrated.layout.header,3);assert.equal(migrated.layout.first,4);assert.deepEqual([migrated.layout.start,migrated.layout.end,migrated.layout.ml],[21,40,33]);assert.equal(migrated.layout.fields.sampleNameSuffix,2);assert.equal(migrated.fields.find(f=>f.key==='context')?.column,10);assert.equal(migrated.fields.find(f=>f.key==='batchSize')?.active,true);assert.deepEqual(migrated.layout.extraMerges,[]);
 });
 test('configuration rejects overlapping sections, removed fields and duplicate names',async()=>{
  const current=await getConfiguration();const invalid=structuredClone(current.value);invalid.sampleTypes[1].layout=invalid.sampleTypes[0].layout;assert.equal(configSchema.safeParse(invalid).success,false);
