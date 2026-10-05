@@ -41,9 +41,9 @@ test('configuration rejects overlapping sections, removed fields and duplicate n
  const removed=structuredClone(current.value);removed.sampleTypes.pop();await assert.rejects(()=>saveConfiguration(removed,current.revision,'admin@example.test'));
  const duplicate=structuredClone(current.value);duplicate.tests[1].name=duplicate.tests[0].name;assert.equal(configSchema.safeParse(duplicate).success,false);
 });
-test('configured form requirements, dropdown options and inactive types are enforced',async()=>{
+test('configured form requirements, dropdown suggestions and inactive types are enforced',async()=>{
  const c=(await getConfiguration()).value;const type=structuredClone(c.sampleTypes.find(t=>t.id==='FG')!);type.fields.push({key:'source',label:'Source',type:'dropdown',required:true,active:true,order:99,help:'',defaultValue:'',options:['Approved source'],lookup:'',column:null});
- const fields={name:'Example',batch:'TEST',received:'2026-09-24T09:00',source:'Unknown'};assert.match(validateIntake(type,fields,c).join(),/available option/);fields.source='Approved source';assert.equal(validateIntake(type,fields,c).length,0);type.active=false;assert.match(validateIntake(type,fields,c).join(),/inactive/);
+ const fields={name:'Example',batch:'TEST',received:'2026-09-24T09:00',source:'Operator-entered source'};assert.equal(validateIntake(type,fields,c).length,0);type.active=false;assert.match(validateIntake(type,fields,c).join(),/inactive/);
  assert.match(validateIntake({...type,active:true},{...fields,ml:'Invented'},c).join(),/form has changed/);
 });
 test('configured numbering recognizes legacy series and still appends only in the current section',async()=>{

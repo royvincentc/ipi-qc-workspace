@@ -55,8 +55,9 @@ export function validateIntake(type:SampleType,fields:Record<string,string>,conf
  for(const f of enabled){const v=fields[f.key]??'';const environmentalCategory=type.register==='environmental'?environmentalCategoryOptions[f.key]:undefined;if((f.required||environmentalCategory)&&!v.trim())issues.push(`${f.label} is required`);if(!v)continue;
   if(f.type==='number'&&(!/^\d+(\.\d+)?$/.test(v)||!Number.isFinite(Number(v))||(f.integer!==false&&!Number.isInteger(Number(v)))))issues.push(`${f.label}: enter a non-negative ${f.integer!==false?'whole number':'number'}`);
   if(['date','datetime-local'].includes(f.type)&&(!/^\d{4}-\d{2}-\d{2}/.test(v)||!Number.isFinite(Date.parse(v))||!Number.isFinite(Date.parse(v.slice(0,10)+'T00:00:00Z'))||new Date(v.slice(0,10)+'T00:00:00Z').toISOString().slice(0,10)!==v.slice(0,10)))issues.push(`${f.label}: enter a valid date`);
-  if(environmentalCategory&&!environmentalCategory.includes(v))issues.push(`${f.label}: choose an available option`);
-  else if(f.type==='dropdown'){const opts=f.lookup?config.lookups.find(l=>l.id===f.lookup&&l.active)?.options||[]:f.options;if(!opts.includes(v))issues.push(`${f.label}: choose an available option`);}
+  // Suggestions help analysts enter consistent values, but the logbook accepts
+  // free text in these source cells. Keep the options advisory instead of
+  // turning them into a new validation rule.
   if(f.type==='checkbox'&&!['true','false'].includes(v))issues.push(`${f.label}: choose yes or no`);
  }return [...new Set(issues)];
 }
