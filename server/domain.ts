@@ -23,10 +23,10 @@ export function monthOf(name:string){const m=name.match(/^(January|February|Marc
 export function currentMonth(now:Date,zone:string){const parts=new Intl.DateTimeFormat('en',{timeZone:zone,month:'numeric',year:'numeric'}).formatToParts(now);return {month:Number(parts.find(p=>p.type==='month')!.value),year:Number(parts.find(p=>p.type==='year')!.value)};}
 function sameSourceHeader(expected:unknown,actual:unknown){
  const key=(value:unknown)=>{
-  const compact=normalizeHeader(value);
-  // Older logbooks use the misspelling "Recieved"; accept its corrected
-  // spelling without weakening validation for unrelated header changes.
-  return compact==='daterecieved'?'datereceived':compact;
+  // The historical logbooks use both "Received" and the misspelling
+  // "Recieved" (for example, "RECIEVED BY"). Treat only that spelling
+  // variation as equivalent; other header changes still require review.
+  return normalizeHeader(value).replaceAll('recieved','received');
  };
  const expectedKey=key(expected),actualKey=key(actual);
  const batchHeaders=new Set(['batchno','batchlotno']);
