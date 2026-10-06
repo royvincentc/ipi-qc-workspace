@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS users (email text PRIMARY KEY, name text NOT NULL, ro
 CREATE TABLE IF NOT EXISTS sessions (token_hash text PRIMARY KEY, email text REFERENCES users(email), expires_at timestamptz NOT NULL);
 CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS samples (id text PRIMARY KEY, source_key text UNIQUE, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS worksheet_notes (sample_id text PRIMARY KEY REFERENCES samples(id) ON DELETE CASCADE, note text NOT NULL CHECK (char_length(note) <= 500), updated_by text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS source_history (id text PRIMARY KEY, sample_id text NOT NULL REFERENCES samples(id), data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS submissions (id text PRIMARY KEY, payload_hash text NOT NULL, workbook text NOT NULL, category text NOT NULL, state text NOT NULL, ml text, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
 CREATE UNIQUE INDEX IF NOT EXISTS submission_number ON submissions(workbook,ml) WHERE ml IS NOT NULL;

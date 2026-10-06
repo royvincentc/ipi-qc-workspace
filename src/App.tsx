@@ -2,7 +2,7 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon} from 'lucide-react';
+import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon,Table2} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
@@ -13,6 +13,7 @@ const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Re
 const ReportEditorRoute=lazy(()=>import('./reports').then(module=>({default:module.ReportEditor})));
 const AssistantRoute=lazy(()=>import('./AssistantPage').then(module=>({default:module.AssistantPage})));
 const FileLibraryRoute=lazy(()=>import('./library'));
+const WorksheetRoute=lazy(()=>import('./worksheet'));
 
 function isConstrainedDevice(){
   if(typeof navigator==='undefined')return false;
@@ -26,6 +27,7 @@ const navigation=[
   ['/','Dashboard',LayoutDashboard],
   ['/new','Log Sample',Plus],
   ['/samples','Samples',Search],
+  ['/worksheet','Worksheet',Table2],
   ['/reports','Results & Reports',FileText],
   ['/library','File Library',FolderOpen],
   ['/assistant','Smart Assistant',Bot]
@@ -254,6 +256,7 @@ function Workspace({data}:{data:any}){
                   <Route path="/" element={<Dashboard/>}/>
                   <Route path="/new" element={<Intake/>}/>
                   <Route path="/samples" element={<SampleSearch/>}/>
+                  <Route path="/worksheet" element={<WorksheetRoute/>}/>
                   <Route path="/samples/:id" element={<SampleDetailRoute/>}/>
                   <Route path="/reports" element={<ReportsRoute/>}/>
                   <Route path="/reports/:id" element={<ReportEditorRoute/>}/>
@@ -269,7 +272,7 @@ function Workspace({data}:{data:any}){
           {mobileNav?<button className="mobile-nav-backdrop" aria-label="Close navigation" onClick={()=>setMobileNav(false)}/>:null}
 
           <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} />
-          <FloatingAssistant />
+          {location.pathname==='/worksheet'?null:<FloatingAssistant />}
           <DeploymentUpdate />
 
           {notice && (

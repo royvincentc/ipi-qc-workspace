@@ -90,6 +90,26 @@ app.get('/api/samples',async(req,res)=>{
   res.json(rows.map(({id,data,duplicates})=>({...data,id,duplicate:Number(duplicates)>1})));
 });
 app.get('/api/samples/:id',async(req,res)=>{const row=(await db.query('SELECT id,data FROM samples WHERE id=$1',[req.params.id])).rows[0];if(!row)throw new Fault(404,'Sample not found');const data={...row.data,id:row.id};res.json({sample:data,history:(await db.query('SELECT data,created_at FROM source_history WHERE sample_id=$1 ORDER BY created_at DESC',[req.params.id])).rows,drafts:(await db.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','updatedAt',data->'updatedAt') AS data FROM drafts WHERE data->>'sampleId'=$1",[req.params.id])).rows.map(r=>r.data)});});
+app.put('/api/worksheet/:sampleId/note',requireRole('administrator','analyst'),async(req,res)=>{
+ const {note}=z.object({note:z.string().max(500)}).parse(req.body);const clean=note.trim();const sampleId=req.params.sampleId;
+ if(!(await db.query('SELECT id FROM samples WHERE id=$1',[sampleId])).rows.length)throw new Fault(404,'Sample not found');
+ const auditId=randomUUID();
+ await db.query(`WITH previous AS (
+   SELECT note FROM worksheet_notes WHERE sample_id=$1
+ ), saved AS (
+   INSERT INTO worksheet_notes(sample_id,note,updated_by,updated_at) VALUES($1,$2,$3,now())
+   ON CONFLICT(sample_id) DO UPDATE SET note=EXCLUDED.note,updated_by=EXCLUDED.updated_by,updated_at=now()
+   WHERE worksheet_notes.note IS DISTINCT FROM EXCLUDED.note
+   RETURNING sample_id,note
+ ), logged AS (
+   INSERT INTO audit(id,actor,action,entity,details)
+   SELECT $4,$3,'worksheet_note_updated',$1,jsonb_build_object('before',COALESCE(previous.note,''),'after',saved.note)
+   FROM saved LEFT JOIN previous ON true
+   RETURNING id
+ ) SELECT sample_id FROM saved`,[sampleId,clean,req.user.email,auditId]);
+ const current=(await db.query('SELECT note,updated_by,updated_at FROM worksheet_notes WHERE sample_id=$1',[sampleId])).rows[0];
+ res.json({sampleId,note:current?.note||'',updatedBy:current?.updated_by||null,updatedAt:current?.updated_at||null});
+});
  const categorySchema=z.string().min(1).max(50);
  app.post('/api/samples',requireRole('administrator','analyst'),async()=>{throw new Fault(409,'Use the sample review workflow. Direct sample submissions are disabled; no logbook values were written.');});
  app.post('/api/submissions/prepare',requireRole('administrator','analyst'),async(req,res)=>{const body=z.object({batchId:z.string().uuid(),items:z.array(z.object({submissionId:z.string().uuid(),category:categorySchema,fields:z.record(z.string().max(1000))})).min(1).max(50)}).parse(req.body);if(new Set(body.items.map(i=>i.submissionId)).size!==body.items.length)throw new Fault(400,'Each row needs a distinct submission ID.');if(new Set(body.items.map(i=>i.category)).size!==1)throw new Fault(400,'Review one sample type per batch.');const managed=await getConfiguration(),results=[];for(let index=0;index<body.items.length;index++){const item=body.items[index];try{results.push(await prepareSample(req.user.email,item as any,body.batchId,index));}catch(e:any){results.push({submissionId:item.submissionId,category:item.category,state:'blocked',name:item.fields.name||'',batch:item.fields.batch||'',received:item.fields.received||'',error:e.message});}}res.json({batchId:body.batchId,configurationRevision:managed.revision,items:results});});

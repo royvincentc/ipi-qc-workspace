@@ -305,6 +305,50 @@
   white-space: nowrap;
 }
 
+/* The worksheet keeps source-backed values distinct from database-owned notes. */
+.worksheet-page { min-width: 0; }
+.worksheet-panel { overflow: hidden; }
+.worksheet-refresh { white-space: nowrap; }
+.worksheet-types { display: flex; gap: 6px; padding: 10px 16px 0; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: thin; -webkit-overflow-scrolling: touch; }
+.worksheet-type-tab { appearance: none; flex: 0 0 auto; min-height: 40px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--text-tertiary); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: color var(--motion-state) ease-out, border-color var(--motion-state) ease-out, background var(--motion-state) ease-out; }
+.worksheet-type-tab:hover { color: var(--text-primary); background: var(--bg-surface-hover); }
+.worksheet-type-tab[aria-pressed="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.worksheet-type-tab:focus-visible,.worksheet-edit-note:focus-visible,.worksheet-open-record:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.worksheet-toolbar { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(140px, auto) minmax(160px, auto) minmax(90px, auto); align-items: end; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); }
+.worksheet-search { min-width: 0; }
+.worksheet-filter { display: grid; gap: 4px; min-width: 0; color: var(--text-tertiary); font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.worksheet-filter select { min-width: 0; min-height: 36px; padding: 6px 28px 6px 10px; color: var(--text-primary); font-size: 12px; }
+.worksheet-register-line { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 18px; color: var(--text-tertiary); font-size: 11px; }
+.worksheet-register-line > span { display: inline-flex; align-items: center; gap: 7px; }
+.worksheet-register-line strong { margin-left: auto; color: var(--text-secondary); font-size: 11px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.worksheet-table-scroll { overscroll-behavior-inline: contain; }
+.worksheet-table { min-width: 970px; }
+.worksheet-table th { padding: 10px 13px; }
+.worksheet-table td { padding: 12px 13px; }
+.worksheet-table td[data-column="batch"] small,.worksheet-table td[data-column="source"] small,.worksheet-table td[data-column="updated"] small { display: block; margin-top: 3px; color: var(--text-tertiary); font-size: 11px; line-height: 1.4; }
+.worksheet-identity > a { display: block; min-width: 0; }
+.worksheet-identity > a strong { overflow-wrap: anywhere; }
+.worksheet-table .worksheet-db-id { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 10px; }
+.worksheet-category { color: var(--text-secondary); font-size: 12px; }
+.worksheet-note-value { display: grid; min-width: 140px; gap: 5px; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.worksheet-note-value em { color: var(--text-tertiary); font-style: normal; }
+.worksheet-note-value > small { color: var(--text-tertiary); font-size: 10px; }
+.worksheet-edit-note { justify-self: start; min-height: 30px; padding: 3px 7px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--accent); background: transparent; font: inherit; font-size: 11px; cursor: pointer; transition: background var(--motion-state) ease-out, border-color var(--motion-state) ease-out; }
+.worksheet-edit-note:hover { background: var(--accent-soft); border-color: var(--border-strong); }
+.worksheet-note-editor { position: relative; display: grid; gap: 6px; min-width: 190px; }
+.worksheet-note-editor textarea { width: 100%; min-height: 60px; padding: 8px; border: 1px solid var(--border-strong); border-radius: var(--radius-control); color: var(--text-primary); background: var(--bg-app); font: inherit; font-size: 12px; line-height: 1.45; resize: vertical; }
+.worksheet-note-editor textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.worksheet-note-count { justify-self: end; color: var(--text-tertiary); font-size: 10px; font-variant-numeric: tabular-nums; }
+.worksheet-note-error { color: var(--color-critical); font-size: 11px; }
+.worksheet-note-actions,.worksheet-page-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.worksheet-note-actions .button { min-height: 32px; padding-inline: 9px; font-size: 11px; }
+.worksheet-open-record { display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; color: var(--accent); font-size: 11px; text-decoration: none; }
+.worksheet-open-record:hover { text-decoration: underline; text-underline-offset: 3px; }
+.worksheet-pagination { gap: 9px; }
+.worksheet-pagination > span { margin-right: auto; }
+.worksheet-pagination .worksheet-clear { min-height: 32px; }
+.worksheet-retry { padding: 0 18px 14px; }
+
 /* Right Rail Components */
 .rail-section {
   display: flex;

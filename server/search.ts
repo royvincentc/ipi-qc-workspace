@@ -19,20 +19,22 @@ export function registerSearch(app:Express){
   const query=String(req.query.q||'').trim().slice(0,200);const category=String(req.query.category||'');const status=String(req.query.status||'');const from=String(req.query.from||''),to=String(req.query.to||'');
   const limit=Math.max(1,Math.min(50,Math.floor(Number(req.query.limit))||25)),page=Math.max(1,Math.min(100000,Math.floor(Number(req.query.page))||1));
   const args:any[]=[];const where:string[]=[];const param=(v:any)=>{args.push(v);return '$'+args.length;};
-  if(query){const p=param('%'+query.replace(/[\\%_]/g,'\\$&')+'%');where.push(`concat_ws(' ',data->>'ml',data->>'name',data->>'batch',data->>'received',data->>'status',data->>'category',data->>'categoryLabel') ILIKE ${p}`);}
+  if(query){const p=param('%'+query.replace(/[\\%_]/g,'\\$&')+'%');where.push(`concat_ws(' ',data->>'ml',data->>'name',data->>'batch',data->>'received',data->>'status',data->>'category',data->>'categoryLabel',data->'source'->>'sheet',data->'source'->>'section',worksheet_notes.note) ILIKE ${p}`);}
   if(category)where.push(`data->>'category'=${param(category)}`);if(status)where.push(`data->>'status'=${param(status)}`);
   if(from)where.push(`${receivedDay}>=${param(from)}`);if(to)where.push(`${receivedDay}<=${param(to)}`);
   const filter=where.length?'WHERE '+where.join(' AND '):'';
-  const count=Number((await db.query(`SELECT count(*) FROM samples ${filter}`,args)).rows[0].count);
-  const sorts:Record<string,string>={recent:'updated_at DESC',name:"data->>'name' ASC",received:receivedDay+" DESC NULLS LAST",ml:"data->>'category', (regexp_match(data->>'ml','([0-9]{2,4})[-/][0-9]+$'))[1]::integer ASC NULLS LAST, substring(data->>'ml' from '[0-9]+$')::numeric ASC NULLS LAST"};const order=sorts[String(req.query.sort)]||sorts.recent;
+  const count=Number((await db.query(`SELECT count(*) FROM samples LEFT JOIN worksheet_notes ON worksheet_notes.sample_id=samples.id ${filter}`,args)).rows[0].count);
+  const sorts:Record<string,string>={recent:'samples.updated_at DESC',name:"data->>'name' ASC",received:receivedDay+" DESC NULLS LAST",ml:"data->>'category', (regexp_match(data->>'ml','([0-9]{2,4})[-/][0-9]+$'))[1]::integer ASC NULLS LAST, substring(data->>'ml' from '[0-9]+$')::numeric ASC NULLS LAST"};const order=sorts[String(req.query.sort)]||sorts.recent;
   // Search results only need list fields. Sample snapshots also contain the
   // original source row and field map, which can be much larger and belong in
   // the single-record endpoint rather than every keystroke/search page.
   const rows=(await db.query(`SELECT jsonb_build_object(
     'id',COALESCE(data->'id',to_jsonb(samples.id)),'name',data->'name','ml',data->'ml','category',data->'category',
     'categoryLabel',data->'categoryLabel','batch',data->'batch','received',data->'received',
-    'status',data->'status','remarks',data->'remarks','context',data->'context'
-  ) AS data,(SELECT count(*) FROM samples b WHERE b.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
+    'status',data->'status','remarks',data->'remarks','context',data->'context',
+    'sourceSheet',data->'source'->>'sheet','sourceSection',data->'source'->>'section','sourceRow',data->'source'->>'row',
+    'recordUpdatedAt',samples.updated_at,'workspaceNote',worksheet_notes.note,'workspaceNoteUpdatedAt',worksheet_notes.updated_at
+  ) AS data,(SELECT count(*) FROM samples b WHERE b.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples LEFT JOIN worksheet_notes ON worksheet_notes.sample_id=samples.id ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
   const statuses=(await db.query("SELECT DISTINCT data->>'status' AS status FROM samples WHERE data->>'status'<>'' ORDER BY status")).rows.map(r=>r.status);
   res.json({items:rows.map(r=>({...r.data,duplicate:Number(r.duplicates)>1})),total:count,page,limit,statuses});
  });

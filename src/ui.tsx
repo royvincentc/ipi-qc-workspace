@@ -11,6 +11,7 @@ const pageMotifs:{match:RegExp;label:string;path:string}[]=[
   {match:/^\/new(?:\/|$)/,label:'Sample intake',path:'M36 11v21m-8-7 8 8 8-8M25 45h22m-18 5h14'},
   {match:/^\/samples\/[^/]+/,label:'Sample trace',path:'M11 37h14l8-14 9 28 9-14h10'},
   {match:/^\/samples(?:\/|$)/,label:'Sample lookup',path:'M49 48l11 11M42 15a18 18 0 1 1 0 36 18 18 0 0 1 0-36Z'},
+  {match:/^\/worksheet(?:\/|$)/,label:'Database worksheet',path:'M14 16h44M14 28h44M14 40h44M14 52h44M27 12v44M44 12v44'},
   {match:/^\/reports\/[^/]+/,label:'Report preparation',path:'M25 12h17l8 8v34H25zM42 12v10h9M31 32h13M31 39h13M31 46h9'},
   {match:/^\/reports(?:\/|$)/,label:'Results review',path:'M12 47h11l6-20 8 25 8-19 7 14h8'},
   {match:/^\/library(?:\/|$)/,label:'Reference library',path:'M22 15h22l8 7v32H22zM44 15v10h8M29 34h16M29 41h16M29 48h12'},
