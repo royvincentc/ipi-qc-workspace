@@ -42,6 +42,13 @@ test('legacy Finished Goods mapping migrates to the current twenty-column source
  await db.query('UPDATE configuration SET data=$1 WHERE id=1',[JSON.stringify(value)]);await migrateConfigurationColumns();const migrated=(await getConfiguration()).value.sampleTypes.find(t=>t.id==='FG')!;
  assert.equal(migrated.layout.header,3);assert.equal(migrated.layout.first,4);assert.deepEqual([migrated.layout.start,migrated.layout.end,migrated.layout.ml],[21,40,33]);assert.equal(migrated.layout.fields.sampleNameSuffix,2);assert.equal(migrated.fields.find(f=>f.key==='context')?.column,10);assert.equal(migrated.fields.find(f=>f.key==='batchSize')?.active,true);assert.deepEqual(migrated.layout.extraMerges,[]);
 });
+test('legacy row migration still runs when saved headers already have the current width',async()=>{
+ const current=await getConfiguration();const value=structuredClone(current.value);const type=value.sampleTypes.find(t=>t.id==='FG')!;
+ type.layout={...type.layout,start:21,end:40,ml:33,header:5,first:6,headers:[...type.layout.headers],fields:{received:0,name:1,batch:2,context:3,secondaryCategory:4,ml:5,receivedBy:6,analyzedBy:7,analysisDate:8,readBy:9,releaseDate:10,status:11,remarks:12}};
+ type.fields=type.fields.filter(field=>['received','name','batch','context','secondaryCategory'].includes(field.key));type.fields.find(field=>field.key==='context')!.active=false;
+ await db.query('UPDATE configuration SET data=$1 WHERE id=1',[JSON.stringify(value)]);await migrateConfigurationColumns();const migrated=(await getConfiguration()).value.sampleTypes.find(t=>t.id==='FG')!;
+ assert.equal(migrated.layout.header,3);assert.equal(migrated.layout.first,4);assert.equal(migrated.fields.find(field=>field.key==='context')?.active,false);assert.equal(migrated.fields.find(field=>field.key==='batchSize')?.active,true);assert.equal(migrated.layout.fields.sampleNameSuffix,2);
+});
 test('configuration rejects overlapping sections, removed fields and duplicate names',async()=>{
  const current=await getConfiguration();const invalid=structuredClone(current.value);invalid.sampleTypes[1].layout=invalid.sampleTypes[0].layout;assert.equal(configSchema.safeParse(invalid).success,false);
  const removed=structuredClone(current.value);removed.sampleTypes.pop();await assert.rejects(()=>saveConfiguration(removed,current.revision,'admin@example.test'));

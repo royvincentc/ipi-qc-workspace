@@ -63,7 +63,9 @@ export async function migrateConfigurationColumns(){
   const next={...t,layout:{...t.layout,acceptedTitles:t.layout.acceptedTitles||[]}};
   if(formCategories.includes(t.id)){
    const mapping=mappings[t.id];
-   const legacyRows=next.layout.header===5&&next.layout.first===6&&next.layout.headers.length!==mapping.headers.length;
+   // The old logger stored its headers on row 5 even when a prior migration
+   // had already expanded the saved header list to the current width.
+   const legacyRows=next.layout.header===5&&next.layout.first===6;
    if(legacyRows){
     const oldFields=next.fields||[];const mappedKeys=new Set(Object.keys(mapping.fields).filter(key=>key in labels));
     const definitions=Object.entries(mapping.fields).filter(([key])=>key in labels).map(([key,column],order)=>({
