@@ -334,3 +334,11 @@
 - Data/service impact: Only the log excerpt supplied by the owner was used. No live Render query, API request, database/source data, secret, or deployment was accessed or changed.
 - Verification: Not run; no tests, build, or browser check was run. No commit or push was made.
 - Next: Run a de-identified request that triggers two function calls and confirm a final formatted response with no non-text-parts warning.
+
+## October source sync repair — 2026-10-06, Asia/Taipei
+
+- Owner requested missing October/later samples, including ML-FG-26-0477. Confirmed Render workspace tea-d7fs8ud8nd3s73ejbul0; live service srv-daqv18jncjis73bghv8g; database project ipiqclab, main/neondb.
+- Root cause verified through authenticated Neon SQL editor: source ML-ST-26-0221 was cleared at August row 12, so the importer rejected the entire workbook. The preserved sample ID is 1b1d0ceb-f11e-4429-8933-c32bc9ade37b. Do not delete or rewrite its snapshot.
+- Scoped fix preserves conflicting identities and blocks relocated duplicates while importing unrelated records; structured conflicts and partial counts remain auditable. No frontend layout or Google source changed.
+- Relevant tests (40), typecheck and production build pass. Three full-suite report/configuration failures reproduced against the unchanged baseline.
+- Pending: deploy scoped changes, refresh sources, confirm October count and target in Samples/Worksheet, confirm August snapshot remains identical, then append final verification.

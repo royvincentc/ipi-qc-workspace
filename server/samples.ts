@@ -5,6 +5,7 @@ import {db,locked,setting,setSetting,audit,demo,tryLocked} from './db.js';
 import {readWorkbook,rangeValues,writeRange,readApplicability} from './google.js';
 import {allocate,Fault,hash,mappings,validateLayout,sectionRows,sourceLayout,column,type Mapping,type Sheet} from './domain.js';
 import {categories,type Category,type Sample,type Source} from '../shared/model.js';
+import {planSourceSync,type SourceIdentityConflict} from './source-sync.js';
 let lastApplicabilityFingerprint:string|undefined;
 let syncInFlight:Promise<any>|undefined;
 export interface Connections {incoming:string;environmental:string;specifications:string;folders:string[];reportFolder:string;timezone:string;reservationsReconciled:boolean;manualIntakeCoordinated:boolean;writesEnabled:boolean}
@@ -48,15 +49,14 @@ async function autoCreateProducts(actor:string){
  }
 }
 export async function syncSources(actor:string){if(demo)return {count:0,message:'De-identified demo; live synchronization is disabled'};if(syncInFlight)return syncInFlight;const running=tryLocked('source-sync',()=>syncSourcesOnce(actor)).then(result=>{if(result)return result;if(actor==='system')return {count:0,skipped:true,message:'Source synchronization is already running on another instance'};return {count:0,skipped:true,message:'Source synchronization is already running. Try again shortly.'};});syncInFlight=running;try{return await running;}finally{if(syncInFlight===running)syncInFlight=undefined;}}
-async function syncSourcesOnce(actor:string){const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;
+async function syncSourcesOnce(actor:string){const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;const conflicts:SourceIdentityConflict[]=[];
  for(const [url,cs] of [[config.incoming,sourceCatalog.filter(t=>t.register==='incoming').map(t=>t.id)],[config.environmental,sourceCatalog.filter(t=>t.register==='environmental').map(t=>t.id)]] as [string,Category[]][]){if(!url)continue;const book=await readWorkbook(url);await locked(book.id,async()=>{const records:Sample[]=[];for(const sheet of book.sheets)for(const c of cs){const type=managed.value.sampleTypes.find(t=>t.id===c)!;const layout=sourceLayout(sheet,c,type,new Date(),managed.value.general.timezone);for(const r of sectionRows(sheet,c,type,layout))if(r.occupied&&!r.reserved&&r.ml.trim())records.push(sourceSample(book.id,sheet,c,r.row,r.values,type,managed.revision,layout));}
-  // Validate identity for the entire import before persisting any changed rows.
+  // Plan the entire workbook before persisting. Identity conflicts block only
+  // their own rows and relocated copies, while preserving the saved snapshots.
   const existing = (await db.query('SELECT id, data->>\'ml\' as ml, data->\'source\'->>\'sheet\' as sheet, data->\'source\'->>\'sheetId\' as sheet_id, data->>\'category\' as category, data->\'source\'->>\'row\' as row, data->\'source\'->>\'fingerprint\' as fingerprint, data->>\'configurationRevision\' as rev FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1', [book.id])).rows.filter(r => r.ml?.trim());
     const old_records = existing.map(r => ({ id: r.id, ml: r.ml, category: r.category, rev: Number(r.rev), source: { sheet: r.sheet, sheetId: Number(r.sheet_id), row: Number(r.row), fingerprint: r.fingerprint } }));
-    for(const old of old_records){const current=records.find(s=>s.source.sheetId===old.source.sheetId&&s.category===old.category&&s.source.row===old.source.row);if(!current||current.ml!==old.ml)throw new Fault(409,`A source record (${old.ml}) on sheet "${old.source.sheet}" row ${old.source.row} moved, disappeared, or changed identity. Reconcile the spreadsheet before synchronization.`);}
-    for(const record of records){
-      const match = old_records.find(s => s.source.sheetId === record.source.sheetId && s.category === record.category && s.source.row === record.source.row);
-      if (match && match.source.fingerprint === record.source.fingerprint && match.rev === record.configurationRevision) continue;
+    const plan=planSourceSync(records,old_records);conflicts.push(...plan.conflicts);
+    for(const record of plan.updates){
       await saveSnapshot(record);
       count++;
     }
@@ -64,7 +64,12 @@ async function syncSourcesOnce(actor:string){const config=await setting('connect
  if(config.specifications){const applicability=await readApplicability(config.specifications);const fingerprint=hash({url:config.specifications,applicability});if(fingerprint!==lastApplicabilityFingerprint){await setSetting('applicability',applicability);lastApplicabilityFingerprint=fingerprint;}}
  // Auto-create managed products for any sample names without a matching product entry
  const added=count?await autoCreateProducts(actor):0;
- await setSetting('sync',{lastSuccess:new Date().toISOString(),count,error:null});if(actor!=='system'||count||added)await audit(actor,'synchronize','sources',{count,productsAutoCreated:added});return {count,productsAutoCreated:added};
+ const message=conflicts.length?`Synchronized ${count} source records; ${conflicts.length} historical source record${conflicts.length===1?'':'s'} require reconciliation. ${conflicts[0].message}`:null;
+ const previous=await setting<any>('sync',{});const attemptedAt=new Date().toISOString();
+ await setSetting('sync',{...previous,lastSuccess:conflicts.length?previous.lastSuccess||null:attemptedAt,lastAttempt:attemptedAt,count,error:message,conflicts});
+ if(actor!=='system'||count||added||JSON.stringify(previous.conflicts||[])!==JSON.stringify(conflicts))await audit(actor,'synchronize','sources',{count,productsAutoCreated:added,conflicts});
+ if(message)throw new Fault(409,message);
+ return {count,productsAutoCreated:added};
 }
 export async function submitSample(actor:string,input:{submissionId:string;category:Category;fields:Record<string,string>}){const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===input.category);if(!type?.active)throw new Fault(400,'Choose an active sample type');const issues=validateIntake(type,input.fields,managed.value);if(issues.length)throw new Fault(400,issues.join('; '));if(demo)return submitDemo(actor,input,type,managed.revision,managed.value.general.timezone);const config=await setting('connections',defaultConnections);if(!config.writesEnabled||!config.reservationsReconciled||!config.manualIntakeCoordinated)throw new Fault(409,'An administrator must validate connections, reconcile reservations and coordinate manual intake before enabling writes');const url=type.register==='environmental'?config.environmental:config.incoming;if(!url)throw new Fault(409,'Configure the logbook connection first');const payloadHash=hash(input);const book=await readWorkbook(url);
  return locked(book.id,async()=>{const old=(await db.query('SELECT * FROM submissions WHERE id=$1',[input.submissionId])).rows[0];if(old){if(old.payload_hash!==payloadHash)throw new Fault(409,'Submission ID was already used with different values');if(old.state==='complete')return old.data.sample;throw new Fault(409,'This submission requires reconciliation; it will not be sent again automatically');}

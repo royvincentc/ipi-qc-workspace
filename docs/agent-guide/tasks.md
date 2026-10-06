@@ -1389,3 +1389,15 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Rollback: Revert the scoped multi-function-call loop and plural response helper; retain the separately requested formatting/error-message changes.
 - Evidence: User-provided production logs at `2026-10-05T04:00:19Z` and `2026-10-05T04:16:55Z`; scoped source diff.
 - Next action/owner: Run a de-identified assistant request that triggers two tools and confirm it returns a formatted text reply without a Gemini non-text warning.
+
+## TASK-20261006-001 — Restore October sample ingestion
+
+- Actor/tool: Codex.
+- Authorization: Owner requested a database repair for October and later samples, naming ML-FG-26-0477, and confirmed Roy's Render workspace.
+- Finding: Live sync last succeeded on 2026-09-30. Its stored error identifies ML-ST-26-0221 at August 2026 row 12. Read-only source inspection confirms the ML cell is blank while product, batch, receipt and receiver match the preserved database snapshot. The workbook-wide identity check stopped all later imports.
+- Change: Plan source updates before persisting; preserve conflicting rows and block relocated copies of their identities, but import unaffected records. Retain a structured conflict list, partial import count and last-attempt timestamp; emit an audit event and continue reporting a reconciliation error. Complete-success time remains distinct from a partial refresh.
+- Files: server/source-sync.ts, server/samples.ts, tests/source-sync.test.ts.
+- Validation: 40 domain/source-sync tests pass; TypeScript check and Vite production build pass. Full suite has three configuration/report failures reproduced against HEAD's unchanged samples.ts; those are outside this repair.
+- Source evidence: Current importer reads all monthly Incoming sections and finds 64 October records, including ML-FG-26-0477 at V4:AO4. No November/December tabs currently exist in the connected Incoming workbook.
+- Data boundaries: Preserve saved samples, IDs, source history and report references; no Google Sheet edits. Live resync and rendered verification pending deployment.
+- Approval review: Full Render environment export and a plaintext credential command were rejected. Continued through the authenticated Neon SQL editor with read-only diagnostic queries; no environment export occurred.
