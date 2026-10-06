@@ -20,6 +20,7 @@ import {createAutomaticDraft,resolveReportSetup,saveDraft,generate,worker,privat
 import {validateBindings} from './template.js';
 import {categories,type Category,type Specification,type Template,type Sample,resultKey} from '../shared/model.js';
 import {seed} from './seed.js';
+import {seedBundledReportFormats} from './report-formats.js';
 import {aiRouter} from './ai.js';
 import fs from 'node:fs';
 const deploymentBuildId=process.env.RENDER_GIT_COMMIT||process.env.GIT_COMMIT||process.env.COMMIT_SHA||'';
@@ -29,7 +30,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64 && !process.env.GOOGLE_APP
   fs.writeFileSync(dest, Buffer.from(process.env.GOOGLE_APPLICATION_CREDENTIALS_BASE64, 'base64'));
   process.env.GOOGLE_APPLICATION_CREDENTIALS = dest;
 }
-await migrate();await mkdir(storage,{recursive:true});await seed();
+await migrate();await mkdir(storage,{recursive:true});await seed();await seedBundledReportFormats();
 const configured=await getConfiguration();
 if(configured.value.sampleTypes.some(type=>type.id==='RM'&&type.applicabilitySheet==='Raw Materials')){
  await saveConfiguration({...configured.value,sampleTypes:configured.value.sampleTypes.map(type=>type.id==='RM'&&type.applicabilitySheet==='Raw Materials'?{...type,applicabilitySheet:'RAW'}:type)},configured.revision,'system');
@@ -196,7 +197,6 @@ app.get('/api/audit',requireRole('administrator'),async(_req,res)=>res.json((awa
 app.use(express.static(path.resolve('dist')));app.get('/{*path}',(_req,res)=>res.sendFile(path.resolve('dist/index.html')));
 app.use((err:any,_req:express.Request,res:express.Response,_next:express.NextFunction)=>{const status=err instanceof Fault?err.status:err instanceof z.ZodError?400:500;console.error(status===500?err.message:'Request rejected',status);res.status(status).json({error:status===500?'The server could not complete this operation. Please try again or contact your administrator.':err instanceof z.ZodError?err.issues.map((i:any)=>i.message).join('; '):err.message});});
 import { CUSTOM_TEMPLATE_B64 } from './custom-template.b64.ts';
-import { REPORT_FORMATS } from './report-formats.b64.js';
 setTimeout(async () => {
   try {
     const customP = 'templates/custom-template.docx';
@@ -218,37 +218,6 @@ setTimeout(async () => {
     console.log('Seeded Roy Custom Template.');
   } catch(e) { console.error('Failed seeding custom', e); }
 }, 2000);
-
-setTimeout(async () => {
-  try {
-    await mkdir(privatePath('templates/report-formats'), { recursive: true });
-    const bundledNames = REPORT_FORMATS.map(format => format.name);
-    const existingRows = (await db.query("SELECT data->>'name' AS name FROM templates WHERE data->>'name'=ANY($1::text[])", [bundledNames])).rows;
-    const existingNames = new Set(existingRows.map(row => row.name));
-    for (const format of REPORT_FORMATS) {
-      if (existingNames.has(format.name)) continue;
-      const slug = format.name.toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const filePath = `templates/report-formats/${slug}.docx`;
-      await writeFile(privatePath(filePath), Buffer.from(format.base64, 'base64'));
-      const manifest = await worker(['validate', '--input', privatePath(filePath)]);
-      const revision = hash(format.base64);
-      const template = {
-        id: randomUUID(),
-        name: format.name,
-        family: 'standard',
-        category: format.category,
-        revision,
-        path: filePath,
-        verified: true,
-        manifest: { ...manifest, requiredFields: [] }
-      };
-      await db.query('INSERT INTO templates(id,data) VALUES($1,$2)', [template.id, JSON.stringify(template)]);
-      existingNames.add(format.name);
-      await audit('system:bundled-template-seed', 'template_seeded', template.id, { name: template.name, revision, category: template.category });
-    }
-    console.log('Loaded bundled report formats.');
-  } catch(e) { console.error('Failed loading owner-selected report formats', e); }
-}, 2200);
 
 const server=app.listen(Number(process.env.PORT||3001),demo?'127.0.0.1':'0.0.0.0',()=>console.log(`IPI API listening on ${process.env.PORT||3001}${demo?' (de-identified demo)':''}`));
 const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},4*60*60*1000);interval.unref();
