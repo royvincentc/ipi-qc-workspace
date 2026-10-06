@@ -3,6 +3,7 @@ import {db,setting} from './db.js';
 import {getConfiguration} from './configuration.js';
 import {reportIssues} from '../shared/model.js';
 const receivedDay="CASE WHEN data->>'received' ~ '^\\d{4}-\\d{2}-\\d{2}' THEN substring(data->>'received',1,10) WHEN data->>'received' ~ '^\\d{2}/\\d{2}/\\d{4}' THEN substring(data->>'received',7,4)||'-'||substring(data->>'received',1,2)||'-'||substring(data->>'received',4,2) ELSE NULL END";
+const receivedTimestamp=`CASE WHEN data->>'received' ~ '^\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}' THEN (data->>'received')::timestamptz WHEN data->>'received' ~ '^\\d{1,2}/\\d{1,2}/\\d{4}\\s*@\\s*\\d{1,2}:\\d{2}\\s*[APap][Mm]$' THEN to_timestamp(data->>'received','MM/DD/YYYY @ HH12:MI AM') ELSE ${receivedDay}::timestamp END`;
 export function registerSearch(app:Express){
  app.get('/api/library-items',async(req,res)=>{
   const q=String(req.query.q||'').trim().slice(0,200),kind=String(req.query.kind||'');const page=Math.max(1,Math.min(100000,Math.floor(Number(req.query.page))||1)),limit=25;
@@ -27,11 +28,11 @@ export function registerSearch(app:Express){
   const sort=String(req.query.sort||'recent');
   const direction=String(req.query.direction||(['latest','recent','received'].includes(sort)?'desc':'asc'))==='desc'?'DESC':'ASC';
   const sorts:Record<string,string>={
-   latest:`${receivedDay} ${direction} NULLS LAST,samples.updated_at DESC`,
+   latest:`${receivedTimestamp} ${direction} NULLS LAST,samples.updated_at DESC,samples.id DESC`,
    recent:`samples.updated_at ${direction}`,
    name:`data->>'name' ${direction} NULLS LAST`,
    category:`data->>'category' ${direction} NULLS LAST`,
-   received:`${receivedDay} ${direction} NULLS LAST,samples.updated_at DESC`,
+   received:`${receivedTimestamp} ${direction} NULLS LAST,samples.updated_at DESC,samples.id DESC`,
    source:`data->'source'->>'sheet' ${direction} NULLS LAST,data->'source'->>'section' ${direction} NULLS LAST`,
    status:`data->>'status' ${direction} NULLS LAST`,
    note:`worksheet_notes.note ${direction} NULLS LAST`,
