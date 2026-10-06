@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {planSourceSync,type SavedSourceRecord} from '../server/source-sync.js';
+import {planSourceSync,persistSourceUpdates,type SavedSourceRecord} from '../server/source-sync.js';
 import type {Sample} from '../shared/model.js';
 
 function sample(ml:string,sheetId:number,row:number,category='FG',fingerprint='fresh',revision=19):Sample{
@@ -31,4 +31,22 @@ test('unchanged snapshots are skipped and changed content or mapping revisions a
  const unchanged=sample('ML-FG-26-0001',8,4),changed=sample('ML-FG-26-0002',8,5),remapped=sample('ML-FG-26-0003',8,6);
  const plan=planSourceSync([unchanged,changed,remapped],[saved(unchanged),saved({...changed,source:{...changed.source,fingerprint:'old'}}),saved({...remapped,configurationRevision:16})]);
  assert.deepEqual(plan.updates,[changed,remapped]);assert.deepEqual(plan.conflicts,[]);
+});
+
+test('independent saves are bounded and each planned update is saved exactly once',async()=>{
+ let active=0,peak=0;const savedIds:number[]=[];
+ const result=await persistSourceUpdates(Array.from({length:19},(_,i)=>i),async id=>{
+  active++;peak=Math.max(peak,active);await new Promise(resolve=>setImmediate(resolve));savedIds.push(id);active--;
+ });
+ assert.equal(result.count,19);assert.equal(result.failure,undefined);assert.equal(peak,8);
+ assert.deepEqual(savedIds.sort((a,b)=>a-b),Array.from({length:19},(_,i)=>i));
+});
+test('a failed batch waits for all started saves and starts no further updates',async()=>{
+ const finished:number[]=[],error=new Error('Database write failed');
+ const result=await persistSourceUpdates(Array.from({length:12},(_,i)=>i),async id=>{
+  if(id===0)throw error;
+  await new Promise(resolve=>setImmediate(resolve));finished.push(id);
+ });
+ assert.equal(result.count,7);assert.equal(result.failure?.reason,error);
+ assert.deepEqual(finished.sort((a,b)=>a-b),[1,2,3,4,5,6,7]);
 });

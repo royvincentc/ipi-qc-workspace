@@ -342,3 +342,5 @@
 - Scoped fix preserves conflicting identities and blocks relocated duplicates while importing unrelated records; structured conflicts and partial counts remain auditable. No frontend layout or Google source changed.
 - Relevant tests (40), typecheck and production build pass. Three full-suite report/configuration failures reproduced against the unchanged baseline.
 - Pending: deploy scoped changes, refresh sources, confirm October count and target in Samples/Worksheet, confirm August snapshot remains identical, then append final verification.
+- Live result: 64 October Incoming samples imported; target verified in rendered Worksheet and sample details. Historical August ID/fingerprint/observedAt preserved.
+- Required historical refresh was slow due to serial SQL round trips. Added bounded batches of eight under the existing workbook lock, with all-settled failure handling; 42 relevant tests and typecheck pass. Environmental source has eight October records, so final expected total is 72. Complete full refresh and verify audit/conflict state after this deployment.

@@ -37,3 +37,16 @@ export function planSourceSync(records:Sample[],saved:SavedSourceRecord[]){
  });
  return {updates,conflicts};
 }
+
+// Keep below the database pool limit. Finish every started save before the
+// caller releases its workbook lock, including when one save fails.
+export async function persistSourceUpdates<T>(records:T[],save:(record:T)=>Promise<unknown>){
+ let count=0;
+ for(let offset=0;offset<records.length;offset+=8){
+  const results=await Promise.allSettled(records.slice(offset,offset+8).map(async record=>save(record)));
+  count+=results.filter(result=>result.status==='fulfilled').length;
+  const failure=results.find(result=>result.status==='rejected');
+  if(failure?.status==='rejected')return {count,failure};
+ }
+ return {count,failure:undefined};
+}

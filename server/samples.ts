@@ -5,7 +5,7 @@ import {db,locked,setting,setSetting,audit,demo,tryLocked} from './db.js';
 import {readWorkbook,rangeValues,writeRange,readApplicability} from './google.js';
 import {allocate,Fault,hash,mappings,validateLayout,sectionRows,sourceLayout,column,type Mapping,type Sheet} from './domain.js';
 import {categories,type Category,type Sample,type Source} from '../shared/model.js';
-import {planSourceSync,type SourceIdentityConflict} from './source-sync.js';
+import {planSourceSync,persistSourceUpdates,type SourceIdentityConflict} from './source-sync.js';
 let lastApplicabilityFingerprint:string|undefined;
 let syncInFlight:Promise<any>|undefined;
 export interface Connections {incoming:string;environmental:string;specifications:string;folders:string[];reportFolder:string;timezone:string;reservationsReconciled:boolean;manualIntakeCoordinated:boolean;writesEnabled:boolean}
@@ -56,10 +56,8 @@ async function syncSourcesOnce(actor:string){const config=await setting('connect
   const existing = (await db.query('SELECT id, data->>\'ml\' as ml, data->\'source\'->>\'sheet\' as sheet, data->\'source\'->>\'sheetId\' as sheet_id, data->>\'category\' as category, data->\'source\'->>\'row\' as row, data->\'source\'->>\'fingerprint\' as fingerprint, data->>\'configurationRevision\' as rev FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1', [book.id])).rows.filter(r => r.ml?.trim());
     const old_records = existing.map(r => ({ id: r.id, ml: r.ml, category: r.category, rev: Number(r.rev), source: { sheet: r.sheet, sheetId: Number(r.sheet_id), row: Number(r.row), fingerprint: r.fingerprint } }));
     const plan=planSourceSync(records,old_records);conflicts.push(...plan.conflicts);
-    for(const record of plan.updates){
-      await saveSnapshot(record);
-      count++;
-    }
+    const persisted=await persistSourceUpdates(plan.updates,saveSnapshot);count+=persisted.count;
+    if(persisted.failure)throw persisted.failure.reason;
  });}
  if(config.specifications){const applicability=await readApplicability(config.specifications);const fingerprint=hash({url:config.specifications,applicability});if(fingerprint!==lastApplicabilityFingerprint){await setSetting('applicability',applicability);lastApplicabilityFingerprint=fingerprint;}}
  // Auto-create managed products for any sample names without a matching product entry
