@@ -19,6 +19,7 @@ import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
 import {createAutomaticDraft,resolveReportSetup,saveDraft,generate,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
 import {validateBindings} from './template.js';
 import {categories,type Category,type Specification,type Template,type Sample,resultKey} from '../shared/model.js';
+import {defaultWorksheetLayout,worksheetLayoutSchema} from '../shared/worksheet-layout.js';
 import {seed} from './seed.js';
 import {seedBundledReportFormats} from './report-formats.js';
 import {aiRouter} from './ai.js';
@@ -90,6 +91,22 @@ app.get('/api/samples',async(req,res)=>{
   res.json(rows.map(({id,data,duplicates})=>({...data,id,duplicate:Number(duplicates)>1})));
 });
 app.get('/api/samples/:id',async(req,res)=>{const row=(await db.query('SELECT id,data FROM samples WHERE id=$1',[req.params.id])).rows[0];if(!row)throw new Fault(404,'Sample not found');const data={...row.data,id:row.id};res.json({sample:data,history:(await db.query('SELECT data,created_at FROM source_history WHERE sample_id=$1 ORDER BY created_at DESC',[req.params.id])).rows,drafts:(await db.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','updatedAt',data->'updatedAt') AS data FROM drafts WHERE data->>'sampleId'=$1",[req.params.id])).rows.map(r=>r.data)});});
+app.get('/api/worksheet/layout',async(_req,res)=>{
+ const stored=await setting('worksheetLayout',defaultWorksheetLayout);
+ const parsed=worksheetLayoutSchema.safeParse(stored);
+ res.json(parsed.success?parsed.data:defaultWorksheetLayout);
+});
+app.put('/api/worksheet/layout',requireRole('administrator'),async(req,res)=>{
+ const next=worksheetLayoutSchema.parse(req.body);
+ const stored=await setting('worksheetLayout',defaultWorksheetLayout);
+ const parsed=worksheetLayoutSchema.safeParse(stored);
+ const previous=parsed.success?parsed.data:defaultWorksheetLayout;
+ const panesChanged=JSON.stringify(previous.columns)!==JSON.stringify(next.columns)||previous.frozenColumns!==next.frozenColumns||previous.frozenRows!==next.frozenRows;
+ if(previous.locked&&next.locked&&panesChanged)throw new Fault(409,'Unlock the shared table layout before changing its columns or frozen panes.');
+ await setSetting('worksheetLayout',next);
+ if(JSON.stringify(previous)!==JSON.stringify(next))await audit(req.user.email,'worksheet_layout_updated','worksheet',{before:previous,after:next});
+ res.json(next);
+});
 app.put('/api/worksheet/:sampleId/note',requireRole('administrator','analyst'),async(req,res)=>{
  const {note}=z.object({note:z.string().max(500)}).parse(req.body);const clean=note.trim();const sampleId=req.params.sampleId;
  if(!(await db.query('SELECT id FROM samples WHERE id=$1',[sampleId])).rows.length)throw new Fault(404,'Sample not found');

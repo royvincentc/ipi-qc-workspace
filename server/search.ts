@@ -24,7 +24,20 @@ export function registerSearch(app:Express){
   if(from)where.push(`${receivedDay}>=${param(from)}`);if(to)where.push(`${receivedDay}<=${param(to)}`);
   const filter=where.length?'WHERE '+where.join(' AND '):'';
   const count=Number((await db.query(`SELECT count(*) FROM samples LEFT JOIN worksheet_notes ON worksheet_notes.sample_id=samples.id ${filter}`,args)).rows[0].count);
-  const sorts:Record<string,string>={recent:'samples.updated_at DESC',name:"data->>'name' ASC",received:receivedDay+" DESC NULLS LAST",ml:"data->>'category', (regexp_match(data->>'ml','([0-9]{2,4})[-/][0-9]+$'))[1]::integer ASC NULLS LAST, substring(data->>'ml' from '[0-9]+$')::numeric ASC NULLS LAST"};const order=sorts[String(req.query.sort)]||sorts.recent;
+  const sort=String(req.query.sort||'recent');
+  const direction=String(req.query.direction||(['latest','recent','received'].includes(sort)?'desc':'asc'))==='desc'?'DESC':'ASC';
+  const sorts:Record<string,string>={
+   latest:`${receivedDay} ${direction} NULLS LAST,samples.updated_at DESC`,
+   recent:`samples.updated_at ${direction}`,
+   name:`data->>'name' ${direction} NULLS LAST`,
+   category:`data->>'category' ${direction} NULLS LAST`,
+   received:`${receivedDay} ${direction} NULLS LAST,samples.updated_at DESC`,
+   source:`data->'source'->>'sheet' ${direction} NULLS LAST,data->'source'->>'section' ${direction} NULLS LAST`,
+   status:`data->>'status' ${direction} NULLS LAST`,
+   note:`worksheet_notes.note ${direction} NULLS LAST`,
+   ml:`data->>'category' ASC NULLS LAST, (regexp_match(data->>'ml','([0-9]{2,4})[-/][0-9]+$'))[1]::integer ${direction} NULLS LAST, substring(data->>'ml' from '[0-9]+$')::numeric ${direction} NULLS LAST`,
+  };
+  const order=sorts[sort]||sorts.recent;
   // Search results only need list fields. Sample snapshots also contain the
   // original source row and field map, which can be much larger and belong in
   // the single-record endpoint rather than every keystroke/search page.
