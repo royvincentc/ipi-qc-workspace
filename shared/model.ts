@@ -21,28 +21,33 @@ export function reportTestLabel(test:string,fallback=''){
  return labels[test]||fallback||testLabels[test]||test;
 }
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'>){return [r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
-export function microbiologyLimit(test:string){return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
+export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return /^\s*Nmt\b/i.test(criterion)?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function resultDisplayValue(test:Criterion,r:Result){
  if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
- const limit=microbiologyLimit(test.test);
+ const limit=microbiologyLimit(test.test,test.criterion);
  if(limit&&r.qualifier==='Nmt')return limit;
- if(limit&&r.value.trim())return /cfu\/mL$/i.test(r.value.trim())?r.value.trim():`${r.value.trim()} cfu/mL`;
+ const value=r.value.trim();
+ if(limit&&value)return test.unit&&value.toLocaleLowerCase().endsWith(test.unit.toLocaleLowerCase())?value:`${value} ${test.unit}`.trim();
  return [r.qualifier,r.value,r.unit].filter(Boolean).join(' ');
 }
-export function reportIssues(d:Draft):string[]{
- const issues=[...d.specification.issues];
+export function resultIssues(d:Draft):string[]{
+ const issues:string[]=[];
  for(const t of d.specification.tests){const r=d.results.find(x=>resultKey(x)===resultKey(t));const label=[t.label,t.location,t.stage].filter(Boolean).join(' · ');
   if(!t.criterion||!t.source||!t.date) issues.push(`${label}: unresolved criterion source`);
   if(!r||r.state!=='entered') {issues.push(`${label}: result required`);continue;}
   if(d.sample.category==='SFG'&&!['passed','failed'].includes(r.remarks.trim().toLocaleLowerCase()))issues.push(`${label}: select Passed or Failed so the Semi-Finished Goods report format can be chosen.`);
   const unchangedSourceValue=r.sourceValue!==undefined&&r.value===r.sourceValue;
   if(!unchangedSourceValue){
-   if(!microbiologyLimit(t.test)&&r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
-   if(t.type==='numeric'&&microbiologyLimit(t.test)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&!r.value.trim()) issues.push(`${label}: enter a value`);}
+  if(r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
+  if(t.type==='numeric'&&microbiologyLimit(t.test,t.criterion)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&!r.value.trim()) issues.push(`${label}: enter a number`);}
    else if(t.type==='numeric'&&(!/^\d+(\.\d+)?$/.test(r.value)||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);
    if(t.type==='finding'&&!['Positive','Negative'].includes(r.value)) issues.push(`${label}: choose Positive or Negative`);
   }
  }
+ return issues;
+}
+export function reportIssues(d:Draft):string[]{
+ const issues=[...d.specification.issues,...resultIssues(d)];
  if(!d.fields.analysisDate)issues.push('Analysis date is required');
  const validReportDate=(value:string)=>{
   const iso=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);

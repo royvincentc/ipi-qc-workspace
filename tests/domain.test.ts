@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {allocate,column,currentMonth,googleId,latestCriteria,mappings,sectionRows,sourceLayout,validateLayout,type Sheet} from '../server/domain.js';
-import {reportIssues,type Draft,type Specification,type Category} from '../shared/model.js';
+import {microbiologyLimit,reportIssues,resultDisplayValue,resultIssues,type Draft,type Specification,type Category} from '../shared/model.js';
 function sheet(name='September 2026',c:Category='FG'):Sheet {const m=mappings[c];const rows:unknown[][]=Array.from({length:20},()=>[]);rows[m.header-1]=Array.from({length:m.end+1},()=> '');m.headers.forEach((v,i)=>rows[m.header-1][m.start+i]=v);if(c==='EM')rows[0][0]='ENVIRONMENTAL MONITORING';else rows[1][m.start]=m.title;return {name,id:7,rows,rowCount:20,merges:[m.merge,...(m.extraMerges||[])]};}
 function record(s:Sheet,row:number,ml:string,c:Category='FG',name='Example sample',remarks=''){const m=mappings[c];s.rows[row-1][m.ml]=ml;s.rows[row-1][m.start+m.fields.name]=name;s.rows[row-1][m.start+m.fields.remarks]=remarks;}
 const now=new Date('2026-09-23T01:00:00Z');
@@ -51,6 +51,9 @@ test('missing dates block a specification match',()=>assert.throws(()=>latestCri
 test('missing applicable tests cannot silently disappear',()=>assert.throws(()=>latestCriteria([spec('2026-01-01','Nmt 50')],'Example','FG','Routine',['MY']),/date/));
 function draft():Draft{return {id:'d',sampleId:'s',sample:{} as any,templateId:'t',templateRevision:'1',revision:1,analyst:'A',updatedAt:'',specification:spec('2026-01-01','Nmt 50'),fields:{analysisDate:'2026-01-01',logbook:'MIC-1'},results:[{test:'SPC',state:'entered',value:'0',qualifier:'',unit:'cfu/g',reason:'',remarks:''}]};}
 test('actual zero is valid while missing value is not',()=>{const d=draft();assert.deepEqual(reportIssues(d),[]);d.results[0].value='';assert.match(reportIssues(d).join(),/number/);});
+test('partial Results imports require entry only for the missing test',()=>{const d=draft();d.specification.tests.push({...d.specification.tests[0],test:'MY',label:'Molds and Yeast'});d.results.push({...d.results[0],test:'MY',state:'not_entered',value:'',sourceValue:undefined});assert.deepEqual(resultIssues(d),['Molds and Yeast: result required']);});
+test('complete Results imports do not require manual result entry',()=>{const d=draft();d.results[0].sourceValue='0';assert.deepEqual(resultIssues(d),[]);});
+test('manual microbiology values use the pinned criterion and unit',()=>{const d=draft();const criterion=d.specification.tests[0];assert.equal(microbiologyLimit(criterion.test,criterion.criterion),'Nmt 50');d.results[0].value='5';assert.equal(resultDisplayValue(criterion,d.results[0]),'5 cfu/g');});
 test('not-tested result does not satisfy a required test',()=>{const d=draft();d.results[0].state='not_tested';d.results[0].reason='Insufficient sample';assert.match(reportIssues(d).join(),/required/);});
 test('numeric unit mismatch blocks generation',()=>{const d=draft();d.results[0].unit='cfu/mL';assert.match(reportIssues(d).join(),/unit/);});
 test('negative finding is distinct from not entered',()=>{const d=draft();d.specification.tests[0].type='finding';d.specification.tests[0].unit='';d.results[0].unit='';d.results[0].value='Negative';assert.deepEqual(reportIssues(d),[]);d.results[0].state='not_entered';assert.match(reportIssues(d).join(),/required/);});

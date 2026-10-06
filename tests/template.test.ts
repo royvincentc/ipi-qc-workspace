@@ -15,6 +15,14 @@ test('report results follow the document row order rather than specification ord
  const template={manifest:{resultBindings:[{index:0,test:'MY'},{index:1,test:'SPC'}]}} as unknown as Template;
  assert.deepEqual(reportRows(draft,template).map(r=>r.value),['4 cfu/g','0 cfu/g']);
 });
+test('missing result fields remain blank in the generated report',()=>{
+ const criteria=[{test:'SPC',label:'SPC',type:'numeric' as const,unit:'cfu/g',criterion:'Nmt 50 cfu/g',source:'fixture',sourceLocation:'row 1',date:'2026-09-01',dateBasis:'release' as const,revision:'1'}];
+ const draft={specification:{tests:criteria},results:[{test:'SPC',state:'not_entered',value:'',qualifier:'',unit:'cfu/g',reason:'',remarks:''}]} as Draft;
+ const template={manifest:{}} as unknown as Template;
+ assert.equal(reportRows(draft,template)[0].value,'');
+ draft.results=[];
+ assert.equal(reportRows(draft,template)[0].value,'');
+});
 test('template with a missing applicable test cannot start a report',()=>{
  const draft={specification:{tests:[{test:'SPC'},{test:'MY'}]},results:[{test:'SPC'},{test:'MY'}]} as Draft;
  const template={manifest:{resultBindings:[{index:0,test:'SPC'}]}} as unknown as Template;

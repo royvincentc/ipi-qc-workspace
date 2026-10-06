@@ -27,10 +27,11 @@ export function reportRows(d:Draft,t:Template){
  if(bindings.length&&ordered.length!==d.specification.tests.length)throw new Fault(422,'Template does not represent every applicable test instance');
  if(bindings.length&&new Set(ordered.map(resultKey)).size!==d.specification.tests.length)throw new Fault(422,'Template result rows do not match applicable tests');
  return ordered.map((test,i)=>{
-  const r=d.results.find(x=>resultKey(x)===resultKey(test));if(!r)throw new Fault(422,`${test.label}: actual result is missing`);
+  const r=d.results.find(x=>resultKey(x)===resultKey(test));
   const label=({'SPC':'Standard Plate Count (SPC)','MY':'Molds and Yeast'}[test.test]||reportTestLabel(test.test,test.label));
-  const location=r.location||test.location||'';
+  const location=r?.location||test.location||'';
   if(grouped&&!location.trim())throw new Fault(422,`${label}: approved sampling-plan location is missing`);
-  return {index:i,groupKey:[test.test,test.stage||'',test.criterion].join('|'),test:grouped?label:[label,location,test.stage,test.replicate].filter(Boolean).join(' · '),location,criterion:test.criterion,value:resultDisplayValue(test,r),remarks:r.remarks};
+  const value=r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r):'';
+  return {index:i,groupKey:[test.test,test.stage||'',test.criterion].join('|'),test:grouped?label:[label,location,test.stage,test.replicate].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:r?.remarks||''};
  });
 }
