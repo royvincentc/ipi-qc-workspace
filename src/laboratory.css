@@ -332,8 +332,8 @@ input:not([type="checkbox"]):not([type="radio"]),select,textarea { min-height:42
   .login-petri-visual { transform:none!important; }
   .selection-layer,.rail-selection,.lab-switch i,.button,.icon-button,.sidebar,.workbench-connect { transition:none!important; }
 }
-.app-low-performance .lab-object svg,.app-low-performance .workflow-panel:hover .lab-object svg { transform:none!important; }
-.app-low-performance .connection-pulse { animation:none!important; }
+.app-low-performance .lab-object:not(.motion-preview-on *) svg { transform:none!important; }
+.app-low-performance .connection-pulse:not(.motion-preview-on *) { animation:none!important; }
 .app-low-performance .selection-layer,.app-low-performance .rail-selection { transition:none; }
 
 /* Dashboard reference composition: the header, assay notch, and tray are one
@@ -664,7 +664,7 @@ input:not([type="checkbox"]):not([type="radio"]),select,textarea { min-height:42
 @media (prefers-reduced-motion:reduce) {
   .app-dashboard .lab-object svg,.app-dashboard .workflow-panel:hover .lab-object svg,.app-dashboard .workflow-panel:focus-within .lab-object svg { transform:scale(var(--lab-graphic-scale,1.35))!important; }
 }
-.app-dashboard.app-low-performance .lab-object svg,.app-dashboard.app-low-performance .workflow-panel:hover .lab-object svg { transform:scale(var(--lab-graphic-scale,1.35))!important; }
+.app-dashboard.app-low-performance .lab-object:not(.motion-preview-on *) svg { transform:scale(var(--lab-graphic-scale,1.35))!important; }
 
 @media (min-width:1051px) and (max-width:1310px) {
   .app-dashboard .assay-selector { top:96px; left:50%; right:auto; width:max-content; transform:translateX(-50%); flex-wrap:nowrap; justify-content:flex-start; }

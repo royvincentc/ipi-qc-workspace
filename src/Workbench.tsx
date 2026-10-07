@@ -4,6 +4,7 @@ import {ArrowRight,Beaker,ChevronDown,FileText,FlaskConical,FolderOpen,MapPin,Me
 import {LabGraphic} from './LabGraphic';
 import {Badge,ErrorBox,useLoad} from './ui';
 import {api} from './api';
+import {isConstrainedDevice} from './motion';
 import {resultDisplayValue,resultKey,type Sample} from '../shared/model';
 
 type Assay={id:string;name:string;shortName?:string;reportLabel?:string;active?:boolean;categories?:string[]};
@@ -49,7 +50,8 @@ function WorkflowConnector({path,active,pulseId,enabled,flowing,paused}:{path:Pa
 
 export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selectedSampleId,onSelectSample}:{samples:Sample[];drafts:any[];edit:boolean;categoryName:(id:string)=>string;assays:Assay[];selectedSampleId:string;onSelectSample:(id:string)=>void}){
   const [connections,setConnections]=useState(true);
-  const [motionRequested,setMotionRequested]=useState(true);
+  const [lowPerformance]=useState(isConstrainedDevice);
+  const [motionRequested,setMotionRequested]=useState(()=>!isConstrainedDevice());
   const [reducedMotion,setReducedMotion]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [pageVisible,setPageVisible]=useState(()=>typeof document==='undefined'||document.visibilityState!=='hidden');
   const [inView,setInView]=useState(true);
@@ -112,9 +114,10 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
   const results=Array.isArray(draftRecord?.results)?draftRecord.results:setup?.sample?.id===sample?.id?setup.results||[]:[];
   const specification=draftRecord?.specification||(setup?.sample?.id===sample?.id?setup.specification:undefined);
   const availableAssays=assays.filter(test=>test.active!==false&&(!test.categories?.length||!sample?.category||test.categories.includes(sample.category)));
+  // Connectors show the selected sample's workflow, including stages awaiting data.
+  // Missing parameters and drafts remain explicit within their respective panels.
   const action=draft?`/reports/${draft.id}`:sample?`/reports?sample=${sample.id}`:'/reports';
-  const lowPerformance=typeof document!=='undefined'&&Boolean(document.querySelector('.app-low-performance'));
-  const motionSupported=!reducedMotion&&!lowPerformance;
+  const motionSupported=!reducedMotion;
   const motionEnabled=motionRequested&&motionSupported;
   const paused=!pageVisible||!inView;
   const previousSample=useRef(sample?.id);
@@ -154,11 +157,11 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
     setPulseTarget(motionEnabled&&connections&&!paused?path:null);
     setPulseId(value=>value+1);
   };
-  return <section ref={root} className={`sample-workbench ${connections?'connections-on':'connections-off'} ${motionEnabled?'':'motion-off'} ${paused?'motion-paused':''}`} aria-label="Selected sample workflow">
+  return <section ref={root} className={`sample-workbench ${connections?'connections-on':'connections-off'} ${motionEnabled?'motion-preview-on':'motion-off'} ${paused?'motion-paused':''}`} aria-label="Selected sample workflow">
     <div className="workbench-toolbar">
       <div className="workbench-options">
         <div className="workbench-option"><span>Show connections</span><button type="button" className="lab-switch" role="switch" aria-label="Show connections" aria-checked={connections} onClick={()=>setConnections(value=>!value)}><i/></button></div>
-        <div className="workbench-option"><span>Motion preview</span><button type="button" className="lab-switch" role="switch" aria-label="Motion preview" aria-checked={motionEnabled} disabled={!motionSupported} title={!motionSupported?(reducedMotion?'Motion is off because reduced motion is enabled':'Motion is off on this constrained device'):'Toggle motion preview'} onClick={()=>setMotionRequested(value=>!value)}><i/></button></div>
+        <div className="workbench-option"><span>Motion preview</span><button type="button" className="lab-switch" role="switch" aria-label="Motion preview" aria-checked={motionEnabled} disabled={!motionSupported} title={reducedMotion?'Motion is off because reduced motion is enabled':lowPerformance?'Toggle motion preview · Off by default to reduce device load':'Toggle motion preview'} onClick={()=>setMotionRequested(value=>!value)}><i/></button></div>
       </div>
       <div className="workflow-search" ref={searchRef} onBlur={event=>{if(event.relatedTarget&&!event.currentTarget.contains(event.relatedTarget))setSearchOpen(false);}}>
         <label className="workflow-search-field"><Search size={20} aria-hidden="true"/><input role="combobox" aria-label="Find workflow sample by ML or control number" aria-autocomplete="list" aria-expanded={searchOpen&&Boolean(query.trim())} aria-controls="workflow-sample-matches" aria-activedescendant={searchOpen&&activeMatch>=0?`workflow-match-${activeMatch}`:undefined} autoComplete="off" placeholder="Search by ML or control number…" value={query} onFocus={()=>setSearchOpen(true)} onChange={event=>{setQuery(event.target.value);setSearchOpen(true);}} onKeyDown={event=>{
@@ -220,7 +223,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
         <span className="workflow-caption">Source</span>
       </div>
 
-      <WorkflowConnector path="tests" active={pulseTarget==='tests'} pulseId={pulseId} enabled={connections&&Boolean(sample)&&Boolean(specification)} flowing={motionEnabled} paused={paused||!motionEnabled}/>
+      <WorkflowConnector path="tests" active={pulseTarget==='tests'} pulseId={pulseId} enabled={connections&&Boolean(sample)} flowing={motionEnabled} paused={paused||!motionEnabled}/>
       <div className={`workflow-step ${selectedStage==='tests'?'is-selected':''}`}>
         <article className="workflow-panel">
           <span className="workflow-context-icon" aria-hidden="true"><Beaker size={21}/></span>
@@ -240,7 +243,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
         <span className="workflow-caption">Results</span>
       </div>
 
-      <WorkflowConnector path="report" active={pulseTarget==='report'} pulseId={pulseId} enabled={connections&&Boolean(draft)} flowing={motionEnabled} paused={paused||!motionEnabled}/>
+      <WorkflowConnector path="report" active={pulseTarget==='report'} pulseId={pulseId} enabled={connections&&Boolean(sample)} flowing={motionEnabled} paused={paused||!motionEnabled}/>
       <div className={`workflow-step ${selectedStage==='report'?'is-selected':''}`}>
         <article className="workflow-panel">
           <span className="workflow-context-icon" aria-hidden="true"><FileText size={21}/></span>

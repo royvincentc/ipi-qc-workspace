@@ -5,7 +5,7 @@ export function LabGraphic({kind='dish'}:{kind?:'dish'|'assay'|'sheets'|'vessel'
   const id=useId().replace(/:/g,'');
   const ref=useRef<HTMLSpanElement>(null);
   const move=(event:PointerEvent<HTMLSpanElement>)=>{
-    if(event.pointerType!=='mouse'||!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion:reduce)').matches||event.currentTarget.closest('.app-low-performance,.motion-off')||document.hidden)return;
+    if(event.pointerType!=='mouse'||!matchMedia('(hover:hover) and (pointer:fine)').matches||matchMedia('(prefers-reduced-motion:reduce)').matches||event.currentTarget.closest('.motion-off')||(event.currentTarget.closest('.app-low-performance')&&!event.currentTarget.closest('.motion-preview-on'))||document.hidden)return;
     const rect=event.currentTarget.getBoundingClientRect();
     const svg=ref.current?.firstElementChild as SVGElement;
     const scale=getComputedStyle(event.currentTarget).getPropertyValue('--lab-graphic-scale').trim()||'1.35';

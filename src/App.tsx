@@ -8,6 +8,7 @@ import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
 import {RouteExperience,SelectionMotion} from './Experience';
 import Dialog from './dialog';
+import {isConstrainedDevice} from './motion';
 const AdminCenter=lazy(()=>import('./admin'));
 const SampleDetailRoute=lazy(()=>import('./pages').then(module=>({default:module.SampleDetail})));
 const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Reports})));
@@ -15,14 +16,6 @@ const ReportEditorRoute=lazy(()=>import('./reports').then(module=>({default:modu
 const AssistantRoute=lazy(()=>import('./AssistantPage').then(module=>({default:module.AssistantPage})));
 const FileLibraryRoute=lazy(()=>import('./library'));
 const WorksheetRoute=lazy(()=>import('./worksheet'));
-
-function isConstrainedDevice(){
-  if(typeof navigator==='undefined')return false;
-  const device=navigator as Navigator & {deviceMemory?:number;connection?:{saveData?:boolean}};
-  return Boolean(device.connection?.saveData)
-    || (device.hardwareConcurrency>0&&device.hardwareConcurrency<=4)
-    || (typeof device.deviceMemory==='number'&&device.deviceMemory<=4);
-}
 
 const navigation=[
   ['/','Dashboard',Home],
