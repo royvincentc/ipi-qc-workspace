@@ -697,6 +697,8 @@ input:not([type="checkbox"]):not([type="radio"]),select,textarea { min-height:42
 .app-dashboard .workflow-search-dropdown strong span { font-weight:400; }
 .app-dashboard .workflow-search-dropdown small,.app-dashboard .workflow-search-dropdown p { font-size:11px; line-height:1.5; color:var(--text-secondary); }
 .app-dashboard .workflow-search-dropdown p { margin:0; padding:10px 16px; }
+.app-dashboard .workflow-search-more { display:block; width:100%; min-height:44px; padding:10px 16px; border:0; border-top:1px solid var(--border-subtle); color:var(--text-primary); background:var(--bg-surface-elevated); font-size:12px; cursor:pointer; }
+.app-dashboard .workflow-search-more:disabled { cursor:wait; opacity:.7; }
 .app-dashboard .workflow-parameter-results { flex:1; overflow:auto; scrollbar-width:thin; }
 .app-dashboard .workflow-parameter-results > div { min-height:70px; }
 .app-dashboard .workflow-parameter-results > div > span { min-width:0; overflow-wrap:anywhere; }

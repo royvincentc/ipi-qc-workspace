@@ -59,19 +59,36 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
   const [searchOpen,setSearchOpen]=useState(false);
   const [searching,setSearching]=useState(false);
   const [searchError,setSearchError]=useState('');
+  const [totalMatches,setTotalMatches]=useState(0);
+  const [searchPage,setSearchPage]=useState(1);
+  const [loadingMore,setLoadingMore]=useState(false);
+  const searchGeneration=useRef(0);
   const [activeMatch,setActiveMatch]=useState(-1);
   const [searchedSample,setSearchedSample]=useState<any>();
   const searchRef=useRef<HTMLDivElement>(null);
   useEffect(()=>{
+    ++searchGeneration.current;
     let active=true;
-    setMatches([]);setActiveMatch(-1);setSearchError('');
+    setMatches([]);setActiveMatch(-1);setSearchError('');setTotalMatches(0);setSearchPage(1);setLoadingMore(false);
     if(!query.trim()){setSearching(false);return;}
     setSearching(true);
-    const timer=setTimeout(()=>api(`/search?workflow=true&limit=50&q=${encodeURIComponent(query.trim())}`).then(data=>{
-      if(active){setMatches(data.items);setSearching(false);}
+    const timer=setTimeout(()=>api(`/search?workflow=true&sort=latest&direction=desc&limit=50&q=${encodeURIComponent(query.trim())}`).then(data=>{
+      if(active){setMatches(data.items);setTotalMatches(data.total);setSearching(false);}
     }).catch(e=>{if(active){setSearchError(e.message);setSearching(false);}}),250);
     return()=>{active=false;clearTimeout(timer);};
   },[query]);
+  const loadMoreMatches=async()=>{
+    if(loadingMore||searching)return;
+    const generation=searchGeneration.current;
+    setLoadingMore(true);setSearchError('');
+    try{
+      const data=await api(`/search?workflow=true&sort=latest&direction=desc&limit=50&page=${searchPage+1}&q=${encodeURIComponent(query.trim())}`);
+      if(generation!==searchGeneration.current)return;
+      setMatches(items=>[...items,...data.items.filter((item:any)=>!items.some(existing=>existing.id===item.id))]);
+      setTotalMatches(data.total);setSearchPage(page=>page+1);
+    }catch(e:any){if(generation===searchGeneration.current)setSearchError(e.message);}
+    finally{if(generation===searchGeneration.current)setLoadingMore(false);}
+  };
   useEffect(()=>{if(activeMatch>=0)document.getElementById(`workflow-match-${activeMatch}`)?.scrollIntoView({block:'nearest'});},[activeMatch]);
   useEffect(()=>{
     const dismiss=(event:PointerEvent)=>{if(!searchRef.current?.contains(event.target as Node))setSearchOpen(false);};
@@ -143,7 +160,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
         <div className="workbench-option"><span>Show connections</span><button type="button" className="lab-switch" role="switch" aria-label="Show connections" aria-checked={connections} onClick={()=>setConnections(value=>!value)}><i/></button></div>
         <div className="workbench-option"><span>Motion preview</span><button type="button" className="lab-switch" role="switch" aria-label="Motion preview" aria-checked={motionEnabled} disabled={!motionSupported} title={!motionSupported?(reducedMotion?'Motion is off because reduced motion is enabled':'Motion is off on this constrained device'):'Toggle motion preview'} onClick={()=>setMotionRequested(value=>!value)}><i/></button></div>
       </div>
-      <div className="workflow-search" ref={searchRef} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget))setSearchOpen(false);}}>
+      <div className="workflow-search" ref={searchRef} onBlur={event=>{if(event.relatedTarget&&!event.currentTarget.contains(event.relatedTarget))setSearchOpen(false);}}>
         <label className="workflow-search-field"><Search size={20} aria-hidden="true"/><input role="combobox" aria-label="Find workflow sample by ML or control number" aria-autocomplete="list" aria-expanded={searchOpen&&Boolean(query.trim())} aria-controls="workflow-sample-matches" aria-activedescendant={searchOpen&&activeMatch>=0?`workflow-match-${activeMatch}`:undefined} autoComplete="off" placeholder="Search by ML or control number…" value={query} onFocus={()=>setSearchOpen(true)} onChange={event=>{setQuery(event.target.value);setSearchOpen(true);}} onKeyDown={event=>{
           if(event.key==='Escape'){setSearchOpen(false);setActiveMatch(-1);}
           if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();setSearchOpen(true);setActiveMatch(index=>matches.length?(event.key==='ArrowDown'?(index+1)%matches.length:(index-1+matches.length)%matches.length):-1);}
@@ -155,7 +172,9 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
             <small>Received: {item.received||'Not recorded'} · Analyzed: {item.analysisDate||'Not recorded'}</small>
             <small>Analyzed by: {item.analyzedBy||'Not recorded'}</small>
           </button>)}
-        </div>{searching?<p role="status">Searching samples…</p>:searchError?<p role="alert">Search unavailable. Please try again. {searchError}</p>:!matches.length?<p role="status">No matching samples. Try another ML or control number.</p>:<p>{matches.length} match{matches.length===1?'':'es'} · Choose a sample to display below{matches.length===50?' · Refine your number for more precise matches':''}</p>}</div>:null}
+        </div>{searching?<p role="status">Searching samples…</p>:!matches.length&&!searchError?<p role="status">No matching samples. Try another ML or control number.</p>:matches.length?<p role="status">Showing {matches.length} of {totalMatches} matches · Newest received first</p>:null}
+        {searchError?<p role="alert">Search unavailable. Please try again. {searchError}</p>:null}
+        {matches.length<totalMatches?<button className="workflow-search-more" type="button" disabled={loadingMore} onClick={loadMoreMatches}>{loadingMore?'Loading more samples…':searchError?'Retry loading more':'Load more matches'}</button>:null}</div>:null}
       </div>
       <div className="workbench-utilities" aria-label="Quick workspace actions">
         <Link className="workbench-tool-button" to={edit?'/new':'/samples'} title={edit?'Log a sample':'Browse samples'} aria-label={edit?'Log a sample':'Browse samples'}>{edit?<Plus size={24}/>:<Search size={21}/>}</Link>
