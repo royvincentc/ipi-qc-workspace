@@ -1,0 +1,60 @@
+import {test,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp} from 'node:fs/promises';
+import path from 'node:path';
+process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=await mkdtemp(path.resolve('.data/environmental-test-'));
+const {db,migrate,close}=await import('../server/db.js');
+const {getConfiguration,saveConfiguration}=await import('../server/configuration.js');
+const {publishEnvironmentalProfile,resolveEnvironmentalLayout,retireEnvironmentalProfile}=await import('../server/environmental.js');
+const {resolveReportSetup,createAutomaticDraft,saveDraft,reportTemplateFields}=await import('../server/reports.js');
+await migrate();after(close);
+const row={test:'SPC',label:'Standard Plate Count',type:'numeric',location:'Nozzle 1',stage:'',replicate:'',block:'tests',unit:'cfu',criterion:'Nmt 100 cfu',source:'reference',sourceLocation:'Table 1:Row 2',date:'2026-09-01',dateBasis:'owner-confirmed',revision:'criterion-v1'};
+const template={id:'env-layout',name:'Environmental layout',category:'EM',family:'environmental-grouped-5c',verified:true,revision:'template-v1',path:'fixture.docx',manifest:{tokens:['tests','test','location','criterion','value','remarks'],rowGrouping:{mergeColumns:[0,2]},requiredFields:['analysisDate'],defaultForCategory:true}};
+const sample={id:'env-sample',ml:'ML-EM-26-0001',batch:'TEST01',name:'Fixture Environmental Product',received:'2026-10-01',status:'RELEASED',remarks:'PASSED',context:'Regular',category:'EM',fields:{facility:'Plant 1',area:'Filling',remarks:'PASSED'},source:{fingerprint:'current-source',observedAt:'2026-10-01',raw:[]}};
+const input={name:'Fixture filling',productId:'env-product',product:sample.name,category:'EM',facility:'Plant 1',area:'Filling',context:'Regular',equipmentSet:'Line A',effectiveFrom:'2026-09-01',evidenceIds:['reference'],outputs:[{id:'surface',name:'SPC / MY surface',method:'spc-my',mode:'surface',templateId:template.id,templateRevision:template.revision,instances:[row,{...row,location:'Nozzle 2'}]}]};
+test('legacy product routes retain specificity and never fall back across categories',()=>{
+ const generic={...template,manifest:{...template.manifest,appliesToProducts:['Fixture'],defaultForCategory:false}};
+ const specific={...template,id:'specific',manifest:{...template.manifest,appliesToProducts:[sample.name],defaultForCategory:false}};
+ assert.equal(resolveEnvironmentalLayout(sample as any,[generic,specific],input.outputs[0].instances as any).template?.id,'specific');
+ assert.equal(resolveEnvironmentalLayout(sample as any,[{...template,category:'FG'}],input.outputs[0].instances as any).resolution.status,'missing');
+});
+test('approved environmental plan creates independent blank results and keeps its revision after configuration changes',async()=>{
+ const current=await getConfiguration(),config=structuredClone(current.value);
+ config.products.push({id:'env-product',name:sample.name,category:'EM',code:'',active:true,aliases:[]});
+ const spc=config.tests.find(t=>t.id==='SPC')!;if(!spc.categories.includes('EM'))spc.categories.push('EM');
+ await saveConfiguration(config,current.revision,'owner');
+ await db.query('INSERT INTO files(id,data) VALUES($1,$2)',['reference',JSON.stringify({kind:'reference',name:'Fixture.docx',evidence:{sha256:'bytes-hash'}})]);
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',[template.id,JSON.stringify(template)]);
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['duplicate',JSON.stringify({...template,id:'duplicate',name:'Other default'})]);
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
+ const conflict=resolveEnvironmentalLayout(sample as any,[template,{...template,id:'duplicate',name:'Other default'}],input.outputs[0].instances as any);
+ assert.equal(conflict.resolution.status,'conflict');assert.match(conflict.resolution.message,/Other default/);
+ const profile=await publishEnvironmentalProfile(input,'owner');
+ await assert.rejects(publishEnvironmentalProfile(input,'owner'),/overlaps/);
+ const setup=await resolveReportSetup(sample.id);assert.equal(setup.template?.id,template.id);assert.equal(setup.specification.tests.length,2);
+ const draft=await createAutomaticDraft(sample.id,{email:'owner',name:'Owner Analyst',role:'administrator'});
+ assert.equal(draft.environmentalSnapshot?.profile.id,profile.id);assert.equal(draft.results.length,2);
+ assert.notEqual(draft.results[0].instanceId,draft.results[1].instanceId);
+ assert.ok(draft.results.every(r=>r.state==='not_entered'&&r.value===''&&r.remarks===''));assert.equal(draft.resultSource,undefined);
+ assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'');assert.equal(reportTemplateFields(draft,template).temperature,'');assert.equal(reportTemplateFields(draft,template).releaseDate,'');
+ const tampered=structuredClone(draft.results);tampered[0].location='Different nozzle';await assert.rejects(saveDraft(draft.id,1,tampered,draft.fields,'owner'),/cannot be changed/);
+ await retireEnvironmentalProfile(profile.id,profile.revision,'owner');
+ const stored=(await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data;assert.equal(stored.environmentalSnapshot.profile.active,true);
+ // Restore the explicit plan and retire its layout. Criteria remain visible in preview.
+ const next=await publishEnvironmentalProfile({...input,equipmentSet:'Line B'},'owner');
+ await db.query('UPDATE templates SET data=$1 WHERE id=$2',[JSON.stringify({...template,active:false}),template.id]);
+ const preview=await resolveReportSetup(sample.id,{profileId:next.id},true);
+ assert.equal(preview.template,undefined);assert.equal(preview.specification.tests.length,2);assert.equal(preview.layoutResolution?.status,'conflict');
+ await assert.rejects(createAutomaticDraft(sample.id,{email:'owner',name:'Owner',role:'administrator'}),/No active approved environmental template/);
+});
+
+test('warehouse draft keeps separate channel identities through result entry and saving',async()=>{
+ const layout={...template,id:'warehouse-layout',revision:'warehouse-v1',family:'environmental-warehouse-phase-air-7c',manifest:{tokens:['tests','test','location','phase','criterion','activeValue','passiveValue','remarks'],rowGrouping:{mergeColumns:[0,3]},requiredFields:['analysisDate']}};
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',[layout.id,JSON.stringify(layout)]);
+ const profile=await publishEnvironmentalProfile({...input,name:'Warehouse fixture',equipmentSet:'Air fixture',outputs:[{id:'air',name:'Phase air',method:'spc-my',mode:'phase-air',templateId:layout.id,templateRevision:layout.revision,instances:[{...row,stage:'1',channel:'active-air',unit:'cfu/m3'},{...row,stage:'1',channel:'passive-air',unit:'cfu'}]}]},'owner');
+ const draft=await createAutomaticDraft(sample.id,{email:'owner',name:'Owner',role:'administrator'},{profileId:profile.id});
+ assert.deepEqual(draft.results.map(r=>r.channel),['active-air','passive-air']);assert.notEqual(draft.results[0].instanceId,draft.results[1].instanceId);
+ const current=draft.results.map((r,i)=>({...r,state:'entered' as const,value:String(i),remarks:i?'Failed':'Passed'}));
+ const saved=await saveDraft(draft.id,draft.revision,current,draft.fields,'owner');assert.deepEqual(saved.results.map(r=>r.value),['0','1']);
+ await assert.rejects(saveDraft(saved.id,saved.revision,saved.results.map((r,i)=>i?{...r,channel:'active-air'}:r),saved.fields,'owner'),/identities cannot be changed/);
+});

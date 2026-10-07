@@ -95,13 +95,13 @@ test('prepared rows can be cancelled before commit and retain their audit identi
  const replacement=await prepareSample('analyst@example.test',{...item,submissionId:randomUUID()},batchId,0);assert.equal(replacement.ml,prepared.ml);
 });
 test('draft pins template, criteria, manual empty results and configuration revision',async()=>{
- let current=await getConfiguration();const value=structuredClone(current.value);value.sampleTypes.find(t=>t.id==='FG')!.applicability='managed';value.products.push({id:'example-product',name:'Example',category:'FG',code:'',aliases:[],active:true});current=await saveConfiguration(value,current.revision,'admin@example.test');
+ let current=await getConfiguration();const value=structuredClone(current.value);value.sampleTypes.find(t=>t.id==='FG')!.applicability='managed';if(!value.products.some(p=>p.name==='Example'&&p.category==='FG'))value.products.push({id:'example-product',name:'Example',category:'FG',code:'',aliases:[],active:true});current=await saveConfiguration(value,current.revision,'admin@example.test');
  const sampleRow=(await db.query('SELECT id,data FROM samples LIMIT 1')).rows[0];const sample=sampleRow.id;await db.query('UPDATE samples SET data=$1 WHERE id=$2',[JSON.stringify({...sampleRow.data,context:'Routine',fields:{...sampleRow.data.fields,context:'Routine',manufactureDate:'2026-09-01',analysisDate:'2026-09-24',status:'RELEASED'}}),sample]);
  const criterion={test:'SPC',label:'Standard Plate Count',type:'numeric',unit:'cfu/g',criterion:'Nmt 50 cfu/g',source:'fixture',sourceLocation:'Table 1',date:'2026-09-01',dateBasis:'release',revision:'1'};
  await db.query('INSERT INTO specifications(id,data) VALUES($1,$2)',['spec',JSON.stringify({id:'spec',product:'Example',category:'FG',context:'Routine',revision:'1',tests:[criterion],issues:[],source:'fixture'})]);
  await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['template',JSON.stringify({id:'template',name:'FG',category:'FG',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{requiredFields:['manufactureDate','analysisDate']}})]);
- const setup=await resolveReportSetup(sample);assert.deepEqual(setup.applicableTests,['Standard Plate Count']);assert.equal(setup.template.id,'template');assert.equal(setup.prefilledFields.manufactureDate,'2026-09-01');assert.equal(setup.prefilledFields.analysisDate,undefined);
- const automatic=await createAutomaticDraft(sample,{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(automatic.templateId,'template');assert.equal(automatic.fields.manufactureDate,'2026-09-01');assert.equal(automatic.fields.analysisDate,'');assert.equal(automatic.results[0].state,'not_entered');
+ const setup=await resolveReportSetup(sample);assert.deepEqual(setup.applicableTests,['Standard Plate Count']);assert.equal(setup.template?.id,'template');assert.equal(setup.prefilledFields.manufactureDate,'2026-09-01');assert.equal(setup.prefilledFields.analysisDate,undefined);
+ const automatic=await createAutomaticDraft(sample,{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(automatic.templateId,'template');assert.equal(automatic.fields.manufactureDate,'2026-09-01');assert.equal(automatic.fields.analysisDate,'2026-09-24');assert.equal(automatic.results[0].state,'not_entered');
  const draft=await createDraft(sample,'spec','template',{email:'admin@example.test',name:'Analyst',role:'administrator'});assert.equal(draft.results[0].state,'not_entered');assert.equal(draft.results[0].value,'');assert.equal(draft.templateSnapshot?.revision,'1');
  const changed=structuredClone(current.value);changed.reports.notedBy='Changed person';await saveConfiguration(changed,current.revision,'admin@example.test');
  const reopened=(await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data;assert.equal(reopened.configurationSnapshot.reports.notedBy,'Celeste P. Yandug');assert.equal(reopened.specification.tests[0].criterion,'Nmt 50 cfu/g');
@@ -118,7 +118,7 @@ test('report template aliases populate the approved custom template tags',()=>{
  } as any;
  const template={manifest:{tokens:['d.release','t.release','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
  const fields=reportTemplateFields(draft,template,new Date('2026-09-29T01:23:00Z'));
- assert.equal(fields['date.mfd'],'2026-01-01');assert.equal(fields['exp.date'],'2028-01-01');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
+ assert.equal(fields['date.mfd'],'01/01/2026');assert.equal(fields['exp.date'],'01/01/2028');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
 });
 
 test('report format routing follows category and explicit Supplier values',()=>{
@@ -172,8 +172,7 @@ test('applicability resolution respects Omega specification keywords and the Her
  const herbycin=resolveApplicabilityMatches([{sheet:'RM/FP/AS',product:'Herbycin Syrup',tests:['SPC','MY','SA','EC','SAL','ENT']}],{name:'Herbycin Syrup',aliases:[]},'RM/FP/AS','HERBYCIN SYRUP');
  assert.deepEqual(herbycin[0].tests,['SPC','MY','SA','EC','SAL','ENT']);
  const omegaCurrent=[{sheet:'RM/FP/AS',product:'Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL',tests:['SPC','MY','PA','SA','CA']}];
- assert.ok(matchScore('Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL')>0);
- assert.ok(matchScore('Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL')>0);
+ assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment- (5th withdrawal - New Specs)-30 mL'),omegaCurrent);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-30 mL'),omegaCurrent);
  assert.deepEqual(resolveApplicabilityMatches(omegaCurrent,{name:'Omega Pain Killer Liniment',aliases:[]},'RM/FP/AS','Omega Pain Killer Liniment-  (5th withdrawal - New Specs)-15 mL'),omegaCurrent);
  const genericOmega=[

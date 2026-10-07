@@ -5,22 +5,22 @@ export type Role = 'administrator'|'analyst'|'viewer';
 export interface User {email:string;name:string;role:Role}
 export interface Source {spreadsheetId:string;sheetId:number;sheet:string;section:string;row:number;range:string;fingerprint:string;observedAt:string;url:string;mappingRevision:string;raw:unknown[];active?:boolean}
 export interface Sample {configurationRevision?:number;categoryLabel?:string;id:string;category:Category;ml:string;name:string;batch:string;received:string;status:string;remarks:string;context:string;source:Source;fields:Record<string,string>;duplicate?:boolean}
-export interface Criterion {test:string;label:string;type:'numeric'|'finding';unit:string;criterion:string;source:string;sourceLocation:string;date:string;dateBasis:'release'|'analysis'|'owner-confirmed';revision:string;stage?:string;location?:string;replicate?:string}
+export interface Criterion {test:string;label:string;type:'numeric'|'finding';unit:string;criterion:string;source:string;sourceLocation:string;date:string;dateBasis:'release'|'analysis'|'owner-confirmed';revision:string;stage?:string;location?:string;replicate?:string;channel?:'active-air'|'passive-air';instanceId?:string;block?:string}
 export interface Specification {active?:boolean;previousId?:string;id:string;product:string;category:Category;context:string;revision:string;tests:Criterion[];issues:string[];source:string}
 export interface ResultSource {spreadsheetId:string;url:string;sheetId:number;sheet:string;row:number;range:string;fingerprint:string;observedAt:string;ml:string;raw:string[];remarks?:string;analyst?:string}
-export interface Result {test:string;location?:string;stage?:string;replicate?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
-export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;resultLookup?:'matched'|'not_found'|'demo';fields:Record<string,string>;updatedAt:string;analyst:string}
-export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>};
-export interface TemplateManifest extends Record<string,unknown>{appliesToProducts?:string[];defaultForCategory?:boolean;rowGrouping?:{mergeColumns:number[]}}
-export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:TemplateManifest;verified:boolean;demo?:boolean}
-export interface ReportSetup {sample:Sample;specification:Specification;template:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>}
+export interface Result {test:string;location?:string;stage?:string;replicate?:string;channel?:'active-air'|'passive-air';instanceId?:string;block?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
+export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;environmentalSnapshot?:import('./environmental.js').EnvironmentalSnapshot;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;resultLookup?:'matched'|'not_found'|'demo';fields:Record<string,string>;updatedAt:string;analyst:string}
+export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>;outputName?:string};
+export interface TemplateManifest extends Record<string,unknown>{appliesToProducts?:string[];defaultForCategory?:boolean;rowGrouping?:{mergeColumns:number[]};blocks?:Record<string,{mergeColumns:number[]}>}
+export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:TemplateManifest;verified:boolean;demo?:boolean;active?:boolean}
+export interface ReportSetup {sample:Sample;specification:Specification;template?:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>;layoutResolution?:import('./environmental.js').LayoutResolution;environmental?:import('./environmental.js').EnvironmentalSetup}
 export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P.aeruginosa',SA:'S.aureus',CA:'C.albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
 /** The workbook uses short IDs; reports show the organism names. */
 export function reportTestLabel(test:string,fallback=''){
  const labels:Record<string,string>={PA:'P.aeruginosa',SA:'S.aureus',CA:'C.albicans',EC:'E.coli',SAL:'Salmonella',ENT:'Enterobacteriaceae'};
  return labels[test]||fallback||testLabels[test]||test;
 }
-export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'>){return [r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
+export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'|'instanceId'>){return r.instanceId||[r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return /^\s*Nmt\b/i.test(criterion)?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function resultDisplayValue(test:Criterion,r:Result){
  if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;

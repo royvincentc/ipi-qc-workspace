@@ -17,6 +17,6 @@ try {
     $document.Save()
     $document.ExportAsFixedFormat($OutputPdf, 17)
 } finally {
-    if ($null -ne $document) { $document.Close(0) | Out-Null; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($document) }
-    if ($null -ne $word) { $word.Quit() | Out-Null; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($word) }
+    if ($null -ne $document) { try { $document.Close(0) | Out-Null } catch {}; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($document) }
+    if ($null -ne $word) { try { $word.Quit() | Out-Null } catch {}; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($word) }
 }

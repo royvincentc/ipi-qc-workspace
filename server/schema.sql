@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS submissions (id text PRIMARY KEY, payload_hash text N
 CREATE UNIQUE INDEX IF NOT EXISTS submission_number ON submissions(workbook,ml) WHERE ml IS NOT NULL;
 CREATE TABLE IF NOT EXISTS specifications (id text PRIMARY KEY, data jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS templates (id text PRIMARY KEY, data jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS environmental_profiles (id text PRIMARY KEY, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS drafts (id text PRIMARY KEY, revision integer NOT NULL, data jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS draft_revisions (id text NOT NULL REFERENCES drafts(id), revision integer NOT NULL, data jsonb NOT NULL, PRIMARY KEY(id,revision));
 CREATE TABLE IF NOT EXISTS files (id text PRIMARY KEY, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());

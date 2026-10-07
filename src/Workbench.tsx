@@ -256,7 +256,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
           </div>
           {sample?<Link className="workflow-report-link" to={`${action}#results-details`}>Results &amp; details <ArrowRight size={14}/></Link>:null}
         </article>
-        <span className="workflow-caption">Report draft</span>
+        <span className="workflow-caption">Report draft</span>{setup?.layoutResolution?.status!=='ready'?<ErrorBox message={setup?.layoutResolution?.message||''}/>:null}
       </div>
 
       <WorkflowConnector path="actions" active={false} pulseId={pulseId} enabled={connections&&Boolean(sample)} flowing={motionEnabled} paused={paused||!motionEnabled}/>

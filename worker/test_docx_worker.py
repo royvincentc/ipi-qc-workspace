@@ -53,4 +53,71 @@ class DocumentTests(unittest.TestCase):
         self.assertNotIn('incubation',text(cell).lower());self.assertEqual(text(cell),'Standard Plate Count (SPC)')
         label_run=cell.xpath('.//w:r[w:t[contains(.,"Standard Plate Count")]]',namespaces=NS)[0]
         self.assertTrue(label_run.xpath('./w:rPr/w:b',namespaces=NS))
+    def environmental_fixture(self,blocks=2):
+        from docx import Document
+        d=Document();header=d.sections[0].header
+        for label,value in [('Name of Sample','Historical Product'),('Batch/Lot No.','OLD01'),('Logbook','Historical ML'),('Area','Filling'),('Temperature','25'),('Relative Humidity','60')]:
+            header.add_paragraph(label);header.add_paragraph(':');header.add_paragraph(value)
+        d.sections[0].footer.paragraphs[0].text='Historical Analyst'
+        for test in ['Standard Plate Count (SPC)','Molds and Yeast'][:blocks]:
+            t=d.add_table(rows=3,cols=5);t.style='Table Grid'
+            for c,v in zip(t.rows[0].cells,['Analysis Desired','Area / Location','Standard Specifications','Actual Results','Remarks']):c.text=v
+            for i in [1,2]:
+                for c,v in zip(t.rows[i].cells,[test,'Nozzle '+str(i),'Nmt 100 cfu','Historical Result','Passed']):c.text=v
+            t.cell(1,0).merge(t.cell(2,0)).text=test;t.cell(1,2).merge(t.cell(2,2)).text='Nmt 100 cfu'
+        source=self.folder/'environmental.docx';d.save(source);return source
+    def test_environmental_preparation_preserves_two_blocks_and_inherits_merged_criteria(self):
+        source=self.environmental_fixture();out=self.folder/'prepared-env.docx';info=prepare_template(source.read_bytes(),out)
+        self.assertEqual(set(info['blocks']),{'spc','my'})
+        self.assertEqual(len(info['environmentalPattern']['blocks'][0]['instances']),2)
+        self.assertEqual(info['environmentalPattern']['blocks'][0]['instances'][1]['criterion'],'Nmt 100 cfu')
+        content=' '.join(text(r) for r in roots(package(out.read_bytes())).values())
+        for historical in ['Historical Product','OLD01','Historical ML','Historical Analyst','Historical Result','Passed']:self.assertNotIn(historical,content)
+        self.assertIn('rows.spc',content);self.assertIn('rows.my',content)
+        self.assertNotIn('logbookReference',content)
+        self.assertIn('sample.ml',validate_template(out.read_bytes())['tokens'])
+    def test_preparation_clears_all_paragraphs_in_a_header_value_cell(self):
+        from docx import Document
+        d=Document(self.environmental_fixture());table=d.sections[0].header.add_table(rows=1,cols=3,width=d.sections[0].page_width)
+        table.cell(0,0).text='Logbook';table.cell(0,1).text=':';table.cell(0,2).text='ML-EM-26-0001';table.cell(0,2).add_paragraph('ML-EM-26-0002')
+        source=self.folder/'multi-ml.docx';d.save(source);output=self.folder/'multi-ml-prepared.docx';manifest=prepare_template(source.read_bytes(),output)
+        content=' '.join(text(r) for r in roots(package(output.read_bytes())).values())
+        self.assertNotIn('ML-EM-26-0001',content);self.assertNotIn('ML-EM-26-0002',content)
+        self.assertFalse(any('Unmapped historical ML' in issue for issue in manifest['issues']))
+    def test_two_blocks_render_independent_results_with_safe_vertical_merges(self):
+        source=self.environmental_fixture();template=self.folder/'prepared-env.docx';info=prepare_template(source.read_bytes(),template)
+        fields={k:'Current '+k for k in validate_template(template.read_bytes())['tokens'] if k not in ['test','location','criterion','value','remarks'] and not k.startswith('rows.')}
+        rows=lambda test:[{'test':test,'location':'Nozzle '+str(i),'criterion':'Nmt 100 cfu','value':str(i-1)+' cfu','remarks':'','groupKey':test} for i in [1,2]]
+        output=self.folder/'two-blocks.docx';render(template,{'fields':fields,'blocks':{'spc':rows('SPC'),'my':rows('MY')},'renderOptions':{'blocks':info['blocks']}},output)
+        root=roots(package(output.read_bytes()))['word/document.xml']
+        for table in root.xpath('./w:body/w:tbl',namespaces=NS):
+            self.assertEqual(len(table.findall(W+'tr')),3)
+            for col in [1,3]:self.assertEqual(len(table.xpath(f'./w:tr/w:tc[{col}]/w:tcPr/w:vMerge',namespaces=NS)),2)
+            for col in [2,4,5]:self.assertEqual(len(table.xpath(f'./w:tr/w:tc[{col}]/w:tcPr/w:vMerge',namespaces=NS)),0)
+        self.assertIn('0 cfu',text(root));self.assertNotIn('{{',text(root))
+        with self.assertRaisesRegex(ValueError,'Only test and specification'):
+            render(template,{'fields':fields,'blocks':{'spc':rows('SPC'),'my':rows('MY')},'renderOptions':{'blocks':{'spc':{'mergeColumns':[3]}}}},self.folder/'bad.docx')
+    def test_missing_named_output_block_is_rejected(self):
+        source=self.environmental_fixture();template=self.folder/'prepared-env.docx';prepare_template(source.read_bytes(),template)
+        with self.assertRaisesRegex(ValueError,'Missing rows for block'):
+            fields={k:'' for k in validate_template(template.read_bytes())['tokens'] if not k.startswith('rows.')}
+            render(template,{'fields':fields,'blocks':{'spc':[{'test':'SPC','location':'Nozzle','criterion':'Nmt 100 cfu','value':'0','remarks':''}]}},self.folder/'missing.docx')
+    def test_environmental_preparation_repairs_a_missing_footer_package(self):
+        from docx import Document
+        d=Document(self.environmental_fixture())
+        for section in d.sections:
+            for reference in list(section._sectPr.findall(W+'footerReference')):
+                d.part.drop_rel(reference.get('{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id'));section._sectPr.remove(reference)
+        source=self.folder/'without-footer.docx';d.save(source)
+        output=self.folder/'footer-repaired.docx';prepare_template(source.read_bytes(),output)
+        self.assertIn('sample.ml',validate_template(output.read_bytes())['tokens'])
+        parts=package(output.read_bytes());self.assertTrue(any(n.startswith('word/footer') for n in parts))
+        self.assertIn(b'/footer',parts['word/_rels/document.xml.rels'])
+    def test_source_unmerged_rows_remain_unmerged(self):
+        from docx import Document
+        d=Document(self.environmental_fixture(blocks=1))
+        for merge in d._element.xpath('.//w:vMerge'):merge.getparent().remove(merge)
+        for row in d.tables[0].rows[1:]:row.cells[0].text='Standard Plate Count (SPC)';row.cells[2].text='Nmt 100 cfu'
+        source=self.folder/'unmerged.docx';d.save(source);output=self.folder/'unmerged-prepared.docx'
+        info=prepare_template(source.read_bytes(),output);self.assertEqual(info['blocks']['tests']['mergeColumns'],[])
 if __name__=='__main__':unittest.main()
