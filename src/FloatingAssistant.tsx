@@ -3,6 +3,7 @@ import { X, Send, User, Sparkles } from 'lucide-react';
 import { api } from './api';
 import { MissMinutesAvatar } from './MissMinutesAvatar';
 import { AssistantMarkdown } from './AssistantMarkdown';
+import Dialog from './dialog';
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
@@ -12,7 +13,7 @@ export function FloatingAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if(messages.length>1)messagesEndRef.current?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion:reduce)').matches?'auto':'smooth' });
   };
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export function FloatingAssistant() {
   }
 
   return (
-    <div className="floating-chat">
+    <Dialog title="Smart assistant" onClose={()=>setOpen(false)} className="assistant-drawer"><div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
             <span className="chat-pet"><MissMinutesAvatar /></span><span><strong>Miss Minutes</strong><small><i/> QC lab companion</small></span>
@@ -83,14 +84,15 @@ export function FloatingAssistant() {
             type="text" 
             className="input" 
             placeholder="Ask about QC samples..." 
+            aria-label="Ask the assistant"
             value={input} 
             onChange={e => setInput(e.target.value)} 
             disabled={loading}
           />
-          <button type="submit" className="button primary floating-send" disabled={loading || !input.trim()}>
+          <button type="submit" className="button primary floating-send" aria-label="Send message" disabled={loading || !input.trim()}>
             <Send size={16} />
           </button>
         </form>
-    </div>
+    </div></Dialog>
   );
 }

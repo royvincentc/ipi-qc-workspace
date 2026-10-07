@@ -50,7 +50,18 @@ export function registerSearch(app:Express){
     'recordUpdatedAt',samples.updated_at,'workspaceNote',worksheet_notes.note,'workspaceNoteUpdatedAt',worksheet_notes.updated_at
   ) AS data,(SELECT count(*) FROM samples b WHERE b.data->>'ml'=samples.data->>'ml') AS duplicates FROM samples LEFT JOIN worksheet_notes ON worksheet_notes.sample_id=samples.id ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
   const statuses=(await db.query("SELECT DISTINCT data->>'status' AS status FROM samples WHERE data->>'status'<>'' ORDER BY status")).rows.map(r=>r.status);
-  res.json({items:rows.map(r=>({...r.data,duplicate:Number(r.duplicates)>1})),total:count,page,limit,statuses});
+  const items=rows.map(r=>({...r.data,duplicate:Number(r.duplicates)>1}));
+  if(req.query.workflow==='true'&&items.length){
+    const ids=items.map(item=>String(item.id));
+    const metadata=(await db.query(`SELECT samples.id,
+      coalesce(nullif(draft.data->'fields'->>'analysisDate',''),nullif(samples.data->'fields'->>'analysisDate',''),nullif(samples.data->'fields'->>'dateAnalyze',''),samples.data->'fields'->>'dateAnalyzed') AS "analysisDate",
+      coalesce(nullif(draft.data->>'analyst',''),nullif(samples.data->'fields'->>'analyzedBy',''),samples.data->'fields'->>'analyst') AS "analyzedBy",
+      draft.data->>'id' AS "draftId",draft.data->'revision' AS "draftRevision"
+      FROM samples LEFT JOIN LATERAL (SELECT data FROM drafts WHERE data->>'sampleId'=samples.id ORDER BY data->>'updatedAt' DESC,id DESC LIMIT 1) draft ON true
+      WHERE samples.id=ANY($1::text[])`,[ids])).rows;
+    for(const item of items)Object.assign(item,metadata.find(row=>String(row.id)===String(item.id))||{});
+  }
+  res.json({items,total:count,page,limit,statuses});
  });
  app.get('/api/work',async(_req,res)=>{
   const config=await getConfiguration();

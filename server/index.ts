@@ -16,7 +16,7 @@ import {Fault,googleId,hash,column,currentMonth,monthOf,sourceLayout} from './do
 import {readWorkbook,readApplicability,google,driveFolder} from './google.js';
 import {defaultConnections,prepareSample,commitPreparedBatch,cancelPreparedBatch,syncSources,reconcileSubmission} from './samples.js';
 import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
-import {createAutomaticDraft,resolveReportSetup,saveDraft,generate,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
+import {createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
 import {validateBindings} from './template.js';
 import {categories,type Category,type Specification,type Template,type Sample,resultKey} from '../shared/model.js';
 import {defaultWorksheetLayout,worksheetLayoutSchema} from '../shared/worksheet-layout.js';
@@ -169,6 +169,7 @@ app.get('/api/drafts',async(_req,res)=>res.json((await db.query(`SELECT jsonb_bu
  'id',data->'id','revision',data->'revision','updatedAt',data->'updatedAt',
  'sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml')
  ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC`)).rows.map(r=>r.data)));
+app.get('/api/sample-workflow/:sampleId',async(req,res)=>res.json(await resolveSampleWorkflow(String(req.params.sampleId))));
 app.get('/api/report-setup/:sampleId',async(req,res)=>res.json(await resolveReportSetup(String(req.params.sampleId))));
 app.post('/api/drafts',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({sampleId:z.string()}).parse(req.body);res.status(201).json(await createAutomaticDraft(b.sampleId,req.user));});
 app.get('/api/drafts/:id',async(req,res)=>{const d=(await db.query('SELECT data FROM drafts WHERE id=$1',[req.params.id])).rows[0]?.data;if(!d)throw new Fault(404,'Draft not found');res.json(d);});

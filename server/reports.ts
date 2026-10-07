@@ -359,6 +359,18 @@ export async function resolveReportSetup(sampleId:string):Promise<ReportSetup>{
  return {sample,specification:{...candidate,product:product.name,context:candidate.context,tests,revision:hash(tests)},template:safeTemplate,applicableTests:tests.map((t: any)=>t.label),prefilledFields:reportFieldDefaults(sample,template)};
 }
 
+/** Read-only workflow preview; never creates a report draft or writes results. */
+export async function resolveSampleWorkflow(sampleId:string){
+ const setup=await resolveReportSetup(sampleId);
+ const config=await setting('connections',defaultConnections);
+ const source=!demo&&config.specifications?await optionalResultsRow(config.specifications,setup.sample.category,setup.sample.ml):undefined;
+ const results=setup.specification.tests.map(test=>{
+   const value=String(source?.tests[test.test]?.value??'').trim();
+   return {test:test.test,location:test.location,stage:test.stage,replicate:test.replicate,state:value?'entered':'not_entered',value,sourceValue:value||undefined,qualifier:'',unit:test.unit,reason:'',remarks:''};
+ });
+ return {...setup,results,resultLookup:source?'matched':'not_found'};
+}
+
 export async function createAutomaticDraft(sampleId:string,actor:User){const setup=await resolveReportSetup(sampleId);return createDraft(sampleId,setup.specification.id,setup.template.id,actor,setup.specification);}
 async function optionalResultsRow(url:string,category:string,ml:string){
  try{return await readResultsRow(url,category,ml);}

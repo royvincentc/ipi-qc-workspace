@@ -1,12 +1,13 @@
 import {useContext,useEffect,useRef,useState} from 'react';
 import type {KeyboardEvent} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
-import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,Activity} from 'lucide-react';
+import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,Activity,SlidersHorizontal,ChevronRight,FolderOpen} from 'lucide-react';
 import {api} from './api';
 import {useCatalog,useConfiguration,useUnsaved} from './configuration';
 import {LabMotionMark,PageTitle,Field,ErrorBox,Loading,Badge,Empty,Notice,Session,useLoad,useCanEdit,SampleList} from './ui';
 import type {Sample, Draft} from '../shared/model';
 import {environmentalCategoryOptions,validateIntake} from '../shared/configuration';
+import {SampleWorkbench} from './Workbench';
 
 function parseActivityDate(value: unknown) {
   if (!value) return undefined;
@@ -20,10 +21,14 @@ export function Dashboard(){
   const {config}=useConfiguration();
   const edit=useCanEdit();
   const [activeTab, setActiveTab] = useState('samples');
-  const [workflowStage, setWorkflowStage] = useState<'intake'|'records'|'reports'>('records');
+  const [selectedSampleId,setSelectedSampleId]=useState('');
   const [dashboardQuery,setDashboardQuery]=useState('');
   const [dashboardType,setDashboardType]=useState('');
   const [dashboardStatus,setDashboardStatus]=useState('');
+  const [filtersOpen,setFiltersOpen]=useState(false);
+  const [filesTab,setFilesTab]=useState<'reference'|'report'>('reference');
+  const [selectedFile,setSelectedFile]=useState<any>();
+  const {data:fileListing,error:fileError}=useLoad(()=>api(`/library-items?kind=${filesTab}&sort=recent&page=1`),[filesTab]);
 
   if(!data)return error?<ErrorBox message={error}/>:<Loading/>;
   
@@ -41,138 +46,90 @@ export function Dashboard(){
   const visibleSamples=data.recent.filter(matchesDashboardFilters);
   const visibleDrafts=openDrafts.filter((draft:any)=>matchesDashboardFilters(draft.sample||{}));
   const hasDashboardFilters=Boolean(dashboardQuery||dashboardType||dashboardStatus);
+  const recordRows=activeTab==='samples'
+    ?visibleSamples.slice(0,6).map((sample:any)=>({sample,to:`/samples/${sample.id}`,status:sample.status||'Not recorded'}))
+    :visibleDrafts.slice(0,6).map((draft:any)=>({sample:draft.sample,to:`/reports/${draft.id}`,status:reportDraftStatus(draft),draft}));
+  const visibleActivity=data.recent.slice(0,4);
   
   return (
     <div className="dashboard-layout dashboard-redesign">
       <header className="dashboard-heading" aria-labelledby="dashboard-welcome-heading">
-        <div><h1 id="dashboard-welcome-heading">Lab operations</h1><p>Sample intake, source records, and report preparation.</p></div>
-        <LabMotionMark key={workflowStage} path={workflowStage==='intake'?"M36 9v17m-8-6 8 8 8-8M22 47h28":workflowStage==='reports'?"M23 16h21l7 7v34H23zM44 16v9h7M30 36h14M30 43h14M30 50h10":"M10 37h15l10-13 11 25 9-12h9"}/>
-        {edit ? <Link className="button primary" to="/new"><Plus size={17} aria-hidden="true" focusable="false"/> Log a sample</Link> : null}
+        <div><h1 id="dashboard-welcome-heading">Microbiology workspace</h1><p className="sr-only">Sample intake, source records, and report preparation.</p></div>
       </header>
 
-      <section className="workflow-board" aria-labelledby="workflow-board-heading">
-        <div className="workflow-board-heading">
-          <div><h2 id="workflow-board-heading">Sample-to-report workflow</h2><p>Jump to intake, source tracing, or report drafts. Counts summarize activity at each step.</p></div>
-          <Link className="workflow-history-link" to="/samples">Browse records <ArrowRight size={15} aria-hidden="true" focusable="false"/></Link>
-        </div>
-        <div className="workflow-track" role="group" aria-label="Microbiology workflow stages">
-          <button type="button" className={`workflow-node ${workflowStage==='intake'?'is-selected':''}`} aria-pressed={workflowStage==='intake'} aria-controls="workflow-context" onClick={()=>setWorkflowStage('intake')}>
-            <span className="workflow-node-icon"><Plus size={16} aria-hidden="true"/></span><span className="workflow-node-copy"><strong>Sample intake</strong><small>Assign a control number</small></span><span className="workflow-node-count">{data.loggedToday}<small>today</small></span>
-          </button>
-          <span className="workflow-connector" aria-hidden="true"><i/></span>
-          <button type="button" className={`workflow-node ${workflowStage==='records'?'is-selected':''}`} aria-pressed={workflowStage==='records'} aria-controls="workflow-context" onClick={()=>setWorkflowStage('records')}>
-            <span className="workflow-node-icon"><FlaskConical size={16} aria-hidden="true"/></span><span className="workflow-node-copy"><strong>Source records</strong><small>Trace samples to the logbook</small></span><span className="workflow-node-count">{data.recent.length}<small>recent</small></span>
-          </button>
-          <span className="workflow-connector" aria-hidden="true"><i/></span>
-          <button type="button" className={`workflow-node ${workflowStage==='reports'?'is-selected':''}`} aria-pressed={workflowStage==='reports'} aria-controls="workflow-context" onClick={()=>setWorkflowStage('reports')}>
-            <span className="workflow-node-icon"><FileText size={16} aria-hidden="true"/></span><span className="workflow-node-copy"><strong>Report preparation</strong><small>Enter results and build drafts</small></span><span className="workflow-node-count">{openDrafts.length}<small>open</small></span>
-          </button>
-        </div>
-        <section id="workflow-context" className="workflow-context" aria-live="polite" aria-atomic="true">
-          {workflowStage==='intake'?<>
-            <div className="workflow-context-copy"><h3>Receive the next sample</h3><p>{data.loggedToday} logged today. Start one record or a batch, review assigned ML numbers, then commit the ready rows.</p></div>
-            {edit?<Link className="button primary" to="/new"><Plus size={16} aria-hidden="true"/> Log a sample</Link>:<span className="workflow-readonly">Your role has read-only access.</span>}
-          </>:workflowStage==='records'?<>
-            <div className="workflow-context-heading"><div><h3>Continue with a sample</h3><p>{data.recent.length} recent source records</p></div><Link to="/samples">Open sample history <ArrowRight size={14} aria-hidden="true"/></Link></div>
-            <div className="workflow-context-records">{journeySamples.slice(0,3).map((sample:any,i:number)=><Link key={sample.id??sample.ml??i} className="workflow-context-record" to={`/samples/${sample.id}`}><span className="mono">{sample.ml||'Incomplete record'}</span><strong>{sample.name||'Sample name not recorded'}</strong><span className="workflow-record-meta">{categoryName(sample.category)} · {sample.status||'Not recorded'}</span></Link>)}{!data.recent.length?<p className="workflow-empty">No recent sample records. Log a sample to begin the traceable workflow.</p>:null}</div>
-          </>:<>
-            <div className="workflow-context-heading"><div><h3>Pick up a report draft</h3><p>{openDrafts.length} open drafts</p></div><Link to="/reports">Open reports <ArrowRight size={14} aria-hidden="true"/></Link></div>
-            <div className="workflow-context-records">{openDrafts.slice(0,3).map((draft:any,i:number)=><Link key={draft.id??draft.sample?.ml??i} className="workflow-context-record" to={`/reports/${draft.id}`}><span className="mono">{draft.sample?.ml||'Report draft'}</span><strong>{draft.sample?.name||'Sample report'}</strong><span className={`workflow-record-meta ${draft.referenceIssue||draft.missing?'attention':''}`}>{reportDraftStatus(draft)}</span></Link>)}{!openDrafts.length?<p className="workflow-empty">No open drafts. Prepare a report from a source sample when results are ready.</p>:null}</div>
-            <p className="workflow-boundary-note">Review, signatures, and sample release remain in the laboratory process.</p>
-          </>}
-        </section>
-      </section>
-
+      <SampleWorkbench samples={journeySamples} drafts={openDrafts} edit={edit} categoryName={categoryName} assays={config.value.tests} selectedSampleId={selectedSampleId} onSelectSample={setSelectedSampleId}/>
       <div className="dashboard-workspace">
         <section className="dashboard-queue" aria-labelledby="dashboard-queue-heading">
           <div className="dashboard-queue-heading">
-            <div>
-              <h2 id="dashboard-queue-heading">Work in progress</h2>
-              <p>Open a source record or continue a report draft.</p>
-            </div>
+            <h2 id="dashboard-queue-heading">Find records</h2>
             <Link className="dashboard-queue-all" to={activeTab === 'samples' ? '/samples' : '/reports'}>View all <ArrowRight size={14} aria-hidden="true" focusable="false"/></Link>
           </div>
 
-          <div className="tabs dashboard-tabs" aria-label="Workbench records">
-            <button type="button" aria-pressed={activeTab === 'samples'} className={`tab ${activeTab === 'samples' ? 'active' : ''}`} onClick={() => setActiveTab('samples')}>
-              Recent samples
-            </button>
-            <button type="button" aria-pressed={activeTab === 'reports'} className={`tab ${activeTab === 'reports' ? 'active' : ''}`} onClick={() => setActiveTab('reports')}>
-              Open report drafts <span className="tab-badge">{openDrafts.length}</span>
-            </button>
+          <div className="record-search-row">
+            <label className="record-search"><Search size={18} aria-hidden="true"/><input aria-label="Search recent records by control number, product, batch, or location" placeholder="Search by sample ID, product, batch or location" value={dashboardQuery} onChange={event=>setDashboardQuery(event.target.value)}/></label>
+            <button type="button" className="record-filter-trigger" aria-label="Open record filters" aria-expanded={filtersOpen} onClick={()=>setFiltersOpen(value=>!value)}><SlidersHorizontal size={19}/></button>
           </div>
 
-          <div className="filters-bar dashboard-filters">
-            <div className="search dashboard-search">
-              <Search size={15} aria-hidden="true" focusable="false"/>
-              <input aria-label="Search workbench records" placeholder="Search samples…" value={dashboardQuery} onChange={event=>setDashboardQuery(event.target.value)}/>
+          <div className={`record-filter-panel ${filtersOpen?'is-open':''}`} aria-hidden={!filtersOpen} inert={!filtersOpen}>
+            <div className="tabs dashboard-record-tabs" role="group" aria-label="Record category">
+              <button type="button" className={`tab ${activeTab==='samples'?'active':''}`} aria-pressed={activeTab==='samples'} onClick={()=>setActiveTab('samples')}>Recent samples</button>
+              <button type="button" className={`tab ${activeTab==='reports'?'active':''}`} aria-pressed={activeTab==='reports'} onClick={()=>setActiveTab('reports')}>Open report drafts <span className="tab-badge">{openDrafts.length}</span></button>
             </div>
-            <select aria-label="Filter dashboard by sample type" value={dashboardType} onChange={event=>setDashboardType(event.target.value)}><option value="">All types</option>{categories.map(category=><option key={category} value={category}>{categoryName(category)}</option>)}</select>
-            <select aria-label="Filter dashboard by status" value={dashboardStatus} onChange={event=>setDashboardStatus(event.target.value)}><option value="">All statuses</option>{statuses.map(status=><option key={status}>{status}</option>)}</select>
+            <label><span className="sr-only">Filter by sample type</span><select aria-label="Filter dashboard by sample type" value={dashboardType} onChange={event=>setDashboardType(event.target.value)}><option value="">All types</option>{categories.map(category=><option key={category} value={category}>{categoryName(category)}</option>)}</select></label>
+            <label><span className="sr-only">Filter by source status</span><select aria-label="Filter dashboard by status" value={dashboardStatus} onChange={event=>setDashboardStatus(event.target.value)}><option value="">All statuses</option>{statuses.map(status=><option key={status}>{status}</option>)}</select></label>
             {hasDashboardFilters?<button type="button" className="text-button dashboard-clear-filters" onClick={()=>{setDashboardQuery('');setDashboardType('');setDashboardStatus('');}}>Clear filters</button>:null}
           </div>
 
-          <div className="data-table-container dashboard-table">
-            <table className="data-table">
-              <thead>
-                <tr><th>Control No.</th><th>Sample name</th><th>Type</th><th>Batch No.</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr>
-              </thead>
-              <tbody>
-                  {activeTab === 'samples' ? (
-                  visibleSamples.length ? visibleSamples.slice(0, 8).map((s:any, i:number) => (
-                    <tr key={s.id ?? `${s.ml || 'sample'}-${i}`}>
-                      <td className="td-id mono" data-label="Control No.">{s.ml}</td>
-                      <td data-label="Sample name"><Link to={`/samples/${s.id}`}>{s.name || 'Incomplete record'}</Link></td>
-                      <td data-label="Type">{categoryName(s.category)}</td>
-                      <td className="mono" data-label="Batch No.">{s.batch || '—'}</td>
-                      <td data-label="Status"><Badge tone={s.status==='RELEASED'?'green':'neutral'}>{s.status || 'Not recorded'}</Badge></td>
-                      <td data-label="Action"><Link to={`/samples/${s.id}`} className="text-button" aria-label={`View sample ${s.ml}`}>View</Link></td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={6} style={{textAlign: 'center', padding: '32px'}}><Empty title={hasDashboardFilters?"No samples match these filters":"No recent samples"}>{hasDashboardFilters?"Clear the filters to see all recent samples.":"Log a sample or browse the source history."}</Empty></td></tr>
-                  )
-                ) : (
-                  visibleDrafts.length ? visibleDrafts.map((d:any, i:number) => (
-                    <tr key={d.id ?? `${d.sample?.ml || 'draft'}-${i}`}>
-                      <td className="td-id mono" data-label="Control No.">{d.sample.ml}</td>
-                      <td data-label="Sample name"><Link to={`/reports/${d.id}`}>{d.sample.name}</Link></td>
-                      <td data-label="Type">{categoryName(d.sample.category)}</td>
-                      <td className="mono" data-label="Batch No.">{d.sample.batch || '—'}</td>
-                      <td data-label="Status"><Badge tone={d.missing?'amber':'neutral'}>{d.referenceIssue?'Reference needs attention':d.missing?`${d.missing} required item${d.missing===1?'':'s'} missing`:'Inputs complete'}</Badge></td>
-                      <td data-label="Action"><Link to={`/reports/${d.id}`} className="text-button" aria-label={`Continue report for ${d.sample.ml}`}>Continue</Link></td>
-                    </tr>
-                  )) : (
-                    <tr><td colSpan={6} style={{textAlign: 'center', padding: '32px'}}><Empty title={hasDashboardFilters?"No drafts match these filters":"No open report drafts"}>{hasDashboardFilters?"Clear the filters to see all open drafts.":"Prepare a report from a sample record to begin."}</Empty></td></tr>
-                  )
-                )}
-              </tbody>
-            </table>
+          <div className="dashboard-record-list" role="list" aria-label={activeTab==='samples'?'Recent samples':'Open report drafts'}>
+            {recordRows.length?recordRows.map(({sample,to,status,draft}:any)=>{
+              const selected=selectedSampleId===sample.id;
+              return <article className={`dashboard-record-row ${selected?'is-current':''}`} role="listitem" key={draft?.id||sample.id}>
+                <button type="button" className="record-select" aria-current={selected?'true':undefined} aria-label={`Use ${sample.ml||sample.name} in the workflow`} onClick={()=>setSelectedSampleId(sample.id)}>
+                  <span className="record-icon"><FlaskConical size={20}/></span>
+                  <span className="record-name"><strong>{sample.name||'Incomplete record'}</strong><small>{categoryName(sample.category)}<span className="record-status">{status}</span></small></span>
+                  <span className="record-number"><strong>{sample.ml||'Not recorded'}</strong><small>{sample.batch||sample.source?.section||'Not recorded'}</small></span>
+                </button>
+                <Link className="record-open" to={to} aria-label={draft?`Continue report for ${sample.ml}`:`Open sample ${sample.ml}`}><ChevronRight size={21}/></Link>
+              </article>;
+            }):<div className="dashboard-record-empty"><strong>{hasDashboardFilters?`No ${activeTab==='samples'?'samples':'drafts'} match these filters`:activeTab==='samples'?'No recent samples':'No open report drafts'}</strong><span>{hasDashboardFilters?'Clear a filter or change your search.':activeTab==='samples'?'Log a sample or browse the source history.':'Prepare a report from a sample record to begin.'}</span></div>}
           </div>
         </section>
 
-        <aside className="right-rail dashboard-activity" aria-label="Latest source entries">
-          <div className="rail-section">
-            <div className="dashboard-activity-heading"><h2>Latest source entries</h2><Activity size={16} aria-hidden="true" focusable="false"/></div>
-            {data.recent.length ? <div className="timeline">
-              {data.recent.slice(0,4).map((s:any, i:number) => (
-                <div key={`act-${s.id ?? `${s.ml || 'sample'}-${i}`}`} className={`timeline-item ${i===0 ? 'active' : ''}`}>
-                  <div className="timeline-time">{(parseActivityDate(s.received) || parseActivityDate(s.source?.observedAt))?.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) || '—'}</div>
-                  <div className="timeline-content">
-                    <div className="timeline-title">Sample logged</div>
-                    <Link className="timeline-desc mono" to={`/samples/${s.id}`}>{s.ml}</Link>
-                  </div>
-                </div>
-              ))}
-            </div> : <Empty title="No recent activity">New sample entries will appear here.</Empty>}
+        <section className="dashboard-files" aria-labelledby="dashboard-files-heading">
+          <div className="dashboard-files-heading">
+            <h2 id="dashboard-files-heading">Files &amp; reports</h2>
+            <div className="dashboard-files-actions">
+              <Link className="icon-button" to="/reports" aria-label="Prepare a report" title="Prepare a report"><Plus size={22}/></Link>
+              <Link className="icon-button" to="/library" aria-label="Open file library" title="Open file library"><FolderOpen size={21}/></Link>
+            </div>
           </div>
-          <Link className="dashboard-activity-all" to="/samples">Browse sample history <ArrowRight size={14} aria-hidden="true" focusable="false"/></Link>
-        </aside>
+          <div className="tabs dashboard-files-tabs" role="group" aria-label="File category">
+            <button type="button" className={`tab ${filesTab==='reference'?'active':''}`} aria-pressed={filesTab==='reference'} onClick={()=>{setFilesTab('reference');setSelectedFile(undefined);}}>Reference files</button>
+            <button type="button" className={`tab ${filesTab==='report'?'active':''}`} aria-pressed={filesTab==='report'} onClick={()=>{setFilesTab('report');setSelectedFile(undefined);}}>Generated reports</button>
+          </div>
+          <div className={`dashboard-file-preview ${selectedFile?'has-selected-file':''}`}>
+            {selectedFile?<>
+              <div className="selected-file-heading"><FileText size={21}/><span><strong>{selectedFile.name}</strong><small>{selectedFile.kind==='report'?'Generated report':'Reference file'}{selectedFile.externalReviewRequired?' · External review required':''}</small></span><button className="file-close" type="button" aria-label="Clear file preview" onClick={()=>setSelectedFile(undefined)}>×</button></div>
+              {selectedFile.hasPreview?<iframe title={`Preview of ${selectedFile.name}`} src={`/api/files/${selectedFile.id}/preview#toolbar=0&navpanes=0`}/>:<p className="file-no-preview">Preview unavailable. <a href={`/api/files/${selectedFile.id}/download`}>Download the file</a>.</p>}
+            </>:fileError?<p className="file-state" role="alert">Files could not be loaded. Open the File Library to retry.</p>:!fileListing?<p className="file-state" role="status">Loading {filesTab==='reference'?'reference files':'generated reports'}…</p>:fileListing.items.length?<div className="dashboard-file-list" role="list" aria-label={filesTab==='reference'?'Reference files':'Generated reports'}>
+              {fileListing.items.slice(0,2).map((file:any)=><button key={file.id} type="button" className="dashboard-file-row" role="listitem" onClick={()=>setSelectedFile(file)}><FileText size={20}/><span><strong>{file.name}</strong><small>{file.ml||'No linked control number'}{file.externalReviewRequired?' · External review required':''}</small></span><ChevronRight size={18}/></button>)}
+              <Link className="dashboard-files-all" to="/library">Open all {filesTab==='reference'?'reference files':'generated reports'} <ArrowRight size={14}/></Link>
+            </div>:<div className="dashboard-file-empty"><FileText size={29}/><strong>{filesTab==='reference'?'No reference files available':'No generated reports available'}</strong><span>{filesTab==='reference'?'Connected reference files will appear in the File Library.':'Prepare a report from a sample record to create a preview.'}</span><Link to={filesTab==='reference'?'/library':'/reports'}>{filesTab==='reference'?'Open File Library':'Prepare a report'} <ArrowRight size={14}/></Link></div>}
+          </div>
+        </section>
       </div>
+
+      <footer className="dashboard-footer"><span className="dashboard-footer-info" aria-hidden="true">i</span><span>External review and signature required. Sample release is separate.</span></footer>
+      <details className="dashboard-activity-disclosure">
+        <summary><Activity size={15}/> Latest source entries</summary>
+        {visibleActivity.length?<div className="timeline">{visibleActivity.map((sample:any,index:number)=><div key={sample.id||sample.ml} className={`timeline-item ${index===0?'active':''}`}><div className="timeline-time">{(parseActivityDate(sample.received)||parseActivityDate(sample.source?.observedAt))?.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})||'—'}</div><div className="timeline-content"><div className="timeline-title">Sample logged</div><Link className="timeline-desc mono" to={`/samples/${sample.id}`}>{sample.ml}</Link></div></div>)}</div>:<Empty title="No recent activity">New sample entries will appear here.</Empty>}
+        <Link className="dashboard-activity-all" to="/samples">Browse sample history <ArrowRight size={14}/></Link>
+      </details>
 
     </div>
   );
 }
-export function SampleSearch(){const {config}=useConfiguration();const [params,setParams]=useSearchParams();const [q,setQ]=useState(params.get('q')||'');const [busy,setBusy]=useState(false);const notify=useContext(Notice);const edit=useCanEdit();const [columns,setColumns]=useState(()=>{try{return JSON.parse(localStorage.getItem('ipi.columns')||'["batch","received","status"]') as string[];}catch{return ['batch','received','status'];}});const request=new URLSearchParams(params);request.set('limit',String(config.value.general.pageSize));const {data,error,reload}=useLoad(()=>api('/search?'+request),[request.toString()]);const set=(key:string,value:string)=>{setParams(p=>{p.set(key,value);if(key!=='page')p.set('page','1');return p;});};useEffect(()=>{const timer=setTimeout(()=>{if(q!==(params.get('q')||''))set('q',q);},250);return()=>clearTimeout(timer);},[q]);useEffect(()=>{try{localStorage.setItem('ipi.columns',JSON.stringify(columns));}catch{}},[columns]);useEffect(()=>setQ(params.get('q')||''),[params.get('q')]);return <><PageTitle title="Samples & history" description="Search every month while keeping each source record separate." action={edit?<button disabled={busy} className="button secondary" onClick={async()=>{setBusy(true);try{const result=await api('/sync','POST');reload();notify(result.skipped?result.message:'Source refresh completed');}catch(e:any){notify(e.message,true);}finally{setBusy(false);}}}><RefreshCw size={17}/> {busy?'Refreshing…':'Refresh sources'}</button>:undefined}/><section className="panel"><div className="filters"><div className="search search-field"><Search size={17}/><input aria-label="Search samples" placeholder="Search by ML number, product, or batch" value={q} onChange={e=>setQ(e.target.value)}/></div><select aria-label="Sample type filter" value={params.get('category')||''} onChange={e=>set('category',e.target.value)}><option value="">All sample types</option>{config.value.sampleTypes.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select><select aria-label="Source status filter" value={params.get('status')||''} onChange={e=>set('status',e.target.value)}><option value="">All source statuses</option>{data?.statuses.map((s:string)=><option key={s}>{s}</option>)}</select><select aria-label="Sort samples" value={params.get('sort')||'recent'} onChange={e=>set('sort',e.target.value)}><option value="recent">Recently updated</option><option value="ml">ML number ↑</option><option value="name">Sample name ↑</option><option value="received">Received date ↓</option></select></div><div className="filters secondary-filters"><Field label="Received from"><input type="date" value={params.get('from')||''} onChange={e=>set('from',e.target.value)}/></Field><Field label="Received through"><input type="date" value={params.get('to')||''} onChange={e=>set('to',e.target.value)}/></Field><details><summary>Visible columns</summary>{['batch','received','status'].map(c=><label key={c} className="checkbox"><input type="checkbox" checked={columns.includes(c)} onChange={e=>setColumns(cs=>e.target.checked?[...cs,c]:cs.filter(x=>x!==c))}/>{c}</label>)}</details><button className="text-button" onClick={()=>{setQ('');setParams({});}}>Clear filters</button></div><ErrorBox message={error}/>{!data?<Loading/>:data.items.length?<><div className="table-scroll"><table className="data-table"><thead><tr><th>Sample / control number</th><th>Sample type</th>{columns.includes('batch')?<th>Batch / lot</th>:null}{columns.includes('received')?<th>Received</th>:null}{columns.includes('status')?<th>Source status</th>:null}<th><span className="sr-only">Action</span></th></tr></thead><tbody>{data.items.map((s:Sample)=><tr key={s.id}><td><Link to={`/samples/${s.id}`}><strong>{s.name||'Incomplete record'}</strong><br /><small className="mono">{s.ml}</small></Link>{s.duplicate?<Badge tone="red">Duplicate ML — separate source</Badge>:null}</td><td>{config.value.sampleTypes.find(t=>t.id===s.category)?.name||s.category}</td>{columns.includes('batch')?<td>{s.batch||'—'}</td>:null}{columns.includes('received')?<td>{s.received||'Not recorded'}</td>:null}{columns.includes('status')?<td><Badge tone={s.status==='RELEASED'?'green':'neutral'}>{s.status||'Not recorded'}</Badge></td>:null}<td><Link to={`/samples/${s.id}`}>Open →</Link></td></tr>)}</tbody></table></div><div className="pagination"><span>{data.total} matching samples · Page {data.page} of {Math.max(1,Math.ceil(data.total/data.limit))}</span><button className="button secondary small" disabled={data.page===1} onClick={()=>set('page',String(data.page-1))}>Previous</button><button className="button secondary small" disabled={data.page*data.limit>=data.total} onClick={()=>set('page',String(data.page+1))}>Next</button></div></>:<Empty title="No samples match these filters">Try a different product, date range or control number.</Empty>}</section></>;}
+export function SampleSearch(){const {config}=useConfiguration();const [params,setParams]=useSearchParams();const [q,setQ]=useState(params.get('q')||'');const [busy,setBusy]=useState(false);const notify=useContext(Notice);const edit=useCanEdit();const [columns,setColumns]=useState(()=>{try{return JSON.parse(localStorage.getItem('ipi.columns')||'["batch","received","status"]') as string[];}catch{return ['batch','received','status'];}});const request=new URLSearchParams(params);request.set('limit',String(config.value.general.pageSize));const {data,error,reload}=useLoad(()=>api('/search?'+request),[request.toString()]);const set=(key:string,value:string)=>{setParams(p=>{p.set(key,value);if(key!=='page')p.set('page','1');return p;});};useEffect(()=>{const timer=setTimeout(()=>{if(q!==(params.get('q')||''))set('q',q);},250);return()=>clearTimeout(timer);},[q,params]);useEffect(()=>{try{localStorage.setItem('ipi.columns',JSON.stringify(columns));}catch{}},[columns]);useEffect(()=>setQ(params.get('q')||''),[params.get('q')]);return <><PageTitle title="Samples & history" description="Search every month while keeping each source record separate." action={edit?<button disabled={busy} className="button secondary" onClick={async()=>{setBusy(true);try{const result=await api('/sync','POST');reload();notify(result.skipped?result.message:'Source refresh completed');}catch(e:any){notify(e.message,true);}finally{setBusy(false);}}}><RefreshCw size={17}/> {busy?'Refreshing…':'Refresh sources'}</button>:undefined}/><section className="panel samples-register"><div className="filters"><div className="search search-field"><Search size={17}/><input aria-label="Search samples" placeholder="Search by ML number, product, or batch" value={q} onChange={e=>setQ(e.target.value)}/></div><select aria-label="Sample type filter" value={params.get('category')||''} onChange={e=>set('category',e.target.value)}><option value="">All sample types</option>{config.value.sampleTypes.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select><select aria-label="Source status filter" value={params.get('status')||''} onChange={e=>set('status',e.target.value)}><option value="">All source statuses</option>{data?.statuses.map((s:string)=><option key={s}>{s}</option>)}</select><select aria-label="Sort samples" value={params.get('sort')||'recent'} onChange={e=>set('sort',e.target.value)}><option value="recent">Recently updated</option><option value="ml">ML number ↑</option><option value="name">Sample name ↑</option><option value="received">Received date ↓</option></select></div><div className="filters secondary-filters"><Field label="Received from"><input type="date" value={params.get('from')||''} onChange={e=>set('from',e.target.value)}/></Field><Field label="Received through"><input type="date" value={params.get('to')||''} onChange={e=>set('to',e.target.value)}/></Field><details><summary>Visible columns</summary>{['batch','received','status'].map(c=><label key={c} className="checkbox"><input type="checkbox" checked={columns.includes(c)} onChange={e=>setColumns(cs=>e.target.checked?[...cs,c]:cs.filter(x=>x!==c))}/>{c}</label>)}</details><button className="text-button" onClick={()=>{setQ('');setParams({});}}>Clear filters</button></div><ErrorBox message={error}/>{!data?<Loading/>:data.items.length?<><div className="table-scroll"><table className="data-table"><thead><tr><th>Sample / control number</th><th>Sample type</th>{columns.includes('batch')?<th>Batch / lot</th>:null}{columns.includes('received')?<th>Received</th>:null}{columns.includes('status')?<th>Source status</th>:null}<th><span className="sr-only">Action</span></th></tr></thead><tbody>{data.items.map((s:Sample)=><tr key={s.id}><td><Link to={`/samples/${s.id}`}><strong>{s.name||'Incomplete record'}</strong><br /><small className="mono">{s.ml}</small></Link>{s.duplicate?<Badge tone="red">Duplicate ML — separate source</Badge>:null}</td><td>{config.value.sampleTypes.find(t=>t.id===s.category)?.name||s.category}</td>{columns.includes('batch')?<td>{s.batch||'—'}</td>:null}{columns.includes('received')?<td>{s.received||'Not recorded'}</td>:null}{columns.includes('status')?<td><Badge tone={s.status==='RELEASED'?'green':'neutral'}>{s.status||'Not recorded'}</Badge></td>:null}<td><Link to={`/samples/${s.id}`}>Open →</Link></td></tr>)}</tbody></table></div><div className="pagination"><span>{data.total} matching samples · Page {data.page} of {Math.max(1,Math.ceil(data.total/data.limit))}</span><button className="button secondary small" disabled={data.page===1} onClick={()=>set('page',String(data.page-1))}>Previous</button><button className="button secondary small" disabled={data.page*data.limit>=data.total} onClick={()=>set('page',String(data.page+1))}>Next</button></div></>:<Empty title="No samples match these filters">Try a different product, date range or control number.</Empty>}</section></>;}
 type IntakeDraftRow={key:string;submissionId:string;fields:Record<string,string>};
 const emptyIntakeRow=(type:any):IntakeDraftRow=>({key:crypto.randomUUID(),submissionId:crypto.randomUUID(),fields:Object.fromEntries(type.fields.filter((f:any)=>f.active&&f.type!=='generated').map((f:any)=>[f.key,f.defaultValue||'']))});
 function intakeSuggestions(field:any,type:any,config:any){const categoryOptions=type.id==='EM'?environmentalCategoryOptions[field.key]:undefined;const lookupOptions=field.lookup?config.lookups.find((l:any)=>l.id===field.lookup&&l.active)?.options||[]:field.options||[];const productOptions=field.key==='name'?config.products.filter((p:any)=>p.active&&p.category===type.id).flatMap((p:any)=>[p.name,...(p.aliases||[])]):[];return productOptions.length?productOptions:categoryOptions||(lookupOptions.length?lookupOptions:field.type==='checkbox'?['true','false']:[]);}

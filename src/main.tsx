@@ -11,4 +11,5 @@ import './settings-layout.css';
 import './experience.css';
 import './report-design.css';
 import './route-redesign.css';
+import './laboratory.css';
 

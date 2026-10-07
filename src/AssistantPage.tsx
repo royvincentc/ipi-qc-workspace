@@ -34,7 +34,7 @@ export function AssistantPage() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }); }, [messages]);
+  useEffect(() => { if(messages.length>1)messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }); }, [messages]);
   useEffect(() => {
     if (!messages.some(message => message.role === 'user' && message.parts.some(part => part.text.trim()))) return;
     setHistory(previous => {
@@ -84,7 +84,7 @@ export function AssistantPage() {
     <div className="assistant-page">
       <div className="assistant-header"><div className="assistant-heading"><div className="assistant-avatar"><MissMinutesAvatar /></div><div><div className="eyebrow"><Sparkles size={12}/> QC lab companion</div><h2>Miss Minutes</h2><small>Searches authorized QC records and audit history</small></div></div><button className="button secondary" onClick={newConversation}><RefreshCw size={14}/> New chat</button></div>
       <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}${m.error ? ' is-error' : ''}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <MissMinutesAvatar className="assistant-message-mark"/>}</div><div className="assistant-bubble" role={m.error ? 'alert' : undefined}>{m.parts.map((p, partIndex) => <AssistantMarkdown key={partIndex} text={p.text}/>)}</div></div>)}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><MissMinutesAvatar className="assistant-message-mark"/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
-      <div className="assistant-composer"><form onSubmit={handleSend}><div className="assistant-input-wrap"><Search size={18}/><input type="text" className="input" placeholder="Ask about QC samples, results, or audit history…" value={input} onChange={e => setInput(e.target.value)} disabled={loading} autoFocus /></div><button type="submit" className="button primary assistant-send" disabled={loading || !input.trim()}><Send size={16}/> Send</button></form></div>
+      <div className="assistant-composer"><form onSubmit={handleSend}><div className="assistant-input-wrap"><Search size={18}/><input type="text" className="input" placeholder="Ask about QC samples, results, or audit history…" value={input} onChange={e => setInput(e.target.value)} disabled={loading} aria-label="Ask about QC records" /></div><button type="submit" className="button primary assistant-send" disabled={loading || !input.trim()}><Send size={16}/> Send</button></form></div>
     </div>
   </div></>;
 }

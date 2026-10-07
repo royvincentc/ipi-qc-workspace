@@ -2,11 +2,12 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {LayoutDashboard,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon,Table2} from 'lucide-react';
+import {Home,Sparkles,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Table2,ChevronDown} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
-import {AmbientBackdrop,RouteExperience} from './Experience';
+import {RouteExperience,SelectionMotion} from './Experience';
+import Dialog from './dialog';
 const AdminCenter=lazy(()=>import('./admin'));
 const SampleDetailRoute=lazy(()=>import('./pages').then(module=>({default:module.SampleDetail})));
 const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Reports})));
@@ -24,8 +25,8 @@ function isConstrainedDevice(){
 }
 
 const navigation=[
-  ['/','Dashboard',LayoutDashboard],
-  ['/new','Log Sample',Plus],
+  ['/','Dashboard',Home],
+  ['/new','Log Sample',FlaskConical],
   ['/samples','Samples',Search],
   ['/worksheet','Worksheet',Table2],
   ['/reports','Results & Reports',FileText],
@@ -77,34 +78,37 @@ function CommandPalette({open, onClose}: {open: boolean, onClose: () => void}) {
   const [query,setQuery]=useState('');
   const [items,setItems]=useState<any[]>([]);
   const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
   useEffect(()=>{
     if(!open||query.trim().length<2){setItems([]);setBusy(false);return;}
-    let active=true;setBusy(true);
-    const timer=setTimeout(()=>api(`/search?q=${encodeURIComponent(query)}&limit=6`).then(result=>{if(active)setItems(result.items);}).catch(()=>{if(active)setItems([]);}).finally(()=>{if(active)setBusy(false);}),250);
+    let active=true;setBusy(true);setError('');
+    const timer=setTimeout(()=>api(`/search?q=${encodeURIComponent(query)}&limit=6`).then(result=>{if(active)setItems(result.items);}).catch(e=>{if(active){setItems([]);setError(e.message||'Search could not load. Try again.');}}).finally(()=>{if(active)setBusy(false);}),250);
     return()=>{active=false;clearTimeout(timer);};
   },[open,query]);
   useEffect(()=>{if(!open)setQuery('');},[open]);
   if (!open) return null;
   return (
-    <div className="cmd-palette-backdrop open" onClick={onClose} role="presentation">
-      <div className="cmd-palette" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Find a sample">
+    <Dialog title="Find a sample" onClose={onClose}>
+      <div className="cmd-palette" onKeyDown={event=>{if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;const links=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('.cmd-results a'));if(!links.length)return;event.preventDefault();const index=links.indexOf(document.activeElement as HTMLElement);links[(index+(event.key==='ArrowDown'?1:-1)+links.length)%links.length]?.focus();}}>
         <div className="cmd-input-row"><Search size={19}/><input autoFocus className="cmd-input" aria-label="Find a sample anywhere" placeholder="ML number, sample, product or batch…" value={query} onChange={event=>setQuery(event.target.value)}/><button className="icon-button" onClick={onClose} aria-label="Close search"><X size={18}/></button></div>
         <div className="cmd-results">
+          {error?<ErrorBox message={error}/>:null}
           {query.trim().length<2?<p>Enter at least two characters to search all months.</p>:busy?<p>Searching…</p>:items.length?items.map(sample=><Link key={sample.id} to={`/samples/${sample.id}`} onClick={onClose}><strong>{sample.ml}</strong><span>{sample.name||'Incomplete record'}</span><small>{sample.categoryLabel||sample.category}{sample.batch?` · Batch ${sample.batch}`:''}</small></Link>):<p>No matching samples.</p>}
           {query.trim().length>=2?<Link className="cmd-all-results" to={`/samples?q=${encodeURIComponent(query)}`} onClick={onClose}>View all search results <ArrowRight size={15}/></Link>:null}
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 }
 
 function Workspace({data}:{data:any}){
   const {config,theme,setTheme}=useConfiguration();
   const [notice,setNotice]=useState<{text:string;error:boolean}|null>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [mobileNav,setMobileNav]=useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
-  const [now,setNow]=useState(()=>new Date());
+  const [accountOpen,setAccountOpen]=useState(false);
+  const accountMenu=useRef<HTMLDivElement>(null);
   const [lowPerformanceMode]=useState(isConstrainedDevice);
   const [syncing,setSyncing]=useState(false);
   const location=useLocation();
@@ -140,21 +144,45 @@ function Workspace({data}:{data:any}){
         e.preventDefault();
         setCmdOpen(o => !o);
       }
-      if (e.key === 'Escape') { setCmdOpen(false); setMobileNav(false); }
+      if (e.key === 'Escape') { setCmdOpen(false); setMobileNav(false); setAccountOpen(false); }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-  useEffect(()=>{const timer=window.setInterval(()=>setNow(new Date()),60000);return()=>window.clearInterval(timer);},[]);
+  useEffect(()=>{
+    const outside=(event:PointerEvent)=>{if(!accountMenu.current?.contains(event.target as Node))setAccountOpen(false);};
+    document.addEventListener('pointerdown',outside);
+    return()=>document.removeEventListener('pointerdown',outside);
+  },[]);
+  useEffect(()=>{
+    const rail=document.querySelector<HTMLElement>('.sidebar');
+    if(!rail)return;
+    const mobile=matchMedia('(max-width:767px)');
+    const apply=()=>{rail.inert=mobile.matches&&!mobileNav;};
+    apply();mobile.addEventListener('change',apply);
+    const trigger=document.querySelector<HTMLElement>('.mobile-menu-button');
+    if(mobileNav)rail.querySelector<HTMLElement>('a')?.focus();
+    const trap=(event:KeyboardEvent)=>{
+      if(!mobileNav||!mobile.matches||event.key!=='Tab')return;
+      const items=Array.from(rail.querySelectorAll<HTMLElement>('a,button:not(:disabled)')).filter(el=>el.getClientRects().length);
+      const first=items[0],last=items.at(-1);
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+    };
+    window.addEventListener('keydown',trap);
+    return()=>{mobile.removeEventListener('change',apply);window.removeEventListener('keydown',trap);rail.inert=false;if(mobileNav)trigger?.focus();};
+  },[mobileNav]);
 
   return (
     <Session.Provider value={data}>
       <Notice.Provider value={notify}>
-        <div className={`app ${lowPerformanceMode?'app-low-performance':''}`}>
+        <div className={`app ${lowPerformanceMode?'app-low-performance':''} ${location.pathname==='/'?'app-dashboard':''}`}>
           <RouteExperience/>
+          <SelectionMotion/>
+          <a className="skip-to-content" href="#workspace-main">Skip to workspace</a>
           <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`} aria-label="Workspace navigation">
             <Link to="/" className="brand" title={config.value.general.appName}>
-              <div className="brand-icon"><FlaskConical size={24}/></div>
+              <div className="brand-icon"><Sparkles size={24}/></div>
               <div className="brand-text">
                 <b>{config.value.general.appName}</b>
                 <span>{config.value.general.department}</span>
@@ -197,61 +225,39 @@ function Workspace({data}:{data:any}){
               )}
             </nav>
 
-            <div className="sidebar-bottom">
-              <div className="theme-control">
-                <span className="theme-control-label">Appearance</span>
-                <button type="button" className="theme-toggle" role="switch" aria-label="Dark theme" aria-checked={theme==='dark'} data-mode={theme} title={`Switch to ${theme==='light'?'dark':'light'} theme`} onClick={()=>setTheme(theme==='light'?'dark':'light')}>
-                  <span className="theme-toggle-icon light"><Sun size={14}/></span>
-                  <span className="theme-toggle-icon dark"><Moon size={13}/></span>
-                  <span className="theme-toggle-thumb" aria-hidden="true"><Sun className="toggle-sun" size={15}/><Moon className="toggle-moon" size={14}/></span>
-                </button>
-              </div>
-              <div className="user" style={{marginBottom: collapsed ? '0' : '12px'}}>
-                <span className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</span>
-                <div className="user-text">
-                  <strong>{data.user.name}</strong>
-                  <small>{data.user.role}</small>
-                </div>
-                {!data.demo && !collapsed && (
-                  <button className="icon-button" aria-label="Sign out" onClick={()=>api('/auth/logout','POST').then(()=>window.location.reload())} title="Sign Out" style={{marginLeft: 'auto'}}>
-                    <LogOut size={16}/>
-                  </button>
-                )}
-              </div>
-            </div>
           </aside>
 
           <div className={`main-wrapper ${collapsed ? 'collapsed' : ''}`}>
             <header className="topbar">
               <button className="icon-button mobile-menu-button" aria-label="Open navigation" onClick={()=>setMobileNav(true)}><Menu size={20}/></button>
-              <button type="button" className="global-search" onClick={() => setCmdOpen(true)} aria-label="Open global sample search">
-                <Search size={16} />
-                <span style={{flex: 1, textAlign: 'left'}}>Search a sample, batch, or control number...</span>
-                <kbd>{searchShortcut}</kbd>
-              </button>
+              <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>IPI</b><span>QC MICROBIOLOGY</span></Link>
+              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Workspace'],['/new','Log Sample'],['/samples','Samples'],['/reports','Reports'],['/library','File Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
-                <div style={{display: 'flex', alignItems: 'center', gap: '8px', marginRight: '16px'}}>
+                <div className="workspace-status" title={data.demo?'Practice records only. External writes are disabled.':'Authenticated live workspace'}>
                   <span className={`status-dot ${data.demo ? 'pending' : ''}`}/>
                   {data.demo?'Demo workspace':'Live workspace'}
                 </div>
                 {syncing?<div className="sync-progress-inline" role="status" aria-live="polite"><span>Syncing sources</span><div className="sync-progress-track" role="progressbar" aria-label="Database synchronization progress" aria-valuetext="A reliable percentage is not available yet"><span/></div><span className="sr-only">Synchronization is in progress. Percentage is unavailable until completion.</span></div>:null}
-                <div className="topbar-divider"></div>
-                <div className="topbar-date">
-                  <span>{new Intl.DateTimeFormat(config.value.general.dateFormat,{weekday:'short',day:'numeric',month:'short',year:'numeric',timeZone:config.value.general.timezone}).format(now)}</span>
-                  <strong>{new Intl.DateTimeFormat(config.value.general.dateFormat,{hour:'2-digit',minute:'2-digit',timeZone:config.value.general.timezone}).format(now)}</strong>
+                <button type="button" className="global-search" onClick={() => setCmdOpen(true)} aria-label={`Open global sample search (${searchShortcut})`} title={`Find a sample · ${searchShortcut}`}><Search size={22}/><span>Search a sample, batch, or control number...</span><kbd>{searchShortcut}</kbd></button>
+                <button className="icon-button topbar-theme" aria-label={`Switch to ${theme==='light'?'dark':'light'} theme`} onClick={()=>setTheme(theme==='light'?'dark':'light')}><Sun size={22}/></button>
+                <div className="account-menu-anchor" ref={accountMenu}>
+                  <button type="button" className="account-trigger" aria-label={`Account menu for ${data.user.name}`} aria-haspopup="menu" aria-expanded={accountOpen} onClick={()=>setAccountOpen(value=>!value)}><span className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</span><ChevronDown size={15}/></button>
+                  {accountOpen?<div className="account-menu" role="menu" aria-label="Account">
+                    <strong>{data.user.name}</strong><span className="account-role">{data.user.role}</span>
+                    {data.demo?<span className="account-demo-note">Demo workspace · practice records only</span>:<button type="button" role="menuitem" onClick={()=>api('/auth/logout','POST').then(()=>window.location.reload())}><LogOut size={15}/> Sign out</button>}
+                  </div>:null}
                 </div>
-                <div className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</div>
               </div>
             </header>
 
             {data.demo && (
-              <div style={{background: 'var(--color-warning-bg)', color: 'var(--color-warning)', padding: '8px 24px', fontSize: '11px', textAlign: 'center'}}>
+              <div className="demo-banner" style={{background: 'var(--color-warning-bg)', color: 'var(--color-warning)', padding: '8px 24px', fontSize: '11px', textAlign: 'center'}}>
                 DEMO MODE — Practice records only. No Google writes enabled.
               </div>
             )}
 
             <div className="workspace-content">
-              <main className="route-stage" key={location.pathname}>
+              <main id="workspace-main" tabIndex={-1} className="route-stage" key={location.pathname}>
                 <Suspense fallback={<Loading/>}><Routes>
                   <Route path="/" element={<Dashboard/>}/>
                   <Route path="/new" element={<Intake/>}/>
@@ -276,7 +282,7 @@ function Workspace({data}:{data:any}){
           <DeploymentUpdate />
 
           {notice && (
-            <div className={`toast ${notice.error?'bad':''}`} role="status">
+            <div className={`toast ${notice.error?'bad':''}`} role={notice.error?'alert':'status'}>
               <span>{notice.text}</span>
               <button onClick={()=>setNotice(null)} aria-label="Dismiss notification">&times;</button>
             </div>
@@ -295,6 +301,7 @@ export default function App(){
     return (
       <div className="login-screen login-screen-split">
         <aside className="login-story" aria-labelledby="login-story-heading" onPointerMove={event=>{
+          if(isConstrainedDevice()||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
           if(event.pointerType!=='mouse'&&event.pointerType!=='pen')return;
           const bounds=event.currentTarget.getBoundingClientRect();
           event.currentTarget.style.setProperty('--petri-pointer-x',`${((event.clientX-bounds.left)/bounds.width-.5)*15}px`);
@@ -303,7 +310,6 @@ export default function App(){
           event.currentTarget.style.setProperty('--petri-pointer-x','0px');
           event.currentTarget.style.setProperty('--petri-pointer-y','0px');
         }}>
-          <AmbientBackdrop landing/>
           <div className="login-story-brand">
             <span className="login-story-mark" aria-hidden="true"><FlaskConical size={20} strokeWidth={1.7}/></span>
             <span>IPI <b>MICROBIOLOGY</b></span>
