@@ -65,14 +65,32 @@ export function prepareAssistantChat(messages: AssistantMessage[]) {
 }
 
 export function publicGeminiError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-  const normalized = message.toLowerCase();
+  // SDK errors have a message, but REST failures may be plain nested objects.
+  // Inspect only error fields; never return or log the raw upstream payload.
+  const fields: string[] = [];
+  let current = error;
+  for (let depth = 0; depth < 3 && current && typeof current === 'object'; depth += 1) {
+    const value = current as Record<string, unknown>;
+    for (const field of ['message', 'status', 'code']) {
+      if (typeof value[field] === 'string' || typeof value[field] === 'number') {
+        fields.push(String(value[field]));
+      }
+    }
+    current = value.error;
+  }
+  const normalized = (fields.length ? fields.join(' ') : String(error)).toLowerCase();
+
+  // Google can report depleted prepayment credits as 429 RESOURCE_EXHAUSTED.
+  // Billing must take precedence over the generic quota/key classifications.
+  if (/prepay|prepaid|prepayment|payment.?required|billing|\b402\b/.test(normalized)) {
+    return { category: 'billing', status: 503, message: 'Gemini API billing needs attention. An administrator should open Google AI Studio Billing for the API key\'s project, check whether a switch to Prepay is required, and confirm an active prepaid balance. Eligible developer credits require an active prepaid balance.' };
+  }
 
   if (/api.?key|unauthenticated|permission.?denied|\b401\b|\b403\b/.test(normalized)) {
     return { category: 'authentication', status: 502, message: 'Gemini rejected the configured API key. An administrator must replace it with a valid Google AI Studio key and redeploy.' };
   }
   if (/quota|rate.?limit|resource.?exhausted|\b429\b/.test(normalized)) {
-    return { category: 'quota', status: 503, message: 'Smart Assistant has reached its Gemini usage limit. Please try again later or ask an administrator to review the API quota.' };
+    return { category: 'quota', status: 503, message: 'Gemini rejected this request because of a quota or rate limit. Try again later. If it continues, an administrator should check the configured model\'s limits and the API key project\'s billing status in Google AI Studio; a remaining credit balance does not rule out either issue.' };
   }
   if (/model.*(not found|unavailable)|not found.*model|\b404\b/.test(normalized)) {
     return { category: 'model', status: 502, message: 'The configured Gemini model is unavailable. Ask an administrator to review GEMINI_MODEL and redeploy.' };

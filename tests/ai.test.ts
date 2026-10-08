@@ -40,3 +40,24 @@ test('Gemini 3 function responses preserve the function-call id', () => {
   );
   assert.throws(() => createGeminiFunctionResponse({ name: 'query_samples' }, {}), /did not include an id/);
 });
+
+test('depleted prepayment is a billing failure even when Gemini returns quota status', () => {
+  for (const failure of [
+    new Error('429 RESOURCE_EXHAUSTED: Your prepayment credits are depleted. secret-value'),
+    new Error('403 PERMISSION_DENIED: Billing account is inactive'),
+    { error: { code: 402, message: 'Your prepayment credits are depleted. secret-value' } },
+    { status: 429, message: 'Please switch your billing account to Prepay' }
+  ]) {
+    const result = publicGeminiError(failure);
+    assert.equal(result.category, 'billing');
+    assert.equal(result.status, 503);
+    assert.match(result.message, /Google AI Studio Billing/);
+    assert.equal(result.message.includes('secret-value'), false);
+  }
+});
+
+test('structured rate limits and key failures retain their separate remedies', () => {
+  assert.equal(publicGeminiError({ error: { code: 429, status: 'RESOURCE_EXHAUSTED' } }).category, 'quota');
+  assert.equal(publicGeminiError({ error: { code: 403, message: 'API_KEY_INVALID' } }).category, 'authentication');
+  assert.equal(publicGeminiError(new Error('503 UNAVAILABLE')).category, 'upstream');
+});
