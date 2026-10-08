@@ -3,6 +3,18 @@ from pathlib import Path
 from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W,upgrade_environmental_layout
 
 class DocumentTests(unittest.TestCase):
+    def test_overall_passed_is_bold_underlined_without_styling_label(self):
+        from lxml import etree as E
+        from docx_worker import replace_tokens
+        for token in ['overallRemarks','overall.remarks']:
+            p=E.fromstring(('<w:p xmlns:w="'+NS['w']+'"><w:r><w:t>REMARKS: {{'+token+'}} end</w:t></w:r></w:p>').encode())
+            replace_tokens(p,{token:'PASSED'})
+            self.assertEqual(text(p),'REMARKS: PASSED end')
+            passed=p.xpath('./w:r[w:t="PASSED"]',namespaces=NS)[0]
+            self.assertEqual(passed.xpath('./w:rPr/w:b/@w:val',namespaces=NS),['1'])
+            self.assertEqual(passed.xpath('./w:rPr/w:u/@w:val',namespaces=NS),['single'])
+            self.assertFalse(p.xpath('./w:r[w:t="REMARKS: "]/w:rPr/w:b',namespaces=NS))
+
     def test_environmental_data_weight_preserves_bold_headings(self):
         from docx import Document
         d=Document(self.template);header=d.sections[0].header

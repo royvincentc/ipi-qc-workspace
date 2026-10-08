@@ -15,3 +15,11 @@ export function AnalystRemarks({value,disabled,onChange}:{value:string;disabled:
   </div>
  </div>;
 }
+
+/** Native radio inputs provide selection and arrow-key navigation. */
+export function ResultToggle({label,value,options,disabled,onChange}:{label:string;value:string;options:{value:string;label:string}[];disabled:boolean;onChange:(value:string)=>void}){
+ const id=useId();
+ return <div className="field result-toggle-field"><span id={id+'-label'}>{label}</span><div className="result-toggle" role="radiogroup" aria-labelledby={id+'-label'}>
+  {options.map(option=><label key={option.value} className="result-toggle-option"><input type="radio" name={id} value={option.value} checked={value===option.value} disabled={disabled} onChange={()=>onChange(option.value)}/><span>{option.label}</span></label>)}
+ </div></div>;
+}

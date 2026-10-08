@@ -278,7 +278,27 @@ def replace_tokens(paragraph,values):
             value=node.text or ''; a,b=offset,offset+len(value);offset=b
             if b<=start or a>=end:continue
             left=value[:max(0,start-a)];right=value[max(0,end-a):]
-            node.text=left+(replacement if not assigned else '')+right
+            if key in ('overallRemarks','overall.remarks') and replacement=='PASSED' and not assigned:
+                run=node.getparent()
+                # Split the token run so the label keeps its original formatting.
+                parent=run.getparent(); index=parent.index(run)
+                props=run.find(W+'rPr')
+                if left:
+                    prefix=E.Element(W+'r')
+                    if props is not None:prefix.append(copy.deepcopy(props))
+                    E.SubElement(prefix,W+'t').text=left;parent.insert(index,prefix)
+                if right:
+                    suffix=E.Element(W+'r')
+                    if props is not None:suffix.append(copy.deepcopy(props))
+                    E.SubElement(suffix,W+'t').text=right;parent.insert(parent.index(run)+1,suffix)
+                if props is None:props=E.Element(W+'rPr');run.insert(0,props)
+                for tag in ('b','u'):
+                    element=props.find(W+tag)
+                    if element is None:element=E.SubElement(props,W+tag)
+                    element.set(W+'val','single' if tag=='u' else '1')
+                node.text=replacement
+            else:
+                node.text=left+(replacement if not assigned else '')+right
             node.set('{http://www.w3.org/XML/1998/namespace}space','preserve');assigned=True
 
 def set_vertical_merge(cell, mode):

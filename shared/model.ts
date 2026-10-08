@@ -22,10 +22,29 @@ export function reportTestLabel(test:string,fallback=''){
 }
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'|'instanceId'>){return r.instanceId||[r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return (/^\s*Nmt\b/i.test(criterion)||(['SPC','MY'].includes(test)&&/^\s*Not\s+more\s+than\s*\d/i.test(criterion)))?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
-export function resultDisplayValue(test:Criterion,r:Result){
+export function microbiologyResultLimit(test:Criterion){return 'Nmt 10 '+(test.unit||'cfu/mL');}
+export function suggestedAnalystRemark(test:Criterion,r:Result):string{
+ if(r.state!=='entered')return '';
+ if(test.type==='finding')return ['Positive','Negative'].includes(r.value)&&['positive','negative'].includes(test.criterion.trim().toLowerCase())?(r.value.toLowerCase()===test.criterion.trim().toLowerCase()?'Passed':'Failed'):'';
+ const limit=test.criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+(\d+(?:\.\d+)?)/i);
+ if(!limit)return '';
+ if(r.qualifier==='Nmt')return 10<=Number(limit[1])?'Passed':'Failed';
+ if(r.qualifier!==''&&r.qualifier!=='=')return '';
+ if(!/^\d+(?:\.\d+)?$/.test(r.value.trim()))return '';
+ // Actual results at the standard's boundary fail in the requested workflow.
+ return Number(r.value)<Number(limit[1])?'Passed':'Failed';
+}
+export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'>):string|undefined{
+ if(!['SFG','FG','ST','MIS'].includes(d.sample.category))return undefined;
+ const rows=d.specification.tests.map(t=>({test:t,result:d.results.find(r=>resultKey(r)===resultKey(t))}));
+ const failed=[...new Set(rows.filter(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='failed').map(({test:t})=>t.label))];
+ if(failed.length)return 'Failed in '+failed.join(', ');
+ return rows.length&&rows.every(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='passed')?'PASSED':'';
+}
+export function resultDisplayValue(test:Criterion,r:Result,category?:string){
  if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
  const limit=microbiologyLimit(test.test,test.criterion);
- if(limit&&r.qualifier==='Nmt')return limit;
+ if(limit&&r.qualifier==='Nmt')return category&&['SFG','FG','ST','MIS'].includes(category)?microbiologyResultLimit(test):limit;
  const value=r.value.trim();
  if(limit&&value)return test.unit&&value.toLocaleLowerCase().endsWith(test.unit.toLocaleLowerCase())?value:`${value} ${test.unit}`.trim();
  return [r.qualifier,r.value,r.unit].filter(Boolean).join(' ');
@@ -39,7 +58,7 @@ export function resultIssues(d:Draft):string[]{
   const unchangedSourceValue=r.sourceValue!==undefined&&r.value===r.sourceValue;
   if(!unchangedSourceValue){
   if(r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
-  if(t.type==='numeric'&&microbiologyLimit(t.test,t.criterion)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&!r.value.trim()) issues.push(`${label}: enter a number`);}
+  if(t.type==='numeric'&&microbiologyLimit(t.test,t.criterion)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&(!/^\d+(\.\d+)?$/.test(r.value.trim())||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);}
    else if(t.type==='numeric'&&(!/^\d+(\.\d+)?$/.test(r.value)||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);
    if(t.type==='finding'&&!['Positive','Negative'].includes(r.value)) issues.push(`${label}: choose Positive or Negative`);
   }

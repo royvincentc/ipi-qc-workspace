@@ -113,7 +113,7 @@ test('viewer cannot administer configuration',()=>{
 test('report template aliases populate the approved custom template tags',()=>{
  const draft={
   sample:{name:'Omega Pain Killer Liniment - Pro',ml:'ML-FG-26-9999',batch:'LOT-42',received:'2026-09-29 08:00',category:'FG',fields:{manufactureDate:'2026-01-01',expiryDate:'2028-01-01',fillVolume:'60 mL',requestedBy:'QC'}},
-  fields:{logbookReference:'MIC-42 p.7',analyst:'Analyst'},
+  fields:{logbookReference:'MIC-42 p.7',analyst:'Analyst'},results:[],specification:{tests:[]},
   configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}},
  } as any;
  const template={manifest:{tokens:['d.release','t.release','date.mfd','exp.date','fill.vol','requested.by','logbook']}} as any;
@@ -133,18 +133,18 @@ test('report format routing follows category and explicit Supplier values',()=>{
  assert.throws(()=>reportFormatName(source('RM') as any),/Supplier/);
 });
 
-test('new report fields map from sample metadata and overall remarks use the source logbook',()=>{
- const draft={sample:{name:'Sample',ml:'ML-SFG-26-0001',batch:'B1',received:'2026-09-29',category:'SFG',fields:{sampleNameSuffix:'(Export)',batchSize:'2,500 L',pageNumber:'123',mic:'MIC-17',type:'Stability',remarks:'FAILED in SPC and Molds and Yeast.'}},fields:{'overall.remarks':'manual override must not replace source remarks','sample.name':'manual name','sample.name.suffix':'manual suffix',type:'manual type'},results:[{test:'SPC',remarks:'Failed'},{test:'PA',remarks:'Passed'},{test:'MY',remarks:'Failed'}],specification:{tests:[{test:'SPC',label:'Standard Plate Count (SPC)'},{test:'PA',label:'P. aeruginosa'},{test:'MY',label:'Molds and Yeast'}]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
+test('new report fields map from sample metadata and overall remarks use final analyst decisions',()=>{
+ const draft={sample:{name:'Sample',ml:'ML-SFG-26-0001',batch:'B1',received:'2026-09-29',category:'SFG',fields:{sampleNameSuffix:'(Export)',batchSize:'2,500 L',pageNumber:'123',mic:'MIC-17',type:'Stability',remarks:'FAILED in SPC and Molds and Yeast.'}},fields:{'overall.remarks':'manual override must not replace source remarks','sample.name':'manual name','sample.name.suffix':'manual suffix',type:'manual type'},results:[{test:'SPC',state:'entered',remarks:'Failed'},{test:'PA',state:'entered',remarks:'Passed'},{test:'MY',state:'entered',remarks:'Failed'}],specification:{tests:[{test:'SPC',label:'Standard Plate Count (SPC)'},{test:'PA',label:'P. aeruginosa'},{test:'MY',label:'Molds and Yeast'}]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
  const template={manifest:{tokens:['batch.size','page','mic','overall.remarks','sample.name','sample.name.suffix','type']}} as any;
  const fields=reportTemplateFields(draft,template);
  assert.deepEqual([fields['batch.size'],fields.page,fields.mic],['2,500 L','123','MIC-17']);
  assert.deepEqual([fields['sample.name'],fields['sample.name.suffix']],['Sample','(Export)']);
  assert.equal(fields.type,'Stability');
- assert.equal(fields['overall.remarks'],'FAILED in SPC and Molds and Yeast.');
+ assert.equal(fields['overall.remarks'],'Failed in Standard Plate Count (SPC), Molds and Yeast');
  draft.results.forEach((result:any)=>result.remarks='Failed');
- assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'FAILED in SPC and Molds and Yeast.');
+ assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'Failed in Standard Plate Count (SPC), P. aeruginosa, Molds and Yeast');
  draft.results.forEach((result:any)=>result.remarks='Passed');
- assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'FAILED in SPC and Molds and Yeast.');
+ assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'PASSED');
 });
 
 test('report organism labels use the full workbook names',()=>{
