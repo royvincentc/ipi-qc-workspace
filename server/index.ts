@@ -16,6 +16,7 @@ import {Fault,googleId,hash,column,currentMonth,monthOf,sourceLayout} from './do
 import {readWorkbook,readApplicability,google,driveFolder} from './google.js';
 import {defaultConnections,prepareSample,commitPreparedBatch,cancelPreparedBatch,syncSources,reconcileSubmission} from './samples.js';
 import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
+import {syncPendingReports} from './report-drive-sync.js';
 import {createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
 import {validateBindings,validatePreparedReplacement} from './template.js';
 import {environmentalProfiles,publishEnvironmentalProfile,retireEnvironmentalProfile} from './environmental.js';
@@ -230,6 +231,13 @@ app.put('/api/drafts/:id',requireRole('administrator','analyst'),async(req,res)=
 app.get('/api/drafts/:id/history',async(req,res)=>res.json((await db.query('SELECT revision,data FROM draft_revisions WHERE id=$1 ORDER BY revision DESC',[req.params.id])).rows));
 app.post('/api/drafts/:id/generate',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive()}).parse(req.body);const f=await generate(String(req.params.id),b.revision,req.user.email);const {path,pdf,...safe}=f;res.json({...safe,hasPreview:!!pdf});});
 app.get('/api/files',async(req,res)=>{const q=String(req.query.q||'').trim();const where=q?"WHERE concat_ws(' ',data->>'name',data->>'ml',data->>'kind') ILIKE $1":'';const args=q?[`%${q.replace(/[\\%_]/g,'\\$&')}%`]:[];const list=(await db.query(`SELECT (data-'path'-'pdf') || jsonb_build_object('hasPreview',COALESCE(jsonb_typeof(data->'pdf')='string',false)) AS data FROM files ${where}`,args)).rows.map(r=>r.data);list.sort((a,b)=>String(a.ml||a.name).localeCompare(String(b.ml||b.name),undefined,{numeric:true}));res.json(list);});
+app.post('/api/files/sync-all',requireRole('administrator','analyst'),async(req,res)=>{
+ if(demo)throw new Fault(409,'Google Drive sync is unavailable in the local demo');
+ const connections=await setting('connections',defaultConnections);
+ if(!connections.reportFolder)throw new Fault(409,'Ask an administrator to configure the report archive in Settings → Connections');
+ const reports=(await db.query("SELECT data FROM files WHERE data->>'kind'='report' ORDER BY created_at,id")).rows.map(row=>row.data);
+ res.json(await syncPendingReports(reports,id=>retryReportDriveSync(id,req.user.email)));
+});
 app.post('/api/files/:id/sync',requireRole('administrator','analyst'),async(req,res)=>res.json(await retryReportDriveSync(String(req.params.id),req.user.email)));
 app.get('/api/files/:id/:action',async(req,res)=>{const file=(await db.query('SELECT data FROM files WHERE id=$1',[req.params.id])).rows[0]?.data;if(!file)throw new Fault(404,'File not found');const preview=req.params.action==='preview',pdfDownload=req.params.action==='download-pdf';if(!preview&&!pdfDownload&&req.params.action!=='download')throw new Fault(404,'Unknown file action');if((preview||pdfDownload)&&!file.pdf)throw new Fault(409,'PDF file is unavailable');await audit(req.user.email,preview?'file_preview':pdfDownload?'pdf_download':'file_download',file.id);res.setHeader('Cache-Control','private, no-store');if(file.driveId&&file.kind==='library'){const config=await setting('connections',defaultConnections);const meta=await google<any>(`https://www.googleapis.com/drive/v3/files/${file.driveId}?fields=id,name,parents,capabilities(canDownload),mimeType`);if(!await isDriveFileInLinkedFolder(file.driveId,config.folders)||!meta.capabilities?.canDownload)throw new Fault(403,'File access is no longer authorized');throw new Fault(409,'Open this source in Google Drive to preview or download with its native permissions');}if(preview)res.type('pdf').sendFile(privatePath(file.pdf));else if(pdfDownload)res.download(privatePath(file.pdf),String(file.name).replace(/\.docx$/i,'.pdf'));else res.download(privatePath(file.path),file.name);});
 app.post('/api/library/sync',requireRole('administrator'),async(req,res)=>res.json(await syncDriveLibrary(req.user.email)));

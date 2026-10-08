@@ -224,7 +224,7 @@ function Workspace({data}:{data:any}){
             <header className="topbar">
               <button className="icon-button mobile-menu-button" aria-label="Open navigation" onClick={()=>setMobileNav(true)}><Menu size={20}/></button>
               <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>IPI</b><span>QC MICROBIOLOGY</span></Link>
-              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Workspace'],['/new','Log Sample'],['/samples','Samples'],['/reports','Reports'],['/library','File Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
+              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Workspace'],['/new','Log Sample'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','File Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
                 <div className="workspace-status" title={data.demo?'Local workspace. External writes are disabled.':'Authenticated live workspace'}>
                   <span className={`status-dot ${data.demo ? 'pending' : ''}`}/>

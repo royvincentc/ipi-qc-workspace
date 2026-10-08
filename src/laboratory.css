@@ -208,6 +208,8 @@ input:not([type="checkbox"]):not([type="radio"]),select,textarea { min-height:42
 .toast { border-radius:18px; background:var(--bg-surface-elevated); color:var(--text-primary); }
 .sticky-actions { border-radius:20px; background:var(--bg-surface-elevated); }
 .loading-state { min-height:180px; }
+.library-header-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.library-page .page-heading-action .library-header-actions .button { width:auto; min-height:44px; padding:10px 14px; font-size:12px; gap:8px; }
 #root > .loading-state { min-height:100vh; min-height:100dvh; }
 .main-wrapper:has(> .workspace-content > .route-stage > .loading-state) { min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; }
 .main-wrapper:has(> .workspace-content > .route-stage > .loading-state) > .workspace-content { flex:1; display:flex; }
