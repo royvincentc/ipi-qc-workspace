@@ -4,7 +4,6 @@ import {ArrowRight,Beaker,ChevronDown,FileText,FlaskConical,FolderOpen,MapPin,Me
 import {LabGraphic} from './LabGraphic';
 import {Badge,ErrorBox,useLoad} from './ui';
 import {api} from './api';
-import {isConstrainedDevice} from './motion';
 import {resultDisplayValue,resultKey,type Sample} from '../shared/model';
 
 type Assay={id:string;name:string;shortName?:string;reportLabel?:string;active?:boolean;categories?:string[]};
@@ -50,8 +49,7 @@ function WorkflowConnector({path,active,pulseId,enabled,flowing,paused}:{path:Pa
 
 export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selectedSampleId,onSelectSample}:{samples:Sample[];drafts:any[];edit:boolean;categoryName:(id:string)=>string;assays:Assay[];selectedSampleId:string;onSelectSample:(id:string)=>void}){
   const [connections,setConnections]=useState(true);
-  const [lowPerformance]=useState(isConstrainedDevice);
-  const [motionRequested,setMotionRequested]=useState(()=>!isConstrainedDevice());
+  const [motionRequested,setMotionRequested]=useState(true);
   const [reducedMotion,setReducedMotion]=useState(()=>typeof window!=='undefined'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [pageVisible,setPageVisible]=useState(()=>typeof document==='undefined'||document.visibilityState!=='hidden');
   const [inView,setInView]=useState(true);
@@ -163,7 +161,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
     <div className="workbench-toolbar">
       <div className="workbench-options">
         <div className="workbench-option"><span>Show connections</span><button type="button" className="lab-switch" role="switch" aria-label="Show connections" aria-checked={connections} onClick={()=>setConnections(value=>!value)}><i/></button></div>
-        <div className="workbench-option"><span>Motion preview</span><button type="button" className="lab-switch" role="switch" aria-label="Motion preview" aria-checked={motionEnabled} disabled={!motionSupported} title={reducedMotion?'Motion is off because reduced motion is enabled':lowPerformance?'Toggle motion preview · Off by default to reduce device load':'Toggle motion preview'} onClick={()=>setMotionRequested(value=>!value)}><i/></button></div>
+        <div className="workbench-option"><span>Motion preview</span><button type="button" className="lab-switch" role="switch" aria-label="Motion preview" aria-checked={motionEnabled} disabled={!motionSupported} title={reducedMotion?'Motion is off because reduced motion is enabled':'Toggle motion preview'} onClick={()=>setMotionRequested(value=>!value)}><i/></button></div>
       </div>
       <div className="workflow-search" ref={searchRef} onBlur={event=>{if(event.relatedTarget&&!event.currentTarget.contains(event.relatedTarget))setSearchOpen(false);}}>
         <label className="workflow-search-field"><Search size={20} aria-hidden="true"/><input role="combobox" aria-label="Find workflow sample by ML or control number" aria-autocomplete="list" aria-expanded={searchOpen&&Boolean(query.trim())} aria-controls="workflow-sample-matches" aria-activedescendant={searchOpen&&activeMatch>=0?`workflow-match-${activeMatch}`:undefined} autoComplete="off" placeholder="Search by ML or control number…" value={query} onFocus={()=>setSearchOpen(true)} onChange={event=>{setQuery(event.target.value);setSearchOpen(true);}} onKeyDown={event=>{

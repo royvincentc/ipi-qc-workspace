@@ -208,6 +208,11 @@ input:not([type="checkbox"]):not([type="radio"]),select,textarea { min-height:42
 .toast { border-radius:18px; background:var(--bg-surface-elevated); color:var(--text-primary); }
 .sticky-actions { border-radius:20px; background:var(--bg-surface-elevated); }
 .loading-state { min-height:180px; }
+#root > .loading-state { min-height:100vh; min-height:100dvh; }
+.main-wrapper:has(> .workspace-content > .route-stage > .loading-state) { min-height:100vh; min-height:100dvh; display:flex; flex-direction:column; }
+.main-wrapper:has(> .workspace-content > .route-stage > .loading-state) > .workspace-content { flex:1; display:flex; }
+.route-stage:has(> .loading-state) { flex:1; display:flex; flex-direction:column; }
+.route-stage > .loading-state { flex:1; }
 /* Incumbent decorative loops yield to brief, interaction-bound motion. */
 .page-motion-mark,.page-motion-mark *,.brand-icon svg,.badge,.status-dot,.timeline-item,.timeline-item *,.sample-row,.route-stage,.dashboard-table tr,.floating-launcher,.floating-launcher *,.petri-rim,.petri-scan-ring,.petri-orbit,.petri-colony,.petri-colony-core,.petri-signal,.petri-node,.login-story-mark { animation:none!important; }
 .ambient-backdrop { display:none; }

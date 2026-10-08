@@ -1,4 +1,4 @@
-/** A conservative default; users can opt into the workflow motion preview. */
+/** Reduce general interface effects on constrained devices; workflow motion has its own toggle. */
 export function isConstrainedDevice(){
   if(typeof navigator==='undefined')return false;
   const device=navigator as Navigator & {deviceMemory?:number;connection?:{saveData?:boolean}};
