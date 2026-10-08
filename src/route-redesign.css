@@ -293,6 +293,12 @@ main [aria-selected="true"] { color: var(--ink-primary); }
   white-space: normal;
 }
 .library-document small { display: block; margin-top: 3px; font-size: 11px; }
+.library-document .library-sync-error { color: var(--text-primary); font-size: 12px; line-height: 1.5; margin-top: 8px; overflow-wrap: anywhere; }
+.library-sync-failures { margin-bottom: 20px; }
+.library-sync-failures h2 { font-size: 16px; }
+.library-sync-failures ul { margin: 12px 0 0; padding-left: 20px; }
+.library-sync-failures li { margin-top: 12px; overflow-wrap: anywhere; }
+.library-sync-failures p { margin: 4px 0 0; color: var(--text-secondary); font-size: 13px; }
 .library-record-state { min-width: 0; }
 .library-record-state .badge { max-width: 100%; white-space: normal; }
 .library-state-quiet { color: var(--text-tertiary); font-size: 12px; }

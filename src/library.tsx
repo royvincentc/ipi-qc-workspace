@@ -14,15 +14,17 @@ const kindLabels:Record<string,string>={
 export default function FileLibrary(){
  const [q,setQ]=useState(''),[search,setSearch]=useState(''),[kind,setKind]=useState(''),[sort,setSort]=useState('numeric'),[page,setPage]=useState(1),[busy,setBusy]=useState(false),[syncing,setSyncing]=useState(''),[preview,setPreview]=useState<any>();
  const notify=useContext(Notice),{user,demo}=useContext(Session);
+ const [syncFailures,setSyncFailures]=useState<{id:string;name:string;error:string}[]>([]);
  useEffect(()=>{const t=setTimeout(()=>{setSearch(q);setPage(1);},250);return()=>clearTimeout(t);},[q]);
  const params=new URLSearchParams({q:search,kind,sort,page:String(page)});const {data,error,reload}=useLoad(()=>api('/library-items?'+params),[params.toString()]);
- async function syncReport(id:string){setSyncing(id);try{await api(`/files/${id}/sync`,'POST');notify('Report synced to Google Drive');reload();}catch(e:any){notify(e.message,true);}finally{setSyncing('');}}
+ async function syncReport(id:string){setSyncing(id);try{await api(`/files/${id}/sync`,'POST');setSyncFailures(items=>items.filter(item=>item.id!==id));notify('Report synced to Google Drive');}catch(e:any){setSyncFailures(items=>items.map(item=>item.id===id?{...item,error:e.message}:item));notify(e.message,true);}finally{reload();setSyncing('');}}
  const refreshLibrary=async()=>{setBusy(true);try{const r=await api('/library/sync','POST');notify(`Library refreshed: ${r.count} files`);reload();}catch(e:any){notify(e.message,true);}finally{setBusy(false);}};
- const syncAll=async()=>{setSyncing('all');try{const r=await api('/files/sync-all','POST');notify(`${r.synced} reports synced to Drive · ${r.skipped} already synced${r.failed.length?` · ${r.failed.length} failed; retry the reports marked “Drive sync needs attention”`:''}`,r.failed.length>0);reload();}catch(e:any){notify(e.message,true);}finally{setSyncing('');}};
+ const syncAll=async()=>{setSyncing('all');try{const r=await api('/files/sync-all','POST');setSyncFailures(r.failed);notify(`${r.synced} reports synced to Drive · ${r.skipped} already synced${r.failed.length?` · ${r.failed.length} failed. See the failure details in the library.`:''}`,r.failed.length>0);reload();}catch(e:any){notify(e.message,true);}finally{setSyncing('');}};
  const pageCount=data?Math.max(1,Math.ceil(data.total/data.limit)):1;
 
  return <div className="library-page">
   <PageTitle title="Files & documents" description="Find generated reports, historical references and authorized library files." action={<div className="library-header-actions">{user.role==='administrator'?<button className="button secondary" disabled={demo||busy||!!syncing} title={demo?'Drive refresh is unavailable in the local demo':undefined} onClick={refreshLibrary}><RefreshCw size={16}/>{busy?'Refreshing…':'Refresh library'}</button>:null}{user.role!=='viewer'?<button className="button secondary" disabled={demo||busy||!!syncing} title={demo?'Drive sync is unavailable in the local demo':'Upload all pending generated reports, across all pages and filters'} onClick={syncAll}><CloudUpload size={16}/>{syncing==='all'?'Syncing reports…':'Sync all to drive'}</button>:null}</div>}/>
+  {syncFailures.length?<section className="library-sync-failures" aria-label="Drive sync failures" role="status"><h2>{syncFailures.length} {syncFailures.length===1?'report could':'reports could'} not sync to Drive</h2><ul>{syncFailures.map(f=><li key={f.id}><strong>{f.name}</strong><p>{f.error}</p></li>)}</ul></section>:null}
   <section className="panel library-panel" aria-label="Document library">
    <div className="library-toolbar">
     <SearchInput value={q} onChange={setQ} placeholder="Find a document or control number…"/>
@@ -35,7 +37,7 @@ export default function FileLibrary(){
     <div className="library-list">
      {data.items.map((f:any)=><article className="library-row" key={f.id} aria-label={`Document ${f.name}`}>
       <FileText className="library-file-icon" size={20} aria-hidden="true"/>
-      <div className="library-document"><strong title={f.name}>{f.name}</strong><small>{kindLabels[f.kind]||'Document'}{f.resultRevision?` · Result revision ${f.resultRevision}`:''}</small></div>
+      <div className="library-document"><strong title={f.name}>{f.name}</strong><small>{kindLabels[f.kind]||'Document'}{f.resultRevision?` · Result revision ${f.resultRevision}`:''}</small>{f.driveSyncError?<small className="library-sync-error">{f.driveSyncError}</small>:null}</div>
       <div className="library-record-state">{f.driveSyncError?<Badge tone="amber">Drive sync needs attention</Badge>:f.externalReviewRequired?<Badge tone="amber">External review required</Badge>:f.driveSyncedAt?<Badge tone="green">Synced to Drive</Badge>:<span className="library-state-quiet">Available</span>}</div>
       <div className="library-actions">
        {f.hasPreview?<button className="button secondary small" aria-label={`Preview ${f.name}`} onClick={()=>setPreview(f)}>Preview</button>:null}
