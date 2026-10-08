@@ -19,6 +19,7 @@ import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
 import {createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
 import {validateBindings,validatePreparedReplacement} from './template.js';
 import {environmentalProfiles,publishEnvironmentalProfile,retireEnvironmentalProfile} from './environmental.js';
+import {scanEnvironmentalBatch,previewEnvironmentalBatch,publishEnvironmentalBatch} from './environmental-batch.js';
 import {categories,type Category,type Specification,type Template,type Sample,resultKey} from '../shared/model.js';
 import {defaultWorksheetLayout,worksheetLayoutSchema} from '../shared/worksheet-layout.js';
 import {seed} from './seed.js';
@@ -208,6 +209,15 @@ app.get('/api/drafts',async(_req,res)=>res.json((await db.query(`SELECT jsonb_bu
  'sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml')
  ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC`)).rows.map(r=>r.data)));
 app.get('/api/environmental/profiles',async(_req,res)=>res.json(await environmentalProfiles()));
+const environmentalBatchRules=z.object({facility:z.string().max(200),context:z.string().max(200),criterionDate:z.string(),effectiveFrom:z.string(),layouts:z.record(z.string()),createProducts:z.boolean(),unchanged:z.boolean().default(true)});
+app.post('/api/environmental/imports',requireRole('administrator'),express.raw({type:'application/zip',limit:'180mb'}),async(req,res)=>{
+ if(!Buffer.isBuffer(req.body)||!req.body.length)throw new Fault(400,'Upload the environmental ZIP archive.');
+ const blob=req.body;req.body=undefined;
+ res.json(await scanEnvironmentalBatch(blob,String(req.query.name||'Environmental archive').slice(0,200),req.user.email));
+});
+app.get('/api/environmental/imports',requireRole('administrator'),async(_req,res)=>res.json((await db.query("SELECT jsonb_build_object('id',id,'name',data->>'name','createdAt',data->>'createdAt') AS data FROM files WHERE data->>'kind'='environmental-import' ORDER BY created_at DESC LIMIT 10")).rows.map(r=>r.data)));
+app.post('/api/environmental/imports/:id/preview',requireRole('administrator'),async(req,res)=>res.json(await previewEnvironmentalBatch(String(req.params.id),environmentalBatchRules.parse(req.body))));
+app.post('/api/environmental/imports/:id/publish',requireRole('administrator'),async(req,res)=>{const b=z.object({rules:environmentalBatchRules,selected:z.array(z.string()).min(1).max(1000),configurationRevision:z.number().int(),reviewed:z.literal(true)}).parse(req.body);res.json(await publishEnvironmentalBatch(String(req.params.id),b.rules,b.selected,b.configurationRevision,req.user.email));});
 app.post('/api/environmental/profiles',requireRole('administrator'),async(req,res)=>{const b=z.object({profile:z.unknown(),reviewed:z.literal(true),previousId:z.string().optional(),revision:z.string().optional()}).parse(req.body);res.status(201).json(await publishEnvironmentalProfile(b.profile,req.user.email,b.previousId,b.revision));});
 app.patch('/api/environmental/profiles/:id/retire',requireRole('administrator'),async(req,res)=>{const b=z.object({revision:z.string()}).parse(req.body);res.json(await retireEnvironmentalProfile(String(req.params.id),b.revision,req.user.email));});
 app.patch('/api/references/templates/:id/active',requireRole('administrator'),async(req,res)=>{const b=z.object({active:z.boolean(),revision:z.string()}).parse(req.body);const row=(await db.query('SELECT data FROM templates WHERE id=$1',[req.params.id])).rows[0];if(!row||row.data.revision!==b.revision)throw new Fault(409,'Template changed. Reload before changing its active state.');const t={...row.data,active:b.active};await db.query('UPDATE templates SET data=$1 WHERE id=$2',[JSON.stringify(t),req.params.id]);await audit(req.user.email,'template_active_changed',String(req.params.id),{active:b.active});res.json({id:t.id,active:t.active});});

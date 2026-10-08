@@ -41,7 +41,7 @@ export function reportRows(d:Draft,t:Template){
   const location=[test.location||'',test.replicate?`Replicate ${test.replicate}`:''].filter(Boolean).join(' · ');
   if(grouped&&!location.trim())throw new Fault(422,`${label}: approved sampling-plan location is missing`);
   const value=r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r):'';
-  return {index:i,block:test.block||'tests',channel:test.channel,phase:test.stage||'',groupKey:[test.block||'tests',test.test,test.stage||'',test.criterion,test.unit,test.revision,test.date].join('|'),test:grouped?[label,t.family==='environmental-warehouse-phase-air-7c'?'':test.stage].filter(Boolean).join('\n'):[label,location,test.stage].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:r?.remarks||''};
+  return {index:i,block:test.block||'tests',channel:test.channel,phase:test.stage||'',groupKey:[test.block||'tests',test.test,test.stage||'',test.criterion,test.unit,test.revision,test.date].join('|'),test:grouped?[label,['environmental-warehouse-phase-air-7c','environmental-grouped-5c'].includes(t.family)?'':test.stage].filter(Boolean).join('\n'):[label,location,test.stage].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:r?.remarks||''};
  });
  return t.family==='environmental-warehouse-phase-air-7c'?warehouseRows(rows):rows;
 }

@@ -6,6 +6,13 @@ import {resultKey,type Sample,type Template} from '../shared/model.js';
 const sample={id:'sample',ml:'ML-EM-26-0001',batch:'TEST',status:'',remarks:'',category:'EM',name:'Fixture Product',context:'Regular',received:'2026-10-01',fields:{facility:'Plant 1',area:'Filling'},source:{fingerprint:'source-v1',spreadsheetId:'fixture',sheetId:1,sheet:'October 2026',section:'EM',row:5,range:'A5:S5',observedAt:'2026-10-01',url:'',mappingRevision:'1',raw:[]}} satisfies Sample;
 const template={id:'layout',name:'Fixture layout',path:'fixture.docx',category:'EM',family:'environmental-grouped-5c',verified:true,revision:'layout-v1',manifest:{tokens:['tests','test','location','criterion','value','remarks']}} satisfies Template;
 const row={test:'SPC',label:'Standard Plate Count',type:'numeric',location:'Filling nozzle 1',unit:'cfu',criterion:'Nmt 100 cfu',source:'reference',sourceLocation:'table1:row1',date:'2026-09-01',dateBasis:'owner-confirmed',revision:'criterion-v1'};
+test('registered layouts alone cannot fabricate environmental locations or criteria',()=>{
+ const result=resolveEnvironmentalProfile(sample,'product',[],[template]);
+ assert.equal(result.resolution.status,'missing');assert.equal(result.snapshot,undefined);
+ assert.match(result.resolution.message,/Fixture Product in Filling/);
+ assert.match(result.resolution.message,/DOCX layout does not supply locations or criteria/);
+ assert.deepEqual(result.profiles,[]);assert.deepEqual(result.outputs,[]);
+});
 function profile(){return {...environmentalProfileSchema.parse({name:'Fixture filling pattern',productId:'product',product:'Fixture Product',facility:'Plant 1',area:'Filling',equipmentSet:'Line A',context:'Regular',effectiveFrom:'2026-09-01',evidenceIds:['reference'],outputs:[{id:'spcmy',name:'SPC / MY',method:'spc-my',mode:'surface',templateId:'layout',templateRevision:'layout-v1',instances:[row,{...row,location:'Filling nozzle 2'}]}]}),id:'pattern',revision:'pattern-v1',active:true,approvedBy:'owner',approvedAt:'2026-09-01'};}
 test('multiple layouts do not conflict with the approved explicit output layout',()=>{
  const result=resolveEnvironmentalProfile(sample,'product',[profile()],[template,{...template,id:'other'}]);

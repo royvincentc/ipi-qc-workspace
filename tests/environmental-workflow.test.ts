@@ -36,7 +36,7 @@ test('approved environmental plan creates independent blank results and keeps it
  assert.equal(draft.environmentalSnapshot?.profile.id,profile.id);assert.equal(draft.results.length,2);
  assert.notEqual(draft.results[0].instanceId,draft.results[1].instanceId);
  assert.ok(draft.results.every(r=>r.state==='not_entered'&&r.value===''&&r.remarks===''));assert.equal(draft.resultSource,undefined);
- assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'');assert.equal(reportTemplateFields(draft,template).temperature,'');assert.equal(reportTemplateFields(draft,template).releaseDate,'');
+ assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'');assert.equal(reportTemplateFields(draft,template).temperature,'');const generated=reportTemplateFields(draft,template,new Date('2026-10-08T03:12:00Z'));assert.equal(generated.releaseDate,'10/08/2026 @ 11:12 AM');assert.equal(generated['sample.released'],generated.releaseDate);assert.equal(generated.facility,draft.sample.fields.facility);assert.equal(generated.area,draft.sample.fields.area);
  const tampered=structuredClone(draft.results);tampered[0].location='Different nozzle';await assert.rejects(saveDraft(draft.id,1,tampered,draft.fields,'owner'),/cannot be changed/);
  await retireEnvironmentalProfile(profile.id,profile.revision,'owner');
  const stored=(await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data;assert.equal(stored.environmentalSnapshot.profile.active,true);

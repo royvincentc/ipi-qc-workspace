@@ -113,6 +113,8 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
   const draftRecord=loadedDraft?.id===draft?.id?loadedDraft:undefined;
   const results=Array.isArray(draftRecord?.results)?draftRecord.results:setup?.sample?.id===sample?.id?setup.results||[]:[];
   const specification=draftRecord?.specification||(setup?.sample?.id===sample?.id?setup.specification:undefined);
+  const layoutResolution=setup?.sample?.id===sample?.id&&!draft?setup.layoutResolution:undefined;
+  const layoutBlocked=Boolean(layoutResolution&&layoutResolution.status!=='ready');
   const availableAssays=assays.filter(test=>test.active!==false&&(!test.categories?.length||!sample?.category||test.categories.includes(sample.category)));
   // Connectors show the selected sample's workflow, including stages awaiting data.
   // Missing parameters and drafts remain explicit within their respective panels.
@@ -236,7 +238,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
               const value=result?.state==='entered'?resultDisplayValue(test,result):result?.state==='not_tested'?`Not tested · ${result.reason||'Reason recorded in draft'}`:draft?(draftRecord?'Not entered':'Loading results…'):setup?.resultLookup==='not_found'?'No result recorded':'Not entered';
               return <div key={resultKey(test)}><Beaker size={19}/><span><strong>{meta?.shortName||test.test}</strong>{[test.location,test.stage,test.replicate].filter(Boolean).length?<small>{[test.location,test.stage,test.replicate].filter(Boolean).join(' · ')}</small>:null}<small className="parameter-value">{value}</small><small>{test.criterion||'Criteria not recorded'}</small></span></div>;
             })}
-            {!specification?<p>{draftError||setupError?'Parameters unavailable':sample?'Loading product parameters…':'Select a sample to see its parameters'}</p>:!specification.tests?.length?<p>No parameters configured for this product.</p>:null}
+            {!specification?<p>{draftError||setupError?'Parameters unavailable':sample?'Loading product parameters…':'Select a sample to see its parameters'}</p>:!specification.tests?.length?<p>{setup?.environmental?'An approved sampling pattern is needed to supply locations and criteria.':'No parameters configured for this product.'}</p>:null}
           </div>
           <ErrorBox message={draftError||setupError}/>
         </article>
@@ -245,18 +247,20 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
 
       <WorkflowConnector path="report" active={pulseTarget==='report'} pulseId={pulseId} enabled={connections&&Boolean(sample)} flowing={motionEnabled} paused={paused||!motionEnabled}/>
       <div className={`workflow-step ${selectedStage==='report'?'is-selected':''}`}>
-        <article className="workflow-panel">
+        <article className={`workflow-panel ${layoutBlocked?'is-blocked':''}`}>
           <span className="workflow-context-icon" aria-hidden="true"><FileText size={21}/></span>
           <LabGraphic key={selectedStage==='report'?pulseId:'report'} kind="sheets"/>
           <h3 className="workflow-title-heading"><button className="workflow-title" type="button" aria-pressed={selectedStage==='report'} onClick={()=>pulse('report')}>Draft report</button></h3>
           <div className="workflow-facts">
             <div><FileText size={19}/><span>Saved draft<small>{draft?<Badge>Draft · revision {draft.revision}</Badge>:'No related draft'}</small></span></div>
-            <div><MessageSquare size={19}/><span>Required inputs<small>{draft?draft.referenceIssue?'Reference needs attention':draft.missing?`${draft.missing} required items missing`:'Inputs complete':'Resolved when preparing a report'}</small></span></div>
-            <div><FolderOpen size={19}/><span>Linked source<small>{sample?.ml||'Not selected'}</small></span></div>
+            {!layoutBlocked?<><div><MessageSquare size={19}/><span>Required inputs<small>{draft?draft.referenceIssue?'Reference needs attention':draft.missing?`${draft.missing} required items missing`:'Inputs complete':'Resolved when preparing a report'}</small></span></div>
+            <div><FolderOpen size={19}/><span>Linked source<small>{sample?.ml||'Not selected'}</small></span></div></>:null}
           </div>
+          {layoutBlocked?<div className="workflow-resolution" role="region" aria-label="Report setup issue" tabIndex={0}><ErrorBox message={layoutResolution.message}/></div>:null}
+          {layoutBlocked&&setup?.environmental&&layoutResolution.status==='missing'?<Link className="workflow-report-link" to="/settings?section=templates#environmental-patterns">Configure sampling pattern <ArrowRight size={14}/></Link>:null}
           {sample?<Link className="workflow-report-link" to={`${action}#results-details`}>Results &amp; details <ArrowRight size={14}/></Link>:null}
         </article>
-        <span className="workflow-caption">Report draft</span>{setup?.layoutResolution?.status!=='ready'?<ErrorBox message={setup?.layoutResolution?.message||''}/>:null}
+        <span className="workflow-caption">Report draft</span>
       </div>
 
       <WorkflowConnector path="actions" active={false} pulseId={pulseId} enabled={connections&&Boolean(sample)} flowing={motionEnabled} paused={paused||!motionEnabled}/>

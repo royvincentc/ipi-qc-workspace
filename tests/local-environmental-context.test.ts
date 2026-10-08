@@ -1,0 +1,20 @@
+import {test,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp} from 'node:fs/promises';
+import path from 'node:path';
+process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=await mkdtemp(path.resolve('.data/environmental-context-test-'));
+const {db,migrate,close}=await import('../server/db.js');
+const {mappings}=await import('../server/domain.js');
+const {importLocalEnvironmentalContext}=await import('../server/local-environmental-context.js');
+await migrate();after(close);
+const row=['10/01/2026 @09:00 am','PF2','ML-EM-26-0491','Boost','Compounding','Regular','N/A','EYJ81','8','8','16','Aryan','Roy','','10/01/2026','','ON-GOING',''];
+const snapshot={spreadsheetId:'fixture',title:'Environmental logbook',readAt:'2026-10-08T00:00:00Z',tabs:[{tab:'October (ENVI) 2026',sheetId:1,values:[['ENVIRONMENTAL MONITORING'],[],[],mappings.EM.headers,row]}]};
+test('live context copy preserves raw activity metadata, source identity and idempotency without importing results',async()=>{
+ const first=await importLocalEnvironmentalContext(snapshot,'owner');assert.equal(first.inserted,1);assert.equal(first.googleWritesEnabled,false);
+ const initial=(await db.query('SELECT data FROM samples')).rows[0].data;assert.equal(initial.fields.facility,'PF2');assert.equal(initial.context,'Regular');assert.deepEqual(initial.source.raw,row);assert.equal(initial.results,undefined);
+ const retry=await importLocalEnvironmentalContext(snapshot,'owner');assert.equal(retry.updated,1);assert.equal((await db.query('SELECT data FROM samples')).rows[0].data.id,initial.id);
+ const invalid=structuredClone(snapshot);invalid.tabs[0].values[3][1]='Different header';await assert.rejects(()=>importLocalEnvironmentalContext(invalid,'owner'),/headers require review/);
+ const replacement=structuredClone(snapshot);replacement.tabs[0].values[4][2]='ML-EM-26-0500';await assert.rejects(()=>importLocalEnvironmentalContext(replacement,'owner'),/changed identity/);
+ assert.equal((await db.query('SELECT data FROM samples')).rows[0].data.ml,'ML-EM-26-0491');
+ const duplicate=structuredClone(snapshot);duplicate.tabs[0].values.push([...row]);const summary=await importLocalEnvironmentalContext(duplicate,'owner');assert.deepEqual(summary.duplicates,['ML-EM-26-0491']);assert.ok((await db.query('SELECT data FROM samples')).rows.every(r=>r.data.duplicate));
+});

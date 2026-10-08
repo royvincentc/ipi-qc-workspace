@@ -10,7 +10,7 @@ export const environmentalInstanceSchema=z.object({
 });
 export const environmentalOutputSchema=z.object({id:z.string().regex(/^[a-z][a-z0-9_-]{0,39}$/),name:text,method:z.enum(['accupoint','spc-my','microbial']),mode:z.enum(['surface','open-plate','water-validation','gip','phase-air']),templateId:text,templateRevision:text,instances:z.array(environmentalInstanceSchema).min(1).max(300)});
 export const environmentalProfileSchema=z.object({
- name:text,productId:text,product:text,category:text.default('EM'),facility:text,area:text,context:z.string().trim().max(200).default(''),equipmentSet:text,
+ name:text,productId:text,product:text,category:text.default('EM'),facility:text,area:text,areaType:z.string().trim().max(200).optional(),context:z.string().trim().max(200).default(''),equipmentSet:text,
  effectiveFrom:date,effectiveTo:date.optional(),evidenceIds:z.array(text).min(1).max(100),outputs:z.array(environmentalOutputSchema).min(1).max(10),
 }).superRefine((p,c)=>{
  if(p.effectiveTo&&p.effectiveTo<p.effectiveFrom)c.addIssue({code:'custom',message:'End date precedes the effective date'});
@@ -74,7 +74,7 @@ export function resolveEnvironmentalProfile(sample:Sample,productId:string,profi
  const summary=available.map(({id,name,equipmentSet,revision})=>({id,name,equipmentSet,revision}));
  const fail=(status:LayoutResolution['status'],message:string):EnvironmentalSetup=>({resolution:{status,message},profiles:summary,outputs:[]});
  if(sourceIssue)return fail('conflict',sourceIssue);
- if(!available.length)return fail('missing','No approved sampling pattern matches this product, facility, area and context. Configure one in Settings → Standardized templates.');
+ if(!available.length)return fail('missing',`No approved sampling pattern matches ${sample.name} in ${sample.fields.area} (${sample.context||'unspecified context'}). Registering a DOCX layout does not supply locations or criteria. Configure a matching pattern in Settings → Report templates.`);
  const rawDate=sample.received.match(/(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/)?.[0];
  const slash=rawDate?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
  const candidateDate=slash?`${slash[3]}-${slash[1].padStart(2,'0')}-${slash[2].padStart(2,'0')}`:rawDate;

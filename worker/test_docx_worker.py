@@ -1,8 +1,46 @@
 import io,json,tempfile,unittest,zipfile
 from pathlib import Path
-from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W
+from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W,upgrade_environmental_layout
 
 class DocumentTests(unittest.TestCase):
+    def test_environmental_data_weight_preserves_bold_headings(self):
+        from docx import Document
+        d=Document(self.template);header=d.sections[0].header
+        header.add_paragraph().add_run('{{sample.name}}').bold=True
+        heading=header.add_paragraph();heading.add_run('MICROBIOLOGY ANALYSIS REPORT').bold=True
+        for col in [2,3]:
+            for run in d.tables[0].cell(1,col).paragraphs[0].runs:run.bold=True
+        source=self.folder/'bold.docx';d.save(source);out=self.folder/'regular.docx';upgrade_environmental_layout(source.read_bytes(),out)
+        docs=roots(package(out.read_bytes()))
+        metadata=next(p for n,r in docs.items() if 'header' in n for p in r.xpath('.//w:p',namespaces=NS) if '{{sample.name}}' in text(p))
+        self.assertEqual(metadata.xpath('./w:r/w:rPr/w:b/@w:val',namespaces=NS),['0'])
+        heading=next(p for n,r in docs.items() if 'header' in n for p in r.xpath('.//w:p',namespaces=NS) if text(p)=='MICROBIOLOGY ANALYSIS REPORT')
+        self.assertNotEqual(heading.xpath('./w:r/w:rPr/w:b/@w:val',namespaces=NS),['0'])
+        for token in ['{{value}}','{{remarks}}']:
+            p=next(p for p in docs['word/document.xml'].xpath('.//w:p',namespaces=NS) if token in text(p))
+            self.assertEqual(p.xpath('./w:r/w:rPr/w:b/@w:val',namespaces=NS),['0'])
+    def test_environmental_analyst_date_excludes_time_but_release_header_keeps_it(self):
+        from docx import Document
+        d=Document(self.template);d.add_paragraph('Date&Time Released: {{releaseDate}}');d.sections[0].footer.add_paragraph('Date: {{releaseDate}}')
+        source=self.folder/'dated.docx';d.save(source);upgraded=self.folder/'dated-upgraded.docx';upgrade_environmental_layout(source.read_bytes(),upgraded)
+        fields={k:'' for k in validate_template(upgraded.read_bytes())['tokens']};fields.update({'releaseDate':'10/08/2026 @ 11:23 AM','d.release':'10/08/2026'})
+        output=self.folder/'dated-result.docx';render(upgraded,{'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]},output)
+        docs=roots(package(output.read_bytes()))
+        self.assertIn('Date&Time Released: 10/08/2026 @ 11:23 AM',text(docs['word/document.xml']))
+        footer=' '.join(text(r) for n,r in docs.items() if 'footer' in n)
+        self.assertIn('Date: 10/08/2026',footer);self.assertNotIn('11:23',footer)
+    def test_environmental_layout_upgrade_and_empty_block_override(self):
+        source=self.environmental_fixture(blocks=1);template=self.folder/'prepared.docx';prepare_template(source.read_bytes(),template)
+        upgraded=self.folder/'upgraded.docx';upgrade_environmental_layout(template.read_bytes(),upgraded)
+        tokens=validate_template(upgraded.read_bytes())['tokens']
+        self.assertIn('facility',tokens);self.assertIn('area',tokens);self.assertIn('type',tokens)
+        fields={k:'' for k in tokens};fields.update({'facility':'PF2','area':'Compounding','type':'Hair and Body Care'})
+        rows=[{'test':'SPC','location':str(i),'criterion':'Nmt 100 cfu','value':str(i),'remarks':'Passed','groupKey':'SPC'} for i in range(2)]
+        out=self.folder/'rendered.docx';render(upgraded,{'fields':fields,'rows':rows,'renderOptions':{'environmental':True,'blocks':{'tests':{'mergeColumns':[]}}}},out)
+        docs=roots(package(out.read_bytes()));root=docs['word/document.xml']
+        self.assertIn('PF2 Compounding Area (Hair and Body Care)',' '.join(text(r) for r in docs.values()))
+        for col in [1,3]:self.assertEqual(len(root.xpath(f'.//w:tr/w:tc[{col}]/w:tcPr/w:vMerge',namespaces=NS)),2)
+        for col in [2,4,5]:self.assertEqual(len(root.xpath(f'.//w:tr/w:tc[{col}]/w:tcPr/w:vMerge',namespaces=NS)),0)
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.folder=Path(self.tmp.name);self.template=self.folder/'template.docx';demo_template(self.template)
     def tearDown(self):self.tmp.cleanup()

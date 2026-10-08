@@ -226,7 +226,7 @@ function Workspace({data}:{data:any}){
               <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>IPI</b><span>QC MICROBIOLOGY</span></Link>
               <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Workspace'],['/new','Log Sample'],['/samples','Samples'],['/reports','Reports'],['/library','File Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
-                <div className="workspace-status" title={data.demo?'Practice records only. External writes are disabled.':'Authenticated live workspace'}>
+                <div className="workspace-status" title={data.demo?'Local workspace. External writes are disabled.':'Authenticated live workspace'}>
                   <span className={`status-dot ${data.demo ? 'pending' : ''}`}/>
                   {data.demo?'Demo workspace':'Live workspace'}
                 </div>
@@ -237,7 +237,7 @@ function Workspace({data}:{data:any}){
                   <button type="button" className="account-trigger" aria-label={`Account menu for ${data.user.name}`} aria-haspopup="menu" aria-expanded={accountOpen} onClick={()=>setAccountOpen(value=>!value)}><span className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</span><ChevronDown size={15}/></button>
                   {accountOpen?<div className="account-menu" role="menu" aria-label="Account">
                     <strong>{data.user.name}</strong><span className="account-role">{data.user.role}</span>
-                    {data.demo?<span className="account-demo-note">Demo workspace · practice records only</span>:<button type="button" role="menuitem" onClick={()=>api('/auth/logout','POST').then(()=>window.location.reload())}><LogOut size={15}/> Sign out</button>}
+                    {data.demo?<span className="account-demo-note">Local demo · Google writes disabled</span>:<button type="button" role="menuitem" onClick={()=>api('/auth/logout','POST').then(()=>window.location.reload())}><LogOut size={15}/> Sign out</button>}
                   </div>:null}
                 </div>
               </div>
@@ -245,7 +245,7 @@ function Workspace({data}:{data:any}){
 
             {data.demo && (
               <div className="demo-banner" style={{background: 'var(--color-warning-bg)', color: 'var(--color-warning)', padding: '8px 24px', fontSize: '11px', textAlign: 'center'}}>
-                DEMO MODE — Practice records only. No Google writes enabled.
+                LOCAL DEMO — May include imported logbook snapshots. Google writes are disabled.
               </div>
             )}
 

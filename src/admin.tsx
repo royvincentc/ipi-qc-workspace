@@ -1,4 +1,5 @@
 import Dialog from './dialog';
+import {useSearchParams} from 'react-router-dom';
 import AuditLog from './audit';
 import {useContext,useEffect,useState} from 'react';
 import {Plus,Save,Search,Settings2} from 'lucide-react';
@@ -13,7 +14,10 @@ const sections=[['general','General','Application name, laboratory, location and
 const listKeys=['sampleTypes','products','tests','lookups'] as const;
 type ListKey=typeof listKeys[number];
 export default function AdminCenter(){
- const {config,reload}=useConfiguration();const [draft,setDraft]=useState<Configuration>(structuredClone(config.value)),[section,setSection]=useState('general'),[query,setQuery]=useState(''),[selected,setSelected]=useState(''),[entityQuery,setEntityQuery]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false),[navCollapsed,setNavCollapsed]=useState(false);
+ const [settingsParams]=useSearchParams();
+ const requestedSection=settingsParams.get('section');
+ const {config,reload}=useConfiguration();const [draft,setDraft]=useState<Configuration>(structuredClone(config.value)),[section,setSection]=useState(requestedSection&&sections.some(s=>s[0]===requestedSection)?requestedSection:'general'),[query,setQuery]=useState(''),[selected,setSelected]=useState(''),[entityQuery,setEntityQuery]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[confirm,setConfirm]=useState(false),[navCollapsed,setNavCollapsed]=useState(false);
+ useEffect(()=>{if(requestedSection&&sections.some(s=>s[0]===requestedSection))setSection(requestedSection);},[requestedSection]);
  const notify=useContext(Notice);const dirty=JSON.stringify(draft)!==JSON.stringify(config.value);const clearUnsaved=useUnsaved(dirty);
  useEffect(()=>setDraft(structuredClone(config.value)),[config.revision]);
  const change=(group:'general'|'reports',key:string,value:any)=>setDraft(d=>({...d,[group]:{...d[group],[key]:value}}));

@@ -21,7 +21,7 @@ export function reportTestLabel(test:string,fallback=''){
  return labels[test]||fallback||testLabels[test]||test;
 }
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'|'instanceId'>){return r.instanceId||[r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
-export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return /^\s*Nmt\b/i.test(criterion)?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
+export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return (/^\s*Nmt\b/i.test(criterion)||(['SPC','MY'].includes(test)&&/^\s*Not\s+more\s+than\s*\d/i.test(criterion)))?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function resultDisplayValue(test:Criterion,r:Result){
  if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
  const limit=microbiologyLimit(test.test,test.criterion);

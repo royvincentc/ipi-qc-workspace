@@ -127,7 +127,7 @@ def prepare_template(data,output,family=None):
                     issues.append('Unrecognized field structure: '+label);continue
                 value=following[colon+1];key=labels[label]
                 if pattern and label=='Logbook':set_text(p,'ML number')
-                set_text(value,'{{'+key+'}}'+(' {{sample.ml}}' if key=='logbookReference' else ''))
+                set_text(value,'{{facility}} {{area}} Area ({{type}})' if pattern and label=='Area' else '{{'+key+'}}'+(' {{sample.ml}}' if key=='logbookReference' else ''))
                 # A legacy value cell may contain several paragraphs (including
                 # a second ML number). Blank the whole value region, not just
                 # its first paragraph, while preserving subsequent field labels.
@@ -235,6 +235,7 @@ def prepare_template(data,output,family=None):
         if pattern and re.search(r'\bML\s*-\s*[A-Z]{2,4}\s*-\s*\d{2,4}\s*-\s*\d+\b',text(root),re.I):issues.append('Unmapped historical ML identifier needs manual removal')
     with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
         for n,b in parts.items():z.writestr(n,b)
+    if pattern:upgrade_environmental_layout(Path(output).read_bytes(),output)
     return {'requiredFields':sorted(set(required+(['analysisDate'] if pattern else ['analysisDate','logbookReference']))),'mappedFields':mapped,'instances':instances,'blocks':block_options or None,'environmentalPattern':pattern,'family':pattern['family'] if pattern else None,'issues':issues,'verified':False,'sourceSha256':hashlib.sha256(data).hexdigest(),'instruction':'Review all variable fields, blank signature areas and rendered layout before registration.'}
 
 def inventory(data,name='',family_hint=None):
@@ -312,6 +313,52 @@ def merge_result_groups(rows, rendered_rows, merge_columns):
                     set_vertical_merge(cells[column],'restart' if row_index==start else 'continue')
         start=i
 
+def upgrade_environmental_layout(data,output):
+    """Update only Area metadata in a retained, already sanitized layout."""
+    parts=package(data);docs=roots(parts);updated=any('{{facility}} {{area}} Area ({{type}})' in text(root) for root in docs.values())
+    for name,root in docs.items():
+        paragraphs=[p for p in root.xpath('.//w:p',namespaces=NS) if not p.xpath('.//w:p',namespaces=NS)]
+        for paragraph in paragraphs:
+            if re.match(r'^\s*Date\s*:',text(paragraph),re.I):
+                values={token:'{{'+token+'}}' for token in re.findall(r'\{\{\s*([\w.:-]+)\s*\}\}',text(paragraph))}
+                values.update({'releaseDate':'{{d.release}}','sample.released':'{{d.release}}'})
+                replace_tokens(paragraph,values)
+        for i,p in enumerate(paragraphs):
+            if text(p).strip().rstrip(':')!='Area':continue
+            following=paragraphs[i+1:i+5]
+            colon=next((j for j,x in enumerate(following) if text(x).strip()==':'),None)
+            if colon is None or colon+1>=len(following):continue
+            value=following[colon+1]
+            if '{{area}}' not in text(value):continue  # never replace historical source data
+            set_text(value,'{{facility}} {{area}} Area ({{type}})');updated=True
+    if not updated:
+        header=next((r for n,r in docs.items() if n.startswith('word/header')),None)
+        region=header if header is not None else docs['word/document.xml'].find(W+'body')
+        paragraph=E.Element(W+'p');set_text(paragraph,'Area: {{facility}} {{area}} Area ({{type}})')
+        section=region.find(W+'sectPr')
+        if section is not None:region.insert(region.index(section),paragraph)
+        else:region.append(paragraph)
+    # Extracted metadata and individual observations are regular-weight data.
+    # Keep form headings, method names, locations and specification labels intact.
+    for name,root in docs.items():
+        for paragraph in root.xpath('.//w:p',namespaces=NS):
+            if paragraph.xpath('.//w:p',namespaces=NS):continue
+            tokens=re.findall(r'\{\{\s*([\w.:-]+)\s*\}\}',text(paragraph))
+            is_metadata='header' in name and bool(tokens)
+            is_result=any(t in ('value','activeValue','passiveValue','remarks') or re.fullmatch(r'result\.\d+\.(?:value|remarks)',t) for t in tokens)
+            if not (is_metadata or is_result):continue
+            for run in paragraph.findall(W+'r'):
+                props=run.find(W+'rPr')
+                if props is None:props=E.Element(W+'rPr');run.insert(0,props)
+                for tag in ['b','bCs']:
+                    weight=props.find(W+tag)
+                    if weight is None:weight=E.SubElement(props,W+tag)
+                    weight.set(W+'val','0')
+    for n,root in docs.items():parts[n]=E.tostring(root,xml_declaration=True,encoding='UTF-8',standalone=True)
+    with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
+        for n,b in parts.items():z.writestr(n,b)
+    return {'path':str(output),'tokens':validate_template(Path(output).read_bytes())['tokens']}
+
 def render(template,payload,output,soffice=None):
     parts=package(Path(template).read_bytes()); docs=roots(parts)
     fields=payload['fields']; observations=payload.get('rows',[])
@@ -348,6 +395,8 @@ def render(template,payload,output,soffice=None):
             options=payload.get('renderOptions',{}).get('blocks',{}).get(block,row_grouping) if payload.get('renderOptions',{}).get('blocks') else row_grouping
             merge_columns=options.get('mergeColumns',[]) if options else []
             allowed=[column for column,cell in logical_cells(row).items() if re.search(r'\{\{\s*(test|criterion)\s*\}\}',text(cell)) and not re.search(r'\{\{\s*(location|phase)\s*\}\}',text(cell))]
+            if payload.get('renderOptions',{}).get('environmental'):
+                merge_columns=sorted(set(merge_columns+allowed))
             if any(column not in allowed for column in merge_columns):raise ValueError('Only test and specification cells may be merged')
             for column in merge_columns:
                 role='test' if re.search(r'\{\{\s*test\s*\}\}',text(logical_cells(row)[column])) else 'criterion'
@@ -367,7 +416,7 @@ def render(template,payload,output,soffice=None):
                 for p in clone.xpath('.//w:p',namespaces=NS):replace_tokens(p,{**fields,**result,marker:''})
                 parent.insert(index+i,clone)
                 clones.append(clone)
-            if options:merge_result_groups(clones,selected,merge_columns)
+            if options or payload.get('renderOptions',{}).get('environmental'):merge_result_groups(clones,selected,merge_columns)
         for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,fields)
         if '{{' in text(root):raise ValueError('Unresolved template tokens remain')
     if named and set(payload.get('blocks',{}))-seen_blocks:raise ValueError('Payload includes an unknown row block')
@@ -417,8 +466,11 @@ def demo_template(output):
     d.save(output)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--soffice');p.add_argument('--family');args=p.parse_args()
-    if args.action=='inventory':
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--soffice');p.add_argument('--family');args=p.parse_args()
+    if args.action=='environmental-batch':
+        from environmental_batch import scan
+        result=scan(args.input,args.output)
+    elif args.action=='inventory':
         path=Path(args.input)
         if path.suffix.lower()=='.zip':
             result=[]
@@ -428,6 +480,7 @@ def main():
                         try:result.append(inventory(z.read(item),item.filename))
                         except Exception as e:result.append({'name':item.filename,'error':str(e)})
         else:result=inventory(path.read_bytes(),path.name,args.family)
+    elif args.action=='environmental-layout':result=upgrade_environmental_layout(Path(args.input).read_bytes(),args.output)
     elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output,args.soffice)
     elif args.action=='validate':result=validate_template(Path(args.input).read_bytes())
     elif args.action=='prepare':result=prepare_template(Path(args.input).read_bytes(),args.output,args.family)

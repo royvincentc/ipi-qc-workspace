@@ -1,10 +1,38 @@
 # Environmental report generation
 
-Implemented locally on `master`, 7–8 October 2026. Production deployment and operational pattern approvals have not been performed.
+Implemented locally on `master`, 7–8 October 2026. Production deployment has not been performed. Owner-authorized local pattern publication is recorded below.
+
+## Local live-context setup, 8 October 2026
+
+Follow-up approved automation: explicit PF1/PF2/PF3, Water Treatment or numbered Warehouse facility names are read from document Area. Corroborated logbook scopes supply context only when unique; explicit Pilot/Demo descriptors are retained. Real source discrepancies remain blocked. Cosmetic name differences, known OPK naming and area/context suffixes are approved as aliases; Pro/Old/New, China/export, fragrance and G/P variants are retained. The controlled duplicate ML numbers are not renumbered; combined product/batch/facility/area and source row identify a record.
+
+The follow-up published 52 additional patterns: the local workspace now has **80 active patterns, 130 monitoring outputs, 11 products and 49 approved aliases**. These counts supersede the initial totals below. Remaining exceptions are listed in the refreshed Markdown exception register; no new current laboratory results were invented.
+
+An authenticated fresh read of the 2026 environmental Google logbook copied 495 activities from ten tabs into `.data/environmental-local-setup`. The original source identities, raw values, status and provenance are retained. Google writes remain disabled. The local database was backed up before import. Two duplicated ML numbers (`ML-EM-26-0395`, `ML-EM-26-0359`) remain flagged and are excluded from automatic context matching.
+
+The archive was rescanned to separate different header product names. When ML is absent, an explicit archive year plus product, batch and area must identify exactly one activity before facility/context can be inferred. This does not infer an equipment set from a numeric count. Equivalent test/location/criterion rows do not create duplicate outputs because of label or whitespace changes; true criterion, channel and block differences remain exceptions.
+
+Published locally: **28 active patterns, 43 monitoring outputs, six products**. The products are Dr. Wong's Lightening Face Cream, Dr. Wong's Lightening Lotion, Efficascent Boost Pain Relief Massage Roll On, Mama's Love Baby Oil, Omega Pain Killer Liniment - Export, and Cheers Baby Oil. Added evidence for an otherwise identical approved pattern is published as a revision; previous drafts keep their pinned snapshots. Publication results and remaining exceptions are saved under `output/environmental-automation-review/`.
+
+`ML-EM-26-0491` is now available locally with its actual PF2 / Compounding / Regular context. Multiple historical equipment sets still require selection; the activity's equipment count does not establish which named locations were used. Incomplete warehouse/water criteria and unmatched historical scopes remain unpublished.
 
 The four owner-revised DOCX layouts are retained in `output/environmental-automation-review/*-prepared.docx`. They were validated and registered in the isolated local demo as the "Roy revised" templates; the prior five-column template was retired there. Their added analyst, logbook/page and standing-signatory fields are preserved. Demo registrations are database state and are not installed by this Git commit. Import these revised layouts through the administrator workflow for another workspace. Warehouse criteria/units and ambiguous organism mappings still need confirmation before pattern publication.
 
 ## Administrator workflow
+
+### Bulk setup (recommended)
+
+1. Open **Settings → Report templates → Environmental sampling patterns → Bulk setup from environmental archive**.
+2. Upload the environmental ZIP once, or select it under **Resume prepared archive**. Scanning runs in the background and can be resumed after leaving the page.
+3. Keep **Parameters are unchanged across activity dates** checked. No dates need to be entered: approval is recorded today and the pattern covers historical/current activity dates. If criteria changed, uncheck it and use explicit dates for that group.
+4. Each family selects its single active approved layout automatically. Confirm a layout once where multiple layouts exist. Facility/context come from uniquely corroborated logbook activities; enter shared fallback values only when they apply to the remaining evidence.
+5. Check **Create missing environmental products** if the proposed archive names are approved. Click **Prepare bulk patterns**. Repeated reports are consolidated, compatible methods become separate outputs, and historical results remain excluded.
+6. Filter by product, area, equipment or exception. Review locations/criteria. Select ready patterns, check the bulk review declaration and click **Publish selected patterns**. Publication creates missing approved products and profiles together; each pattern has an outcome. Repeating publication skips already published profiles.
+7. Select an environmental ML number in **Analysis reports**. The approved pattern supplies locations, criteria and layout; choose an equipment set/output if several match, then enter current results.
+
+Source conflicts, distinct Pro/Old/New variants, missing criteria/units and non-environmental documents remain exceptions. Equipment counts do not establish a physical production-line identity. The supplied ZIP was staged in the local demo: 3,630 documents, 299 grouped proposals and 64 document exceptions. No operational profiles were published. The demo lacks the live activity records needed to assign facility/context.
+
+### Individual setup
 
 1. Open **Settings → Report templates**. Inspect a representative environmental DOCX. Preparation supports grouped five-column, GIP four-column, water-validation four-column and warehouse phase/air seven-column tables. Select the preparation format explicitly when the evidence is ambiguous. The original file remains unchanged.
 2. Prepare and download the blank copy. Review it in Word before registering it. Historical identifiers, results, passing remarks and signatures are removed from recognized regions. Unrecognized identifiers, tracked changes and unsupported layouts block registration. If you edit the downloaded copy in Word, select it under **Edited prepared DOCX (optional)** before registration. Keep the result-table placeholders; the original preparation retains its source and per-table merge settings. Recheck the sanitization declaration for the edited file. **Use original prepared copy** discards the upload selection. Registering a layout does not require a category-wide default or product prefix when an approved pattern will assign it directly.
