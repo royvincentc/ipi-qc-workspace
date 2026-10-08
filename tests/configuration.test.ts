@@ -198,6 +198,27 @@ test('connection validation survives appearance edits and is invalidated by rout
  assert.equal((await db.query("SELECT value FROM settings WHERE key='connections'")).rows[0].value.writesEnabled,false);assert.equal((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.incoming,undefined);assert.ok((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.specifications);
 });
 
+test('Cotton Balls workflow resolves checked sheet tests for a Miscellaneous sample',async()=>{
+ const current=await getConfiguration();const value=structuredClone(current.value);
+ const type=value.sampleTypes.find(t=>t.id==='MIS')!;type.applicability='spreadsheet';type.applicabilitySheet='RM/FP/AS';
+ value.products.push({id:'cotton-balls-regression',name:'Cotton Balls',category:'MIS',code:'',aliases:[],active:true});
+ await saveConfiguration(value,current.revision,'admin@example.test');
+ const {setSetting}=await import('../server/db.js');
+ const rows=[{sheet:'RM/FP/AS',row:10,product:'Mama’s Love Absorbent Cotton Balls',tests:['SPC','MY']},{sheet:'RM/FP/AS',row:11,product:'Mama’s Love Absorbent Cotton Rolls',tests:['SPC','MY']},{sheet:'RM/FP/AS',row:12,product:'Mama’s Love Cotton Buds',tests:['SPC','MY']}];
+ await setSetting('applicability',rows);
+ const original=(await db.query('SELECT data FROM samples LIMIT 1')).rows[0].data;
+ const sample={...original,id:'cotton-balls-regression',ml:'ML-MIS-26-0064',name:'Cotton Balls',category:'MIS',categoryLabel:'Miscellaneous',context:'',fields:{}};
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['cotton-misc',JSON.stringify({id:'cotton-misc',name:'MISC',category:'MIS',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{requiredFields:[]}})]);
+ const setup=await resolveReportSetup(sample.id,{},true);
+ assert.equal(setup.template?.name,'MISC');
+ assert.deepEqual(setup.specification.tests.map(t=>[t.test,t.criterion,t.unit]),[['SPC','Nmt 50 cfu/g','cfu/g'],['MY','Nmt 10 cfu/g','cfu/g']]);
+ await setSetting('applicability',rows.map(row=>({...row,tests:[]})));
+ await assert.rejects(resolveReportSetup(sample.id,{},true),/every test is unchecked/);
+ await setSetting('applicability',[...rows,{...rows[0]}]);
+ await assert.rejects(resolveReportSetup(sample.id,{},true),/one applicable-test row/);
+});
+
 test('optional report metadata resolves canonical fields and legacy tokens consistently',()=>{
  const draft={sample:{name:'Sample',category:'ST',fields:{manufactureDate:'2026-09-01',expiryDate:'2028-09-01',fillVolume:'60 mL',batchLotSize:'2500 L',requestedBy:'QCL-1'}},fields:{},results:[],specification:{tests:[]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
  const template={manifest:{tokens:['date.mfd','exp.date','fill.vol','batch.size','requested.by']}} as any;
