@@ -5,6 +5,7 @@ import {REPORT_FORMATS} from './report-formats.b64.js';
 import {audit,db} from './db.js';
 import {hash} from './domain.js';
 import {privatePath,worker} from './reports.js';
+import {seedEnvironmentalFormats} from './environmental-template-seed.js';
 
 export async function seedBundledReportFormats(){
  const names=REPORT_FORMATS.map(format=>format.name);
@@ -48,5 +49,6 @@ export async function seedBundledReportFormats(){
   await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',[template.id,JSON.stringify(template)]);
   await audit('system:bundled-template-seed','template_seeded',template.id,{name:template.name,revision:template.revision,category:template.category});
  }
- console.log('Bundled report formats are ready.');
+ await seedEnvironmentalFormats(db,privatePath,file=>worker(['validate','--input',file]),audit);
+ console.log('Bundled report formats are ready, including approved environmental layouts.');
 }
