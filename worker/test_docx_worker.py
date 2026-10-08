@@ -3,6 +3,70 @@ from pathlib import Path
 from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W,upgrade_environmental_layout
 
 class DocumentTests(unittest.TestCase):
+    def test_missing_metadata_and_incomplete_cc_are_detected_and_filled(self):
+        from docx import Document
+        from docx_worker import report_details
+        d=Document(self.template)
+        table=d.add_table(rows=3,cols=3)
+        for row,label,value in zip(table.rows,['Date Mfd.','Fill Vol./Wt.','Requested by'],['{{date.mfd}}','','QC']):
+            row.cells[0].text=label;row.cells[1].text=':';row.cells[2].text=value
+        d.sections[0].footer.add_paragraph('cc. File,')
+        source=self.folder/'optional.docx';d.save(source)
+        fields={k:'filled' for k in validate_template(source.read_bytes())['tokens']}
+        fields['date.mfd']=''
+        details=report_details(source.read_bytes(),fields)
+        keys={item['key'] for item in details['optionalFields']}
+        self.assertTrue({'manufactureDate','fillVolume','additionalCC'}<=keys)
+        self.assertNotIn('requestedBy',keys)
+        fields.update({'date.mfd':'10/01/2026','manufactureDate':'10/01/2026','fillVolume':'60 mL','additionalCC':'QCL-1'})
+        output=self.folder/'optional-output.docx'
+        render(source,{'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]},output)
+        docs=roots(package(output.read_bytes()))
+        self.assertTrue(any('cc. File, QCL-1' in text(root) for root in docs.values()))
+        self.assertIn('60 mL',text(docs['word/document.xml']))
+        self.assertEqual(report_details(output.read_bytes(),fields)['optionalFields'],[])
+
+    def test_cc_detection_preserves_page_fields_in_shared_footer_paragraph(self):
+        from docx import Document
+        from docx_worker import report_details
+        from lxml import etree as E
+        d=Document(self.template);p=d.sections[0].footer.add_paragraph('Page 1 of 1')
+        r=E.SubElement(p._p,W+'r');E.SubElement(r,W+'instrText').text=' PAGE '
+        p.add_run('cc. File, {{requested.by}} ')
+        source=self.folder/'shared-footer.docx';d.save(source)
+        fields={k:'filled' for k in validate_template(source.read_bytes())['tokens']};fields['requested.by']='';fields['additionalCC']='QCL-1'
+        self.assertEqual(report_details(source.read_bytes(),{**fields,'additionalCC':''})['incompleteCC'],['File,'])
+        output=self.folder/'shared-output.docx'
+        render(source,{'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]},output)
+        docs=roots(package(output.read_bytes()))
+        self.assertTrue(any('Page 1 of 1cc. File, QCL-1' in text(root) for root in docs.values()))
+        self.assertTrue(any(root.xpath('.//w:instrText[text()=" PAGE "]',namespaces=NS) for root in docs.values()))
+
+    def test_complete_cc_and_intentional_signature_blanks_are_preserved(self):
+        from docx import Document
+        from docx_worker import report_details
+        d=Document(self.template);d.sections[0].footer.add_paragraph('cc. File, QCL-1')
+        d.add_paragraph('Approved by: {{approvedBy}}')
+        source=self.folder/'complete-cc.docx';d.save(source)
+        fields={k:'filled' for k in validate_template(source.read_bytes())['tokens']};fields['approvedBy']='';fields['additionalCC']='Other'
+        self.assertEqual(report_details(source.read_bytes(),fields)['optionalFields'],[])
+        output=self.folder/'complete-output.docx'
+        render(source,{'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]},output)
+        docs=roots(package(output.read_bytes()))
+        self.assertTrue(any('cc. File, QCL-1' in text(root) for root in docs.values()))
+        self.assertFalse(any('QCL-1 Other' in text(root) for root in docs.values()))
+
+    def test_optional_values_can_be_left_blank(self):
+        from docx import Document
+        from docx_worker import report_details
+        d=Document(self.template);d.add_paragraph('Batch/Lot Size: {{batch.size}}');d.sections[0].footer.add_paragraph('cc. File,')
+        source=self.folder/'blank-optionals.docx';d.save(source)
+        fields={k:'' for k in validate_template(source.read_bytes())['tokens']}
+        output=self.folder/'blank-output.docx'
+        render(source,{'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]},output)
+        self.assertIn('additionalCC',{item['key'] for item in report_details(source.read_bytes(),fields)['optionalFields']})
+        self.assertTrue(any('cc. File,' in text(root) for root in roots(package(output.read_bytes())).values()))
+
     def test_overall_passed_is_bold_underlined_without_styling_label(self):
         from lxml import etree as E
         from docx_worker import replace_tokens

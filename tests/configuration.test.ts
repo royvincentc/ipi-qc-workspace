@@ -197,3 +197,14 @@ test('connection validation survives appearance edits and is invalidated by rout
  const routing=structuredClone(current.value);routing.general.timezone='UTC';await saveConfiguration(routing,current.revision,'admin@example.test');
  assert.equal((await db.query("SELECT value FROM settings WHERE key='connections'")).rows[0].value.writesEnabled,false);assert.equal((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.incoming,undefined);assert.ok((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.specifications);
 });
+
+test('optional report metadata resolves canonical fields and legacy tokens consistently',()=>{
+ const draft={sample:{name:'Sample',category:'ST',fields:{manufactureDate:'2026-09-01',expiryDate:'2028-09-01',fillVolume:'60 mL',batchLotSize:'2500 L',requestedBy:'QCL-1'}},fields:{},results:[],specification:{tests:[]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
+ const template={manifest:{tokens:['date.mfd','exp.date','fill.vol','batch.size','requested.by']}} as any;
+ const fields=reportTemplateFields(draft,template);
+ assert.equal(fields.manufactureDate,fields['date.mfd']);assert.equal(fields['date.mfd'],'09/01/2026');
+ assert.equal(fields.expiryDate,fields['exp.date']);assert.equal(fields.fillVolume,'60 mL');assert.equal(fields.batchSize,'2500 L');assert.equal(fields['requested.by'],'QCL-1');
+ draft.fields={manufactureDate:'2026-10-01',fillVolume:'100 mL',batchSize:'3000 L',additionalCC:'QA'};
+ const edited=reportTemplateFields(draft,template);assert.equal(edited['date.mfd'],'10/01/2026');assert.equal(edited['fill.vol'],'100 mL');assert.equal(edited['batch.size'],'3000 L');assert.equal(edited.additionalCC,'QA');
+ draft.sample.fields={};draft.fields={};const blank=reportTemplateFields(draft,template);assert.equal(blank['date.mfd'],'');assert.equal(blank.fillVolume,'');assert.equal(blank.requestedBy,'');
+});

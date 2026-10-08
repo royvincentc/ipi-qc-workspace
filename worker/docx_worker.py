@@ -301,6 +301,73 @@ def replace_tokens(paragraph,values):
                 node.text=left+(replacement if not assigned else '')+right
             node.set('{http://www.w3.org/XML/1998/namespace}space','preserve');assigned=True
 
+# Optional report metadata only; signature and approval blanks are intentional.
+REPORT_METADATA={
+    'Date Mfd.':'manufactureDate','Expiry Date':'expiryDate','Fill Vol./Wt.':'fillVolume',
+    'Batch/Lot Size':'batchSize','Requested by':'requestedBy','Purpose':'purpose',
+    'Logbook':'logbookReference','MIC':'mic','Page':'page',
+}
+REPORT_ALIASES={'date.mfd':'manufactureDate','exp.date':'expiryDate','fill.vol':'fillVolume',
+    'batch.size':'batchSize','requested.by':'requestedBy','logbook':'logbookReference'}
+REPORT_LABELS={value:key for key,value in REPORT_METADATA.items()}
+REPORT_LABELS.update({'manufactureDate':'Date manufactured','expiryDate':'Expiry date','fillVolume':'Fill volume / weight',
+    'batchSize':'Batch / lot size','requestedBy':'Requested by','purpose':'Purpose','logbookReference':'Logbook reference','mic':'MIC','page':'Page number'})
+
+def resolved_paragraph(p,fields):
+    return re.sub(r'\{\{\s*([\w.:-]+)\s*\}\}',lambda m:str(fields.get(m.group(1),'') or ''),text(p))
+
+def metadata_cells(docs):
+    for root in docs.values():
+        for row in root.xpath('.//w:tr',namespaces=NS):
+            cells=row.findall(W+'tc')
+            for i,cell in enumerate(cells):
+                label=text(cell).strip().rstrip(':').strip()
+                if label not in REPORT_METADATA:continue
+                j=i+1
+                if j<len(cells) and text(cells[j]).strip()==':':j+=1
+                if j<len(cells):yield REPORT_METADATA[label],cells[j]
+
+def report_details(data,fields):
+    docs=roots(package(data));missing={}
+    protected={'analysisDate','releaseDate','d.release','t.release','analyst','micAnalyst','overallRemarks','overall.remarks',
+        'tests','test','criterion','value','remarks','location','stage','replicate','channel','phase','activeValue','passiveValue','block','groupKey','type',
+        'signature','reviewedBy','approvedBy','analyzedBy','notedBy'}
+    for root in docs.values():
+        for p in root.xpath('.//w:p',namespaces=NS):
+            for token in re.findall(r'\{\{\s*([\w.:-]+)\s*\}\}',text(p)):
+                key=REPORT_ALIASES.get(token,token)
+                if token.startswith(('sample.','report.','result.','rows.')) or token in protected or re.search(r'signature|approved|reviewed|noted',token,re.I):continue
+                if key in ('cc','additionalCC'):continue
+                if not str(fields.get(token,'') or '').strip():missing[key]={'key':key,'label':REPORT_LABELS.get(key,re.sub(r'([a-z])([A-Z])',r'\1 \2',key).replace('.',' ').capitalize())}
+    for key,cell in metadata_cells(docs):
+        value=''.join(resolved_paragraph(p,fields) for p in cell.xpath('.//w:p',namespaces=NS)).strip()
+        if not value and not str(fields.get(key,'') or '').strip():missing[key]={'key':key,'label':REPORT_LABELS[key]}
+    cc=[]
+    for root in docs.values():
+        for p in root.xpath('.//w:p',namespaces=NS):
+            value=resolved_paragraph(p,fields).strip()
+            match=re.search(r'cc\s*[.:]\s*(.*)$',value,re.I)
+            if match and (not match.group(1).strip() or re.search(r'[,;]\s*$',match.group(1))):cc.append(match.group(1).strip())
+    if cc and not str(fields.get('additionalCC','') or '').strip():missing['additionalCC']={'key':'additionalCC','label':'Additional CC'}
+    return {'optionalFields':list(missing.values()),'incompleteCC':cc}
+
+def fill_optional_report_details(docs,fields):
+    for key,cell in metadata_cells(docs):
+        if not text(cell).strip() and str(fields.get(key,'') or '').strip():
+            p=next(iter(cell.findall(W+'p')),None)
+            if p is None:p=E.SubElement(cell,W+'p')
+            set_text(p,str(fields[key]))
+    additional=str(fields.get('additionalCC','') or '').strip().strip(',;').strip()
+    if additional:
+        for root in docs.values():
+            for p in root.xpath('.//w:p',namespaces=NS):
+                value=text(p).rstrip()
+                match=re.search(r'cc\s*[.:]\s*(.*)$',value,re.I)
+                if match and (not match.group(1).strip() or re.search(r'[,;]\s*$',match.group(1))):
+                    nodes=p.xpath('.//w:t',namespaces=NS)
+                    last=next((node for node in reversed(nodes) if (node.text or '').strip()),None)
+                    if last is not None:last.text=last.text.rstrip()+' '+additional;last.set('{http://www.w3.org/XML/1998/namespace}space','preserve')
+
 def set_vertical_merge(cell, mode):
     props=cell.find(W+'tcPr')
     if props is None:
@@ -439,6 +506,7 @@ def render(template,payload,output,soffice=None):
             if options or payload.get('renderOptions',{}).get('environmental'):merge_result_groups(clones,selected,merge_columns)
         for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,fields)
         if '{{' in text(root):raise ValueError('Unresolved template tokens remain')
+    fill_optional_report_details(docs,fields)
     if named and set(payload.get('blocks',{}))-seen_blocks:raise ValueError('Payload includes an unknown row block')
     for n,root in docs.items():parts[n]=E.tostring(root,xml_declaration=True,encoding='UTF-8',standalone=True)
     settings=E.fromstring(parts['word/settings.xml'],XML) if 'word/settings.xml' in parts else E.Element(W+'settings',nsmap={'w':NS['w']})
@@ -486,7 +554,7 @@ def demo_template(output):
     d.save(output)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--soffice');p.add_argument('--family');args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout','report-details']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--soffice');p.add_argument('--family');args=p.parse_args()
     if args.action=='environmental-batch':
         from environmental_batch import scan
         result=scan(args.input,args.output)
@@ -501,6 +569,7 @@ def main():
                         except Exception as e:result.append({'name':item.filename,'error':str(e)})
         else:result=inventory(path.read_bytes(),path.name,args.family)
     elif args.action=='environmental-layout':result=upgrade_environmental_layout(Path(args.input).read_bytes(),args.output)
+    elif args.action=='report-details':result=report_details(Path(args.input).read_bytes(),json.loads(Path(args.payload).read_text(encoding='utf8'))['fields'])
     elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output,args.soffice)
     elif args.action=='validate':result=validate_template(Path(args.input).read_bytes())
     elif args.action=='prepare':result=prepare_template(Path(args.input).read_bytes(),args.output,args.family)
