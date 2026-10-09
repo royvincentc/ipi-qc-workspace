@@ -1,6 +1,6 @@
 import {sessionDetailGroups,sharedSessionDetails,editedSessionDetails} from '../shared/environmental-session.js';
 import {reportPurpose} from '../shared/report-purpose.js';
-import {reportArchiveSegments} from '../shared/report-archive.js';
+import {reportArchiveAnalyst,reportArchiveSegments} from '../shared/report-archive.js';
 import {reportArtifact,retainReportArtifact} from './report-artifacts.js';
 import {getConfiguration} from './configuration.js';
 import {randomUUID,createHash} from 'node:crypto';
@@ -600,11 +600,10 @@ async function reportArchiveDestination(file:any,actor:string,cache=new Map<stri
  if(!connections.reportFolder)throw new Fault(409,'Ask an administrator to configure the report archive in Settings → Connections');
  const pinned=file.draftId?(await db.query('SELECT data FROM draft_revisions WHERE id=$1 AND revision=$2',[file.draftId,file.resultRevision])).rows[0]?.data:undefined;
  const email=String(file.analystEmail||pinned?.analyst||actor).toLowerCase();
- const user=(await db.query('SELECT name FROM users WHERE email=$1',[email])).rows[0];
  const managed=(await getConfiguration()).value;
  const category=file.category||pinned?.sample?.category||managed.sampleTypes.find(type=>[type.id,type.name].includes(file.sourceSnapshot?.section))?.id;
  const root=googleId(connections.reportFolder,'folder');
- const segments=reportArchiveSegments({analystEmail:email,analystName:String(file.analystName||user?.name||email),category,createdAt:file.createdAt},managed.general.timezone||'Asia/Manila');
+ const segments=reportArchiveSegments({reportAnalyst:reportArchiveAnalyst(file,pinned),category,createdAt:file.createdAt},managed.general.timezone||'Asia/Manila');
  let folder=root;for(const segment of segments){const key=JSON.stringify([folder,segment]);let next=cache.get(key);if(!next){next=await ensureDriveFolder(folder,segment);cache.set(key,next);}folder=next;}
  return {folder,root,email,category,segments};
 }
