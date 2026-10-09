@@ -1,7 +1,7 @@
 import Dialog from './dialog';
 import {Link} from 'react-router-dom';
 import {useContext,useEffect,useState} from 'react';
-import {ArrowUpRight,CloudUpload,FileText,RefreshCw} from 'lucide-react';
+import {ArrowUpRight,CloudUpload,FileText,RefreshCw,FolderTree} from 'lucide-react';
 import {api} from './api';
 import {PageTitle,useLoad,Notice,Session,SearchInput,ErrorBox,Loading,Empty,Badge} from './ui';
 
@@ -20,12 +20,13 @@ export default function FileLibrary(){
  const params=new URLSearchParams({q:search,kind,sort,page:String(page)});const {data,error,reload}=useLoad(()=>api('/library-items?'+params),[params.toString()]);
  async function syncReport(id:string){setSyncing(id);try{await api(`/files/${id}/sync`,'POST');setSyncFailures(items=>items.filter(item=>item.id!==id));notify('Report synced to Google Drive');}catch(e:any){setSyncFailures(items=>items.map(item=>item.id===id?{...item,error:e.message}:item));notify(e.message,true);}finally{reload();setSyncing('');}}
  const refreshLibrary=async()=>{setBusy(true);try{const r=await api('/library/sync','POST');notify(`Library refreshed: ${r.count} files`);reload();}catch(e:any){notify(e.message,true);}finally{setBusy(false);}};
+ const organize=async()=>{setSyncing('organize');try{const r=await api('/files/organize-drive','POST');setSyncFailures(r.failed);notify(`${r.moved} reports organized · ${r.unchanged} already in place${r.failed.length?` · ${r.failed.length} need attention`:''}`,r.failed.length>0);reload();}catch(e:any){notify(e.message,true);}finally{setSyncing('');}};
  const syncAll=async()=>{setSyncing('all');try{const r=await api('/files/sync-all','POST');setSyncFailures(r.failed);notify(`${r.synced} reports synced to Drive · ${r.skipped} already synced${r.failed.length?` · ${r.failed.length} failed. See the failure details in the library.`:''}`,r.failed.length>0);reload();}catch(e:any){notify(e.message,true);}finally{setSyncing('');}};
  const pageCount=data?Math.max(1,Math.ceil(data.total/data.limit)):1;
 
  return <div className="library-page">
-  <PageTitle title="Files & documents" description="Find generated reports, historical references and authorized library files." action={<div className="library-header-actions">{user.role==='administrator'?<button className="button secondary" disabled={demo||busy||!!syncing} title={demo?'Drive refresh is unavailable in the local demo':undefined} onClick={refreshLibrary}><RefreshCw size={16}/>{busy?'Refreshing…':'Refresh library'}</button>:null}{user.role!=='viewer'?<button className="button secondary" disabled={demo||busy||!!syncing} title={demo?'Drive sync is unavailable in the local demo':'Upload all pending generated reports, across all pages and filters'} onClick={syncAll}><CloudUpload size={16}/>{syncing==='all'?'Syncing reports…':'Sync all to drive'}</button>:null}</div>}/>
-  {syncFailures.length?<section className="library-sync-failures" aria-label="Drive sync failures" role="status"><h2>{syncFailures.length} {syncFailures.length===1?'report could':'reports could'} not sync to Drive</h2><ul>{syncFailures.map(f=><li key={f.id}><strong>{f.name}</strong><p>{f.error}</p></li>)}</ul></section>:null}
+  <PageTitle title="Files & documents" description="Find generated reports, historical references and authorized library files." action={<div className="library-header-actions">{user.role==='administrator'?<button className="button secondary" disabled={demo||busy||!!syncing} title={demo?'Drive refresh is unavailable in the local demo':undefined} onClick={refreshLibrary}><RefreshCw size={16}/>{busy?'Refreshing…':'Refresh library'}</button>:null}{user.role==='administrator'?<button className="button secondary" disabled={demo||busy||!!syncing} title="Move existing report files into Analyst → Year → Sample type → Month" onClick={organize}><FolderTree size={16}/>{syncing==='organize'?'Organizing…':'Organize Drive folders'}</button>:null}{user.role!=='viewer'?<button className="button secondary" disabled={demo||busy||!!syncing} title={demo?'Drive sync is unavailable in the local demo':'Upload all pending generated reports, across all pages and filters'} onClick={syncAll}><CloudUpload size={16}/>{syncing==='all'?'Syncing reports…':'Sync all to drive'}</button>:null}</div>}/>
+  {syncFailures.length?<section className="library-sync-failures" aria-label="Drive sync failures" role="status"><h2>{syncFailures.length} {syncFailures.length===1?'report needs':'reports need'} Drive attention</h2><ul>{syncFailures.map(f=><li key={f.id}><strong>{f.name}</strong><p>{f.error}</p></li>)}</ul></section>:null}
   <section className="panel library-panel" aria-label="Document library">
    <div className="library-toolbar">
     <SearchInput value={q} onChange={setQ} placeholder="Find a document or control number…"/>
