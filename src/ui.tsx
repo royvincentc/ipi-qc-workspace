@@ -1,7 +1,7 @@
 import {useCatalog,useUnsaved,useConfiguration} from './configuration';
 import {cloneElement,createContext,isValidElement,useContext,useEffect,useId,useState,type ReactNode} from 'react';
 import {Link,useLocation} from 'react-router-dom';
-import {ArrowUpRight,FlaskConical,Search,FileText,Table2,FolderOpen,Bot,Settings,ClipboardList,Activity,HelpCircle} from 'lucide-react';
+import {ArrowUpRight,FlaskConical,Search,FileText,Table2,FolderOpen,Bot,Settings,ClipboardList,Activity,HelpCircle,Columns3} from 'lucide-react';
 import type {Sample,User} from '../shared/model';
 
 export const Session=createContext<{user:User;demo:boolean}>({user:{email:'',name:'',role:'viewer'},demo:false});
@@ -10,7 +10,7 @@ export function useLoad<T>(fetcher:()=>Promise<T>,deps:unknown[]=[]){const [data
 export function LabMotionMark({path}:{path:string}){return <svg className="page-motion-mark" viewBox="0 0 72 72" aria-hidden="true" focusable="false"><circle className="page-motion-dish" cx="36" cy="36" r="32"/><circle className="page-motion-rim" cx="36" cy="36" r="30.5"/><circle className="page-motion-agar" cx="36" cy="36" r="24.5"/><ellipse className="page-motion-scan" cx="36" cy="36" rx="24.5" ry="9"/><g className="page-motion-colonies"><circle cx="25" cy="26" r="2.3"/><circle cx="46" cy="23" r="1.5"/><circle cx="48" cy="43" r="2.7"/><circle cx="31" cy="48" r="1.7"/><circle cx="20" cy="39" r="1.2"/></g><path className="page-motion-line" pathLength="100" d={path}/><circle className="page-motion-node" cx="36" cy="36" r="2.5"/><circle className="page-motion-signal" cx="58" cy="36" r="2"/></svg>;}
 export function PageTitle({eyebrow,title,description,action}:{eyebrow?:string;title:string;description:string;action?:ReactNode}){
   const {pathname}=useLocation();
-  const Icon=pathname==='/new'?FlaskConical:pathname.startsWith('/samples/')?ClipboardList:pathname==='/samples'?Search:pathname.startsWith('/worksheet')?Table2:pathname.startsWith('/reports')?FileText:pathname.startsWith('/library')?FolderOpen:pathname.startsWith('/assistant')?Bot:pathname.startsWith('/settings')?Settings:pathname==='/'?Activity:HelpCircle;
+  const Icon=pathname==='/new'?FlaskConical:pathname.startsWith('/samples/')?ClipboardList:pathname==='/samples'?Search:pathname.startsWith('/worksheet')?Table2:pathname.startsWith('/reports')?FileText:pathname.startsWith('/library')?FolderOpen:pathname.startsWith('/assistant')?Bot:pathname.startsWith('/shared')?Columns3:pathname.startsWith('/settings')?Settings:pathname==='/'?Activity:HelpCircle;
   return <div className="page-heading"><div className="page-title-mark" aria-hidden="true"><Icon size={26} strokeWidth={1.7}/></div><div className="page-heading-copy"><h1>{title}</h1>{eyebrow?<div className="record-heading-id">{eyebrow}</div>:null}<p>{description}</p></div>{action?<div className="page-heading-action">{action}</div>:null}</div>;
 }
 export function Empty({title,children}:{title:string;children?:ReactNode}){return <div className="empty"><FlaskConical size={32}/><h3>{title}</h3><p>{children}</p></div>;}

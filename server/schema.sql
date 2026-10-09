@@ -18,3 +18,8 @@ CREATE INDEX IF NOT EXISTS samples_ml ON samples ((data->>'ml'));
 CREATE INDEX IF NOT EXISTS samples_category ON samples ((data->>'category'));
 CREATE TABLE IF NOT EXISTS configuration (id integer PRIMARY KEY CHECK(id=1), revision integer NOT NULL, data jsonb NOT NULL, changed_at timestamptz NOT NULL, changed_by text NOT NULL);
 CREATE TABLE IF NOT EXISTS configuration_revisions (revision integer PRIMARY KEY, data jsonb NOT NULL, changed_at timestamptz NOT NULL, changed_by text NOT NULL);
+CREATE TABLE IF NOT EXISTS shared_resources (id text PRIMARY KEY, data jsonb NOT NULL, revision integer NOT NULL DEFAULT 1, drive_revision integer NOT NULL DEFAULT 0, retry_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS shared_operations (resource_id text NOT NULL REFERENCES shared_resources(id), operation_id text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), PRIMARY KEY(resource_id,operation_id));
+CREATE TABLE IF NOT EXISTS shared_presence (resource_id text NOT NULL REFERENCES shared_resources(id), client_id text NOT NULL, email text NOT NULL, name text NOT NULL, role text NOT NULL, pointer jsonb, expires_at timestamptz NOT NULL, PRIMARY KEY(resource_id,client_id));
+CREATE TABLE IF NOT EXISTS shared_previews (resource_id text PRIMARY KEY REFERENCES shared_resources(id), revision integer NOT NULL, content text NOT NULL, drive_id text, checksum text);
+CREATE INDEX IF NOT EXISTS shared_presence_expiry ON shared_presence(expires_at);

@@ -2,7 +2,7 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {Home,Sparkles,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Table2,ChevronDown} from 'lucide-react';
+import {Home,Sparkles,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Table2,ChevronDown,Columns3} from 'lucide-react';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
@@ -16,6 +16,8 @@ const ReportEditorRoute=lazy(()=>import('./reports').then(module=>({default:modu
 const AssistantRoute=lazy(()=>import('./AssistantPage').then(module=>({default:module.AssistantPage})));
 const FileLibraryRoute=lazy(()=>import('./library'));
 const WorksheetRoute=lazy(()=>import('./worksheet'));
+const SharedToolsRoute=lazy(()=>import('./collaboration'));
+const SharedEditorRoute=lazy(()=>import('./collaboration').then(module=>({default:module.SharedEditor})));
 
 const navigation=[
   ['/','Dashboard',Home],
@@ -24,6 +26,7 @@ const navigation=[
   ['/worksheet','Worksheet',Table2],
   ['/reports','Results & Reports',FileText],
   ['/library','File Library',FolderOpen],
+  ['/shared','Shared tools',Columns3],
   ['/assistant','Smart Assistant',Bot]
 ] as const;
 
@@ -260,6 +263,8 @@ function Workspace({data}:{data:any}){
                   <Route path="/reports" element={<ReportsRoute/>}/>
                   <Route path="/reports/:id" element={<ReportEditorRoute/>}/>
                   <Route path="/library" element={<FileLibraryRoute/>}/>
+                  <Route path="/shared" element={<SharedToolsRoute/>}/>
+                  <Route path="/shared/:id" element={<SharedEditorRoute/>}/>
                   <Route path="/assistant" element={<AssistantRoute/>}/>
                   <Route path="/settings" element={data.user.role==='administrator'?<Suspense fallback={<Loading/>}><AdminCenter/></Suspense>:<><PageTitle title="Settings" description="Administrator access is required to manage this workspace."/><ErrorBox message="Administrator access required"/></>}/>
                   <Route path="*" element={<><PageTitle title="Page not found" description="This address does not match a workspace page." action={<Link className="button secondary" to="/">Return to dashboard</Link>}/><ErrorBox message="Page not found"/></>}/>

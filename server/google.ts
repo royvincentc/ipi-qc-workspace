@@ -5,6 +5,19 @@ import {Fault,googleId,column,hash,monthOf,type Sheet} from './domain.js';
 import {demo} from './db.js';
 const auth=new GoogleAuth({scopes:['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive.readonly']});
 const driveWriteAuth=new GoogleAuth({scopes:['https://www.googleapis.com/auth/drive']});
+/** Update only files created for this shared resource, and detect external edits. */
+export async function checkpointSharedDriveFile(input:{parent:string;name:string;content:Buffer;resourceId:string;driveId:string|null;checksum?:string;mimeType?:string}){
+ let id=input.driveId;
+ if(!id){const created=await uploadDriveFile(input.parent,input.name,input.content,`shared_${input.resourceId}`,input.mimeType||'application/json');id=created.id;}
+ const url=`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id!)}?supportsAllDrives=true&fields=id,md5Checksum,appProperties,trashed,parents`;
+ const before=await googleDriveWrite<any>(url);
+ if(before.trashed||!before.parents?.includes(input.parent)||before.appProperties?.ipiFileId!==`shared_${input.resourceId}`)throw new Fault(409,'The Drive file was moved, deleted, or no longer belongs to this resource. Restore its original location before retrying.');
+ if(input.checksum&&before.md5Checksum!==input.checksum)throw new Fault(409,'The Drive file changed outside IPI. Download and review that copy before reconnecting the archive.');
+ const client=await driveWriteAuth.getClient();
+ await client.request({url:`https://www.googleapis.com/upload/drive/v3/files/${encodeURIComponent(id!)}?uploadType=media&supportsAllDrives=true`,method:'PATCH',headers:{'Content-Type':input.mimeType||'application/json'},data:input.content,timeout:60000});
+ await googleDriveWrite(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id!)}?supportsAllDrives=true`,'PATCH',{name:input.name});
+ const after=await googleDriveWrite<any>(url);return {id:id!,checksum:String(after.md5Checksum||'')};
+}
 export async function downloadDriveReport(id:string){
  if(demo)throw new Fault(409,'Google Drive recovery is unavailable in the demo');
  try{const client=await driveWriteAuth.getClient();const response=await client.request<ArrayBuffer>({url:`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(id)}?alt=media&supportsAllDrives=true`,responseType:'arraybuffer',timeout:60000});return Buffer.from(response.data);}

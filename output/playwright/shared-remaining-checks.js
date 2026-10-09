@@ -1,0 +1,43 @@
+async (page) => {
+ const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+ const browser=page.context().browser();
+ const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+ const mobile=await context.newPage();mobile.on('pageerror',e=>errors.push(e.message));
+ try {
+  await mobile.goto('http://127.0.0.1:5173/shared');
+  const id=await mobile.evaluate(async()=>{const post=async(path,body)=>{const response=await fetch('/api/collaboration'+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(!response.ok)throw new Error(await response.text());return response.json();};const board=await post('',{kind:'kanban',title:'Touch and recovery — demo fixture'});await post(`/${board.id}/operations`,{operationId:crypto.randomUUID(),operation:{type:'note-add',id:'touch-note',columnId:'todo',title:'Touch note',body:'Initial touch text',color:'paper'}});return board.id;});
+  await mobile.goto(`http://127.0.0.1:5173/shared/${id}`);
+  const note=mobile.getByRole('textbox',{name:'Note text: Touch note',exact:true});await note.tap();await mobile.getByRole('complementary',{name:'Note details'}).waitFor();await note.fill('Edited with touch controls');await mobile.getByRole('button',{name:'Close note',exact:true}).tap();
+  await mobile.waitForFunction(async id=>(await(await fetch('/api/collaboration/'+id)).json()).state.notes['touch-note'].body==='Edited with touch controls',id);
+  const cdp=await context.newCDPSession(mobile);const head=await mobile.getByRole('button',{name:'Move Touch note',exact:true}).boundingBox();
+  const start={x:head.x+head.width/2,y:head.y+head.height/2};await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[start]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:start.x+18,y:start.y+28}]});await mobile.locator('.sticky-drag-preview').waitFor({timeout:3000});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await mobile.waitForTimeout(350);
+  await mobile.route('**/api/collaboration/*/operations',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'Synthetic temporary save outage'})}));
+  await note.fill('Retained through failed save and reload');
+  await mobile.waitForFunction(()=>Object.keys(sessionStorage).some(k=>k.startsWith('ipi:shared-pending:')&&sessionStorage.getItem(k).includes('operationId')));
+  const pending=await mobile.evaluate(()=>Object.keys(sessionStorage).filter(k=>k.startsWith('ipi:shared-pending:')).length);
+  const navigationDialog=mobile.waitForEvent('dialog');
+  const navigation=mobile.getByRole('link',{name:'Back to shared tools',exact:true}).click();
+  const warning=await navigationDialog;if(warning.type()!=='confirm')throw new Error('Expected pending navigation confirmation');await warning.dismiss();await navigation;
+  if(!mobile.url().endsWith(id))throw new Error('Pending navigation guard failed');
+  mobile.once('dialog',dialog=>dialog.accept());await mobile.reload();await mobile.getByRole('textbox',{name:'Note text: Touch note',exact:true}).waitFor();
+  await mobile.unroute('**/api/collaboration/*/operations');
+  await mobile.waitForFunction(async id=>(await(await fetch('/api/collaboration/'+id)).json()).state.notes['touch-note'].body==='Retained through failed save and reload',id,{timeout:15000});
+  await mobile.waitForFunction(()=>!Object.keys(sessionStorage).some(k=>k.startsWith('ipi:shared-pending:')));
+  const overflow=await mobile.evaluate(()=>({document:document.documentElement.scrollWidth,viewport:innerWidth}));
+  if(overflow.document>overflow.viewport)throw new Error('Mobile document overflow');
+  const drawing=await mobile.evaluate(async()=>{const response=await fetch('/api/collaboration',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'drawing',title:'Touch drawing — demo fixture'})});return response.json();});
+  await mobile.goto(`http://127.0.0.1:5173/shared/${drawing.id}`);await mobile.getByRole('button',{name:'Fullscreen',exact:true}).tap();await mobile.getByRole('dialog',{name:'Drawing fullscreen'}).waitFor();
+  await mobile.locator('label').filter({has:mobile.getByRole('radio',{name:'Rectangle',exact:true})}).tap({timeout:5000});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:110,y:330}]});
+  for(let step=1;step<=8;step++)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:110+step*15,y:330+step*12}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await mobile.waitForFunction(async id=>(await(await fetch('/api/collaboration/'+id)).json()).state.elements.some(e=>e.type==='rectangle'&&!e.isDeleted),drawing.id,{timeout:15000});
+  await mobile.getByRole('button',{name:'Exit fullscreen Esc'}).tap();await mobile.reload();await mobile.getByRole('radio',{name:'Rectangle',exact:true}).waitFor();
+  const reopened=await mobile.evaluate(async id=>(await(await fetch('/api/collaboration/'+id)).json()).state.elements.filter(e=>!e.isDeleted).length,drawing.id);
+  if(reopened!==1)throw new Error('Touch drawing was not restored');
+  if(errors.length)throw new Error(errors.join(';'));
+  return {board:id,drawing:drawing.id,touchEdit:true,touchDragLift:true,touchDrawingAndReload:true,pendingNavigationGuard:true,pendingPersistedBeforeReload:pending,failedSaveReloadRecovery:true,overflow,errors};
+ } finally {await context.close();}
+}
