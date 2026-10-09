@@ -8,10 +8,20 @@ import {
   mergeText,
   textState,
   operationSchema,
+  noteColorSchema,
+  noteColorInk,
   CollaborationConflict,
   type SharedResource,
   type BoardState,
 } from "../shared/collaboration.js";
+test('hex note colors are accepted without allowing CSS injection, with readable ink', () => {
+  assert.equal(noteColorSchema.parse('#123ABC'), '#123ABC');
+  assert.equal(noteColorSchema.parse('sage'), 'sage');
+  assert.equal(noteColorSchema.safeParse('#fff; background:url(x)').success, false);
+  assert.equal(noteColorSchema.safeParse('#xyz123').success, false);
+  assert.equal(noteColorInk('#000000'), '#ffffff');
+  assert.equal(noteColorInk('#ffffff'), '#000000');
+});
 
 function board(): SharedResource {
   return {

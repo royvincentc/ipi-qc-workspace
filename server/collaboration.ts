@@ -7,8 +7,8 @@ import {
   demo,
   setting,
   setSetting,
-  locked,
-  tryLocked,
+  transactionLocked as locked,
+  tryTransactionLocked as tryLocked,
   audit,
 } from "./db.js";
 import { authenticate, requireRole } from "./auth.js";
@@ -16,6 +16,7 @@ import { Fault, googleId } from "./domain.js";
 import { driveFolder, checkpointSharedDriveFile } from "./google.js";
 import {
   initialState,
+  noteColorSchema,
   operationSchema,
   applyOperation,
   CollaborationConflict,
@@ -84,7 +85,7 @@ export async function mutateSharedResource(
   actor: string,
 ) {
   const operation = operationSchema.parse(input);
-  return locked(`shared:${id}`, async (tx) => {
+  const result = await locked(`shared:${id}`, async (tx) => {
     const row = (
       await tx.query("SELECT data FROM shared_resources WHERE id=$1", [id])
     ).rows[0];
@@ -108,8 +109,6 @@ export async function mutateSharedResource(
         error instanceof Error ? error.message : "Invalid update",
       );
     }
-    await tx.query("BEGIN");
-    try {
       await tx.query(
         "UPDATE shared_resources SET data=$2,revision=$3 WHERE id=$1",
         [id, JSON.stringify(next), next.revision],
@@ -118,14 +117,10 @@ export async function mutateSharedResource(
         "INSERT INTO shared_operations(resource_id,operation_id) VALUES($1,$2)",
         [id, operationId],
       );
-      await tx.query("COMMIT");
-    } catch (error) {
-      await tx.query("ROLLBACK");
-      throw error;
-    }
-    updates.emit(id);
     return next;
   });
+  updates.emit(id);
+  return result;
 }
 async function syncResource(id: string) {
   return tryLocked(`shared-drive:${id}`, async () => {
@@ -342,7 +337,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
               columnId: z.string(),
               title: z.string().max(160),
               body: z.string().max(10_000),
-              color: z.enum(["paper", "sage", "amber", "blue"]),
+              color: noteColorSchema,
             }),
           ),
         })

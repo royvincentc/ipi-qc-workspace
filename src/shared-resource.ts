@@ -238,14 +238,24 @@ export function useSharedResource(id: string) {
     });
     const retry = window.setInterval(() => void drain(), 2500),
       heartbeat = window.setInterval(() => void presence(), 10_000);
+    const retryNow = () => void drain();
+    window.addEventListener('ipi:shared-retry', retryNow);
     return () => {
       active.current = false;
       stream.close();
       clearInterval(retry);
       clearInterval(heartbeat);
+      window.removeEventListener('ipi:shared-retry', retryNow);
     };
   }, [id, storageKey, remember, refresh, drain, presence, accept]);
   useUnsaved(pending > 0);
+  const save = useCallback(async () => {
+    const deadline = Date.now() + 15000;
+    while (running.current && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 50));
+    if (running.current) throw new Error('Saving is taking longer than expected. Pending changes are retained.');
+    await drain();
+    if (queue.current.length || failureType.current) throw new Error('Changes could not be saved. Check the connection and try Save board again.');
+  }, [drain]);
   return {
     resource,
     error,
@@ -256,6 +266,7 @@ export function useSharedResource(id: string) {
     clientId: clientId.current,
     canEdit: role !== "viewer",
     mutate,
+    save,
     refresh,
     sendPointer,
   };

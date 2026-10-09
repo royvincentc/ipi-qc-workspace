@@ -4,6 +4,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { readFile, mkdir } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { withTransactionLock } from './transaction-lock.js';
 export interface DB {query<T=Record<string,any>>(sql:string,args?:any[]):Promise<{rows:T[]}>}
 export const demo=process.env.DEMO_MODE==='true';
 if(demo&&process.env.NODE_ENV==='production')throw new Error('Demo mode is prohibited in production');
@@ -50,6 +51,23 @@ if (!demo) {
 }
 export const db:DB=embedded?{query:async(sql,args)=>embedded.query(sql,args)}:pool!;
 let demoLock=Promise.resolve();
+export async function transactionLocked<T>(key:string,fn:(tx:DB)=>Promise<T>):Promise<T>{
+ const namespace=`collaboration-v2:${key}`;
+ if(embedded)return locked(namespace,()=>withTransactionLock(db,namespace,fn));
+ const client=await pool!.connect();try{return await withTransactionLock(client,namespace,fn);}finally{client.release();}
+}
+export async function tryTransactionLocked<T>(key:string,fn:()=>Promise<T>):Promise<T|undefined>{
+ if(embedded)return fn();
+ const client=await pool!.connect();
+ try {
+  await client.query('BEGIN');
+  try {
+   const acquired=(await client.query('SELECT pg_try_advisory_xact_lock(hashtext($1)) AS acquired',[`collaboration-v2:${key}`])).rows[0]?.acquired;
+   const result=acquired ? await fn() : undefined;
+   await client.query('COMMIT');return result;
+  }catch(error){await client.query('ROLLBACK');throw error;}
+ }finally{client.release();}
+}
 export async function locked<T>(key:string,fn:(tx:DB)=>Promise<T>):Promise<T>{
  if(embedded){const before=demoLock;let release!:()=>void;demoLock=new Promise(r=>release=r);await before;try{return await fn(db);}finally{release();}}
  const client=await pool!.connect();try{await client.query('SELECT pg_advisory_lock(hashtext($1))',[key]);return await fn(client);}finally{await client.query('SELECT pg_advisory_unlock(hashtext($1))',[key]);client.release();}

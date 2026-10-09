@@ -16,6 +16,7 @@ import {
   PenTool,
   Plus,
   RefreshCw,
+  Save,
   Trash2,
   Users,
   Upload,
@@ -438,7 +439,8 @@ function ResourceEditor({ id }: { id: string }) {
   const [rename, setRename] = useState(false),
     [title, setTitle] = useState(""),
     [remove, setRemove] = useState(false),
-    [syncing, setSyncing] = useState(false);
+    [syncing, setSyncing] = useState(false),
+    [savingBoard, setSavingBoard] = useState(false);
   if (!resource)
     return (
       <>
@@ -526,6 +528,13 @@ function ResourceEditor({ id }: { id: string }) {
         </div>
       </div>
       <div className="shared-live-bar">
+        {canEdit && resource.kind === 'kanban' ? <button className="button primary small" disabled={savingBoard} onClick={async () => {
+          setSavingBoard(true);
+          try {
+            if (!window.dispatchEvent(new Event('ipi:shared-save', { cancelable: true }))) throw new Error('Enter a valid six-digit hex color before saving the board.');
+            await room.save(); notify('Board saved and shared with the team');
+          } catch (error) { notify(error instanceof Error ? error.message : 'Save failed', true); } finally { setSavingBoard(false); }
+        }}><Save size={15}/>{savingBoard ? 'Saving board…' : 'Save board'}</button> : null}
         <span className={`shared-connection ${room.connected ? "online" : ""}`}>
           <i aria-hidden="true" />
           {room.connected ? "Live" : "Reconnecting…"}

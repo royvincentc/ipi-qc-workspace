@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import {
   DndContext,
@@ -47,6 +48,8 @@ import type {
   SharedResource,
   StickyNote,
 } from "../shared/collaboration";
+import { noteColorHex, noteColorInk } from "../shared/collaboration";
+const colorStyle = (color: NoteColor) => ({ '--sticky-bg': noteColorHex(color), '--sticky-ink': noteColorInk(color) }) as CSSProperties;
 
 type Mutate = (operation: SharedOperation) => void;
 function useNoteBody(note: StickyNote, mutate: Mutate, removed = false) {
@@ -69,6 +72,10 @@ function useNoteBody(note: StickyNote, mutate: Mutate, removed = false) {
       setTextPending(false);
     }
   }, [note.id]);
+  useEffect(() => {
+    window.addEventListener('ipi:shared-save', flush);
+    return () => window.removeEventListener('ipi:shared-save', flush);
+  }, [flush]);
   useEffect(() => {
     const document = new Y.Doc();
     doc.current = document;
@@ -142,7 +149,7 @@ function useNoteBody(note: StickyNote, mutate: Mutate, removed = false) {
   return { body, input, textPending, flush, changeBody };
 }
 
-const colors: NoteColor[] = ["paper", "sage", "amber", "blue"];
+const colors: NoteColor[] = ["paper", "sage", "amber", "blue", '#f1d5de', '#ddd6f3', '#ccebe5', '#f5d7bd'];
 const Sticky = memo(
   function Sticky({
     note,
@@ -262,6 +269,7 @@ const Sticky = memo(
         data-index={index}
         className={`sticky-note sticky-${note.color}${isDragging ? " dragging" : ""}${placed ? " placed" : ""}${saved ? " edit-saved" : ""}`}
         style={{
+          ...colorStyle(note.color),
           position: "absolute",
           width: "100%",
           top,
@@ -570,6 +578,7 @@ export default function Kanban({
               {draggedId && state.notes[draggedId] ? (
                 <article
                   className={`sticky-note sticky-${state.notes[draggedId].color} sticky-drag-preview`}
+                  style={colorStyle(state.notes[draggedId].color)}
                   aria-hidden="true"
                 >
                   <strong>
@@ -736,10 +745,13 @@ function NoteEditor({
   mutate: Mutate;
   onClose: () => void;
 }) {
-  const original = useRef({ title: note.title, color: note.color });
+  const [original, setOriginal] = useState({ title: note.title, color: note.color });
   const [title, setTitle] = useState(note.title),
     [color, setColor] = useState(note.color),
     [deleted, setDeleted] = useState(false);
+  const [hexDraft, setHexDraft] = useState(noteColorHex(note.color));
+  const validHex = /^#[0-9a-fA-F]{6}$/.test(hexDraft);
+  useEffect(() => setHexDraft(noteColorHex(color)), [color]);
   const notify = useContext(Notice);
   const { body, input, textPending, flush, changeBody } = useNoteBody(
     note,
@@ -747,15 +759,26 @@ function NoteEditor({
     removed,
   );
   const dirty =
-    title !== original.current.title || color !== original.current.color;
+    title !== original.title || color !== original.color;
   useEffect(() => {
     if (!dirty || (note.title === title && note.color === color)) {
-      original.current = { title: note.title, color: note.color };
+      setOriginal({ title: note.title, color: note.color });
       setTitle(note.title);
       setColor(note.color);
     }
   }, [note.title, note.color, dirty, title, color]);
-  useUnsaved(!removed && (dirty || textPending));
+  useUnsaved(!removed && (dirty || textPending || !validHex));
+  const saveNote = useCallback((event?: { preventDefault: () => void }) => {
+    if (!validHex) { event?.preventDefault(); return; }
+    if (!canEdit || removed) return;
+    flush();
+    if (dirty) mutate({ type: 'note-edit', id: note.id, title, color, revision: note.revision, beforeTitle: original.title, beforeColor: original.color });
+    window.dispatchEvent(new Event('ipi:shared-retry'));
+  }, [canEdit, removed, flush, dirty, mutate, note.id, note.revision, title, color, validHex]);
+  useEffect(() => {
+    window.addEventListener('ipi:shared-save', saveNote);
+    return () => window.removeEventListener('ipi:shared-save', saveNote);
+  }, [saveNote]);
   const close = () => {
     if (
       dirty &&
@@ -802,6 +825,7 @@ function NoteEditor({
                 type="button"
                 key={value}
                 className={`sticky-${value}`}
+                style={colorStyle(value)}
                 aria-label={`${value} note color`}
                 aria-pressed={color === value}
                 onClick={() => setColor(value)}
@@ -811,6 +835,13 @@ function NoteEditor({
               </button>
             ))}
           </fieldset>
+          <Field label="Custom hex color">
+            <div className="sticky-custom-color">
+              <input type="color" aria-label="Choose custom note color" value={noteColorHex(color)} onChange={event => setColor(event.target.value as NoteColor)} />
+              <input aria-label="Hex note color" placeholder="#RRGGBB" maxLength={7} value={hexDraft} aria-invalid={!validHex} onChange={event => { setHexDraft(event.target.value); if (/^#[0-9a-fA-F]{6}$/.test(event.target.value)) setColor(event.target.value as NoteColor); }} />
+            </div>
+            {!validHex ? <span role="alert">Enter a six-digit hex color, such as #DCE8EF.</span> : null}
+          </Field>
           <Field label="Column">
             <select
               value={note.columnId}
@@ -862,25 +893,14 @@ function NoteEditor({
           </div>
           <button
             className="button primary"
-            disabled={!dirty || textPending || body !== note.body}
-            onClick={() => {
-              flush();
-              mutate({
-                type: "note-edit",
-                id: note.id,
-                title,
-                color,
-                revision: note.revision,
-                beforeTitle: original.current.title,
-                beforeColor: original.current.color,
-              });
-            }}
+            disabled={!validHex || (!dirty && !textPending && body === note.body)}
+            onClick={saveNote}
           >
-            Save title & color
+            Save note
           </button>
           {dirty &&
-          (note.title !== original.current.title ||
-            note.color !== original.current.color) ? (
+          (note.title !== original.title ||
+            note.color !== original.color) ? (
             <div className="sticky-conflict">
               <p>
                 The shared title or color changed. Latest title:{" "}
@@ -889,7 +909,7 @@ function NoteEditor({
               <button
                 className="button secondary small"
                 onClick={() => {
-                  original.current = { title: note.title, color: note.color };
+                  setOriginal({ title: note.title, color: note.color });
                   setTitle(note.title);
                   setColor(note.color);
                 }}

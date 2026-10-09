@@ -4,6 +4,8 @@
 
 **Current phase:** Local recovery, touch, content and authenticated-session verification complete; production release checks remain recorded below.
 
+**Latest fix:** Note save/color and drawing pointer follow-up verified locally. Production logs confirmed deadlocks; collaboration now uses transaction-scoped locks. Deployment verification remains pending for this fix.
+
 **Current blocker:** Drive destination supplied: `0AJ1DArdKmngAUk9PVA`. Backend Google service-account credentials are absent; folder edit access and live saving remain unverified. Drive writes are intentionally disabled in demo mode.
 
 **Next action:** Configure backend Google credentials, grant the service account edit access to the supplied folder, connect it through the administrator UI, and validate live checkpoints. Remaining performance and deployment checks are listed below.
@@ -194,3 +196,16 @@ Follow-up evidence: output/playwright/shared-annotations-audit.md. Direct card/s
 - Browser at 390×844 with emulated touch: note editing, header drag lift, pending navigation warning, HTTP 503 failed-save recovery across reload, canvas fullscreen touch drawing and drawing reload pass. No page errors; document width equals viewport width. Physical hardware is not covered.
 - Evidence: tmp/shared-remaining-tests.log and output/playwright/shared-remaining-results.log. TypeScript compilation passes. Live Drive failures/restoration, multi-instance PostgreSQL, same-element undo and large mobile drawing performance remain release work.
 - Empty-board controls, a 9,501-character note with an unbroken word and multiple lines, synchronized sidebar access, and missing-resource errors pass at 1440px and 390px. No page errors or horizontal document overflow. Evidence: output/playwright/shared-content-results.log.
+
+## Save/color and drawing follow-up — 2026-10-10
+
+- [x] Diagnose production save failure through Render logs: deadlock errors confirmed.
+- [x] Replace collaboration session locks with transaction-scoped locks and publish revisions after commit.
+- [x] Enable metadata saving while text is pending; clear stale unsaved guards after acknowledgement.
+- [x] Add eight color presets, custom hex/picker input, readable ink and export/import support.
+- [x] Add Save board and explicit pending-write retries while preserving genuine unsaved warnings.
+- [x] Refresh canvas offsets on layout/scroll/pointer-down, stabilize editor props, and avoid commits during active gestures.
+- [x] Verify two-context live updates, failed-save retry, navigation, invalid hex input, normal/fullscreen pointer accuracy, light/dark mobile layout, and meaningful regression tests.
+- [ ] Verify this fix after production deployment with an authenticated live session.
+
+Evidence: output/playwright/shared-save-pointer-audit.md. Focused tests 12/12; build/typecheck pass. Short desktop drawing sample p95 approximately 17ms, with occasional pauses; existing large-scene stress limits remain open.

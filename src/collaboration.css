@@ -230,6 +230,12 @@
   --sticky-bg: #dce8ef;
   --sticky-ink: #2e4351;
 }
+.sticky-custom-color { display:flex; align-items:center; gap:10px; }
+.sticky-custom-color input[type="color"] { width:46px; min-width:46px; height:44px; padding:3px; cursor:pointer; }
+.sticky-custom-color input:not([type="color"]) { min-width:0; flex:1; }
+/* The editor owns its toolbar geometry. Application control effects must not move it. */
+.app .shared-drawing .excalidraw :is(button, input, svg):is(:hover, :active, :checked) { transform:none; }
+.app .shared-drawing .excalidraw svg { transition:none; }
 .sticky-note.dragging {
   z-index: 2;
   opacity: 0.75;
@@ -347,7 +353,7 @@
   color: var(--sticky-ink);
 }
 .sticky-note.dragging {
-  opacity: 0.45;
+  opacity: 1;
 }
 .sticky-drag-preview {
   opacity: 1;
@@ -485,6 +491,7 @@
   color: var(--text-secondary);
 }
 .sticky-colors button {
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: 6px;

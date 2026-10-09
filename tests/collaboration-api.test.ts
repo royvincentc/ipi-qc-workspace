@@ -218,6 +218,12 @@ test("shared API enforces viewer writes, durable idempotency, deletion, and rest
       (await recoveredDrawing.json()).state.files.image.dataURL,
       image.dataURL,
     );
+    const hexOperation = { operationId: randomUUID(), operation: { type: 'note-edit', id: 'note', title: 'Collaborative', color: '#123ABC', revision: restored.state.notes.note.revision, beforeTitle: 'Collaborative', beforeColor: 'paper' } };
+    assert.equal((await request(`/${created.id}/operations`, 'POST', hexOperation)).status, 200);
+    const hexSnapshot = await (await request(`/${created.id}/export`)).json();
+    const hexImport = await request('/import', 'POST', { title: 'Hex restore', snapshot: hexSnapshot });
+    assert.equal(hexImport.status, 201);
+    assert.equal(Object.values<any>((await hexImport.json()).state.notes)[0].color, '#123ABC');
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));

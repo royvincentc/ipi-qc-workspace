@@ -2,7 +2,18 @@ import { z } from "zod";
 import * as Y from "yjs";
 
 export type ResourceKind = "kanban" | "drawing";
-export type NoteColor = "paper" | "sage" | "amber" | "blue";
+export type NoteColor = "paper" | "sage" | "amber" | "blue" | `#${string}`;
+export const noteColorSchema = z.union([z.enum(["paper", "sage", "amber", "blue"]), z.string().regex(/^#[0-9a-fA-F]{6}$/)]).transform(value => value as NoteColor);
+export function noteColorHex(color: NoteColor): string {
+  return ({ paper: '#eef0e8', sage: '#dce8d4', amber: '#f5e8c8', blue: '#dce8ef' } as Record<string, string>)[color] || color;
+}
+export function noteColorInk(color: NoteColor): string {
+  const rgb = noteColorHex(color).slice(1).match(/../g)!.map(value => {
+    const channel = parseInt(value, 16) / 255;
+    return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
+  });
+  return rgb[0] * .2126 + rgb[1] * .7152 + rgb[2] * .0722 > .179 ? '#000000' : '#ffffff';
+}
 export interface StickyNote {
   id: string;
   columnId: string;
@@ -76,16 +87,16 @@ export const operationSchema = z.discriminatedUnion("type", [
     columnId: id,
     title: z.string().max(160),
     body: z.string().max(10_000),
-    color: z.enum(["paper", "sage", "amber", "blue"]),
+    color: noteColorSchema,
   }),
   z.object({
     type: z.literal("note-edit"),
     id,
     title: z.string().max(160),
-    color: z.enum(["paper", "sage", "amber", "blue"]),
+    color: noteColorSchema,
     revision: z.number().int().positive(),
     beforeTitle: z.string().max(160).optional(),
-    beforeColor: z.enum(["paper", "sage", "amber", "blue"]).optional(),
+    beforeColor: noteColorSchema.optional(),
     bodyUpdate: bytes.optional(),
   }),
   z.object({ type: z.literal("note-text"), id, update: bytes }),

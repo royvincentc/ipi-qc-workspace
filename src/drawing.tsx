@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useMemo, useEffect, useRef, useState, type ComponentProps } from "react";
 import {
   Excalidraw,
   MainMenu,
@@ -55,6 +55,19 @@ export default function Drawing({
   const fullscreenTrigger = useRef<HTMLButtonElement>(null);
   const fullscreenExit = useRef<HTMLButtonElement>(null);
   const canvasRoot = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!editor) return;
+    let frame = 0;
+    const refresh = () => { cancelAnimationFrame(frame); frame = requestAnimationFrame(() => editor.refresh()); };
+    const root = canvasRoot.current!;
+    const observer = new ResizeObserver(refresh);
+    observer.observe(root);
+    window.addEventListener('scroll', refresh, true);
+    const pointerRefresh = () => editor.refresh();
+    root.addEventListener('pointerdown', pointerRefresh, true);
+    refresh();
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('scroll', refresh, true); root.removeEventListener('pointerdown', pointerRefresh, true); };
+  }, [editor, fullscreen]);
   useEffect(() => {
     if (!fullscreen) return;
     const overflow = document.body.style.overflow;
@@ -116,6 +129,13 @@ export default function Drawing({
   const peers = participants.filter((person) => person.id !== clientId);
   const peerSignature = JSON.stringify(peers);
   const state = resource.state as DrawingState;
+  const initialScene = useRef({ elements: state.elements, files: state.files, appState: { viewBackgroundColor: theme === 'dark' ? '#242621' : '#fcfcf9' } });
+  const editorOptions = useMemo<NonNullable<ComponentProps<typeof Excalidraw>['UIOptions']>>(() => ({ canvasActions: { loadScene: false, saveToActiveFile: false, toggleTheme: false, export: false } }), []);
+  const editorMenu = useMemo(() => <MainMenu>{canEdit ? <MainMenu.DefaultItems.ClearCanvas /> : null}</MainMenu>, [canEdit]);
+  const pointerUpdate = useCallback<NonNullable<ComponentProps<typeof Excalidraw>['onPointerUpdate']>>((payload) => {
+    lastInteraction.current = Date.now();
+    if (peers.length) sendPointer({ x: payload.pointer.x, y: payload.pointer.y, button: payload.button });
+  }, [peers.length, sendPointer]);
   const known = useRef(
     new Map(
       state.elements.map((element) => [
@@ -130,6 +150,12 @@ export default function Drawing({
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mutation = useRef(mutate);
   mutation.current = mutate;
+  const editorRef = useRef(editor);
+  editorRef.current = editor;
+  const interactionActive = () => {
+    const app = editorRef.current?.getAppState();
+    return !!(app?.newElement || app?.resizingElement || app?.selectedElementsAreBeingDragged || app?.editingTextElement);
+  };
   const flush = () => {
     if (!pending.current.size && !Object.keys(pendingFiles.current).length)
       return;
@@ -194,6 +220,11 @@ export default function Drawing({
     if (!editor) return;
     let retry: ReturnType<typeof setTimeout> | undefined;
     const applyRemote = () => {
+      const localNow = editor.getSceneElementsIncludingDeleted();
+      if (state.elements.length === localNow.length && state.elements.every((element, index) => {
+        const local = localNow[index];
+        return local?.id === element.id && local.version === element.version && local.versionNonce === element.versionNonce;
+      }) && Object.keys(state.files).every(id => knownFiles.current.has(id))) return;
       const app = editor.getAppState();
       if (
         canEdit &&
@@ -272,6 +303,39 @@ export default function Drawing({
       >[0]["collaborators"],
     });
   }, [editor, peerSignature]);
+  const onSceneChange = useCallback<NonNullable<ComponentProps<typeof Excalidraw>["onChange"]>>((elements, _appState, files) => {
+            if (remote.current || !canEdit) return;
+            if (
+              lastScene.current?.elements === elements &&
+              lastScene.current.files === files
+            )
+              return;
+            lastScene.current = { elements, files };
+            let changed = false;
+            for (const element of elements) {
+              const key = `${element.version}:${element.versionNonce}`;
+              if (known.current.get(element.id) !== key) {
+                known.current.set(element.id, key);
+                pending.current.set(element.id, element);
+                changed = true;
+              }
+            }
+            for (const [id, file] of Object.entries(files)) {
+              if (!knownFiles.current.has(id)) {
+                knownFiles.current.add(id);
+                pendingFiles.current[id] = file;
+                changed = true;
+              }
+            }
+            if (changed) {
+              setDirty(true);
+              if (!timer.current)
+                timer.current = setTimeout(function commitWhenIdle() {
+                  if (interactionActive()) { timer.current = setTimeout(commitWhenIdle, 120); return; }
+                  timer.current = undefined;
+                  flush();
+                }, 120);
+            }}, [canEdit]);
   const imported = async (file: File) => {
     if (!editor) return;
     try {
@@ -435,72 +499,17 @@ export default function Drawing({
         ) : null}
         <Excalidraw
           excalidrawAPI={setEditor}
-          initialData={{
-            elements: state.elements,
-            files: state.files,
-            appState: {
-              viewBackgroundColor: theme === "dark" ? "#242621" : "#fcfcf9",
-            },
-          }}
+          initialData={initialScene.current}
           theme={theme}
           name={resource.title}
           viewModeEnabled={!canEdit}
           isCollaborating={peers.length > 0}
           validateEmbeddable={false}
-          UIOptions={{
-            canvasActions: {
-              loadScene: false,
-              saveToActiveFile: false,
-              toggleTheme: false,
-              export: false,
-            },
-          }}
-          onPointerUpdate={(payload) => {
-            lastInteraction.current = Date.now();
-            if (peers.length)
-              sendPointer({
-                x: payload.pointer.x,
-                y: payload.pointer.y,
-                button: payload.button,
-              });
-          }}
-          onChange={(elements, _appState, files) => {
-            if (remote.current || !canEdit) return;
-            if (
-              lastScene.current?.elements === elements &&
-              lastScene.current.files === files
-            )
-              return;
-            lastScene.current = { elements, files };
-            let changed = false;
-            for (const element of elements) {
-              const key = `${element.version}:${element.versionNonce}`;
-              if (known.current.get(element.id) !== key) {
-                known.current.set(element.id, key);
-                pending.current.set(element.id, element);
-                changed = true;
-              }
-            }
-            for (const [id, file] of Object.entries(files)) {
-              if (!knownFiles.current.has(id)) {
-                knownFiles.current.add(id);
-                pendingFiles.current[id] = file;
-                changed = true;
-              }
-            }
-            if (changed) {
-              setDirty(true);
-              if (!timer.current)
-                timer.current = setTimeout(() => {
-                  timer.current = undefined;
-                  flush();
-                }, 120);
-            }
-          }}
+          UIOptions={editorOptions}
+          onPointerUpdate={pointerUpdate}
+          onChange={onSceneChange}
         >
-          <MainMenu>
-            {canEdit ? <MainMenu.DefaultItems.ClearCanvas /> : null}
-          </MainMenu>
+          {editorMenu}
         </Excalidraw>
       </div>
     </>

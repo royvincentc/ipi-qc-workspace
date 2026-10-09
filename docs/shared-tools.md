@@ -40,6 +40,10 @@ Still unverified: live Drive upload and failure/retry cases, Drive-only restore 
 
 Edit note text directly on the sticky card; focusing the text also opens its sidebar. The sidebar contains title, color and column controls and stays synchronized with card text through the shared Yjs hook. Drag the full header, or use Space and arrow keys. Feedback includes a lifted preview, bounded drop/settling motion and a local save acknowledgement; reduced-motion and application motion settings are respected.
 
+Use **Save note** to flush text and apply title/color without waiting for an earlier text acknowledgement. Use **Save board** to flush open editors and immediately retry pending writes; success means the backend acknowledged the queue and peers can receive the revision. Text continues to save automatically. Color controls include eight presets, a native picker and a validated `#RRGGBB` field. Custom colors survive export/import and choose contrasting ink. Genuine unsaved edits still trigger navigation protection.
+
+Shared mutations and Drive coordination use transaction-scoped advisory locks inside database transactions. A new collaboration lock namespace avoids the earlier session-lock namespace after the production deadlock report. Canvas geometry refreshes on scroll, resize and pointer-down; drawing commits wait for an active gesture to finish, and unchanged echoes avoid reconciliation. See output/playwright/shared-save-pointer-audit.md for the measured limits and verification evidence.
+
 Use Fullscreen above a drawing for a canvas-only window view. Exit fullscreen or Escape returns to the normal workspace and restores focus. Background controls are inert while fullscreen. This is a window-filling canvas view, so browser chrome stays under the browser's control. Annotation verification and stress limits are recorded in output/playwright/shared-annotations-audit.md.
 
 The subsequent 390×844 emulated-touch check also draws a rectangle in fullscreen using touch events, exits via the touch control and verifies the drawing persists after reload. This supplements the earlier desktop/mobile viewport and keyboard checks.
