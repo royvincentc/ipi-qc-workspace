@@ -12,6 +12,14 @@ const row={test:'SPC',label:'Standard Plate Count',type:'numeric',location:'Nozz
 const template={id:'env-layout',name:'Environmental layout',category:'EM',family:'environmental-grouped-5c',verified:true,revision:'template-v1',path:'fixture.docx',manifest:{tokens:['tests','test','location','criterion','value','remarks'],rowGrouping:{mergeColumns:[0,2]},requiredFields:['analysisDate'],defaultForCategory:true}};
 const sample={id:'env-sample',ml:'ML-EM-26-0001',batch:'TEST01',name:'Fixture Environmental Product',received:'2026-10-01',status:'RELEASED',remarks:'PASSED',context:'Regular',category:'EM',fields:{facility:'Plant 1',area:'Filling',remarks:'PASSED'},source:{fingerprint:'current-source',observedAt:'2026-10-01',raw:[]}};
 const input={name:'Fixture filling',productId:'env-product',product:sample.name,category:'EM',facility:'Plant 1',area:'Filling',context:'Regular',equipmentSet:'Line A',effectiveFrom:'2026-09-01',evidenceIds:['reference'],outputs:[{id:'surface',name:'SPC / MY surface',method:'spc-my',mode:'surface',templateId:template.id,templateRevision:template.revision,instances:[row,{...row,location:'Nozzle 2'}]}]};
+test('product Type tags render the editable Purpose and respect intentional blanks',()=>{
+ const draft={sample:{...sample,category:'ST',fields:{context:'7th Withdrawal'}},fields:{},specification:{tests:[]},results:[],configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{},sampleTypes:[]}} as any;
+ const layout={manifest:{tokens:['type','purpose']}} as any;
+ assert.equal(reportTemplateFields(draft,layout).type,'7th Withdrawal');
+ assert.equal(reportTemplateFields({...draft,fields:{purpose:'Retest'}},layout).type,'Retest');
+ const cleared=reportTemplateFields({...draft,fields:{purpose:''}},layout);
+ assert.equal(cleared.type,'');assert.equal(cleared.purpose,'');assert.equal(draft.sample.fields.context,'7th Withdrawal');
+});
 test('legacy product routes retain specificity and never fall back across categories',()=>{
  const generic={...template,manifest:{...template.manifest,appliesToProducts:['Fixture'],defaultForCategory:false}};
  const specific={...template,id:'specific',manifest:{...template.manifest,appliesToProducts:[sample.name],defaultForCategory:false}};

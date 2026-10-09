@@ -270,7 +270,7 @@ def replace_tokens(paragraph,values):
         key=match.group(1)
         if key not in values: raise ValueError('Unresolved template token: '+key)
         start,end=match.span(); replacement=str(values[key] or '')
-        if key=='sample.name.suffix' and not replacement.strip():
+        if key in ('sample.name.suffix','type','purpose') and not replacement.strip():
             opening=re.search(r'\s*\(\s*$',source[:start]);closing=re.match(r'\s*\)',source[end:])
             if opening and closing:start-=len(opening.group(0));end+=len(closing.group(0))
         offset=0; assigned=False
@@ -327,7 +327,7 @@ def metadata_cells(docs):
                 if j<len(cells) and text(cells[j]).strip()==':':j+=1
                 if j<len(cells):yield REPORT_METADATA[label],cells[j]
 
-def report_details(data,fields,persistent=False):
+def report_details(data,fields,persistent=False,editable_type=False):
     docs=roots(package(data));missing={}
     source_details={'area','facility','logbook','logbookReference'}
     protected={'analysisDate','releaseDate','d.release','t.release','analyst','micAnalyst','overallRemarks','overall.remarks',
@@ -336,9 +336,9 @@ def report_details(data,fields,persistent=False):
     for root in docs.values():
         for p in root.xpath('.//w:p',namespaces=NS):
             for token in re.findall(r'\{\{\s*([\w.:-]+)\s*\}\}',text(p)):
-                key=REPORT_ALIASES.get(token,token)
+                key='purpose' if token=='type' and editable_type else REPORT_ALIASES.get(token,token)
                 if persistent and key in source_details:continue
-                if token.startswith(('sample.','report.','result.','rows.')) or token in protected or re.search(r'signature|approved|reviewed|noted',token,re.I):continue
+                if token.startswith(('sample.','report.','result.','rows.')) or (token in protected and not (token=='type' and editable_type)) or re.search(r'signature|approved|reviewed|noted',token,re.I):continue
                 if key in ('cc','additionalCC'):continue
                 if persistent or not str(fields.get(token,'') or '').strip():missing[key]={'key':key,'label':REPORT_LABELS.get(key,re.sub(r'([a-z])([A-Z])',r'\1 \2',key).replace('.',' ').capitalize())}
     for key,cell in metadata_cells(docs):
@@ -573,7 +573,7 @@ def main():
         else:result=inventory(path.read_bytes(),path.name,args.family)
     elif args.action=='environmental-layout':result=upgrade_environmental_layout(Path(args.input).read_bytes(),args.output)
     elif args.action=='report-details':
-        payload=json.loads(Path(args.payload).read_text(encoding='utf8'));result=report_details(Path(args.input).read_bytes(),payload['fields'],payload.get('persistentDetails',False))
+        payload=json.loads(Path(args.payload).read_text(encoding='utf8'));result=report_details(Path(args.input).read_bytes(),payload['fields'],payload.get('persistentDetails',False),payload.get('editableType',False))
     elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output,args.soffice)
     elif args.action=='validate':result=validate_template(Path(args.input).read_bytes())
     elif args.action=='prepare':result=prepare_template(Path(args.input).read_bytes(),args.output,args.family)

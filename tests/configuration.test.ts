@@ -219,6 +219,18 @@ test('Cotton Balls workflow resolves checked sheet tests for a Miscellaneous sam
  await assert.rejects(resolveReportSetup(sample.id,{},true),/one applicable-test row/);
 });
 
+test('Type headers populate Purpose without replacing the source routing context',async()=>{
+ const type=(await getConfiguration()).value.sampleTypes.find(t=>t.id==='ST')!;
+ const values=Array.from({length:type.layout.end-type.layout.start+1},()=>'' as unknown);
+ values[type.layout.fields.context]='7th Withdrawal';values[type.layout.fields.ml]='ML-ST-26-0001';
+ const header=Array(type.layout.end+1).fill('');type.layout.headers.forEach((value,i)=>header[type.layout.start+i]=value);
+ const sheet={id:101,name:'October 2026',rowCount:20,rows:[[],[],header]} as any;
+ const sample=sourceSample('fixture-workbook',sheet,'ST',5,values,type,7);
+ assert.equal(sample.fields.purpose,'7th Withdrawal');assert.equal(sample.context,'7th Withdrawal');assert.deepEqual(sample.source.raw,values);
+ values[type.layout.fields.context]='';
+ assert.equal(sourceSample('fixture-workbook',sheet,'ST',5,values,type,7).fields.purpose,undefined);
+});
+
 test('optional report metadata resolves canonical fields and legacy tokens consistently',()=>{
  const draft={sample:{name:'Sample',category:'ST',fields:{manufactureDate:'2026-09-01',expiryDate:'2028-09-01',fillVolume:'60 mL',batchLotSize:'2500 L',requestedBy:'QCL-1'}},fields:{},results:[],specification:{tests:[]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
  const template={manifest:{tokens:['date.mfd','exp.date','fill.vol','batch.size','requested.by']}} as any;

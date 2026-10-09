@@ -1,4 +1,5 @@
 import Dialog from './dialog';
+import {Link} from 'react-router-dom';
 import {useContext,useEffect,useState} from 'react';
 import {ArrowUpRight,CloudUpload,FileText,RefreshCw} from 'lucide-react';
 import {api} from './api';
@@ -41,7 +42,7 @@ export default function FileLibrary(){
       <div className="library-record-state">{f.driveSyncError?<Badge tone="amber">Drive sync needs attention</Badge>:f.externalReviewRequired?<Badge tone="amber">External review required</Badge>:f.driveSyncedAt?<Badge tone="green">Synced to Drive</Badge>:<span className="library-state-quiet">Available</span>}</div>
       <div className="library-actions">
        {f.hasPreview?<button className="button secondary small" aria-label={`Preview ${f.name}`} onClick={()=>setPreview(f)}>Preview</button>:null}
-       {f.sourceUrl?<><a className="button secondary small" aria-label={`Open ${f.name} in Drive`} href={f.sourceUrl} target="_blank" rel="noreferrer">Open in Drive <ArrowUpRight size={14}/></a>{f.kind==='report'?<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>Download</a>:null}</>:f.kind==='report'&&user.role!=='viewer'&&!demo?<button className="button secondary small" aria-label={`Sync ${f.name} to Drive`} disabled={!!syncing} onClick={()=>syncReport(f.id)}><CloudUpload size={14}/>{syncing===f.id?'Syncing…':'Sync to Drive'}</button>:<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>Download</a>}
+       {f.kind==='report'&&f.draftId&&f.driveSyncError?<Link className="button secondary small" to={`/reports/${f.draftId}`} aria-label={`Open saved draft for ${f.name}`}>Open saved draft</Link>:null}{f.sourceUrl?<><a className="button secondary small" aria-label={`Open ${f.name} in Drive`} href={f.sourceUrl} target="_blank" rel="noreferrer">Open in Drive <ArrowUpRight size={14}/></a>{f.kind==='report'?<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>Download</a>:null}</>:f.kind==='report'&&user.role!=='viewer'&&!demo?<button className="button secondary small" aria-label={`Sync ${f.name} to Drive`} disabled={!!syncing} onClick={()=>syncReport(f.id)}><CloudUpload size={14}/>{syncing===f.id?'Syncing…':'Sync to Drive'}</button>:<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>Download</a>}
       </div>
      </article>)}
     </div>

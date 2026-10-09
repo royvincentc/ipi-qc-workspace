@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS environmental_profiles (id text PRIMARY KEY, data jso
 CREATE TABLE IF NOT EXISTS drafts (id text PRIMARY KEY, revision integer NOT NULL, data jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS draft_revisions (id text NOT NULL REFERENCES drafts(id), revision integer NOT NULL, data jsonb NOT NULL, PRIMARY KEY(id,revision));
 CREATE TABLE IF NOT EXISTS files (id text PRIMARY KEY, data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS report_artifacts (file_id text NOT NULL REFERENCES files(id) ON DELETE CASCADE, format text NOT NULL CHECK(format IN ('docx','pdf')), content text NOT NULL, sha256 text NOT NULL, PRIMARY KEY(file_id,format));
 CREATE TABLE IF NOT EXISTS audit (id text PRIMARY KEY, actor text NOT NULL, action text NOT NULL, entity text NOT NULL, details jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
 CREATE INDEX IF NOT EXISTS samples_ml ON samples ((data->>'ml'));
 CREATE INDEX IF NOT EXISTS samples_category ON samples ((data->>'category'));

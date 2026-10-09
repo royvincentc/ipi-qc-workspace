@@ -3,6 +3,24 @@ from pathlib import Path
 from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W,upgrade_environmental_layout
 
 class DocumentTests(unittest.TestCase):
+    def test_product_type_is_editable_as_purpose_and_blank_parentheses_are_removed(self):
+        from docx import Document
+        from docx_worker import report_details
+        d=Document(self.template)
+        paragraph=d.add_paragraph('Purpose ')
+        for fragment in ['(', '{{ty', 'pe}}', ')']:
+            paragraph.add_run(fragment)
+        source=self.folder/'type.docx';d.save(source)
+        fields={k:'filled' for k in validate_template(source.read_bytes())['tokens']}
+        fields['type']=''
+        keys={item['key'] for item in report_details(source.read_bytes(),fields,True,True)['optionalFields']}
+        self.assertIn('purpose',keys);self.assertNotIn('type',keys)
+        self.assertNotIn('purpose',{item['key'] for item in report_details(source.read_bytes(),fields,True)['optionalFields']})
+        for value,expected in [('', 'Purpose'),('7th Withdrawal','Purpose (7th Withdrawal)')]:
+            fields['type']=value;output=self.folder/'type-output.docx'
+            render(source,{'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]},output)
+            self.assertIn(expected,[p.text for p in Document(output).paragraphs])
+
     def test_persistent_details_keep_filled_optional_tokens_editable_and_protected_fields_hidden(self):
         from docx import Document
         from docx_worker import report_details
