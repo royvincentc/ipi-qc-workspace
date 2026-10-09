@@ -41,3 +41,22 @@ test('unknown row blocks and dashed criteria cannot be approved',()=>{
  assert.match(environmentalTemplateIssue(template,[{...environmentalCriteria(profile(),profile().outputs[0])[0],block:'spc'}],'EM')||'',/spc row block/);
  const input=profile();input.outputs[0].instances[0].criterion='----';assert.throws(()=>environmentalProfileSchema.parse(input));
 });
+test('surface sessions resolve both methods while preserving method-specific locations and criteria',()=>{
+ const paired=profile();
+ paired.outputs.push({...paired.outputs[0],id:'accupoint',name:'Accupoint',method:'accupoint',instances:[{...paired.outputs[0].instances[0],test:'ACCUPOINT',label:'Neogen Accupoint',location:'Stainless Drum 3',unit:'RLU',criterion:'Not more than 100 RLU'}]});
+ const setup=resolveEnvironmentalProfile(sample,'product',[paired],[template]);
+ assert.equal(setup.resolution.status,'ready');
+ assert.deepEqual(setup.pairedOutputs?.map(o=>o.method),['accupoint','spc-my']);
+ assert.equal(setup.pairedOutputs?.[0].instances[0].location,'Stainless Drum 3');
+ assert.equal(setup.pairedOutputs?.[1].instances[0].unit,'cfu');
+ assert.equal(resolveEnvironmentalProfile(sample,'product',[paired],[template],{outputId:'spcmy'}).pairedOutputs?.length,2);
+ paired.outputs.push({...paired.outputs[0],id:'air',mode:'open-plate'});
+ assert.equal(resolveEnvironmentalProfile(sample,'product',[paired],[template]).resolution.status,'selection');
+ assert.equal(resolveEnvironmentalProfile(sample,'product',[paired],[template],{outputId:'air'}).pairedOutputs,undefined);
+});
+test('a surface pair cannot resolve when the companion layout is unavailable',()=>{
+ const paired=profile();
+ paired.outputs.push({...paired.outputs[0],id:'accupoint',name:'Accupoint',method:'accupoint',templateId:'missing',instances:[{...paired.outputs[0].instances[0],test:'ACCUPOINT',unit:'RLU'}]});
+ const setup=resolveEnvironmentalProfile(sample,'product',[paired],[template],{outputId:'spcmy'});
+ assert.equal(setup.resolution.status,'conflict');assert.match(setup.resolution.message,/Accupoint/);
+});

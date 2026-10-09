@@ -327,8 +327,9 @@ def metadata_cells(docs):
                 if j<len(cells) and text(cells[j]).strip()==':':j+=1
                 if j<len(cells):yield REPORT_METADATA[label],cells[j]
 
-def report_details(data,fields):
+def report_details(data,fields,persistent=False):
     docs=roots(package(data));missing={}
+    source_details={'area','facility','logbook','logbookReference'}
     protected={'analysisDate','releaseDate','d.release','t.release','analyst','micAnalyst','overallRemarks','overall.remarks',
         'tests','test','criterion','value','remarks','location','stage','replicate','channel','phase','activeValue','passiveValue','block','groupKey','type',
         'signature','reviewedBy','approvedBy','analyzedBy','notedBy'}
@@ -336,19 +337,21 @@ def report_details(data,fields):
         for p in root.xpath('.//w:p',namespaces=NS):
             for token in re.findall(r'\{\{\s*([\w.:-]+)\s*\}\}',text(p)):
                 key=REPORT_ALIASES.get(token,token)
+                if persistent and key in source_details:continue
                 if token.startswith(('sample.','report.','result.','rows.')) or token in protected or re.search(r'signature|approved|reviewed|noted',token,re.I):continue
                 if key in ('cc','additionalCC'):continue
-                if not str(fields.get(token,'') or '').strip():missing[key]={'key':key,'label':REPORT_LABELS.get(key,re.sub(r'([a-z])([A-Z])',r'\1 \2',key).replace('.',' ').capitalize())}
+                if persistent or not str(fields.get(token,'') or '').strip():missing[key]={'key':key,'label':REPORT_LABELS.get(key,re.sub(r'([a-z])([A-Z])',r'\1 \2',key).replace('.',' ').capitalize())}
     for key,cell in metadata_cells(docs):
+        if persistent and key in source_details:continue
         value=''.join(resolved_paragraph(p,fields) for p in cell.xpath('.//w:p',namespaces=NS)).strip()
-        if not value and not str(fields.get(key,'') or '').strip():missing[key]={'key':key,'label':REPORT_LABELS[key]}
+        if persistent or (not value and not str(fields.get(key,'') or '').strip()):missing[key]={'key':key,'label':REPORT_LABELS[key]}
     cc=[]
     for root in docs.values():
         for p in root.xpath('.//w:p',namespaces=NS):
             value=resolved_paragraph(p,fields).strip()
             match=re.search(r'cc\s*[.:]\s*(.*)$',value,re.I)
             if match and (not match.group(1).strip() or re.search(r'[,;]\s*$',match.group(1))):cc.append(match.group(1).strip())
-    if cc and not str(fields.get('additionalCC','') or '').strip():missing['additionalCC']={'key':'additionalCC','label':'Additional CC'}
+    if cc and (persistent or not str(fields.get('additionalCC','') or '').strip()):missing['additionalCC']={'key':'additionalCC','label':'Additional CC'}
     return {'optionalFields':list(missing.values()),'incompleteCC':cc}
 
 def fill_optional_report_details(docs,fields):
@@ -569,7 +572,8 @@ def main():
                         except Exception as e:result.append({'name':item.filename,'error':str(e)})
         else:result=inventory(path.read_bytes(),path.name,args.family)
     elif args.action=='environmental-layout':result=upgrade_environmental_layout(Path(args.input).read_bytes(),args.output)
-    elif args.action=='report-details':result=report_details(Path(args.input).read_bytes(),json.loads(Path(args.payload).read_text(encoding='utf8'))['fields'])
+    elif args.action=='report-details':
+        payload=json.loads(Path(args.payload).read_text(encoding='utf8'));result=report_details(Path(args.input).read_bytes(),payload['fields'],payload.get('persistentDetails',False))
     elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output,args.soffice)
     elif args.action=='validate':result=validate_template(Path(args.input).read_bytes())
     elif args.action=='prepare':result=prepare_template(Path(args.input).read_bytes(),args.output,args.family)

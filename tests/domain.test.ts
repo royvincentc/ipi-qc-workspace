@@ -51,6 +51,15 @@ test('missing dates block a specification match',()=>assert.throws(()=>latestCri
 test('missing applicable tests cannot silently disappear',()=>assert.throws(()=>latestCriteria([spec('2026-01-01','Nmt 50')],'Example','FG','Routine',['MY']),/date/));
 function draft():Draft{return {id:'d',sampleId:'s',sample:{} as any,templateId:'t',templateRevision:'1',revision:1,analyst:'A',updatedAt:'',specification:spec('2026-01-01','Nmt 50'),fields:{analysisDate:'2026-01-01',logbook:'MIC-1'},results:[{test:'SPC',state:'entered',value:'0',qualifier:'',unit:'cfu/g',reason:'',remarks:''}]};}
 test('actual zero is valid while missing value is not',()=>{const d=draft();assert.deepEqual(reportIssues(d),[]);d.results[0].value='';assert.match(reportIssues(d).join(),/number/);});
+test('manufacture and expiry accept full or month-only dates and compare calendar ranges',()=>{
+ for(const [manufacture,expiry] of [['12/2025','01/2026'],['10/01/2026','10/2026'],['10/2026','10/01/2026'],['02/29/2024','03/2024'],['2026-10-01','11/2026']]){
+  const d=draft();d.fields.manufactureDate=manufacture;d.fields.expiryDate=expiry;assert.deepEqual(reportIssues(d),[],`${manufacture} to ${expiry}`);
+ }
+ for(const value of ['13/2026','00/2026','02/29/2026','04/31/2026','10/26']){const d=draft();d.fields.manufactureDate=value;assert.match(reportIssues(d).join(),/Manufacture date/);}
+ for(const [manufacture,expiry] of [['01/2026','12/2025'],['10/20/2026','10/19/2026'],['11/2026','10/31/2026']]){const d=draft();d.fields.manufactureDate=manufacture;d.fields.expiryDate=expiry;assert.match(reportIssues(d).join(),/earlier/);}
+ const alias=draft();alias.fields['date.mfd']='10/2026';alias.fields['exp.date']='11/2026';assert.deepEqual(reportIssues(alias),[]);alias.fields['exp.date']='13/2026';assert.match(reportIssues(alias).join(),/Expiry date/);
+ const analysis=draft();analysis.fields.analysisDate='10/2026';assert.match(reportIssues(analysis).join(),/Analysis date/);
+});
 test('partial Results imports require entry only for the missing test',()=>{const d=draft();d.specification.tests.push({...d.specification.tests[0],test:'MY',label:'Molds and Yeast'});d.results.push({...d.results[0],test:'MY',state:'not_entered',value:'',sourceValue:undefined});assert.deepEqual(resultIssues(d),['Molds and Yeast: result required']);});
 test('complete Results imports do not require manual result entry',()=>{const d=draft();d.results[0].sourceValue='0';assert.deepEqual(resultIssues(d),[]);});
 test('manual microbiology values use the pinned criterion and unit',()=>{const d=draft();const criterion=d.specification.tests[0];assert.equal(microbiologyLimit(criterion.test,criterion.criterion),'Nmt 50');d.results[0].value='5';assert.equal(resultDisplayValue(criterion,d.results[0]),'5 cfu/g');});

@@ -3,6 +3,20 @@ from pathlib import Path
 from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W,upgrade_environmental_layout
 
 class DocumentTests(unittest.TestCase):
+    def test_persistent_details_keep_filled_optional_tokens_editable_and_protected_fields_hidden(self):
+        from docx import Document
+        from docx_worker import report_details
+        d=Document(self.template)
+        d.add_paragraph('Manufactured: {{date.mfd}} Expiry: {{exp.date}} Fill: {{fill.vol}}')
+        d.add_paragraph('Analyst: {{analyst}} Overall: {{overallRemarks}} Facility: {{facility}} Area: {{area}}')
+        source=self.folder/'persistent-details.docx';d.save(source)
+        fields={k:'filled' for k in validate_template(source.read_bytes())['tokens']}
+        self.assertEqual(report_details(source.read_bytes(),fields)['optionalFields'],[])
+        keys={item['key'] for item in report_details(source.read_bytes(),fields,True)['optionalFields']}
+        self.assertTrue({'manufactureDate','expiryDate','fillVolume'}<=keys)
+        self.assertNotIn('analyst',keys);self.assertNotIn('overallRemarks',keys)
+        self.assertNotIn('facility',keys);self.assertNotIn('area',keys)
+
     def test_missing_metadata_and_incomplete_cc_are_detected_and_filled(self):
         from docx import Document
         from docx_worker import report_details

@@ -783,3 +783,22 @@ main .result-grid { grid-template-columns:minmax(280px,1.2fr) minmax(230px,1fr) 
 .overall-analyst-remarks u { text-underline-offset:3px; }
 @media(max-width:1200px) { main .result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:640px) { main .result-grid { grid-template-columns:minmax(0,1fr); } }
+/* Swabbing methods are the primary navigation within one session. */
+.swab-method-switcher { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.swab-method-switcher .button.swab-method { min-height:118px; padding:20px 24px; border-radius:14px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:7px; text-align:left; white-space:normal; }
+.swab-method-switcher .swab-method strong { color:inherit; font-size:24px; line-height:1.2; }
+.swab-method span { font-size:14px; line-height:1.4; }
+.swab-method .swab-method-status { font-weight:650; }
+.report-date-pair { grid-column:1/-1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.report-date-pair .field { min-width:0; }
+.result-with-unit { position:relative; min-width:0; }
+.result-with-unit input { width:100%; padding-right:54px; }
+.result-with-unit span { position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--text-secondary); font-size:14px; pointer-events:none; }
+@media(max-width:640px) { .swab-method-switcher { grid-template-columns:1fr; gap:10px; } .swab-method-switcher .button.swab-method { min-height:110px; padding:18px 20px; } }
+.session-preview-navigation { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 24px; border-bottom:1px solid var(--border); }
+.session-preview-navigation .session-preview-tabs { margin:0; }
+.session-preview-navigation .session-preview-tabs button { min-height:44px; min-width:120px; font-size:14px; font-weight:650; }
+.session-preview-navigation .session-preview-tabs button[aria-pressed="true"] { background:var(--accent-action); color:var(--accent-ink); }
+.session-preview-caption { color:var(--text-secondary); font-size:13px; text-align:right; }
+.document-output .document-output-actions .button { min-height:44px; }
+@media(max-width:640px) { .session-preview-navigation { align-items:stretch; flex-direction:column; gap:10px; padding:16px; } .session-preview-navigation .session-preview-tabs { width:100%; } .session-preview-navigation .session-preview-tabs button { flex:1; min-width:0; } .session-preview-caption { text-align:left; } }

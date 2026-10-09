@@ -13,7 +13,9 @@ def fields(docs):
                 following=[v for v in values[i+1:i+5] if v and v!=':']
                 if following and following[0] not in ('Standard Specifications','Results','Remarks','Area','Category','Name of Sample'):
                     found[key]=following[0];break
-    header=' '.join(w.text(r) for n,r in docs.items() if 'header' in n)
+    # Keep paragraph boundaries: a preceding logbook page number must not
+    # concatenate with ML-EM and erase its leading word boundary.
+    header=' '.join(w.text(p) for n,r in docs.items() if 'header' in n for p in r.xpath('.//w:p',namespaces=w.NS))
     found['ml']=next(iter(re.findall(r'\bML-EM-\d{2}-\d+\b',header,re.I)),'')
     return found
 

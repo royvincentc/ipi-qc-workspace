@@ -1,3 +1,4 @@
+import {reportDateRange} from './report-dates.js';
 // Frozen migration defaults. Runtime catalogs are served by the configuration service.
 export const categories:Record<string,string> = {SFG:'Semi-Finished Goods',FG:'Finished Goods',WS:'Water',RM:'Raw Material',ST:'Product Stability',MIS:'Miscellaneous',EM:'Environmental Monitoring'} as const;
 export type Category = string;
@@ -11,6 +12,8 @@ export interface ResultSource {spreadsheetId:string;url:string;sheetId:number;sh
 export interface Result {test:string;location?:string;stage?:string;replicate?:string;channel?:'active-air'|'passive-air';instanceId?:string;block?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
 export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;environmentalSnapshot?:import('./environmental.js').EnvironmentalSnapshot;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;resultLookup?:'matched'|'not_found'|'demo';fields:Record<string,string>;updatedAt:string;analyst:string}
 export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>;outputName?:string};
+export interface Draft {environmentalSession?:{id:string;members:{draftId:string;outputId:string;name:string;method:'accupoint'|'spc-my'|'microbial'}[]}}
+export interface EnvironmentalSessionReview {id:string;members:{draftId:string;name:string;method:string;revision:number;issues:string[]}[]}
 export interface TemplateManifest extends Record<string,unknown>{appliesToProducts?:string[];defaultForCategory?:boolean;rowGrouping?:{mergeColumns:number[]};blocks?:Record<string,{mergeColumns:number[]}>}
 export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:TemplateManifest;verified:boolean;demo?:boolean;active?:boolean}
 export interface ReportSetup {sample:Sample;specification:Specification;template?:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>;layoutResolution?:import('./environmental.js').LayoutResolution;environmental?:import('./environmental.js').EnvironmentalSetup}
@@ -34,20 +37,28 @@ export function suggestedAnalystRemark(test:Criterion,r:Result):string{
  // Actual results at the standard's boundary fail in the requested workflow.
  return Number(r.value)<Number(limit[1])?'Passed':'Failed';
 }
-export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'>):string|undefined{
+export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):string|undefined{
+ const output=d.environmentalSnapshot?.output;
+ if(output?.mode==='surface'&&['accupoint','spc-my'].includes(output.method)){
+  const rows=d.specification.tests.map(t=>({test:t,result:d.results.find(r=>resultKey(r)===resultKey(t))}));
+  const failed=rows.filter(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='failed').map(({test:t})=>`Failed in ${t.label}${t.location?' for '+[t.location,t.stage,t.replicate,t.channel].filter(Boolean).join(' · '):''}`);
+  if(failed.length)return failed.length===1?failed[0]:failed.slice(0,-1).join(', ')+', and '+failed[failed.length-1];
+  return rows.length&&rows.every(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='passed')?'Passed':'';
+ }
  if(!['SFG','FG','ST','MIS'].includes(d.sample.category))return undefined;
  const rows=d.specification.tests.map(t=>({test:t,result:d.results.find(r=>resultKey(r)===resultKey(t))}));
  const failed=[...new Set(rows.filter(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='failed').map(({test:t})=>t.label))];
  if(failed.length)return 'Failed in '+failed.join(', ');
  return rows.length&&rows.every(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='passed')?'PASSED':'';
 }
-export function resultDisplayValue(test:Criterion,r:Result,category?:string){
+export function isSurfaceSpcMy(d:Pick<Draft,'environmentalSnapshot'>){return d.environmentalSnapshot?.output.mode==='surface'&&d.environmentalSnapshot.output.method==='spc-my';}
+export function resultDisplayValue(test:Criterion,r:Result,category?:string,surfaceSpcMy=false){
  if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
  const limit=microbiologyLimit(test.test,test.criterion);
- if(limit&&r.qualifier==='Nmt')return category&&['SFG','FG','ST','MIS'].includes(category)?microbiologyResultLimit(test):limit;
+ if(limit&&r.qualifier==='Nmt')return surfaceSpcMy||category&&['SFG','FG','ST','MIS'].includes(category)?microbiologyResultLimit(test):limit;
  const value=r.value.trim();
  if(limit&&value)return test.unit&&value.toLocaleLowerCase().endsWith(test.unit.toLocaleLowerCase())?value:`${value} ${test.unit}`.trim();
- return [r.qualifier,r.value,r.unit].filter(Boolean).join(' ');
+ return [test.test==='ACCUPOINT'&&r.qualifier==='='?'':r.qualifier,r.value,r.unit].filter(Boolean).join(' ');
 }
 export function resultIssues(d:Draft):string[]{
  const issues:string[]=[];
@@ -68,21 +79,15 @@ export function resultIssues(d:Draft):string[]{
 export function reportIssues(d:Draft):string[]{
  const issues=[...d.specification.issues,...resultIssues(d)];
  if(!d.fields.analysisDate)issues.push('Analysis date is required');
- const validReportDate=(value:string)=>{
-  const iso=value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  const displayed=value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(!iso&&!displayed)return false;
-  const format=d.configurationSnapshot?.general.dateFormat||'en-PH';
-  const [year,month,day]=iso
-   ?[Number(iso[1]),Number(iso[2]),Number(iso[3])]
-   :format==='en-GB'
-    ?[Number(displayed![3]),Number(displayed![2]),Number(displayed![1])]
-    :[Number(displayed![3]),Number(displayed![1]),Number(displayed![2])];
-  const date=new Date(Date.UTC(year,month-1,day));
-  return date.getUTCFullYear()===year&&date.getUTCMonth()===month-1&&date.getUTCDate()===day;
- };
- for(const key of ['analysisDate','manufactureDate','expiryDate']){const value=d.fields[key];if(value&&!validReportDate(value))issues.push(`${key==='analysisDate'?'Analysis date':key.replace(/([A-Z])/g,' $1')}: enter a valid date`);}
- if(d.fields.manufactureDate&&d.fields.expiryDate&&d.fields.expiryDate<d.fields.manufactureDate)issues.push('Expiry date cannot be earlier than manufacture date');
+ const format=d.configurationSnapshot?.general.dateFormat||'en-PH';
+ if(d.fields.analysisDate&&!reportDateRange(d.fields.analysisDate,format))issues.push('Analysis date: enter a valid date');
+ const manufacture=d.fields['date.mfd']||d.fields.manufactureDate;
+ const expiry=d.fields['exp.date']||d.fields.expiryDate;
+ const manufactureRange=manufacture?reportDateRange(manufacture,format,true):undefined;
+ const expiryRange=expiry?reportDateRange(expiry,format,true):undefined;
+ if(manufacture&&!manufactureRange)issues.push('Manufacture date: use MM/DD/YYYY or MM/YYYY');
+ if(expiry&&!expiryRange)issues.push('Expiry date: use MM/DD/YYYY or MM/YYYY');
+ if(manufactureRange&&expiryRange&&expiryRange.end<manufactureRange.start)issues.push('Expiry date cannot be earlier than manufacture date');
  const reportTokens=(d.templateSnapshot?.manifest.tokens||[]) as string[];
  const reportRequired=(d.templateSnapshot?.manifest.requiredFields||[]) as string[];
  const sourceFields=d.sample?.fields||{};

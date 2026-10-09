@@ -28,6 +28,17 @@ test('new products require explicit bulk opt-in and mismatching header names sta
  assert.match(ready.newProduct!.id,/^[A-Za-z][A-Za-z0-9_-]{0,49}$/);
  const mismatched={...candidate,evidence:[{...candidate.evidence[0],product:'Different Product'}]};assert.match(prepareEnvironmentalBatch([mismatched],config,[template],[],rules)[0].issues.join(' '),/header product disagrees/);
 });
+test('a shared session ML pairs surface methods with different locations but never pairs by batch alone',()=>{
+ const pairedConfig={...config,tests:[...config.tests,{id:'ACCUPOINT',active:true,categories:['EM']}] } as Configuration;
+ const traditional={...candidate,evidence:[{...candidate.evidence[0],ml:'ML-EM-26-0491',batch:'EYJ81'}]};
+ const rapid={...traditional,id:'rapid-pattern',referenceId:'rapid-ref',rows:[{...candidate.rows[0],test:'ACCUPOINT',label:'Accupoint',location:'Drum 3',unit:'RLU',criterion:'Not more than 100 RLU'}]};
+ const result=prepareEnvironmentalBatch([traditional,rapid],pairedConfig,[template],[],rules);
+ assert.equal(result.length,1);assert.deepEqual(result[0].issues,[]);assert.deepEqual(result[0].profile.outputs.map((o:any)=>o.method),['accupoint','spc-my']);
+ assert.equal(result[0].profile.outputs[0].instances[0].location,'Drum 3');assert.equal(result[0].profile.outputs[1].instances[0].location,'Mixing tank');
+ assert.deepEqual(new Set(result[0].profile.evidenceIds),new Set(['ref','rapid-ref']));
+ assert.equal(prepareEnvironmentalBatch([traditional,{...rapid,evidence:[{...rapid.evidence[0],ml:'ML-EM-26-0492'}]}],pairedConfig,[template],[],rules).length,2);
+ assert.equal(prepareEnvironmentalBatch([{...traditional,evidence:[{...traditional.evidence[0],ml:undefined}]},{...rapid,evidence:[{...rapid.evidence[0],ml:undefined}]}],pairedConfig,[template],[],rules).length,2);
+});
 test('an exact document product takes precedence over its broader archive folder',()=>{
  const variants={...config,products:[...config.products,{id:'boost-pro',name:'Boost-Pro',category:'EM',active:true,aliases:[],code:''}]};
  const source={...candidate,evidence:[{...candidate.evidence[0],product:'Boost-Pro'}]};

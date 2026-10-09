@@ -17,7 +17,7 @@ import {readWorkbook,readApplicability,google,driveFolder} from './google.js';
 import {defaultConnections,prepareSample,commitPreparedBatch,cancelPreparedBatch,syncSources,reconcileSubmission} from './samples.js';
 import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
 import {syncPendingReports} from './report-drive-sync.js';
-import {inspectReportDetails,createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
+import {getDraft,inspectReportDetails,createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,environmentalSessionReview,generateEnvironmentalSession,worker,privatePath,storage,retryReportDriveSync} from './reports.js';
 import {validateBindings,validatePreparedReplacement} from './template.js';
 import {environmentalProfiles,publishEnvironmentalProfile,retireEnvironmentalProfile} from './environmental.js';
 import {scanEnvironmentalBatch,previewEnvironmentalBatch,publishEnvironmentalBatch} from './environmental-batch.js';
@@ -225,8 +225,14 @@ app.patch('/api/references/templates/:id/active',requireRole('administrator'),as
 app.get('/api/sample-workflow/:sampleId',async(req,res)=>res.json(await resolveSampleWorkflow(String(req.params.sampleId),{profileId:req.query.profileId?String(req.query.profileId):undefined,outputId:req.query.outputId?String(req.query.outputId):undefined})));
 app.get('/api/report-setup/:sampleId',async(req,res)=>res.json(await resolveReportSetup(String(req.params.sampleId),{profileId:req.query.profileId?String(req.query.profileId):undefined,outputId:req.query.outputId?String(req.query.outputId):undefined},true)));
 app.post('/api/drafts',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({sampleId:z.string(),profileId:z.string().optional(),outputId:z.string().optional()}).parse(req.body);res.status(201).json(await createAutomaticDraft(b.sampleId,req.user,b));});
-app.get('/api/drafts/:id',async(req,res)=>{const d=(await db.query('SELECT data FROM drafts WHERE id=$1',[req.params.id])).rows[0]?.data;if(!d)throw new Fault(404,'Draft not found');res.json(d);});
+app.get('/api/drafts/:id',async(req,res)=>{res.json(await getDraft(String(req.params.id)));});
 const resultSchema=z.object({test:z.string(),location:z.string().optional(),stage:z.string().optional(),replicate:z.string().optional(),channel:z.enum(['active-air','passive-air']).optional(),instanceId:z.string().optional(),block:z.string().optional(),state:z.enum(['not_entered','not_tested','entered']),value:z.string().max(100),qualifier:z.enum(['','=','<','<=','Nmt']),unit:z.string().max(60),reason:z.string().max(1000),remarks:z.string().max(1000)});
+app.get('/api/drafts/:id/session',async(req,res)=>res.json(await environmentalSessionReview(String(req.params.id))));
+app.post('/api/drafts/:id/generate-session',requireRole('administrator','analyst'),async(req,res)=>{
+ const b=z.object({revisions:z.record(z.number().int().positive())}).parse(req.body);
+ const result=await generateEnvironmentalSession(String(req.params.id),b.revisions,req.user.email);
+ res.json({...result,files:result.files.map(({path,pdf,...file}:any)=>({...file,hasPreview:!!pdf}))});
+});
 app.get('/api/drafts/:id/report-details',async(req,res)=>res.json(await inspectReportDetails(String(req.params.id))));
 app.put('/api/drafts/:id',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),results:z.array(resultSchema).max(300),fields:z.record(z.string().max(2000))}).parse(req.body);res.json(await saveDraft(String(req.params.id),b.revision,b.results,b.fields,req.user.email));});
 app.get('/api/drafts/:id/history',async(req,res)=>res.json((await db.query('SELECT revision,data FROM draft_revisions WHERE id=$1 ORDER BY revision DESC',[req.params.id])).rows));

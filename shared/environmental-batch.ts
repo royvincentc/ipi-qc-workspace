@@ -93,5 +93,24 @@ export function prepareEnvironmentalBatch(candidates:BatchCandidate[],config:Con
    existing.profile.evidenceIds.push(c.referenceId);existing.candidateIds.push(c.id);existing.issues.push(...issues);existing.evidenceCount+=c.evidence.length;
   }else groups.set(key,{key,candidateIds:[c.id],profile,issues,newProduct,evidenceCount:c.evidence.length});
  }
- return [...groups.values()].map(p=>({...p,issues:[...new Set(p.issues)]}));
+ const proposals=[...groups.values()].map(p=>({...p,issues:[...new Set(p.issues)]}));
+ // A shared historical ML identifies the swabbing activity, even when methods
+ // record different equipment labels. Never infer this link from a date or batch alone.
+ const sourceMls=(p:BatchProposal)=>new Set(candidates.filter(c=>p.candidateIds.includes(c.id)).flatMap(c=>c.evidence.map(e=>environmentalKey(e.ml||''))).filter(ml=>/^ml-em-\d{2}-\d+$/.test(ml)));
+ const scope=(p:BatchProposal)=>JSON.stringify([p.profile.productId,p.profile.category,environmentalKey(p.profile.facility),processArea(p.profile.area),environmentalKey(p.profile.context),environmentalKey(p.profile.areaType||''),p.profile.effectiveFrom]);
+ const singleSurface=(p:BatchProposal)=>!p.issues.length&&p.profile.outputs.length===1&&p.profile.outputs[0].mode==='surface'&&['accupoint','spc-my'].includes(p.profile.outputs[0].method);
+ const partners=(p:BatchProposal)=>proposals.filter(q=>q!==p&&singleSurface(q)&&scope(q)===scope(p)&&q.profile.outputs[0].method!==p.profile.outputs[0].method&&[...sourceMls(q)].some(ml=>sourceMls(p).has(ml)));
+ const consumed=new Set<string>(),paired:BatchProposal[]=[];
+ for(const p of proposals){
+  if(consumed.has(p.key))continue;
+  const matches=singleSurface(p)?partners(p):[];
+  if(matches.length===1&&partners(matches[0]).length===1){
+   const other=matches[0],outputs=[...p.profile.outputs,...other.profile.outputs].sort((a,b)=>a.method.localeCompare(b.method));
+   const locations=[...new Set(outputs.flatMap(o=>o.instances.map((r:any)=>r.location)))].sort();
+   paired.push({...p,key:JSON.stringify(['surface-session',...[p.key,other.key].sort()]),candidateIds:[...p.candidateIds,...other.candidateIds],evidenceCount:p.evidenceCount+other.evidenceCount,profile:{...p.profile,equipmentSet:locations.join(', ').slice(0,170)+' · '+[...p.candidateIds,...other.candidateIds].sort()[0].slice(0,8),evidenceIds:[...new Set([...p.profile.evidenceIds,...other.profile.evidenceIds])],outputs}});
+   consumed.add(other.key);
+  }else paired.push(matches.length?{...p,issues:[...p.issues,'Multiple method patterns share a historical session ML; confirm the Accupoint / SPCMY pair.']}:p);
+  consumed.add(p.key);
+ }
+ return paired;
 }

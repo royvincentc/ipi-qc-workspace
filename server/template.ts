@@ -1,5 +1,5 @@
 import {Fault} from './domain.js';
-import {reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
+import {isSurfaceSpcMy,reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
 
 export interface ResultBinding {index:number;test:string;location?:string;stage?:string;replicate?:string}
 
@@ -40,7 +40,7 @@ export function reportRows(d:Draft,t:Template){
   const label=({'SPC':'Standard Plate Count (SPC)','MY':'Molds and Yeast'}[test.test]||reportTestLabel(test.test,test.label));
   const location=[test.location||'',test.replicate?`Replicate ${test.replicate}`:''].filter(Boolean).join(' · ');
   if(grouped&&!location.trim())throw new Fault(422,`${label}: approved sampling-plan location is missing`);
-  const value=r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r,d.sample?.category):'';
+  const value=r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r,d.sample?.category,isSurfaceSpcMy(d)):'';
   return {index:i,block:test.block||'tests',channel:test.channel,phase:test.stage||'',groupKey:[test.block||'tests',test.test,test.stage||'',test.criterion,test.unit,test.revision,test.date].join('|'),test:grouped?[label,['environmental-warehouse-phase-air-7c','environmental-grouped-5c'].includes(t.family)?'':test.stage].filter(Boolean).join('\n'):[label,location,test.stage].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:r?.remarks||''};
  });
  return t.family==='environmental-warehouse-phase-air-7c'?warehouseRows(rows):rows;

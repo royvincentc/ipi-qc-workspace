@@ -30,5 +30,18 @@ class BatchTests(unittest.TestCase):
             with zipfile.ZipFile(archive,'w') as z:z.writestr('report.docx',self.report(folder,'Environmental Monitoring','4'))
             result=scan(archive,folder/'prepared');candidate=result['candidates'][0]
             self.assertEqual(candidate['productHint'],'Boost');self.assertEqual(candidate['areaHint'],'Compounding')
+    def test_session_ml_survives_header_paragraphs_and_split_runs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp);file=folder/'report.docx'
+            self.report(folder,'Environmental Monitoring','98765321')
+            d=Document(file);header=d.sections[0].header
+            header.paragraphs[0].text='MIC-18 p.249'
+            p=header.add_paragraph()
+            for value in ['ML','-EM-','26','-0491']:p.add_run(value)
+            d.save(file);archive=folder/'source.zip'
+            with zipfile.ZipFile(archive,'w') as z:z.writestr('PF/2026/Boost/report.docx',file.read_bytes())
+            result=scan(archive,folder/'prepared')
+            self.assertEqual(result['candidates'][0]['evidence'][0]['ml'],'ML-EM-26-0491')
+            self.assertNotIn('98765321',json.dumps(result))
 
 if __name__=='__main__':unittest.main()

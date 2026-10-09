@@ -25,7 +25,13 @@ export type EnvironmentalProfile=z.infer<typeof environmentalProfileSchema>&{id:
 export interface EnvironmentalSelection {profileId?:string;outputId?:string}
 export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string}
 export interface LayoutResolution {status:'ready'|'missing'|'selection'|'conflict';message:string;choices?:{id:string;name:string}[]}
-export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot}
+export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[]}
+/** Pair only surface methods in the same approved equipment pattern. */
+export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutput[]{
+ const accupoint=profile.outputs.filter(o=>o.mode==='surface'&&o.method==='accupoint');
+ const spcmy=profile.outputs.filter(o=>o.mode==='surface'&&o.method==='spc-my');
+ return accupoint.length===1&&spcmy.length===1?[accupoint[0],spcmy[0]]:[];
+}
 export const environmentalKey=(value:string)=>value.normalize('NFKC').toLowerCase().replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim();
 export const processArea=(value:string)=>environmentalKey(value).replace(/^for\s+/,'').replace(/\s+area$/,'');
 
@@ -85,10 +91,17 @@ export function resolveEnvironmentalProfile(sample:Sample,productId:string,profi
  if(chosen.length!==1)return fail(chosen.length?'selection':'missing',selection.profileId?'The selected sampling pattern is unavailable or is not effective for this activity.':chosen.length?'Select the confirmed equipment set / sampling pattern for this activity.':'No sampling pattern is effective on the activity date.');
  const profile=chosen[0];
  const outputs=profile.outputs.map(({id,name,method,mode})=>({id,name,method,mode}));
- const picked=selection.outputId?profile.outputs.filter(o=>o.id===selection.outputId):profile.outputs;
+ const pair=surfaceSwabPair(profile);
+ const picked=selection.outputId?profile.outputs.filter(o=>o.id===selection.outputId):pair.length===profile.outputs.length&&pair.length===2?[pair[0]]:profile.outputs;
  if(picked.length!==1)return {...fail('selection',selection.outputId?'The selected monitoring output is not in this pattern.':'Select the monitoring method and output for this activity.'),outputs};
  const output=picked[0],template=templates.find(t=>t.id===output.templateId);
+ const pairedOutputs=pair.some(o=>o.id===output.id)?pair:undefined;
+ for(const member of pairedOutputs||[]){
+  const layout=templates.find(t=>t.id===member.templateId);
+  const problem=environmentalTemplateIssue(layout,environmentalCriteria(profile,member),sample.category);
+  if(problem||layout?.revision!==member.templateRevision)return {...fail('conflict',`${member.name}: ${problem||'The template revision changed. Review and publish a new sampling-pattern revision.'}`),outputs,pairedOutputs,snapshot:{profile,output,sourceFingerprint:sample.source.fingerprint}};
+ }
  const issue=environmentalTemplateIssue(template,environmentalCriteria(profile,output),sample.category);
  if(issue||template?.revision!==output.templateRevision)return {...fail('conflict',issue||'The template revision changed. Review and publish a new sampling-pattern revision.'),outputs,snapshot:{profile,output,sourceFingerprint:sample.source.fingerprint}};
- return {profiles:summary,outputs,resolution:{status:'ready',message:`${profile.name} · ${output.name}`},snapshot:{profile,output,sourceFingerprint:sample.source.fingerprint}};
+ return {profiles:summary,outputs,pairedOutputs,resolution:{status:'ready',message:`${profile.name} · ${pairedOutputs?'Accupoint + SPCMY':output.name}`},snapshot:{profile,output,sourceFingerprint:sample.source.fingerprint}};
 }

@@ -28,3 +28,10 @@ test('template with a missing applicable test cannot start a report',()=>{
  const template={manifest:{resultBindings:[{index:0,test:'SPC'}]}} as unknown as Template;
  assert.throws(()=>reportRows(draft,template),/does not represent every applicable test/i);
 });
+test('SPCMY PDF rows keep standard specifications separate from the fixed reporting result',()=>{
+ const tests=['SPC','MY'].map(test=>({test,label:test,type:'numeric',unit:'cfu/mL',criterion:`Not more than ${test==='SPC'?100:30} cfu/mL`}));
+ const draft={sample:{category:'EM'},environmentalSnapshot:{output:{method:'spc-my',mode:'surface'}},specification:{tests},results:tests.map(t=>({...t,state:'entered',qualifier:'Nmt',value:'',remarks:'Passed'}))} as unknown as Draft;
+ const rows=reportRows(draft,{manifest:{}} as Template);
+ assert.deepEqual(rows.map(r=>r.value),['Nmt 10 cfu/mL','Nmt 10 cfu/mL']);
+ assert.deepEqual(rows.map(r=>r.criterion),['Not more than 100 cfu/mL','Not more than 30 cfu/mL']);
+});

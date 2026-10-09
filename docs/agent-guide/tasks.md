@@ -1416,3 +1416,64 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Owner action: Set up prepay in AI Studio and fund the required starting balance. Google documents a $5 minimum migration purchase and requires an active prepaid balance to use eligible GCP credits. No payment, key rotation, environment export or company-record changes occurred.
 - Deployment: automatic approval review rejected commit/push to master because user approval for the external side effect was not explicit. Changes are local and uncommitted pending approval. Live recovery requires billing activation and a successful assistant retry.
 - Deployment approval: owner explicitly approved commit and push in this chat on 2026-10-09. Publishing the tested scoped fix; billing activation and successful assistant retry remain owner-side follow-up.
+- Verified publication: commit 6eace3efbe279835b7e6360cf4613a04a62a1f19 pushed to origin/master. Render deployment dep-db3v2tg473hc73ftm0cg is live (2026-10-09 03:41:58 Asia/Taipei); GET /api/health returned {"ok":true,"demo":false}. Diagnostic update is deployed; Gemini request success remains unverified pending owner prepay activation. This post-deployment evidence is recorded locally after publication.
+
+### TASK-20261009-002 — Paired environmental surface swab reports
+- Status: Completed locally; not deployed
+- Priority: P1
+- Actor/tool: Codex
+- Authorization: Owner requested one environmental swabbing session / ML row with both Accupoint and traditional SPCMY PDF reports and supplied paired DOCX references.
+- Goal/rule link: Environmental workflow, report standard fidelity, attributable independent manual results, preserved source snapshots.
+- Scope/files: shared/environmental.ts, shared/environmental-batch.ts, shared/model.ts, server/reports.ts, server/index.ts, src/reports.tsx, worker/environmental_batch.py and focused environmental/session/scanner tests.
+- Before: Each environmental draft selected one monitoring output. Bulk patterns required identical location lists to combine methods; flattened header text lost the supplied reports' ML identifier at a paragraph boundary.
+- Change: Approved Accupoint/SPCMY surface patterns resolve as a pair. Atomic creation links two drafts to one source activity; separate results, locations, units, criteria, report details and revisions are preserved. One generation action validates both revisions/results, generates both PDFs, exposes separate previews/downloads, and records incomplete pairs explicitly. Import can link differing method location sets only through a shared session ML and identical routing scope. Header paragraph boundaries now preserve split-run ML identifiers.
+- Data impact: Reference documents were read and dry-scanned; all application writes and generated artifacts used a separate de-identified local database/storage. No production configuration, workbook, sample release state, or deployment was changed. Historical results are not imported into current drafts.
+- Verification: Focused TypeScript environmental, batch, session, report and workflow regressions pass, including rollback when companion tests are inactive, independent revisions, stale revisions, missing companions and same-day distinct sessions. Production build and typecheck pass. Playwright desktop/mobile interaction, autosave while switching methods, both PDF generation/downloads (HTTP 200), idempotent regeneration, dark/light inspection and keyboard focus verified. Both PDFs rendered and visually inspected. Impeccable detector returned no findings. Actual supplied pair dry run: two documents, one proposal, zero issues, eight Accupoint rows, sixteen SPC/MY rows, no historical results imported.
+- Problems/risks: Old single-method historical drafts remain separate; new paired drafts require an approved pattern containing both surface methods. Existing live patterns were not silently merged. External review/signature and release remain separate.
+- Rollback: Revert the scoped source changes; preserve existing snapshots and generated reports. New metadata is additive; no schema migration was needed.
+- Evidence: output/swab-session-review/verification.md and reference-pair-summary.json; isolated browser and PDF artifacts. No commit or push made.
+- Next action/owner: Review/publish the local implementation through the normal deployment process and review matching approved paired patterns; live publication was not part of this request.
+
+### TASK-20261009-003 — Refine environmental result entry from browser comments
+- Status: Completed locally; not deployed
+- Actor/tool: Codex
+- Authorization: Owner's ten browser comments requested clearer method selectors, equipment-first Accupoint headings, zero/exact RLU controls, adjacent manufacture/expiry dates, and product-style SPCMY shortcuts/remarks without standard changes.
+- Scope: src/reports.tsx, src/laboratory.css, shared/model.ts, server/template.ts and focused result/template tests.
+- Change: Enlarged two-line method/status navigation; Accupoint zero/exact controls and visible unit suffix; date pair grouping; surface SPCMY Nmt 10 reporting independent of 100/30 pinned standards; per-row suggested remarks using the requested strict product boundaries with manual override preserved.
+- Validation: Production build/typecheck, 47 focused tests plus 10 result/template tests, Playwright keyboard entry/review, 1440px/390px layout measurements and screenshot inspection; Impeccable detector clean. Fixed selected-button heading contrast during visual audit.
+- Evidence: output/swab-session-review/editor-refinement-verification.md.
+- Data/publication: Isolated local demo only; browser test edits unsaved. No source/production/release changes or deployment.
+
+### TASK-20261009-004 — Accupoint suggestions and shared session report details
+- Status: Completed locally; not deployed
+- Authorization: Owner requested Accupoint Failed at exact values of 100 RLU and above with manual override, shared details between the paired reports, and a temperature Celsius suffix.
+- Scope: shared/environmental-session.ts, server/reports.ts, server/index.ts, src/reports.tsx and focused session/result/workflow tests.
+- Change: Accupoint uses the existing strict-boundary suggestion helper. Common metadata is resolved across the verified session, synchronized atomically on save with companion revisions/history, and retained visibly for editing after completion. Aliases share values; clearing propagates; results/remarks remain independent. Existing one-sided entries appear on companion reads without GET writes. Export/cache resolution includes shared metadata. Temperature displays and renders one Celsius suffix.
+- Verification: Playwright confirmed 99 Passed, 100/101 Failed and manual override, save-before-method-switch sharing of temperature/manufacture/analysis date, visible filled details, 1440px/390px layout with no overflow and adjacent dates. Impeccable detector clean. Focused tests cover stale companion revisions, bidirectional metadata/clear propagation, independent results, legacy fallback, temperature export and strict boundaries.
+- Data/publication: New de-identified drafts in the existing isolated local demo were used for browser testing; original reviewed drafts were not edited. No production/source/release changes or deployment.
+- Final validation: all 37 focused tests, production build/typecheck and whitespace check pass. Cleanup of browser-only demo draft IDs 7a84c8bd-80c0-498a-924f-6e7405d66619 and 4bee5f7e-6bba-4eb2-9daa-5d96be2771dd was rejected by automatic approval review for lack of explicit permanent-deletion authorization. Both test drafts remain pending the owner decision; original reviewed IDs were not targeted.
+- Cleanup authorization received: owner selected Delete the two test drafts. Both exact demo draft IDs were deleted through the normal API with HTTP 200. Browser returned to the original SPCMY draft.
+
+### TASK-20261009-005 — Accept month-only manufacture and expiry dates
+- Status: Completed locally; not deployed
+- Authorization: Owner reported paired PDF generation rejecting manufacture/expiry dates and requested MM/DD/YYYY or MM/YYYY.
+- Scope: shared/report-dates.ts, shared/model.ts, server/reports.ts, src/reports.tsx, tests/domain.test.ts and tests/environmental-workflow.test.ts.
+- Change: Manufacture/expiry validation accepts full dates and month precision, including canonical/legacy token aliases. Chronology compares parsed calendar ranges rather than strings and rejects expiry only when definitely earlier. Month precision remains unchanged in report output; no day is invented. Field hints/placeholders name both accepted forms. Analysis date retains full-date validation.
+- Validation: Production build/typecheck, 42 focused tests and Impeccable detector pass. Playwright on the actual reviewed demo session confirms saved 02/2026 manufacture and 02/2029 expiry produce zero issues in both Accupoint and SPCMY. Desktop/mobile layout measures show no page overflow and dates remain adjacent. Original field values were not edited during verification.
+- Data/publication: Local changes only; no production/source/release changes, commit, push or deployment.
+
+### TASK-20261009-006 — Automatic environmental overall remarks
+- Status: Completed locally; not deployed
+- Authorization: Owner requested overall Passed when all table remarks pass, otherwise a failed-test/equipment summary on both Accupoint and SPCMY PDFs.
+- Scope: shared/model.ts, server/reports.ts, tests/result-remarks.test.ts and tests/environmental-workflow.test.ts.
+- Change: Derive a per-method surface-swab summary from final analyst remarks. Each failed row names its parameter and equipment in table order; all-passed rows yield Passed. Incomplete rows do not yield a false Passed. Existing manual row overrides are respected. Both footer token aliases are computed at save/export; previously generated PDF cache contract was invalidated.
+- Validation: Production build/typecheck, 33 focused tests and 3 export workflow tests pass. Browser confirms automatic Passed and the exact two-equipment failure example; desktop/mobile widths have no overflow. Both actual generated PDFs contain REMARKS: Passed (verified with pypdf). Impeccable detector and diff whitespace check pass.
+- Data/publication: Existing de-identified local session generated fresh PDFs; row failure checks were unsaved. No production/source/release changes, commit, push or deployment.
+
+### TASK-20261009-007 — Refine report previews and publish completed report workflow
+- Status: Ready for authorized GitHub publication
+- Authorization: Owner requested a cleaner generated-session UI and explicitly authorized commit/push, then extended persistent optional editing and date formats to SFG/FG/ST/Miscellaneous reports.
+- Change: Consolidated paired preview selection and PDF/DOCX downloads in one document workspace. Method switching updates the title, pressed state, preview and download URLs; duplicate download rows were removed. Optional report fields remain visible/editable in entry and review/generation for product categories and paired environmental sessions, with canonical/legacy aliases synchronized and intentional blank edits respected. Manufacture/expiry accept full or month-only dates. Source routing/identity fields remain protected.
+- Publication scope: All completed environmental session/report changes from this chat, shared metadata/date helpers, product editing extension, document-worker changes, focused regression tests and task/handover notes. Temporary PDFs, reference documents, browser logs and demo databases are excluded.
+- Validation: Production build/typecheck; full application suite 123/123; document-worker suite 32/32; Impeccable detector and whitespace check clean. Real browser checks verified paired method selection/download URLs, desktop/mobile layout without page overflow, 44px action targets, and a product report fixture retaining prefilled/edited month dates and optional text on review. All four product categories have export/blank-edit coverage. Product UI checks used intercepted fixture responses without persistent company-record edits.
+- Owner authorization supersedes the older local prohibition on automatic analyst/overall remarks; calculations follow the explicit requested strict thresholds and final row decisions. Source sample release and approval remain separate.

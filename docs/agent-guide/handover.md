@@ -353,3 +353,35 @@
 - Prepared backend billing classification/structured-error fix and regression tests. Six assistant tests, typecheck, production build and diff check pass. Browser initialization failed due to Windows sandbox setup; no visual layout changed.
 - Changes remain local and uncommitted: approval review rejected default-branch commit/push without explicit user approval. Ask for approval to publish the scoped four-file fix. Successful live request after owner activates prepay is still required to confirm restoration. No payment, secret export, database or workbook edits performed.
 - Deployment approval: owner explicitly approved commit and push in this chat on 2026-10-09. Publishing the tested scoped fix; billing activation and successful assistant retry remain owner-side follow-up.
+- Verified publication: commit 6eace3efbe279835b7e6360cf4613a04a62a1f19 pushed to origin/master. Render deployment dep-db3v2tg473hc73ftm0cg is live (2026-10-09 03:41:58 Asia/Taipei); GET /api/health returned {"ok":true,"demo":false}. Diagnostic update is deployed; Gemini request success remains unverified pending owner prepay activation. This post-deployment evidence is recorded locally after publication.
+
+## Environmental surface swab report pair — 2026-10-09, Asia/Taipei
+- TASK-20261009-002: owner clarified one environmental source row / ML number represents a swabbing session with Accupoint and SPCMY outputs, rather than individual swab points.
+- Implemented atomic paired draft creation, saved method navigation, independent results/revisions, generation validation for both methods, separate PDF previews/downloads and explicit incomplete-output reporting. Source release status is unchanged.
+- Reference dry run confirmed different method equipment lists can belong to the same activity. The scanner now preserves header paragraph boundaries; import combines those lists only when the methods share a historical ML and routing scope. Actual supplied pair produced one ready proposal with 8 Accupoint and 16 SPC/MY rows; current results remain blank.
+- Verification: targeted TypeScript tests, production build/typecheck, real Playwright interaction at desktop/mobile widths, keyboard focus, dark/light view, both PDF downloads and rendered-page inspection passed. Audit/evidence: output/swab-session-review/verification.md. A save-before-switch guard issue found in the browser was fixed using the existing unsaved guard cleanup after successful persistence.
+- Work is local and uncommitted. No production database/source/configuration or deployment changed. Existing single-method drafts/profile history was preserved; use a new draft from an approved pattern containing both methods for paired generation. No live patterns were silently merged.
+
+## Environmental editor browser refinements — 2026-10-09, Asia/Taipei
+- TASK-20261009-003 completed locally: larger Accupoint/SPCMY navigation, equipment-first Accupoint heading, 0 RLU/Exact value controls with visible suffix, and adjacent manufacture/expiry dates.
+- Surface SPCMY result shortcuts now report Nmt 10 cfu/mL while pinned SPC100/MY30 standards remain unchanged in review and export. Suggested remarks follow product strict boundaries; manual overrides remain usable.
+- Verification: build/typecheck, focused domain/session/result/template tests and real keyboard interaction at desktop/mobile widths; no page overflow. Visual audit found/fixed selected-button heading contrast. Evidence: output/swab-session-review/editor-refinement-verification.md.
+- Local and uncommitted; no source workbook, production settings, sample release or deployment changed. Browser test edits were not saved.
+
+## Shared environmental report details — 2026-10-09, Asia/Taipei
+- TASK-20261009-004 implemented locally: Accupoint automatic suggestions at the strict 100 RLU boundary with manual override; common details shared only within the verified paired session; visible/one-time temperature Celsius suffix.
+- Saves lock both paired drafts in the same order as generation, atomically update shared metadata and revision histories, and leave results/remarks separate. Stale companion editors must reload. Existing single-sided entries are resolved read-only on both methods and export/cache uses the resolved shared fields.
+- Browser verification passed for method-switch metadata persistence, threshold/override and desktop/mobile layout. Filled optional metadata used to disappear; paired detail discovery now keeps it editable. No production/source/release/deployment changes; tested with separate de-identified drafts.
+
+## Month-only report dates — 2026-10-09, Asia/Taipei
+- TASK-20261009-005: manufacture/expiry now accept MM/DD/YYYY or MM/YYYY, with month-only dates preserved in export. Calendar-range comparison replaces string sorting and validates legacy aliases as well.
+- Actual local demo pair with 02/2026 and 02/2029 now has no validation issues on either method. Build/typecheck, 42 focused tests and browser desktop/mobile checks pass. Analysis date still requires a complete date. No data edits or publication occurred.
+
+## Environmental overall remarks — 2026-10-09, Asia/Taipei
+- TASK-20261009-006: Accupoint/SPCMY surface report overall remarks now derive from each method's own final row remarks. All rows Passed gives Passed; failures name each parameter and equipment; incomplete rows cannot imply Passed. Product report formatting is preserved.
+- Save and export resolve both overallRemarks and overall.remarks; new PDF cache revision prevents reuse of older empty-footer reports. Build, focused tests, browser summary/desktop/mobile checks and actual generated PDF footer extraction pass. Local/demo only; no release or deployment change.
+
+## Authorized report workflow publication — 2026-10-09, Asia/Taipei
+- Owner authorized GitHub publication of the completed report workflow and preview cleanup, including persistent optional detail editing and MM/DD/YYYY or MM/YYYY manufacture/expiry formats for SFG/FG/ST/MIS.
+- Generated session previews now share one document workspace, method selector and selected-report downloads. Product and paired report detail discovery retains completed optional fields; alias edits/clears render consistently. Source identity/routing fields remain protected.
+- Final checks: production build/typecheck, 123 application tests, 32 worker tests, Impeccable audit, keyboard preview switching, desktop/mobile layout and representative product review editing passed. Publish the explicit source/test/docs scope only; browser artifacts, private reference reports and demo data are excluded.

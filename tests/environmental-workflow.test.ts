@@ -37,6 +37,13 @@ test('approved environmental plan creates independent blank results and keeps it
  assert.notEqual(draft.results[0].instanceId,draft.results[1].instanceId);
  assert.ok(draft.results.every(r=>r.state==='not_entered'&&r.value===''&&r.remarks===''));assert.equal(draft.resultSource,undefined);
  assert.equal(reportTemplateFields(draft,template)['overall.remarks'],'');assert.equal(reportTemplateFields(draft,template).temperature,'');const generated=reportTemplateFields(draft,template,new Date('2026-10-08T03:12:00Z'));assert.equal(generated.releaseDate,'10/08/2026 @ 11:12 AM');assert.equal(generated['sample.released'],generated.releaseDate);assert.equal(generated.facility,draft.sample.fields.facility);assert.equal(generated.area,draft.sample.fields.area);
+ assert.equal(reportTemplateFields({...draft,fields:{...draft.fields,temperature:'24.5'}},template).temperature,'24.5 °C');
+ assert.equal(reportTemplateFields({...draft,fields:{...draft.fields,temperature:'24.5 °C'}},template).temperature,'24.5 °C');
+ const monthDates=reportTemplateFields({...draft,fields:{...draft.fields,manufactureDate:'10/2026',expiryDate:'11/2027'}},template);
+ assert.equal(monthDates.manufactureDate,'10/2026');assert.equal(monthDates['date.mfd'],'10/2026');assert.equal(monthDates.expiryDate,'11/2027');assert.equal(monthDates['exp.date'],'11/2027');
+ const passedDraft={...draft,results:draft.results.map(r=>({...r,state:'entered' as const,value:'0',remarks:'Passed'})),fields:{...draft.fields,overallRemarks:'Stale manual text'}};
+ assert.equal(reportTemplateFields(passedDraft,template).overallRemarks,'Passed');assert.equal(reportTemplateFields(passedDraft,template)['overall.remarks'],'Passed');
+ passedDraft.results[0].remarks='Failed';assert.equal(reportTemplateFields(passedDraft,template).overallRemarks,'Failed in Standard Plate Count for Nozzle 1');
  const tampered=structuredClone(draft.results);tampered[0].location='Different nozzle';await assert.rejects(saveDraft(draft.id,1,tampered,draft.fields,'owner'),/cannot be changed/);
  await retireEnvironmentalProfile(profile.id,profile.revision,'owner');
  const stored=(await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data;assert.equal(stored.environmentalSnapshot.profile.active,true);

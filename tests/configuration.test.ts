@@ -229,3 +229,10 @@ test('optional report metadata resolves canonical fields and legacy tokens consi
  const edited=reportTemplateFields(draft,template);assert.equal(edited['date.mfd'],'10/01/2026');assert.equal(edited['fill.vol'],'100 mL');assert.equal(edited['batch.size'],'3000 L');assert.equal(edited.additionalCC,'QA');
  draft.sample.fields={};draft.fields={};const blank=reportTemplateFields(draft,template);assert.equal(blank['date.mfd'],'');assert.equal(blank.fillVolume,'');assert.equal(blank.requestedBy,'');
 });
+test('product report metadata preserves month precision and intentional empty edits in every product category',()=>{
+ for(const category of ['SFG','FG','ST','MIS']){
+  const d={sample:{name:'Fixture',category,fields:{manufactureDate:'2026-01-01',expiryDate:'2029-01-01',fillVolume:'30 mL'}},fields:{manufactureDate:'02/2026',expiryDate:'02/2029',fillVolume:''},results:[],specification:{tests:[]},configurationSnapshot:{general:{timezone:'Asia/Manila'},reports:{}}} as any;
+  const fields=reportTemplateFields(d,{manifest:{tokens:['date.mfd','exp.date','fill.vol']}} as any);
+  assert.equal(fields['date.mfd'],'02/2026');assert.equal(fields['exp.date'],'02/2029');assert.equal(fields['fill.vol'],'');
+ }
+});
