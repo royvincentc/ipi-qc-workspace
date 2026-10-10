@@ -34,6 +34,7 @@ import {
 import Dialog from "./dialog";
 import type { ResourceKind, SharedResource } from "../shared/collaboration";
 import { useSharedResource } from "./shared-resource";
+import { listLocal } from './shared-local';
 import Kanban from "./kanban";
 import "./collaboration.css";
 const Drawing = lazy(() => import("./drawing"));
@@ -96,13 +97,18 @@ export default function SharedTools() {
   const kind: ResourceKind =
     params.get("kind") === "drawing" ? "drawing" : "kanban";
   const trashed = params.get("trash") === "true";
+  const { user, demo } = useContext(Session);
   const { data, error, reload } = useLoad(
-    () =>
-      api<SharedResource[]>(`/collaboration${trashed ? "?deleted=true" : ""}`),
+    async () => {
+      try { return await api<SharedResource[]>(`/collaboration${trashed ? "?deleted=true" : ""}`); }
+      catch (error) {
+        if (navigator.onLine) throw error;
+        return trashed ? [] : listLocal(user.email);
+      }
+    },
     [trashed],
   );
   const canEdit = useCanEdit();
-  const { user, demo } = useContext(Session);
   const notify = useContext(Notice);
   const navigate = useNavigate();
   const [create, setCreate] = useState(false),
@@ -532,16 +538,20 @@ function ResourceEditor({ id }: { id: string }) {
           setSavingBoard(true);
           try {
             if (!window.dispatchEvent(new Event('ipi:shared-save', { cancelable: true }))) throw new Error('Enter a valid six-digit hex color before saving the board.');
-            await room.save(); notify('Board saved and shared with the team');
+            await room.save(); notify('Board synced to IPI and shared with the team');
           } catch (error) { notify(error instanceof Error ? error.message : 'Save failed', true); } finally { setSavingBoard(false); }
         }}><Save size={15}/>{savingBoard ? 'Saving board…' : 'Save board'}</button> : null}
         <span className={`shared-connection ${room.connected ? "online" : ""}`}>
           <i aria-hidden="true" />
-          {room.connected ? "Live" : "Reconnecting…"}
+          {!room.online ? "Offline · local" : room.connected ? "Live" : "Reconnecting…"}
         </span>
         <span role="status">
-          {room.pending
-            ? "Saving changes…"
+          {room.localSaving
+            ? "Saving on this device…"
+            : room.localFailed
+              ? "Local save failed · use Save board to save online"
+            : room.pending
+            ? "Saved on this device · syncs every 4 hours"
             : demo
               ? "Saved locally · demo"
               : resource.driveError
@@ -564,10 +574,12 @@ function ResourceEditor({ id }: { id: string }) {
         {canEdit && !demo ? (
           <button
             className="button secondary small"
-            disabled={syncing || room.pending > 0}
+            disabled={syncing}
             onClick={async () => {
               setSyncing(true);
               try {
+                if (!window.dispatchEvent(new Event('ipi:shared-save', { cancelable: true }))) throw new Error('Enter a valid six-digit hex color before saving.');
+                await room.save();
                 await api(`/collaboration/${id}/sync`, "POST", {});
                 await room.refresh();
               } catch (e: any) {
@@ -639,6 +651,7 @@ function ResourceEditor({ id }: { id: string }) {
             className="button secondary"
             onClick={async () => {
               try {
+                await room.save();
                 await api(`/collaboration/${id}`, "DELETE", {
                   revision: resource.revision,
                 });

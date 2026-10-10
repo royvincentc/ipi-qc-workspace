@@ -13,7 +13,7 @@ import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import type { RemoteExcalidrawElement } from "@excalidraw/excalidraw/data/reconcile";
 import "@excalidraw/excalidraw/index.css";
 import { Download, Upload, Scan, Maximize, Minimize } from "lucide-react";
-import { useConfiguration, useUnsaved } from "./configuration";
+import { useUnsaved } from "./configuration";
 import { ErrorBox } from "./ui";
 import { api, fileBase64 } from "./api";
 import type {
@@ -49,7 +49,6 @@ export default function Drawing({
   clientId: string;
   sendPointer: (pointer: Participant["pointer"]) => void;
 }) {
-  const { theme } = useConfiguration();
   const [editor, setEditor] = useState<ExcalidrawImperativeAPI>();
   const [fullscreen, setFullscreen] = useState(false);
   const fullscreenTrigger = useRef<HTMLButtonElement>(null);
@@ -129,7 +128,8 @@ export default function Drawing({
   const peers = participants.filter((person) => person.id !== clientId);
   const peerSignature = JSON.stringify(peers);
   const state = resource.state as DrawingState;
-  const initialScene = useRef({ elements: state.elements, files: state.files, appState: { viewBackgroundColor: theme === 'dark' ? '#242621' : '#fcfcf9' } });
+  // Keep the normal light canvas independent of IPI's surrounding theme.
+  const initialScene = useRef({ elements: state.elements, files: state.files, appState: { viewBackgroundColor: '#fcfcf9' } });
   const editorOptions = useMemo<NonNullable<ComponentProps<typeof Excalidraw>['UIOptions']>>(() => ({ canvasActions: { loadScene: false, saveToActiveFile: false, toggleTheme: false, export: false } }), []);
   const editorMenu = useMemo(() => <MainMenu>{canEdit ? <MainMenu.DefaultItems.ClearCanvas /> : null}</MainMenu>, [canEdit]);
   const pointerUpdate = useCallback<NonNullable<ComponentProps<typeof Excalidraw>['onPointerUpdate']>>((payload) => {
@@ -500,7 +500,7 @@ export default function Drawing({
         <Excalidraw
           excalidrawAPI={setEditor}
           initialData={initialScene.current}
-          theme={theme}
+          theme="light"
           name={resource.title}
           viewModeEnabled={!canEdit}
           isCollaborating={peers.length > 0}

@@ -202,7 +202,13 @@ export function applyOperation(
   actor: string,
   now = new Date().toISOString(),
 ): SharedResource {
-  const next = structuredClone(resource);
+  // Copy board containers, then copy only notes touched by this operation.
+  // Large boards keep unchanged note identities and avoid cloning every text state.
+  const board = resource.state as BoardState;
+  const next: SharedResource = resource.kind === 'kanban' ? {
+    ...resource,
+    state: { columns: board.columns.map(column => ({ ...column, noteIds: [...column.noteIds] })), notes: { ...board.notes } },
+  } : structuredClone(resource);
   const conflict = (message: string): never => {
     throw new CollaborationConflict(message);
   };
@@ -237,11 +243,13 @@ export function applyOperation(
     const column = (columnId: string) =>
       state.columns.find((item) => item.id === columnId) ||
       conflict("This column was removed. Choose another column.");
-    const note = (noteId: string) =>
-      state.notes[noteId] ||
-      conflict(
+    const note = (noteId: string) => {
+      const previous = state.notes[noteId];
+      if (!previous) conflict(
         "This note was removed by another user. Your edits were not applied.",
       );
+      return state.notes[noteId] = { ...previous };
+    };
     switch (operation.type) {
       case "column-add":
         if (state.columns.length >= 30)
@@ -285,7 +293,7 @@ export function applyOperation(
           const target = column(operation.destination);
           for (const nid of c.noteIds) {
             target.noteIds.push(nid);
-            state.notes[nid].columnId = target.id;
+            state.notes[nid] = { ...state.notes[nid], columnId: target.id };
           }
         } else for (const nid of c.noteIds) delete state.notes[nid];
         state.columns = state.columns.filter((item) => item.id !== c.id);

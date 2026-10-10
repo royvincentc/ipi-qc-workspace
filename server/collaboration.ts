@@ -84,39 +84,45 @@ export async function mutateSharedResource(
   input: unknown,
   actor: string,
 ) {
-  const operation = operationSchema.parse(input);
+  return mutateSharedBatch(id, [{ operationId, operation: input }], actor);
+}
+export async function mutateSharedBatch(id: string, input: { operationId: string; operation: unknown }[], actor: string) {
+  const operations = input.map(item => ({ ...item, operation: operationSchema.parse(item.operation) }));
   const result = await locked(`shared:${id}`, async (tx) => {
     const row = (
       await tx.query("SELECT data FROM shared_resources WHERE id=$1", [id])
     ).rows[0];
     if (!row || row.data.deletedAt)
       throw new Fault(404, "This resource was deleted");
-    if (
-      (
-        await tx.query(
-          "SELECT 1 FROM shared_operations WHERE resource_id=$1 AND operation_id=$2",
-          [id, operationId],
-        )
-      ).rows.length
-    )
-      return row.data as SharedResource;
-    let next: SharedResource;
-    try {
-      next = applyOperation(row.data, operation, actor);
-    } catch (error) {
-      throw new Fault(
-        error instanceof CollaborationConflict ? 409 : 400,
-        error instanceof Error ? error.message : "Invalid update",
-      );
+    const existing = new Set((await tx.query(
+      'SELECT operation_id FROM shared_operations WHERE resource_id=$1 AND operation_id=ANY($2::text[])',
+      [id, operations.map(item => item.operationId)],
+    )).rows.map(row => row.operation_id));
+    let next: SharedResource = row.data;
+    const applied: string[] = [];
+    for (const item of operations) {
+      if (existing.has(item.operationId)) continue;
+      try {
+        next = applyOperation(next, item.operation, actor);
+      } catch (error) {
+        throw Object.assign(new Fault(
+          error instanceof CollaborationConflict ? 409 : 400,
+          error instanceof Error ? error.message : 'Invalid update',
+        ), { operationId: item.operationId });
+      }
+      existing.add(item.operationId);
+      applied.push(item.operationId);
     }
+    if (applied.length) {
       await tx.query(
-        "UPDATE shared_resources SET data=$2,revision=$3 WHERE id=$1",
+        "UPDATE shared_resources SET data=$2,revision=$3,retry_at=CASE WHEN revision<=drive_revision THEN now()+interval '4 hours' ELSE retry_at END WHERE id=$1",
         [id, JSON.stringify(next), next.revision],
       );
       await tx.query(
-        "INSERT INTO shared_operations(resource_id,operation_id) VALUES($1,$2)",
-        [id, operationId],
+        "INSERT INTO shared_operations(resource_id,operation_id) SELECT $1,unnest($2::text[])",
+        [id, applied],
       );
+    }
     return next;
   });
   updates.emit(id);
@@ -269,7 +275,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       driveRevision: 0,
       driveError: null,
     };
-    await db.query("INSERT INTO shared_resources(id,data) VALUES($1,$2)", [
+    await db.query("INSERT INTO shared_resources(id,data,retry_at) VALUES($1,$2,now()+interval '4 hours')", [
       id,
       JSON.stringify(resource),
     ]);
@@ -379,7 +385,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
         throw new Fault(400, "Some notes are not assigned to a column");
     }
     resource.revision = 1;
-    await db.query("INSERT INTO shared_resources(id,data) VALUES($1,$2)", [
+    await db.query("INSERT INTO shared_resources(id,data,retry_at) VALUES($1,$2,now()+interval '4 hours')", [
       resource.id,
       JSON.stringify(resource),
     ]);
@@ -389,7 +395,13 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
     res.status(201).json(resource);
   });
   router.get("/:id", async (req, res) => {
-    const resource = await resourceById(identifier.parse(req.params.id));
+    const id = identifier.parse(req.params.id);
+    if (req.query.knownRevision) {
+      const row = (await db.query("SELECT revision FROM shared_resources WHERE id=$1 AND data->>'deletedAt' IS NULL", [id])).rows[0];
+      if (!row) throw new Fault(404, 'This shared resource was deleted or does not exist');
+      if (String(row.revision) === req.query.knownRevision) { res.status(304).end(); return; }
+    }
+    const resource = await resourceById(id);
     const known = new Set(String(req.query.knownFiles || "").split(","));
     res.json(
       resource.kind === "drawing"
@@ -410,17 +422,22 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
   router.post("/:id/operations", editor, async (req, res) => {
     const b = z
       .object({
-        operationId: identifier,
-        operation: z.unknown(),
+        operationId: identifier.optional(),
+        operation: z.unknown().optional(),
+        operations: z.array(z.object({ operationId: identifier, operation: z.unknown() })).min(1).max(50).optional(),
         knownFiles: z.array(z.string()).max(1000).default([]),
       })
       .parse(req.body);
-    const resource = await mutateSharedResource(
-      identifier.parse(req.params.id),
-      b.operationId,
-      b.operation,
-      req.user.email,
-    );
+    if (!b.operations && !b.operationId) throw new Fault(400, 'An operation is required');
+    let resource: SharedResource;
+    try {
+      resource = await mutateSharedBatch(identifier.parse(req.params.id), b.operations?.map(item => ({ operationId: item.operationId, operation: item.operation })) || [{ operationId: b.operationId!, operation: b.operation }], req.user.email);
+    } catch (error) {
+      if (error instanceof Fault && 'operationId' in error) {
+        res.status(error.status).json({ error: error.message, operationId: error.operationId }); return;
+      }
+      throw error;
+    }
     const known = new Set(b.knownFiles);
     res.json(
       resource.kind === "drawing"
@@ -556,7 +573,8 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
   });
   router.post("/:id/presence", async (req, res) => {
     const id = identifier.parse(req.params.id);
-    await resourceById(id);
+    if (!(await db.query("SELECT 1 FROM shared_resources WHERE id=$1 AND data->>'deletedAt' IS NULL", [id])).rows.length)
+      throw new Fault(404, 'Resource removed');
     const b = z
       .object({
         clientId: identifier,
@@ -585,7 +603,8 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
   });
   router.get("/:id/events", async (req, res) => {
     const id = identifier.parse(req.params.id);
-    await resourceById(id);
+    if (!(await db.query("SELECT 1 FROM shared_resources WHERE id=$1 AND data->>'deletedAt' IS NULL", [id])).rows.length)
+      throw new Fault(404, 'Resource removed');
     res.set({
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
@@ -642,7 +661,9 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
     };
     const onUpdate = () => void send();
     updates.on(id, onUpdate);
-    const timer = setInterval(onUpdate, 750);
+    // Local writes publish immediately. Bounded metadata checks detect other instances
+    // and revoked sessions without repeatedly transferring the board from Neon.
+    const timer = setInterval(onUpdate, 15_000);
     timer.unref();
     req.on("close", () => {
       closed = true;
@@ -679,6 +700,6 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
     } finally {
       queueBusy = false;
     }
-  }, 10_000);
+  }, 60_000);
   timer.unref();
 }

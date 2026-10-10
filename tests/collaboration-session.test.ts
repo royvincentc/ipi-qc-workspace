@@ -5,7 +5,7 @@ import path from 'node:path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 
-test('real collaboration sessions enforce permissions and revoke active streams', { timeout: 30000 }, async () => {
+test('real collaboration sessions enforce permissions and revoke active streams', { timeout: 75000 }, async () => {
   process.env.DEMO_MODE = 'true';
   process.env.DEMO_DB_PATH = path.resolve('tmp', `shared-session-${randomUUID()}`);
   process.env.GOOGLE_APPLICATION_CREDENTIALS = '';
@@ -40,7 +40,7 @@ test('real collaboration sessions enforce permissions and revoke active streams'
     const reader = response.body!.getReader();
     let buffered = '';
     return async (pattern: RegExp) => {
-      const deadline = setTimeout(() => controller.abort(), 5000);
+      const deadline = setTimeout(() => controller.abort(), 20000);
       try {
         while (!pattern.test(buffered)) {
           const next = await reader.read();

@@ -683,7 +683,6 @@
   --color-primary-light-darker: #d9ef96;
   --color-surface-primary-container: #e4f7a7;
   --color-on-primary-container: #20241b;
-  --color-surface-low: var(--bg-surface-elevated);
   --color-brand-hover: #52652a;
   --color-brand-active: #3d4e1e;
 }

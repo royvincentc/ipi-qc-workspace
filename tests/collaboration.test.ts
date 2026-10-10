@@ -39,6 +39,19 @@ function board(): SharedResource {
     driveFolder: null,
   };
 }
+
+test('local moves preserve the original board and untouched note identities', () => {
+  let before = board();
+  for (const id of ['moving', 'untouched']) before = applyOperation(before, { type: 'note-add', id, columnId: 'todo', title: id, body: 'Text', color: 'paper' }, 'a@example.test');
+  const original = structuredClone(before);
+  const after = applyOperation(before, { type: 'note-move', id: 'moving', columnId: 'done', beforeId: null }, 'a@example.test');
+  assert.deepEqual(before, original);
+  assert.equal((after.state as BoardState).notes.untouched, (before.state as BoardState).notes.untouched);
+  assert.notEqual((after.state as BoardState).notes.moving, (before.state as BoardState).notes.moving);
+  const transferred = applyOperation(before, { type: 'column-delete', id: 'todo', destination: 'done', revision: before.revision }, 'a@example.test');
+  assert.deepEqual(before, original);
+  assert.equal((transferred.state as BoardState).notes.untouched.columnId, 'done');
+});
 function withNote() {
   return applyOperation(
     board(),

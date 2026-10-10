@@ -224,6 +224,40 @@ test("shared API enforces viewer writes, durable idempotency, deletion, and rest
     const hexImport = await request('/import', 'POST', { title: 'Hex restore', snapshot: hexSnapshot });
     assert.equal(hexImport.status, 201);
     assert.equal(Object.values<any>((await hexImport.json()).state.notes)[0].color, '#123ABC');
+    const batchBoard = await (await request('', 'POST', { kind: 'kanban', title: 'Local first batch' })).json();
+    const operations = [
+      { operationId: randomUUID(), operation: { type: 'note-add', id: 'local-note', columnId: 'todo', title: 'Instant note', body: 'Durable', color: 'sage' } },
+      { operationId: randomUUID(), operation: { type: 'note-move', id: 'local-note', columnId: 'done', beforeId: null } },
+    ];
+    assert.equal((await request(`/${batchBoard.id}/operations`, 'POST', { operations }, 'viewer')).status, 403);
+    const originalQuery = db.query;
+    let writes = 0;
+    db.query = async <T>(sql: string, args?: any[]) => {
+      if (sql.startsWith('UPDATE shared_resources SET data=')) writes++;
+      return originalQuery<T>(sql, args);
+    };
+    try {
+      const batched = await (await request(`/${batchBoard.id}/operations`, 'POST', { operations })).json();
+      assert.equal(batched.revision, 3);
+      assert.deepEqual(batched.state.columns[2].noteIds, ['local-note']);
+      assert.equal(writes, 1, 'A batch writes the board to the database once');
+      const duplicate = await (await request(`/${batchBoard.id}/operations`, 'POST', { operations })).json();
+      assert.equal(duplicate.revision, 3);
+      assert.equal(writes, 1, 'Retrying acknowledged changes does not rewrite the board');
+      const unchanged = await request(`/${batchBoard.id}?knownRevision=3`);
+      assert.equal(unchanged.status, 304);
+      assert.equal(await unchanged.text(), '');
+      const rejectedId = randomUUID();
+      const rejected = await request(`/${batchBoard.id}/operations`, 'POST', { operations: [
+        { operationId: randomUUID(), operation: { type: 'column-add', id: 'new-column', title: 'Must roll back' } },
+        { operationId: rejectedId, operation: { type: 'note-delete', id: 'local-note', revision: 999 } },
+      ] });
+      assert.equal(rejected.status, 409);
+      assert.equal((await rejected.json()).operationId, rejectedId);
+      const afterFailure = await (await request(`/${batchBoard.id}`)).json();
+      assert.equal(afterFailure.revision, 3, 'A conflicting batch rolls back completely');
+      assert.equal(afterFailure.state.columns.length, 3);
+    } finally { db.query = originalQuery; }
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));

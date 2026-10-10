@@ -87,7 +87,8 @@ function useNoteBody(note: StickyNote, mutate: Mutate, removed = false) {
         pendingUpdates.current.push(bytes);
         setTextPending(true);
         clearTimeout(timer.current);
-        timer.current = setTimeout(flush, 250);
+        // Persist every text change locally; the shared outbox batches network sync.
+        flush();
       }
     };
     document.on("update", update);
@@ -768,11 +769,15 @@ function NoteEditor({
     }
   }, [note.title, note.color, dirty, title, color]);
   useUnsaved(!removed && (dirty || textPending || !validHex));
+  useEffect(() => {
+    if (!canEdit || removed || !validHex || !dirty || (note.title === title && note.color === color)) return;
+    mutate({ type: 'note-edit', id: note.id, title, color, revision: note.revision, beforeTitle: original.title, beforeColor: original.color });
+  }, [canEdit, removed, validHex, dirty, note.id, note.title, note.color, note.revision, title, color, original.title, original.color, mutate]);
   const saveNote = useCallback((event?: { preventDefault: () => void }) => {
     if (!validHex) { event?.preventDefault(); return; }
     if (!canEdit || removed) return;
     flush();
-    if (dirty) mutate({ type: 'note-edit', id: note.id, title, color, revision: note.revision, beforeTitle: original.title, beforeColor: original.color });
+    if (dirty && (note.title !== title || note.color !== color)) mutate({ type: 'note-edit', id: note.id, title, color, revision: note.revision, beforeTitle: original.title, beforeColor: original.color });
     window.dispatchEvent(new Event('ipi:shared-retry'));
   }, [canEdit, removed, flush, dirty, mutate, note.id, note.revision, title, color, validHex]);
   useEffect(() => {
@@ -893,7 +898,7 @@ function NoteEditor({
           </div>
           <button
             className="button primary"
-            disabled={!validHex || (!dirty && !textPending && body === note.body)}
+            disabled={!validHex}
             onClick={saveNote}
           >
             Save note
@@ -935,7 +940,7 @@ function NoteEditor({
             </div>
           ) : null}
           <small className="sticky-editor-status">
-            Text saves automatically and merges with other users’ edits.
+            Changes save on this device. Use Save note or Save board to share now; automatic sync runs every 4 hours.
           </small>
           {deleted ? (
             <button
