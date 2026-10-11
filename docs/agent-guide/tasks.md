@@ -1501,3 +1501,11 @@ ormalizeSampleName). Expanded the aliasing logic in server/reports.ts so that SF
 - Audit: Inspected the inherited account-name routing and generated report metadata. No scientific/source/approval changes required; no UI components changed.
 - Validation: 132 application tests, production build/typecheck and whitespace check pass. Tests distinguish report analyst from uploader, protect immutable generated names against later draft edits, cover pinned fallback and block missing names. Initial sandbox-only filesystem failures were resolved by running the same checks with authorized filesystem access.
 - Next: Authorized publication, verify deployment, then rerun archive organization to correct existing folders.
+
+
+### TASK-20261011-001 — Reduce shared-tool Neon transfer
+- Owner requested repair after network transfer grew from 173.75 MB to 247.63 MB since October 1. Inspected shared tools, presence, streams, background jobs and the previous bandwidth fixes.
+- Fixed three unnecessary payload reads: shared lists now exclude state inside Postgres; drawing GET excludes known image assets inside Postgres; preview saves read metadata only and update driveRevision inside Postgres while preserving drawing state. No migration, laboratory data edit, sync interval change or access-control change.
+- Evidence: isolated 1 MB drawing yields 265 bytes for list and 446 bytes for changed drawing with cached image (over 99.9% reduction in these fixture queries). Preview regression reproduced a 1,000,563-byte read before repair and passes after repair. Tests preserve full first loads/exports, new images, revision 304 checks and deletion behavior.
+- Verification: full Node suite 145/146 passed; restart subprocess exceeded its existing 20-second timeout under parallel load, then passed alone. TypeScript and Vite build passed; 33 worker tests passed with project-local temporary files. Collaboration session revocation and permissions tests pass. Local browser shared board creation/open/list smoke check performed.
+- Publication: commit/push required by rules section 12; verify Render deployment and /api/build afterward. Actual Neon daily transfer reduction remains unmeasured; cumulative usage will not decrease and these defects cannot alone establish attribution for the entire 73.88 MB increase.

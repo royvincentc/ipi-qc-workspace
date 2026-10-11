@@ -49,9 +49,23 @@ const identifier = z.string().uuid();
 export async function resourceById(
   id: string,
   includeDeleted = false,
+  knownFiles: string[] = [],
 ): Promise<StoredResource> {
+  // Project cached images out in Postgres: filtering after query() still incurs
+  // Neon transfer for their base64 payloads on every changed-scene fetch.
   const row = (
-    await db.query("SELECT data FROM shared_resources WHERE id=$1", [id])
+    await db.query(
+      knownFiles.length
+        ? `SELECT CASE WHEN data->>'kind'='drawing' THEN
+            jsonb_set(data, '{state,files}', COALESCE((
+              SELECT jsonb_object_agg(key,value)
+              FROM jsonb_each(data->'state'->'files')
+              WHERE NOT (key=ANY($2::text[]))
+            ), '{}'::jsonb)) ELSE data END AS data
+           FROM shared_resources WHERE id=$1`
+        : "SELECT data FROM shared_resources WHERE id=$1",
+      knownFiles.length ? [id, knownFiles] : [id],
+    )
   ).rows[0];
   if (!row || (row.data.deletedAt && !includeDeleted))
     throw new Fault(404, "This shared resource was deleted or does not exist");
@@ -246,12 +260,9 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
     res.json(
       (
         await db.query(
-          `SELECT data FROM shared_resources WHERE (data->>'deletedAt' IS ${deleted ? "NOT " : ""}NULL) ORDER BY data->>'updatedAt' DESC LIMIT 200`,
+          `SELECT data-'state' AS data FROM shared_resources WHERE (data->>'deletedAt' IS ${deleted ? "NOT " : ""}NULL) ORDER BY data->>'updatedAt' DESC LIMIT 200`,
         )
-      ).rows.map(({ data }) => {
-        const { state, ...metadata } = data;
-        return metadata;
-      }),
+      ).rows.map(({ data }) => data),
     );
   });
   router.post("/", editor, async (req, res) => {
@@ -401,23 +412,10 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       if (!row) throw new Fault(404, 'This shared resource was deleted or does not exist');
       if (String(row.revision) === req.query.knownRevision) { res.status(304).end(); return; }
     }
-    const resource = await resourceById(id);
-    const known = new Set(String(req.query.knownFiles || "").split(","));
-    res.json(
-      resource.kind === "drawing"
-        ? {
-            ...resource,
-            state: {
-              ...resource.state,
-              files: Object.fromEntries(
-                Object.entries((resource.state as DrawingState).files).filter(
-                  ([id]) => !known.has(id),
-                ),
-              ),
-            },
-          }
-        : resource,
+    const known = z.array(z.string().max(160)).max(1000).parse(
+      String(req.query.knownFiles || "").split(",").filter(Boolean),
     );
+    res.json(await resourceById(id, false, known));
   });
   router.post("/:id/operations", editor, async (req, res) => {
     const b = z
@@ -535,7 +533,10 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       throw new Fault(400, "Invalid PNG preview");
     await locked(`shared:${id}`, async (tx) => {
       const resource = (
-        await tx.query("SELECT data FROM shared_resources WHERE id=$1", [id])
+        await tx.query(
+          "SELECT data-'state' AS data FROM shared_resources WHERE id=$1",
+          [id],
+        )
       ).rows[0]?.data;
       if (!resource || resource.deletedAt)
         throw new Fault(404, "Drawing not found");
@@ -554,8 +555,8 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       );
       const driveRevision = Math.min(resource.driveRevision, b.revision - 1);
       await tx.query(
-        "UPDATE shared_resources SET drive_revision=$2,data=$3 WHERE id=$1",
-        [id, driveRevision, JSON.stringify({ ...resource, driveRevision })],
+        "UPDATE shared_resources SET drive_revision=$2,data=jsonb_set(data,'{driveRevision}',to_jsonb($2::integer)) WHERE id=$1",
+        [id, driveRevision],
       );
     });
     res.json({ ok: true });

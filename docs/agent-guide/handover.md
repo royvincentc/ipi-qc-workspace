@@ -401,3 +401,9 @@
 ## Correct archive analyst identity — 2026-10-09
 - TASK-20261009-010 follows the owner's correction: use the generated report's Analyzed by value, not the authenticated uploader account. First folder contains the report analyst name only; legacy fallback uses the exact pinned draft, with missing names reported individually. Account attribution is preserved separately.
 - 132 application tests and build/typecheck pass. No UI layout changes, report content edits or laboratory result/source changes. Owner authorized commit/push and correction of the archive hierarchy; publish and rerun the existing archive organization after deployment.
+
+
+## Shared-tool database transfer repair — 2026-10-11 Asia/Taipei
+- TASK-20261011-001: server/collaboration.ts projects shared state and cached drawing images out of database results; preview saves avoid reading/rewriting drawing state. New collaboration-bandwidth regression measures DB result bytes using a 1 MB synthetic image. No schema migration or scientific/source data changes.
+- Verification: 145/146 full Node tests passed; isolated restart rerun passed after full-suite subprocess timeout. TypeScript/Vite build and all 33 worker tests pass. 1 MB fixture list is 265 bytes; cached-image changed-scene fetch is 446 bytes. Local browser smoke check uses isolated demo database and origin at port 3200.
+- Next: publish tested changes per rules section 12 and confirm Render live commit via /api/build. Neon screenshot is cumulative since October 1, 247.63 MB; its post-deploy growth rate is not yet measured. Existing unrelated local documentation additions and task.md changes are preserved outside this commit.
