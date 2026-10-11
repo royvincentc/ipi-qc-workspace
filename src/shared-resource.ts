@@ -34,6 +34,7 @@ export function useSharedResource(id: string) {
   const active = useRef(true);
   const refreshRunning = useRef(false);
   const refreshAgain = useRef(false);
+  const localReady = useRef(false);
   const failureType = useRef<"network" | "rejected" | null>(null);
   const persistence = useRef(Promise.resolve());
   const storageKey = `ipi:shared-pending:${user.email}:${id}`;
@@ -117,6 +118,9 @@ export function useSharedResource(id: string) {
     }
   }, [storageKey, persist]);
   const refresh = useCallback(async () => {
+    // Reconnect events can arrive before IndexedDB. Avoid a cold download when
+    // this browser already has the drawing and its images on disk.
+    if (!localReady.current) return;
     if (refreshRunning.current) {
       refreshAgain.current = true;
       return;
@@ -125,17 +129,16 @@ export function useSharedResource(id: string) {
     try {
       do {
         refreshAgain.current = false;
-        const known =
-          current.current?.kind === "drawing"
-            ? Object.keys((current.current.state as DrawingState).files)
-                .slice(0, 64)
-                .join(",")
-            : "";
-        const params = new URLSearchParams();
-        if (known) params.set('knownFiles', known);
-        if (current.current) params.set('knownRevision', String(current.current.revision));
-        const response = await fetch(`/api/collaboration/${id}?${params}`, { credentials: 'same-origin', cache: 'no-store' });
-        if (response.status !== 304) {
+        const response = await fetch(`/api/collaboration/${id}/snapshot`, {
+          method: 'POST', credentials: 'same-origin', cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            knownRevision: current.current?.revision,
+            knownFiles: current.current?.kind === 'drawing'
+              ? Object.keys((current.current.state as DrawingState).files) : [],
+          }),
+        });
+        if (response.status !== 204) {
           const data = await response.json();
           if (!response.ok) throw new Error(data.error || 'Could not open shared resource');
           accept(data);
@@ -291,6 +294,7 @@ export function useSharedResource(id: string) {
   );
   useEffect(() => {
     active.current = true;
+    localReady.current = false;
     try { nextSync.current = Number(localStorage.getItem(syncKey)) || 0; } catch { nextSync.current = 0; }
     let ready = false;
     void (async () => {
@@ -307,6 +311,7 @@ export function useSharedResource(id: string) {
       } catch { /* Ignore malformed legacy recovery data. */ }
       if (!active.current) return;
       ready = true;
+      localReady.current = true;
       if (queue.current.length && !nextSync.current) {
         nextSync.current = Date.now() + syncInterval;
         try { localStorage.setItem(syncKey, String(nextSync.current)); } catch { /* Tab retains schedule. */ }
@@ -357,6 +362,7 @@ export function useSharedResource(id: string) {
     window.addEventListener('offline', offline);
     return () => {
       active.current = false;
+      localReady.current = false;
       stream.close();
       clearInterval(retry);
       clearInterval(heartbeat);

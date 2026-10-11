@@ -59,6 +59,9 @@ test('real collaboration sessions enforce permissions and revoke active streams'
     assert.equal((await request('viewer', '', 'POST', { kind: 'kanban', title: 'Forbidden' })).status, 403);
     assert.equal((await request('a', '', 'POST', { kind: 'kanban', title: 'Bad origin' }, 'https://other.example')).status, 403);
     const created = await (await request('a', '', 'POST', { kind: 'kanban', title: 'Cookie sessions' })).json();
+    assert.equal((await request('viewer', `/${created.id}/snapshot`, 'POST', { knownRevision: 1, knownFiles: [] })).status, 204);
+    assert.equal((await request('expired', `/${created.id}/snapshot`, 'POST', { knownFiles: [] })).status, 401);
+    assert.equal((await request('a', `/${created.id}/snapshot`, 'POST', {}, 'https://other.example')).status, 403);
     const readA = await stream('a', created.id);
     const readViewer = await stream('viewer', created.id);
     await readA(/"role":"analyst"/);
@@ -75,6 +78,7 @@ test('real collaboration sessions enforce permissions and revoke active streams'
     await db.query('UPDATE users SET active=false WHERE email=$1', ['a@example.test']);
     await readA(/event: access-ended/);
     assert.equal((await request('a', `/${created.id}`)).status, 401);
+    assert.equal((await request('a', `/${created.id}/snapshot`, 'POST', { knownFiles: [] })).status, 401);
     await db.query('DELETE FROM sessions WHERE email=$1', ['viewer@example.test']);
     await readViewer(/event: access-ended/);
     assert.equal((await request('viewer', `/${created.id}/export`)).status, 401);

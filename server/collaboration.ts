@@ -417,6 +417,24 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
     );
     res.json(await resourceById(id, false, known));
   });
+  // A body carries the full browser cache manifest without URL length limits.
+  // This remains an authenticated read, including for viewers.
+  router.post("/:id/snapshot", async (req, res) => {
+    const id = identifier.parse(req.params.id);
+    const input = z.object({
+      knownRevision: z.number().int().positive().optional(),
+      knownFiles: z.array(z.string().min(1).max(128)).max(1000).default([]),
+    }).parse(req.body);
+    res.setHeader('Cache-Control', 'no-store');
+    if (input.knownRevision !== undefined) {
+      const row = (await db.query(
+        "SELECT revision FROM shared_resources WHERE id=$1 AND data->>'deletedAt' IS NULL", [id],
+      )).rows[0];
+      if (!row) throw new Fault(404, 'This shared resource was deleted or does not exist');
+      if (row.revision === input.knownRevision) { res.status(204).end(); return; }
+    }
+    res.json(await resourceById(id, false, input.knownFiles));
+  });
   router.post("/:id/operations", editor, async (req, res) => {
     const b = z
       .object({

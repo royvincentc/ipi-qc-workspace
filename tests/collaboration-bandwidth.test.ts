@@ -23,7 +23,7 @@ test('shared lists and known drawing images stay out of database query results',
   app.use(express.json());
   app.use((req, _res, next) => { req.user = { email: 'a@example.test', name: 'A', role: 'analyst' }; next(); });
   registerCollaboration(app);
-  app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => res.status(error.status || 500).json({ error: error.message }));
+  app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => res.status(error.status || (error.name === 'ZodError' ? 400 : 500)).json({ error: error.message }));
   const server = app.listen(0, '127.0.0.1');
   await new Promise<void>(resolve => server.once('listening', resolve));
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}/api/collaboration`;
@@ -61,8 +61,29 @@ test('shared lists and known drawing images stay out of database query results',
     const afterPreview = await (await fetch(`${base}/${id}`)).json();
     assert.deepEqual(afterPreview.state, resource.state);
     assert.equal(afterPreview.driveRevision, 1);
+    // Reloads restore browser images before sending this complete cache manifest.
+    const images = Object.fromEntries(Array.from({ length: 70 }, (_, index) => [
+      `cached-${index}`, { ...file, id: `cached-${index}`, dataURL: `data:image/png;base64,${'A'.repeat(20_000)}` },
+    ]));
+    const many = { ...resource, revision: 3, state: { ...resource.state, files: { ...images, newImage: resource.state.files.newImage } } };
+    await originalQuery('UPDATE shared_resources SET data=$2,revision=3 WHERE id=$1', [id, JSON.stringify(many)]);
+    const snapshot = (body: unknown) => fetch(`${base}/${id}/snapshot`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    transferred = 0;
+    const changed = await snapshot({ knownRevision: 2, knownFiles: Object.keys(images) });
+    assert.equal(changed.status, 200);
+    assert.deepEqual((await changed.json()).state.files, { newImage: resource.state.files.newImage });
+    assert.ok(transferred < 2000, `70 browser-cached images transferred ${transferred} bytes from DB`);
+    transferred = 0;
+    assert.equal((await snapshot({ knownRevision: 3, knownFiles: Object.keys(many.state.files) })).status, 204);
+    assert.ok(transferred < 100, 'Unchanged cached resource returns metadata only');
+    const cold = await snapshot({ knownFiles: [] });
+    assert.deepEqual((await cold.json()).state, many.state, 'A new browser still downloads all images');
+    assert.equal((await snapshot({ knownFiles: Array.from({ length: 1001 }, () => 'file') })).status, 400);
     await originalQuery("UPDATE shared_resources SET data=jsonb_set(data,'{deletedAt}',to_jsonb('deleted'::text)) WHERE id=$1", [id]);
     assert.equal((await fetch(`${base}/${id}?knownFiles=image`)).status, 404);
+    assert.equal((await snapshot({ knownRevision: 3, knownFiles: Object.keys(images) })).status, 404);
     assert.equal((await (await fetch(base)).json()).length, 0);
     const deleted = await (await fetch(`${base}?deleted=true`)).json();
     assert.equal(deleted[0].id, id);
