@@ -9,9 +9,9 @@ export interface Sample {configurationRevision?:number;categoryLabel?:string;id:
 export interface Criterion {test:string;label:string;type:'numeric'|'finding';unit:string;criterion:string;source:string;sourceLocation:string;date:string;dateBasis:'release'|'analysis'|'owner-confirmed';revision:string;stage?:string;location?:string;replicate?:string;channel?:'active-air'|'passive-air';instanceId?:string;block?:string}
 export interface Specification {active?:boolean;previousId?:string;id:string;product:string;category:Category;context:string;revision:string;tests:Criterion[];issues:string[];source:string}
 export interface ResultSource {spreadsheetId:string;url:string;sheetId:number;sheet:string;row:number;range:string;fingerprint:string;observedAt:string;ml:string;raw:string[];remarks?:string;analyst?:string}
-export interface Result {test:string;location?:string;stage?:string;replicate?:string;channel?:'active-air'|'passive-air';instanceId?:string;block?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string}
+export interface Result {test:string;location?:string;stage?:string;replicate?:string;channel?:'active-air'|'passive-air';instanceId?:string;block?:string;state:'not_entered'|'not_tested'|'entered';value:string;sourceValue?:string;sourceHeader?:string;qualifier:''|'='|'<'|'<='|'Nmt';unit:string;reason:string;remarks:string;remarkMode?:'automatic'|'manual'}
 export interface Draft {configurationRevision?:number;configurationSnapshot?:import('./configuration').Configuration;templateSnapshot?:Template;environmentalSnapshot?:import('./environmental.js').EnvironmentalSnapshot;id:string;sampleId:string;sample:Sample;specification:Specification;templateId:string;templateRevision:string;revision:number;results:Result[];resultSource?:ResultSource;resultLookup?:'matched'|'not_found'|'demo';fields:Record<string,string>;updatedAt:string;analyst:string}
-export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>;outputName?:string};
+export type DraftSummary=Pick<Draft,'id'|'revision'|'updatedAt'> & {sample:Pick<Sample,'name'|'ml'>;outputName?:string;sessionId?:string};
 export interface Draft {environmentalSession?:{id:string;members:{draftId:string;outputId:string;name:string;method:'accupoint'|'spc-my'|'microbial'}[]}}
 export interface EnvironmentalSessionReview {id:string;members:{draftId:string;name:string;method:string;revision:number;issues:string[]}[]}
 export interface TemplateManifest extends Record<string,unknown>{appliesToProducts?:string[];defaultForCategory?:boolean;rowGrouping?:{mergeColumns:number[]};blocks?:Record<string,{mergeColumns:number[]}>}
@@ -36,6 +36,31 @@ export function suggestedAnalystRemark(test:Criterion,r:Result):string{
  if(!/^\d+(?:\.\d+)?$/.test(r.value.trim()))return '';
  // Actual results at the standard's boundary fail in the requested workflow.
  return Number(r.value)<Number(limit[1])?'Passed':'Failed';
+}
+/** Source text is evidence: normalize recognized values only for the existing evaluator. */
+export function automaticAnalystRemark(test:Criterion,r:Result):string{
+ if(r.sourceValue===undefined||r.value!==r.sourceValue)return suggestedAnalystRemark(test,r);
+ if(r.state!=='entered'||r.qualifier!=='')return '';
+ if(test.type==='finding'){
+  const finding=r.value.trim().toLowerCase();
+  return finding==='positive'||finding==='negative'?suggestedAnalystRemark(test,{...r,value:finding==='positive'?'Positive':'Negative'}):'';
+ }
+ const value=r.value.trim().match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+ const unit=(text:string)=>text.toLowerCase().replace(/\s+/g,'');
+ if(!value||value[2]&&unit(value[2])!==unit(test.unit))return '';
+ return suggestedAnalystRemark(test,{...r,value:value[1]});
+}
+export function updateResultRemark(test:Criterion,original:Result,patch:Partial<Result>):Result{
+ const next={...original,...patch};
+ const mode=patch.remarkMode??('remarks' in patch?'manual':original.remarkMode||(original.remarks?'manual':'automatic'));
+ return {...next,remarkMode:mode,remarks:mode==='automatic'?automaticAnalystRemark(test,next):next.remarks};
+}
+export function initializeResultRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):Result[]{
+ if(overallAnalystRemarks(d)===undefined)return d.results;
+ return d.results.map(r=>{
+  const test=d.specification.tests.find(t=>resultKey(t)===resultKey(r));
+  return test?updateResultRemark(test,r,{remarkMode:r.remarkMode||(r.remarks?'manual':'automatic')}):r;
+ });
 }
 export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):string|undefined{
  const output=d.environmentalSnapshot?.output;

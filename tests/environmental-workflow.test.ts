@@ -30,6 +30,7 @@ test('approved environmental plan creates independent blank results and keeps it
  const current=await getConfiguration(),config=structuredClone(current.value);
  config.products.push({id:'env-product',name:sample.name,category:'EM',code:'',active:true,aliases:[]});
  const spc=config.tests.find(t=>t.id==='SPC')!;if(!spc.categories.includes('EM'))spc.categories.push('EM');
+ config.tests.push({...spc,id:'ACCUPOINT',name:'Accupoint',shortName:'Accupoint',reportLabel:'Accupoint',sheetHeader:'',sheetColumn:null,unit:'RLU',categories:['EM']});
  await saveConfiguration(config,current.revision,'owner');
  await db.query('INSERT INTO files(id,data) VALUES($1,$2)',['reference',JSON.stringify({kind:'reference',name:'Fixture.docx',evidence:{sha256:'bytes-hash'}})]);
  await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',[template.id,JSON.stringify(template)]);
@@ -37,10 +38,12 @@ test('approved environmental plan creates independent blank results and keeps it
  await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
  const conflict=resolveEnvironmentalLayout(sample as any,[template,{...template,id:'duplicate',name:'Other default'}],input.outputs[0].instances as any);
  assert.equal(conflict.resolution.status,'conflict');assert.match(conflict.resolution.message,/Other default/);
- const profile=await publishEnvironmentalProfile(input,'owner');
+ const pairedInput={...input,outputs:[...input.outputs,{...input.outputs[0],id:'accupoint',name:'Accupoint',method:'accupoint',instances:input.outputs[0].instances.map(r=>({...r,test:'ACCUPOINT',label:'Accupoint',unit:'RLU',criterion:'Not more than 100 RLU'}))}]};
+ const profile=await publishEnvironmentalProfile(pairedInput,'owner');
  await assert.rejects(publishEnvironmentalProfile(input,'owner'),/overlaps/);
- const setup=await resolveReportSetup(sample.id);assert.equal(setup.template?.id,template.id);assert.equal(setup.specification.tests.length,2);
- const draft=await createAutomaticDraft(sample.id,{email:'owner',name:'Owner Analyst',role:'administrator'});
+ const catalog=await resolveReportSetup(sample.id,{},true),selection={equipmentRevision:catalog.environmental!.equipment!.revision,equipment:[{id:'nozzle',quantity:2}],outputId:'spcmy'};
+ const setup=await resolveReportSetup(sample.id,selection);assert.equal(setup.template?.id,template.id);assert.equal(setup.specification.tests.length,2);
+ const draft=await createAutomaticDraft(sample.id,{email:'owner',name:'Owner Analyst',role:'administrator'},selection);
  assert.equal(draft.environmentalSnapshot?.profile.id,profile.id);assert.equal(draft.results.length,2);
  assert.notEqual(draft.results[0].instanceId,draft.results[1].instanceId);
  assert.ok(draft.results.every(r=>r.state==='not_entered'&&r.value===''&&r.remarks===''));assert.equal(draft.resultSource,undefined);
@@ -56,11 +59,12 @@ test('approved environmental plan creates independent blank results and keeps it
  await retireEnvironmentalProfile(profile.id,profile.revision,'owner');
  const stored=(await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data;assert.equal(stored.environmentalSnapshot.profile.active,true);
  // Restore the explicit plan and retire its layout. Criteria remain visible in preview.
- const next=await publishEnvironmentalProfile({...input,equipmentSet:'Line B'},'owner');
+ const next=await publishEnvironmentalProfile({...pairedInput,equipmentSet:'Line B'},'owner');
  await db.query('UPDATE templates SET data=$1 WHERE id=$2',[JSON.stringify({...template,active:false}),template.id]);
- const preview=await resolveReportSetup(sample.id,{profileId:next.id},true);
- assert.equal(preview.template,undefined);assert.equal(preview.specification.tests.length,2);assert.equal(preview.layoutResolution?.status,'conflict');
- await assert.rejects(createAutomaticDraft(sample.id,{email:'owner',name:'Owner',role:'administrator'}),/No active approved environmental template/);
+ const nextCatalog=await resolveReportSetup(sample.id,{},true),nextSelection={...selection,equipmentRevision:nextCatalog.environmental!.equipment!.revision};
+ const preview=await resolveReportSetup(sample.id,nextSelection,true);
+ assert.equal(preview.template,undefined);assert.equal(preview.environmental!.equipment!.items[0].parameters.length,2);assert.equal(preview.layoutResolution?.status,'conflict');
+ await assert.rejects(createAutomaticDraft(sample.id,{email:'owner',name:'Owner',role:'administrator'},nextSelection),/No active approved environmental template/);
 });
 
 test('warehouse draft keeps separate channel identities through result entry and saving',async()=>{

@@ -43,6 +43,11 @@ export function reportRows(d:Draft,t:Template){
   const value=r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r,d.sample?.category,isSurfaceSpcMy(d)):'';
   return {index:i,block:test.block||'tests',channel:test.channel,phase:test.stage||'',groupKey:[test.block||'tests',test.test,test.stage||'',test.criterion,test.unit,test.revision,test.date].join('|'),test:grouped?[label,['environmental-warehouse-phase-air-7c','environmental-grouped-5c'].includes(t.family)?'':test.stage].filter(Boolean).join('\n'):[label,location,test.stage].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:r?.remarks||''};
  });
+ if(d.environmentalSnapshot?.equipment&&grouped&&!bindings.length){
+  const groups=new Map<string,typeof rows>();
+  for(const row of rows)groups.set(row.groupKey,[...(groups.get(row.groupKey)||[]),row]);
+  return [...groups.values()].flat().map((row,index)=>({...row,index}));
+ }
  return t.family==='environmental-warehouse-phase-air-7c'?warehouseRows(rows):rows;
 }
 

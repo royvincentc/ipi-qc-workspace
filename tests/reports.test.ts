@@ -1,6 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { resolveApplicabilityMatches, historicalCriteria } from '../server/reports.js';
+import * as reports from '../server/reports.js';
+
+test('initial imported SFG remarks pin the QA format before a clean draft can be generated',async()=>{
+ const initialize=(reports as any).initializeDraftReport;assert.equal(typeof initialize,'function');
+ const standard={id:'sfg',name:'SFG',category:'SFG',revision:'standard-1',verified:true,manifest:{tokens:[]}},qa={...standard,id:'sfgqa',name:'SFGQA',revision:'qa-1'};
+ const draft={id:'fixture-draft',sample:{category:'SFG',name:'Fixture Product',fields:{}},specification:{tests:[{test:'SPC',label:'SPC',type:'numeric',unit:'cfu/mL',criterion:'Nmt 100 cfu/mL'}]},results:[{test:'SPC',state:'entered',value:'100 cfu/mL',sourceValue:'100 cfu/mL',sourceHeader:'SPC',qualifier:'',unit:'cfu/mL',reason:'',remarks:''}],templateId:standard.id,templateRevision:standard.revision,templateSnapshot:standard,fields:{analysisDate:'10/09/2026'}};
+ const failed=await initialize(draft,[standard,qa]);assert.equal(failed.results[0].remarks,'Failed');assert.equal(failed.templateId,qa.id);assert.equal(failed.templateRevision,qa.revision);assert.equal(failed.templateSnapshot.name,'SFGQA');assert.equal(failed.results[0].sourceValue,'100 cfu/mL');assert.equal(failed.fields.overallRemarks,'Failed in SPC');assert.equal(draft.results[0].remarks,'');
+ const passed=await initialize({...draft,results:[{...draft.results[0],value:'99 cfu/mL',sourceValue:'99 cfu/mL'}]},[standard,qa]);assert.equal(passed.templateId,standard.id);assert.equal(passed.results[0].remarks,'Passed');
+});
 
 const rows = [
   { sheet: 'RM/FP/AS', row: 33, product: 'Omega Pain Killer Liniment- 15 mL, 30 mL, 60 mL, 120 mL', tests: ['SPC', 'MY', 'PA', 'SA', 'CA'] },

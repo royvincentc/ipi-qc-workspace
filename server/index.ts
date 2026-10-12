@@ -25,6 +25,7 @@ import {environmentalProfiles,publishEnvironmentalProfile,retireEnvironmentalPro
 import {scanEnvironmentalBatch,previewEnvironmentalBatch,publishEnvironmentalBatch} from './environmental-batch.js';
 import {categories,type Category,type Specification,type Template,type Sample,resultKey} from '../shared/model.js';
 import {defaultWorksheetLayout,worksheetLayoutSchema} from '../shared/worksheet-layout.js';
+import {equipmentSelectionSchema} from '../shared/environmental.js';
 import {seed} from './seed.js';
 import {seedBundledReportFormats} from './report-formats.js';
 import {aiRouter} from './ai.js';
@@ -209,7 +210,7 @@ app.get('/api/references/:id/environmental-pattern',requireRole('administrator')
     res.json({ok: true});
   });
 app.get('/api/drafts',async(_req,res)=>res.json((await db.query(`SELECT jsonb_build_object(
- 'id',data->'id','revision',data->'revision','updatedAt',data->'updatedAt','outputName',data->'environmentalSnapshot'->'output'->'name',
+ 'id',data->'id','revision',data->'revision','updatedAt',data->'updatedAt','outputName',data->'environmentalSnapshot'->'output'->'name','sessionId',data->'environmentalSession'->'id',
  'sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml')
  ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC`)).rows.map(r=>r.data)));
 app.get('/api/environmental/profiles',async(_req,res)=>res.json(await environmentalProfiles()));
@@ -227,9 +228,10 @@ app.patch('/api/environmental/profiles/:id/retire',requireRole('administrator'),
 app.patch('/api/references/templates/:id/active',requireRole('administrator'),async(req,res)=>{const b=z.object({active:z.boolean(),revision:z.string()}).parse(req.body);const row=(await db.query('SELECT data FROM templates WHERE id=$1',[req.params.id])).rows[0];if(!row||row.data.revision!==b.revision)throw new Fault(409,'Template changed. Reload before changing its active state.');const t={...row.data,active:b.active};await db.query('UPDATE templates SET data=$1 WHERE id=$2',[JSON.stringify(t),req.params.id]);await audit(req.user.email,'template_active_changed',String(req.params.id),{active:b.active});res.json({id:t.id,active:t.active});});
 app.get('/api/sample-workflow/:sampleId',async(req,res)=>res.json(await resolveSampleWorkflow(String(req.params.sampleId),{profileId:req.query.profileId?String(req.query.profileId):undefined,outputId:req.query.outputId?String(req.query.outputId):undefined})));
 app.get('/api/report-setup/:sampleId',async(req,res)=>res.json(await resolveReportSetup(String(req.params.sampleId),{profileId:req.query.profileId?String(req.query.profileId):undefined,outputId:req.query.outputId?String(req.query.outputId):undefined},true)));
-app.post('/api/drafts',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({sampleId:z.string(),profileId:z.string().optional(),outputId:z.string().optional()}).parse(req.body);res.status(201).json(await createAutomaticDraft(b.sampleId,req.user,b));});
+app.post('/api/report-setup/:sampleId',async(req,res)=>res.json(await resolveReportSetup(String(req.params.sampleId),equipmentSelectionSchema.parse(req.body),true)));
+app.post('/api/drafts',requireRole('administrator','analyst'),async(req,res)=>{const b=equipmentSelectionSchema.extend({sampleId:z.string()}).parse(req.body);res.status(201).json(await createAutomaticDraft(b.sampleId,req.user,b));});
 app.get('/api/drafts/:id',async(req,res)=>{res.json(await getDraft(String(req.params.id)));});
-const resultSchema=z.object({test:z.string(),location:z.string().optional(),stage:z.string().optional(),replicate:z.string().optional(),channel:z.enum(['active-air','passive-air']).optional(),instanceId:z.string().optional(),block:z.string().optional(),state:z.enum(['not_entered','not_tested','entered']),value:z.string().max(100),qualifier:z.enum(['','=','<','<=','Nmt']),unit:z.string().max(60),reason:z.string().max(1000),remarks:z.string().max(1000)});
+const resultSchema=z.object({test:z.string(),location:z.string().optional(),stage:z.string().optional(),replicate:z.string().optional(),channel:z.enum(['active-air','passive-air']).optional(),instanceId:z.string().optional(),block:z.string().optional(),state:z.enum(['not_entered','not_tested','entered']),value:z.string().max(100),qualifier:z.enum(['','=','<','<=','Nmt']),unit:z.string().max(60),reason:z.string().max(1000),remarks:z.string().max(1000),remarkMode:z.enum(['automatic','manual']).optional()});
 app.get('/api/drafts/:id/session',async(req,res)=>res.json(await environmentalSessionReview(String(req.params.id))));
 app.post('/api/drafts/:id/generate-session',requireRole('administrator','analyst'),async(req,res)=>{
  const b=z.object({revisions:z.record(z.number().int().positive())}).parse(req.body);

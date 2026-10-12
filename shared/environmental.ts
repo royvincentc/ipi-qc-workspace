@@ -22,10 +22,14 @@ export const environmentalProfileSchema=z.object({
 });
 export type EnvironmentalOutput=z.infer<typeof environmentalOutputSchema>;
 export type EnvironmentalProfile=z.infer<typeof environmentalProfileSchema>&{id:string;revision:string;active:boolean;approvedBy:string;approvedAt:string;previousId?:string};
-export interface EnvironmentalSelection {profileId?:string;outputId?:string}
-export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string}
+export interface EquipmentQuantity {id:string;quantity:number;labels?:string[]}
+export interface EquipmentCatalog {revision:string;items:{id:string;name:string;issue?:string;parameters:{method:string;test:string;label:string;criterion:string;unit:string}[]}[]}
+export interface EquipmentSnapshot {selection:EquipmentQuantity[];sources:{id:string;revision:string;evidenceIds:string[]}[];revision:string}
+export interface EnvironmentalSelection {profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string}
+export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string;equipment?:EquipmentSnapshot}
 export interface LayoutResolution {status:'ready'|'missing'|'selection'|'conflict';message:string;choices?:{id:string;name:string}[]}
-export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[]}
+export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[];equipment?:EquipmentCatalog;otherOutputs?:{profileId:string;outputId:string;name:string;mode:string}[]}
+export {resolveEnvironmentalEquipment,equipmentSelectionSchema} from './environmental-equipment.js';
 /** Pair only surface methods in the same approved equipment pattern. */
 export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutput[]{
  const accupoint=profile.outputs.filter(o=>o.mode==='surface'&&o.method==='accupoint');
@@ -34,6 +38,12 @@ export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutpu
 }
 export const environmentalKey=(value:string)=>value.normalize('NFKC').toLowerCase().replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim();
 export const processArea=(value:string)=>environmentalKey(value).replace(/^for\s+/,'').replace(/\s+area$/,'');
+export function environmentalActivityDate(sample:Sample){
+ const raw=sample.received.match(/(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/)?.[0];
+ const slash=raw?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+ const candidate=slash?`${slash[3]}-${slash[1].padStart(2,'0')}-${slash[2].padStart(2,'0')}`:raw;
+ return candidate&&date.safeParse(candidate).success?candidate:'';
+}
 
 /** A plan creates stable instances, never analytical results or evidence that a swab occurred. */
 export function environmentalCriteria(profile:EnvironmentalProfile,output:EnvironmentalOutput):Criterion[]{
@@ -81,10 +91,7 @@ export function resolveEnvironmentalProfile(sample:Sample,productId:string,profi
  const fail=(status:LayoutResolution['status'],message:string):EnvironmentalSetup=>({resolution:{status,message},profiles:summary,outputs:[]});
  if(sourceIssue)return fail('conflict',sourceIssue);
  if(!available.length)return fail('missing',`No approved sampling pattern matches ${sample.name} in ${sample.fields.area} (${sample.context||'unspecified context'}). Registering a DOCX layout does not supply locations or criteria. Configure a matching pattern in Settings → Report templates.`);
- const rawDate=sample.received.match(/(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/)?.[0];
- const slash=rawDate?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
- const candidateDate=slash?`${slash[3]}-${slash[1].padStart(2,'0')}-${slash[2].padStart(2,'0')}`:rawDate;
- const activityDate=candidateDate&&date.safeParse(candidateDate).success?candidateDate:'';
+ const activityDate=environmentalActivityDate(sample);
  if(!activityDate)return fail('selection','A valid received date is needed to select the effective sampling-plan revision.');
  const effective=available.filter(p=>p.effectiveFrom<=activityDate&&(!p.effectiveTo||p.effectiveTo>=activityDate));
  const chosen=selection.profileId?effective.filter(p=>p.id===selection.profileId):effective;

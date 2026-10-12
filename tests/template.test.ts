@@ -4,6 +4,13 @@ import {reportRows,validateBindings} from '../server/template.js';
 import type {Draft,Template} from '../shared/model.js';
 
 const tokens=['result.0.criterion','result.0.value','result.0.remarks','result.1.criterion','result.1.value','result.1.remarks'];
+test('quantity-based surface exports keep merge groups contiguous and results attached to their points',()=>{
+ const tests=['Drum 1','Drum 2'].flatMap(location=>['SPC','MY'].map(test=>({test,location,type:'numeric',unit:'cfu/mL',criterion:`Nmt ${test==='SPC'?100:30} cfu/mL`,revision:'approved',date:'2026-10-01'})));
+ const draft={sample:{category:'EM'},environmentalSnapshot:{equipment:{selection:[]},output:{method:'spc-my',mode:'surface'}},specification:{tests},results:tests.map((t,i)=>({...t,state:'entered',qualifier:'',value:String(i+1),remarks:'Passed'}))} as unknown as Draft;
+ const rows=reportRows(draft,{family:'environmental-grouped-5c',manifest:{rowGrouping:{mergeColumns:[0,2]}}} as unknown as Template);
+ assert.deepEqual(rows.map(r=>[r.test,r.location,r.value]),[['Standard Plate Count (SPC)','Drum 1','1 cfu/mL'],['Standard Plate Count (SPC)','Drum 2','3 cfu/mL'],['Molds and Yeast','Drum 1','2 cfu/mL'],['Molds and Yeast','Drum 2','4 cfu/mL']]);
+ assert.deepEqual(rows.map(r=>r.index),[0,1,2,3]);
+});
 test('fixed report rows must each bind to one explicit test instance',()=>{
  assert.throws(()=>validateBindings(tokens,[{index:0,test:'SPC'}]),/every numbered result row/i);
  assert.throws(()=>validateBindings(tokens,[{index:0,test:'SPC'},{index:1,test:'SPC'}]),/same test instance/i);

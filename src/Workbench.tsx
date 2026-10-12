@@ -236,7 +236,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
               const value=result?.state==='entered'?resultDisplayValue(test,result):result?.state==='not_tested'?`Not tested · ${result.reason||'Reason recorded in draft'}`:draft?(draftRecord?'Not entered':'Loading results…'):setup?.resultLookup==='not_found'?'No result recorded':'Not entered';
               return <div key={resultKey(test)}><Beaker size={19}/><span><strong>{meta?.shortName||test.test}</strong>{[test.location,test.stage,test.replicate].filter(Boolean).length?<small>{[test.location,test.stage,test.replicate].filter(Boolean).join(' · ')}</small>:null}<small className="parameter-value">{value}</small><small>{test.criterion||'Criteria not recorded'}</small></span></div>;
             })}
-            {!specification?<p>{draftError||setupError?'Parameters unavailable':sample?'Loading product parameters…':'Select a sample to see its parameters'}</p>:!specification.tests?.length?<p>{setup?.environmental?'An approved sampling pattern is needed to supply locations and criteria.':'No parameters configured for this product.'}</p>:null}
+            {!specification?<p>{draftError||setupError?'Parameters unavailable':sample?'Loading product parameters…':'Select a sample to see its parameters'}</p>:!specification.tests?.length?<p>{setup?.environmental?.equipment?'Select equipment and quantities in Reports and Results to build both method tables.':setup?.environmental?'An approved sampling pattern is needed to supply locations and criteria.':'No parameters configured for this product.'}</p>:null}
           </div>
           <ErrorBox message={draftError||setupError}/>
         </article>
@@ -254,7 +254,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
             {!layoutBlocked?<><div><MessageSquare size={19}/><span>Required inputs<small>{draft?draft.referenceIssue?'Reference needs attention':draft.missing?`${draft.missing} required items missing`:'Inputs complete':'Resolved when preparing a report'}</small></span></div>
             <div><FolderOpen size={19}/><span>Linked source<small>{sample?.ml||'Not selected'}</small></span></div></>:null}
           </div>
-          {layoutBlocked?<div className="workflow-resolution" role="region" aria-label="Report setup issue" tabIndex={0}><ErrorBox message={layoutResolution.message}/></div>:null}
+          {layoutBlocked?<div className="workflow-resolution" role="region" aria-label="Report setup issue" tabIndex={0}>{setup?.environmental?.equipment&&layoutResolution.status==='selection'?<p>{layoutResolution.message}</p>:<ErrorBox message={layoutResolution.message}/>}</div>:null}
           {layoutBlocked&&setup?.environmental&&layoutResolution.status==='missing'?<Link className="workflow-report-link" to="/settings?section=templates#environmental-patterns">Configure sampling pattern <ArrowRight size={14}/></Link>:null}
           {sample?<Link className="workflow-report-link" to={`${action}#results-details`}>Results &amp; details <ArrowRight size={14}/></Link>:null}
         </article>

@@ -2,7 +2,7 @@ import {useId} from 'react';
 import {Check, X} from 'lucide-react';
 
 /** Explicit analyst choice; an empty result never defaults to Passed. */
-export function AnalystRemarks({value,disabled,onChange}:{value:string;disabled:boolean;onChange:(value:string)=>void}){
+export function AnalystRemarks({value,disabled,onChange,mode,onAutomatic}:{value:string;disabled:boolean;onChange:(value:string)=>void;mode?:'automatic'|'manual';onAutomatic?:()=>void}){
  const id=useId();
  const selected=value==='Passed'?'passed':value==='Failed'?'failed':'unset';
  return <div className="field analyst-remarks-field"><span id={`${id}-label`}>Analyst remarks</span>
@@ -13,6 +13,7 @@ export function AnalystRemarks({value,disabled,onChange}:{value:string;disabled:
     <span>{outcome==='Passed'?<Check size={16} aria-hidden="true"/>:<X size={16} aria-hidden="true"/>}{outcome}</span>
    </label>)}
   </div>
+  {onAutomatic?<div className="remark-origin"><small>{mode==='manual'?'Analyst override':value?'Automatic · from result':'Automatic · awaiting an interpretable result'}</small>{mode==='manual'?<button type="button" disabled={disabled} className="remark-reset" onClick={onAutomatic}>Use automatic remark</button>:null}</div>:null}
  </div>;
 }
 

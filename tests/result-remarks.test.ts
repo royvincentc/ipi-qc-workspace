@@ -1,8 +1,25 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {suggestedAnalystRemark,overallAnalystRemarks,resultDisplayValue,type Criterion,type Result} from '../shared/model.js';
+import * as model from '../shared/model.js';
 const spc:Criterion={test:'SPC',label:'Standard Plate Count (SPC)',type:'numeric',unit:'cfu/mL',criterion:'Nmt 100 cfu/mL',source:'spec',sourceLocation:'cell',date:'2026-10-08',dateBasis:'analysis',revision:'1'};
 const result=(value:string,remarks=''):Result=>({test:'SPC',state:'entered',value,qualifier:'',unit:'cfu/mL',reason:'',remarks});
+test('imported results immediately get safe suggestions without changing raw strings or interpreting unknown qualifiers',()=>{
+ const fn=(model as any).automaticAnalystRemark;assert.equal(typeof fn,'function');
+ for(const [value,expected] of [['99 cfu/mL','Passed'],['100 cfu/mL','Failed'],['0','Passed'],['Nmt 100 cfu/mL',''],['<100 cfu/mL',''],['99 RLU',''],['unknown',''],['','']]){
+  const imported={...result(value),sourceValue:value};assert.equal(fn(spc,imported),expected);assert.equal(imported.value,value);assert.equal(imported.sourceValue,value);
+ }
+ const finding={...spc,type:'finding',criterion:'Negative'};assert.equal(fn(finding,{...result('negative'),sourceValue:'negative'}),'Passed');
+});
+test('automatic remarks recalculate while manual overrides survive value edits and can be explicitly reset',()=>{
+ const fn=(model as any).updateResultRemark;assert.equal(typeof fn,'function');
+ const auto=fn(spc,result('99'),{remarkMode:'automatic'});assert.equal(auto.remarks,'Passed');
+ assert.equal(fn(spc,auto,{value:'100'}).remarks,'Failed');
+ const manual=fn(spc,auto,{remarks:'Failed'});assert.equal(manual.remarkMode,'manual');assert.equal(fn(spc,manual,{value:'1'}).remarks,'Failed');
+ assert.equal(fn(spc,manual,{remarkMode:'automatic',value:'1'}).remarks,'Passed');
+ assert.equal(fn(spc,result('99','Failed'),{value:'0'}).remarks,'Failed');
+ assert.equal(fn(spc,auto,{state:'not_entered',value:''}).remarks,'');
+});
 test('actual result boundary follows the requested strict threshold',()=>{for(const [value,expected] of [['0','Passed'],['99','Passed'],['99.9','Passed'],['100','Failed'],['101','Failed'],['',''],['abc',''],['-1','']])assert.equal(suggestedAnalystRemark(spc,result(value)),expected);});
 test('result reporting limit is independent of standard and environmental limits',()=>{const r={...result(''),qualifier:'Nmt' as const};assert.equal(resultDisplayValue(spc,r,'FG'),'Nmt 10 cfu/mL');assert.equal(spc.criterion,'Nmt 100 cfu/mL');assert.equal(resultDisplayValue(spc,r,'EM'),spc.criterion);assert.equal(suggestedAnalystRemark(spc,r),'Passed');});
 test('overall remarks follow final analyst choices including overrides and incomplete rows',()=>{for(const category of ['SFG','FG','ST','MIS']){const d={sample:{category} as any,specification:{tests:[spc,{...spc,test:'MY',label:'Molds and Yeast'}]} as any,results:[result('100','Passed'),{...result('1','Passed'),test:'MY'}]};assert.equal(overallAnalystRemarks(d),'PASSED');d.results[1].remarks='Failed';assert.equal(overallAnalystRemarks(d),'Failed in Molds and Yeast');d.results[0].remarks='Failed';assert.equal(overallAnalystRemarks(d),'Failed in Standard Plate Count (SPC), Molds and Yeast');d.results.forEach(r=>r.remarks='');assert.equal(overallAnalystRemarks(d),'');d.results[0].remarks='Passed';d.results[1].state='not_entered';d.results[1].remarks='Passed';assert.equal(overallAnalystRemarks(d),'');}});
