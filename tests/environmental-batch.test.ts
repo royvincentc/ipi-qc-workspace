@@ -44,6 +44,16 @@ test('an exact document product takes precedence over its broader archive folder
  const source={...candidate,evidence:[{...candidate.evidence[0],product:'Boost-Pro'}]};
  const [matched]=prepareEnvironmentalBatch([source],variants,[template],[],rules);assert.equal(matched.profile.productId,'boost-pro');assert.deepEqual(matched.issues,[]);
 });
+test('a matching process area disambiguates managed product names with area suffixes',()=>{
+ const scoped={...config,products:[
+  {id:'boost-compounding',name:'Boost - Compounding',category:'EM',active:true,aliases:[],code:''},
+  {id:'boost-filling',name:'Boost - Filling',category:'EM',active:true,aliases:[],code:''}
+ ]};
+ const [matched]=prepareEnvironmentalBatch([candidate],scoped,[template],[],rules);
+ assert.equal(matched.profile.productId,'boost-compounding');assert.deepEqual(matched.issues,[]);
+ const [ambiguous]=prepareEnvironmentalBatch([{...candidate,areaHint:'Packaging'}],scoped,[template],[],rules);
+ assert.match(ambiguous.issues.join(' '),/Multiple managed products match/);
+});
 test('distinct product variants remain exceptions and unique activities provide routing metadata',()=>{
  const changed={...candidate,evidence:[{...candidate.evidence[0],product:'Boost-Pro (Old Specs)'}]};
  assert.match(prepareEnvironmentalBatch([changed],config,[template],[],rules)[0].issues.join(' '),/Product variant differs/);

@@ -26,7 +26,8 @@ export function prepareEnvironmentalBatch(candidates:BatchCandidate[],config:Con
   const names=[c.productHint,...c.evidence.map(e=>e.product||'')].filter(Boolean);
   const headerNames=c.evidence.map(e=>e.product||'').filter(Boolean);
   const exactHeaders=products.filter(p=>headerNames.some(name=>[p.name,...p.aliases].some(alias=>environmentalProductKey(name)===environmentalProductKey(alias))));
-  const exact=exactHeaders.length?exactHeaders:products.filter(p=>[p.name,...p.aliases].some(alias=>environmentalProductKey(c.productHint)===environmentalProductKey(alias))&&headerNames.every(name=>variant(name)===variant(p.name)));
+  const areaKey=environmentalKey(c.areaHint).replace(/[^a-z0-9]/g,''),areaScoped=exactHeaders.filter(p=>environmentalKey(p.name).replace(/[^a-z0-9]/g,'').slice(environmentalProductKey(p.name).length).startsWith(areaKey));
+  const exact=areaScoped.length===1?areaScoped:exactHeaders.length?exactHeaders:products.filter(p=>[p.name,...p.aliases].some(alias=>environmentalProductKey(c.productHint)===environmentalProductKey(alias))&&headerNames.every(name=>variant(name)===variant(p.name)));
   const matchesByPrefix=products.map(p=>({p,length:Math.max(0,...[p.name,...p.aliases].filter(alias=>names.some(name=>matches(name,alias))).map(alias=>alias.length))})).filter(p=>p.length);
   const longest=Math.max(0,...matchesByPrefix.map(p=>p.length));
   const matchedProducts=exact.length?exact:matchesByPrefix.filter(p=>p.length===longest).map(p=>p.p);
