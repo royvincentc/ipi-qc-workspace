@@ -26,8 +26,12 @@ test('quantities compose an unseen equipment combination with the same points an
  assert.deepEqual(result.snapshot.equipment.sources.map((s:any)=>s.id),['a','b']);assert.equal(result.snapshot.profile.approvedBy,'owner');assert.equal(profiles[0].outputs[0].instances[0].location,'Stainless Drum 1');
 });
 test('selecting a pattern narrows equipment and counts its numbered locations',()=>{
- const setup=resolve({profileId:'selected'},[profile('selected',['Mixing Tank','Stainless Pail 1','Stainless Pail 2','Spatula 1','Spatula 2']),...profiles]);
+ const competing=profile('competing',['Mixing Tank 1']);competing.outputs[1].instances[0].criterion='Not more than 200 cfu/mL';
+ const input=[profile('selected',['Mixing Tank','Stainless Pail 1','Stainless Pail 2','Spatula 1','Spatula 2']),competing,...profiles];
+ const setup=resolve({profileId:'selected'},input);
  assert.equal(setup.equipment.profileId,'selected');assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Spatula',2],['Stainless Pail',2]]);
+ const selection={profileId:'selected',equipmentRevision:setup.equipment.revision,equipment:[{id:'mixing tank',quantity:1}]};
+ assert.equal(resolve(selection,input).resolution.status,'ready');assert.equal(resolve({...selection,profileId:undefined},input).resolution.status,'conflict');
  assert.equal(resolve({profileId:'missing'}).resolution.status,'selection');
 });
 test('invalid quantities, unknown equipment, duplicate labels and output overflow cannot form a session',()=>{
