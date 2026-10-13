@@ -181,10 +181,11 @@
 .result-import-evidence p { display:grid;gap:8px;margin:8px 0; }
 .result-import-evidence small { font-size:12px; }
 .reports-editor .result-entry-row { display:grid;grid-template-columns:minmax(190px,.75fr) minmax(0,2fr);gap:16px 24px;border:0;border-bottom:1px solid var(--border-subtle);border-radius:0;background:transparent;padding:20px 0;margin:0; }
+.reports-editor .result-entry-row.equipment-group-start { border-top:1px solid var(--border-strong);margin-top:8px;padding-top:19px; }
 .reports-editor .result-entry-row:hover { background:transparent; }
 .reports-editor .test-title { display:block;margin:0;min-width:0; }
 .reports-editor .test-title h3 { font-size:14px;line-height:1.5;margin:4px 0; }
-.equipment-result-heading { display:block;margin:0 0 10px;font-size:16px;font-weight:600; }
+.equipment-result-heading { display:block;margin:0 0 10px;font-size:24px;font-weight:700;line-height:1.2;color:var(--text-primary);overflow-wrap:anywhere; }
 .reports-editor .criterion { min-width:0;padding:10px 0 0;border:0; }
 .reports-editor .criterion small { font-weight:500;letter-spacing:0;font-size:11px; }
 .reports-editor .criterion strong { line-height:1.5;font-size:12px; }
