@@ -34,6 +34,19 @@ test('selecting a pattern narrows equipment and counts its numbered locations',(
  assert.equal(resolve(selection,input).resolution.status,'ready');assert.equal(resolve({...selection,profileId:undefined},input).resolution.status,'conflict');
  assert.equal(resolve({profileId:'missing'}).resolution.status,'selection');
 });
+test('a selected single-method pattern still checks equipment counts from its locations and creates its report rows',()=>{
+ const selected=profile('single-method',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 1','Stainless Drum 2','Stainless Drum 3','Stainless Drum 4','Stainless Pail 1','Stainless Pail 2','Stainless Pail 3']);
+ selected.outputs=selected.outputs.filter(output=>output.method==='spc-my');
+ const setup=resolve({profileId:selected.id},[selected]);
+ assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity,item.issue]),[['Mixing Tank',1,undefined],['Spatula',2,undefined],['Stainless Drum',4,undefined],['Stainless Pail',3,undefined]]);
+ const fallback=resolve({profileId:selected.id},[selected]);assert.equal(fallback.resolution.status,'ready');assert.deepEqual(fallback.snapshot.equipment.selection.map((item:any)=>[item.id,item.quantity]),[['mixing tank',1],['spatula',2],['stainless drum',4],['stainless pail',3]]);
+ const selection={profileId:selected.id,equipmentRevision:setup.equipment.revision,equipment:setup.equipment.items.map((item:any)=>({id:item.id,quantity:item.defaultQuantity}))};
+ const result=resolve(selection,[selected]);
+ assert.equal(result.resolution.status,'ready');assert.equal(result.pairedOutputs,undefined);assert.equal(result.snapshot.output.method,'spc-my');
+ assert.equal(new Set(result.snapshot.output.instances.map((instance:any)=>instance.location)).size,10);
+ const nonsequential=profile('nonsequential',['Stainless Drum 3','Stainless Drum 4']);nonsequential.outputs=nonsequential.outputs.filter(output=>output.method==='spc-my');
+ assert.equal(resolve({profileId:nonsequential.id},[nonsequential]).equipment.items[0].defaultQuantity,2);
+});
 test('invalid quantities, unknown equipment, duplicate labels and output overflow cannot form a session',()=>{
  for(const equipment of [[{id:'stainless drum',quantity:-1}],[{id:'stainless drum',quantity:1.5}],[{id:'unknown',quantity:1}],[{id:'stainless drum',quantity:151}],[{id:'stainless drum',quantity:2,labels:['Drum 3','Drum 3']}],[{id:'stainless drum',quantity:1},{id:'stainless drum',quantity:2}]]){
   assert.notEqual(resolve({...select(),equipment}).resolution.status,'ready');
@@ -44,7 +57,7 @@ test('invalid quantities, unknown equipment, duplicate labels and output overflo
 test('criteria conflicts, missing companion coverage, changed templates and stale source revisions are explicit',()=>{
  const conflict=structuredClone(profiles);conflict[1].outputs[0].instances[0].criterion='Not more than 200 RLU';
  assert.match(resolve({},conflict).equipment.items.find((i:any)=>i.id==='stainless drum').issue,/conflict/i);assert.equal(resolve(select(),conflict).resolution.status,'conflict');
- const missing=structuredClone(profiles);missing.forEach(p=>p.outputs=p.outputs.filter(o=>o.method==='spc-my'));assert.match(resolve({},missing).equipment.items[0].issue,/Accupoint/);
+ const singleMethod=structuredClone(profiles);singleMethod.forEach(p=>p.outputs=p.outputs.filter(o=>o.method==='spc-my'));assert.ok(resolve({},singleMethod).equipment.items.every((item:any)=>!item.issue));
  assert.equal(resolve(select(),profiles,[{...template,revision:'layout-2'}]).resolution.status,'conflict');
  const changed=structuredClone(profiles);changed[0].revision='changed';assert.equal(resolve(select(),changed).resolution.status,'conflict');
  assert.equal(resolve(select(),profiles,[template],{...sample,source:{...sample.source,fingerprint:'changed-source'}}).resolution.status,'conflict');
