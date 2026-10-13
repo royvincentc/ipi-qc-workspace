@@ -34,6 +34,28 @@ def set_text(node,value):
         p=node if node.tag==W+'p' else E.SubElement(node,W+'p')
         r=E.SubElement(p,W+'r');E.SubElement(r,W+'t').text=value
 
+def trim_empty_paragraphs_after_last_table(root):
+    """Remove empty body paragraphs after the last table without stripping breaks."""
+    body=root.find('.//'+W+'body')
+    if body is None:return
+    blocks=[child for child in body if child.tag!=W+'sectPr']
+    last_table=max((i for i,child in enumerate(blocks) if child.tag==W+'tbl'),default=-1)
+    if last_table<0:return
+    for paragraph in blocks[last_table+1:]:
+        if paragraph.tag!=W+'p':continue
+        if paragraph.xpath('.//w:sectPr|.//w:pageBreakBefore',namespaces=NS):continue
+        meaningful=False
+        for node in paragraph.iter():
+            if node is paragraph:continue
+            if node.tag in (W+'pPr',W+'rPr'):continue
+            if any(parent.tag in (W+'pPr',W+'rPr') for parent in node.iterancestors() if parent is not paragraph):continue
+            if node.tag==W+'r':continue
+            if node.tag==W+'t' and not (node.text or '').strip():continue
+            if node.tag==W+'proofErr':continue
+            meaningful=True
+            break
+        if not meaningful:body.remove(paragraph)
+
 def set_noted_by(docs,name='{{report.notedBy}}',role='Assistant Head, Microbiology Laboratory'):
     """User-confirmed standing name; signature and signing date remain separate."""
     for root in docs.values():
@@ -510,6 +532,8 @@ def render(template,payload,output,soffice=None):
         for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,fields)
         if '{{' in text(root):raise ValueError('Unresolved template tokens remain')
     fill_optional_report_details(docs,fields)
+    document=docs.get('word/document.xml')
+    if document is not None:trim_empty_paragraphs_after_last_table(document)
     if named and set(payload.get('blocks',{}))-seen_blocks:raise ValueError('Payload includes an unknown row block')
     for n,root in docs.items():parts[n]=E.tostring(root,xml_declaration=True,encoding='UTF-8',standalone=True)
     settings=E.fromstring(parts['word/settings.xml'],XML) if 'word/settings.xml' in parts else E.Element(W+'settings',nsmap={'w':NS['w']})
