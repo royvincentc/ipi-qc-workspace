@@ -25,6 +25,11 @@ test('quantities compose an unseen equipment combination with the same points an
  assert.ok(accu.instances.every((i:any)=>i.unit==='RLU'&&i.criterion==='Not more than 100 RLU'));assert.equal(spcmy.instances.find((i:any)=>i.test==='MY').criterion,'Not more than 30 cfu/mL');
  assert.deepEqual(result.snapshot.equipment.sources.map((s:any)=>s.id),['a','b']);assert.equal(result.snapshot.profile.approvedBy,'owner');assert.equal(profiles[0].outputs[0].instances[0].location,'Stainless Drum 1');
 });
+test('selecting a pattern narrows equipment and counts its numbered locations',()=>{
+ const setup=resolve({profileId:'selected'},[profile('selected',['Mixing Tank','Stainless Pail 1','Stainless Pail 2','Spatula 1','Spatula 2']),...profiles]);
+ assert.equal(setup.equipment.profileId,'selected');assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Spatula',2],['Stainless Pail',2]]);
+ assert.equal(resolve({profileId:'missing'}).resolution.status,'selection');
+});
 test('invalid quantities, unknown equipment, duplicate labels and output overflow cannot form a session',()=>{
  for(const equipment of [[{id:'stainless drum',quantity:-1}],[{id:'stainless drum',quantity:1.5}],[{id:'unknown',quantity:1}],[{id:'stainless drum',quantity:151}],[{id:'stainless drum',quantity:2,labels:['Drum 3','Drum 3']}],[{id:'stainless drum',quantity:1},{id:'stainless drum',quantity:2}]]){
   assert.notEqual(resolve({...select(),equipment}).resolution.status,'ready');

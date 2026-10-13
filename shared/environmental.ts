@@ -23,7 +23,7 @@ export const environmentalProfileSchema=z.object({
 export type EnvironmentalOutput=z.infer<typeof environmentalOutputSchema>;
 export type EnvironmentalProfile=z.infer<typeof environmentalProfileSchema>&{id:string;revision:string;active:boolean;approvedBy:string;approvedAt:string;previousId?:string};
 export interface EquipmentQuantity {id:string;quantity:number;labels?:string[]}
-export interface EquipmentCatalog {revision:string;items:{id:string;name:string;issue?:string;parameters:{method:string;test:string;label:string;criterion:string;unit:string}[]}[]}
+export interface EquipmentCatalog {revision:string;profileId?:string;items:{id:string;name:string;defaultQuantity:number;issue?:string;parameters:{method:string;test:string;label:string;criterion:string;unit:string}[]}[]}
 export interface EquipmentSnapshot {selection:EquipmentQuantity[];sources:{id:string;revision:string;evidenceIds:string[]}[];revision:string}
 export interface EnvironmentalSelection {profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string}
 export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string;equipment?:EquipmentSnapshot}

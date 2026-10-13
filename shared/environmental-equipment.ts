@@ -30,15 +30,22 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  }
  const base:EnvironmentalSetup={profiles:applicable.map(({id,name,equipmentSet,revision})=>({id,name,equipmentSet,revision})),outputs:[],otherOutputs,resolution:{status:'selection',message:'Select the equipment sampled and set its quantity to build both method tables.'}};
  const fail=(status:EnvironmentalSetup['resolution']['status'],message:string):EnvironmentalSetup=>({...base,resolution:{status,message}});
+ if(selection.profileId&&!applicable.some(p=>p.id===selection.profileId))return fail('selection','The selected sampling pattern is unavailable for this activity.');
+ const definitionProfiles=selection.profileId?applicable.filter(p=>p.id===selection.profileId):applicable;
  const sourceIssue=environmentalSourceIssue(sample);if(sourceIssue)return fail('conflict',sourceIssue);
- const definitions=new Map<string,{name:string;byMethod:Map<string,Definition[]>}>();
- for(const profile of applicable)for(const output of profile.outputs.filter(o=>o.mode==='surface'&&methods.includes(o.method as typeof methods[number]))){
+ const definitions=new Map<string,{name:string;defaultQuantity:number;byMethod:Map<string,Definition[]>}>();
+ for(const profile of definitionProfiles){
+ const profileQuantities=new Map<string,Set<string>>();
+ for(const output of profile.outputs.filter(o=>o.mode==='surface'&&methods.includes(o.method as typeof methods[number]))){
   const locations=new Map<string,EnvironmentalOutput['instances']>();
   for(const row of output.instances){const key=environmentalKey(row.location);locations.set(key,[...(locations.get(key)||[]),row]);}
   for(const rows of locations.values()){
-   const name=equipmentName(rows[0].location),id=environmentalKey(name),entry=definitions.get(id)||{name,byMethod:new Map<string,Definition[]>()};
+   const name=equipmentName(rows[0].location),id=environmentalKey(name),entry=definitions.get(id)||{name,defaultQuantity:0,byMethod:new Map<string,Definition[]>()};
    entry.byMethod.set(output.method,[...(entry.byMethod.get(output.method)||[]),{profile,output,rows,signature:signature(output,rows)}]);definitions.set(id,entry);
+   const points=profileQuantities.get(id)||new Set<string>();points.add(environmentalKey(rows[0].location));profileQuantities.set(id,points);
   }
+ }
+ for(const [id,points] of profileQuantities)definitions.get(id)!.defaultQuantity=Math.max(definitions.get(id)!.defaultQuantity,points.size);
  }
  const revision=JSON.stringify([sample.source.fingerprint,applicable.map(p=>[p.id,p.revision,p.outputs.map(o=>[o.id,o.templateId,o.templateRevision])])]);
  const items:EquipmentCatalog['items']=[...definitions].sort((a,b)=>a[0].localeCompare(b[0])).map(([id,entry])=>{
@@ -52,9 +59,9 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
    if(problem||layout?.revision!==definition.output.templateRevision)issue=issue||`${label}: ${problem||'The approved template revision changed. Publish an updated definition.'}`;
    parameters.push(...definition.rows.map(r=>({method,test:r.test,label:r.label,criterion:r.criterion,unit:r.unit})));
   }
-  return {id,name:entry.name,issue,parameters};
+  return {id,name:entry.name,defaultQuantity:entry.defaultQuantity,issue,parameters};
  });
- base.equipment={revision,items};
+ base.equipment={revision,profileId:selection.profileId,items};
  const parsed=equipmentSelectionSchema.safeParse(selection);
  if(!parsed.success)return fail('conflict','Use whole-number equipment quantities from 0 to 300 and nonblank equipment labels.');
  const quantities=parsed.data.equipment?.filter(q=>q.quantity>0)||[];

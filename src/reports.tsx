@@ -3,7 +3,7 @@ import {reportPurpose} from '../shared/report-purpose';
 import {AnalystRemarks,ResultToggle} from './analyst-remarks';
 import Dialog from './dialog';
 import {useCatalog,useUnsaved} from './configuration';
-import {useContext,useState,useEffect} from 'react';
+import {useContext,useState,useEffect,useRef} from 'react';
 import {Link,useLocation,useNavigate,useParams,useSearchParams} from 'react-router-dom';
 import {FileText,ArrowRight,Save,Eye,Download,CheckCircle2,History,ExternalLink, Trash2} from 'lucide-react';
 import {api} from './api';
@@ -19,6 +19,7 @@ export function Reports(){
  const [params]=useSearchParams(),[selected,setSelected]=useState(params.get('sample')||'');
  const [profileId,setProfileId]=useState(''),[outputId,setOutputId]=useState('');
  const [equipment,setEquipment]=useState<EquipmentQuantity[]>([]),[equipmentRevision,setEquipmentRevision]=useState(''),[catalog,setCatalog]=useState<EquipmentCatalog>();
+ const autoSelectProfile=useRef('');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[confirming,setConfirming]=useState<ReportSetup>();
  const [draftQuery,setDraftQuery]=useState(''),[page,setPage]=useState(0);
  const navigate=useNavigate(),canEdit=useCanEdit(),{user}=useContext(Session),notify=useContext(Notice);
@@ -26,10 +27,10 @@ export function Reports(){
  const {data:found}=useLoad(async()=>{const result=await api<{items:Sample[]}>('/search?limit=25&q='+encodeURIComponent(search));if(selected&&!result.items.some(s=>s.id===selected)){const extra=await api('/samples/'+selected);result.items.unshift(extra.sample);}return result;},[search,selected]);
  const equipmentKey=JSON.stringify(equipment);
  const {data:setup,error:setupError}=useLoad<ReportSetup|undefined>(()=>selected?api(`/report-setup/${selected}`,'POST',{profileId:profileId||undefined,outputId:outputId||undefined,equipment:equipment.length?equipment:undefined,equipmentRevision:equipmentRevision||undefined}):Promise.resolve(undefined),[selected,profileId,outputId,equipmentKey,equipmentRevision]);
- useEffect(()=>{if(setup?.environmental?.equipment)setCatalog(setup.environmental.equipment);},[setup]);
- const chooseSample=(id:string)=>{setSelected(id);setProfileId('');setOutputId('');setEquipment([]);setEquipmentRevision('');setCatalog(undefined);setConfirming(undefined);setError('');};
+ useEffect(()=>{const next=setup?.environmental?.equipment;if(!next||next.profileId!==(profileId||undefined))return;setCatalog(next);if(autoSelectProfile.current&&autoSelectProfile.current===profileId){setEquipment(next.items.filter(item=>!item.issue).map(item=>({id:item.id,quantity:item.defaultQuantity})));setEquipmentRevision(next.revision);autoSelectProfile.current='';}},[setup,profileId]);
+ const chooseSample=(id:string)=>{setSelected(id);setProfileId('');setOutputId('');setEquipment([]);setEquipmentRevision('');setCatalog(undefined);autoSelectProfile.current='';setConfirming(undefined);setError('');};
  const changeEquipment=(value:EquipmentQuantity[])=>{setEquipment(value);setEquipmentRevision(catalog?.revision||'');setConfirming(undefined);setError('');};
- const sample=setup?.sample||found?.items.find(s=>s.id===selected),quantityMode=Boolean(catalog&&!outputId);
+ const sample=setup?.sample||found?.items.find(s=>s.id===selected),profiles=setup?.environmental?.profiles||[],quantityMode=Boolean(catalog&&!outputId&&(profiles.length<2||profileId));
  const parsedSelection=equipmentSelectionSchema.safeParse({equipment});
  const currentSelection=parsedSelection.success?[...(parsedSelection.data.equipment||[])].filter(q=>q.quantity>0).sort((a,b)=>a.id.localeCompare(b.id)):[];
  const setupMatches=!quantityMode||parsedSelection.success&&JSON.stringify(setup?.environmental?.snapshot?.equipment?.selection)===JSON.stringify(currentSelection)&&setup?.environmental?.snapshot?.equipment?.revision===equipmentRevision;
@@ -47,9 +48,9 @@ export function Reports(){
     <SearchInput value={query} onChange={setQuery} placeholder="Find sample by ML number, product or batch…"/>
     <Field label="Select a logged sample"><select value={selected} onChange={e=>chooseSample(e.target.value)}><option value="">Choose from the logbook…</option>{found?.items.map(s=><option key={s.id} value={s.id}>{s.ml} · {s.name} · {s.batch}</option>)}</select></Field>
     {sample?<div className="report-selected-sample"><div><Badge>{sample.category}</Badge><strong className="mono">{sample.ml}</strong><span>Batch {sample.batch}</span></div><h2>{sample.name}</h2><p>{[sample.context,sample.fields?.facility,sample.fields?.area].filter(Boolean).join(' · ')}</p><Link to={`/samples/${sample.id}`}>View source record <ExternalLink size={13}/></Link></div>:<p className="report-setup-intro">Start with a logged sample. Its product, testing context and approved standards will appear here.</p>}
-    {setup?.environmental?.otherOutputs?.length?<Field label="Monitoring output"><select value={outputId?JSON.stringify([profileId,outputId]):!catalog&&setup.environmental.snapshot?JSON.stringify([setup.environmental.snapshot.profile.id,setup.environmental.snapshot.output.id]):''} onChange={e=>{const pair=e.target.value?JSON.parse(e.target.value):['',''];setProfileId(pair[0]);setOutputId(pair[1]);setEquipment([]);setEquipmentRevision('');setConfirming(undefined);}}><option value="">{catalog?'Surface swabs · Accupoint + SPCMY':'Select monitoring output…'}</option>{setup.environmental.otherOutputs.map(o=><option key={o.profileId+o.outputId} value={JSON.stringify([o.profileId,o.outputId])}>{o.name}</option>)}</select></Field>:null}
+    {profiles.length>1&&!outputId?<Field label="Approved sampling pattern"><select value={profileId} onChange={e=>{const id=e.target.value;autoSelectProfile.current=id;setProfileId(id);setOutputId('');setEquipment([]);setEquipmentRevision('');setCatalog(undefined);setConfirming(undefined);}}><option value="">Choose the applicable pattern…</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.equipmentSet}</option>)}</select></Field>:null}
+    {setup?.environmental?.otherOutputs?.length?<Field label="Monitoring output"><select value={outputId?JSON.stringify([profileId,outputId]):!catalog&&setup.environmental.snapshot?JSON.stringify([setup.environmental.snapshot.profile.id,setup.environmental.snapshot.output.id]):''} onChange={e=>{const pair=e.target.value?JSON.parse(e.target.value):['',''];autoSelectProfile.current='';setProfileId(pair[0]);setOutputId(pair[1]);setEquipment([]);setEquipmentRevision('');setConfirming(undefined);}}><option value="">{catalog?'Surface swabs · Accupoint + SPCMY':'Select monitoring output…'}</option>{setup.environmental.otherOutputs.map(o=><option key={o.profileId+o.outputId} value={JSON.stringify([o.profileId,o.outputId])}>{o.name}</option>)}</select></Field>:null}
     {quantityMode?<EnvironmentalEquipment key={selected} catalog={catalog!} value={equipment} disabled={!canEdit||busy} onChange={changeEquipment}/>:null}
-    {setup?.environmental&&!catalog&&!setup.environmental.otherOutputs?.length&&setup.environmental.profiles.length>1?<Field label="Approved sampling plan"><select value={profileId} onChange={e=>{setProfileId(e.target.value);setOutputId('');}}><option value="">Choose the applicable plan…</option>{setup.environmental.profiles.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></Field>:null}
     {setup?.environmental&&!quantityMode&&setup.environmental.outputs.length>1&&setup.environmental.pairedOutputs?.length!==setup.environmental.outputs.length?<Field label="Monitoring method"><select value={outputId} onChange={e=>setOutputId(e.target.value)}><option value="">Choose output…</option>{setup.environmental.outputs.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></Field>:null}
     {selected&&!setup&&!setupError?<div className="report-setup-loading" role="status">{catalog?'Updating the sampling-point preview…':'Loading product standards and report layouts…'}</div>:null}
     {ready&&setup?<div className="equipment-preview-ready" key={quantityMode?equipmentKey:setup.template!.id}>
