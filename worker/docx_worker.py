@@ -1,5 +1,5 @@
 """Private OOXML inspection and generation. No macros, external links or remote renderer."""
-import argparse, copy, hashlib, io, json, re, subprocess, tempfile, zipfile
+import argparse, copy, hashlib, io, json, re, zipfile
 from pathlib import Path
 from lxml import etree as E
 
@@ -33,6 +33,16 @@ def set_text(node,value):
     else:
         p=node if node.tag==W+'p' else E.SubElement(node,W+'p')
         r=E.SubElement(p,W+'r');E.SubElement(r,W+'t').text=value
+
+def set_bold(paragraph):
+    run=next((r for r in paragraph.findall(W+'r') if r.xpath('.//w:t[text()]',namespaces=NS)),None)
+    if run is None:return
+    props=run.find(W+'rPr')
+    if props is None:props=E.Element(W+'rPr');run.insert(0,props)
+    for tag in ['b','bCs']:
+        weight=props.find(W+tag)
+        if weight is None:weight=E.SubElement(props,W+tag)
+        weight.set(W+'val','1')
 
 def trim_empty_paragraphs_after_last_table(root):
     """Remove empty body paragraphs after the last table without stripping breaks."""
@@ -140,8 +150,8 @@ def prepare_template(data,output,family=None):
         for i,p in enumerate(paras):
             if any(parent in result_tables for parent in p.iterancestors()):continue
             label=text(p).strip()
-            if pattern and re.match(r'^(Cleaning Validation of|Air Sampling Evaluation of)',label,re.I):
-                set_text(p,'Environmental Monitoring of {{area}} - {{sample.name}}');continue
+            if pattern and re.match(r'^(Cleaning Validation of|Air Sampling Evaluation of|Environmental Monitoring of)',label,re.I):
+                set_text(p,'Cleaning Validation of {{area}} - {{sample.name}}');set_bold(p);continue
             if label in labels:
                 following=paras[i+1:i+4]
                 colon=next((j for j,x in enumerate(following) if text(x).strip()==':'),None)
@@ -436,6 +446,8 @@ def upgrade_environmental_layout(data,output):
                 values.update({'releaseDate':'{{d.release}}','sample.released':'{{d.release}}'})
                 replace_tokens(paragraph,values)
         for i,p in enumerate(paragraphs):
+            if re.match(r'^(Cleaning Validation of|Air Sampling Evaluation of|Environmental Monitoring of)',text(p).strip(),re.I):
+                set_text(p,'Cleaning Validation of {{area}} - {{sample.name}}');set_bold(p)
             if text(p).strip().rstrip(':')!='Area':continue
             following=paragraphs[i+1:i+5]
             colon=next((j for j,x in enumerate(following) if text(x).strip()==':'),None)
@@ -471,7 +483,7 @@ def upgrade_environmental_layout(data,output):
         for n,b in parts.items():z.writestr(n,b)
     return {'path':str(output),'tokens':validate_template(Path(output).read_bytes())['tokens']}
 
-def render(template,payload,output,soffice=None):
+def render(template,payload,output):
     parts=package(Path(template).read_bytes()); docs=roots(parts)
     fields=payload['fields']; observations=payload.get('rows',[])
     row_grouping=payload.get('renderOptions',{}).get('rowGrouping')
@@ -542,12 +554,7 @@ def render(template,payload,output,soffice=None):
     update.set(W+'val','true');parts['word/settings.xml']=E.tostring(settings,xml_declaration=True,encoding='UTF-8')
     with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
         for n,b in parts.items():z.writestr(n,b)
-    if soffice:
-        with tempfile.TemporaryDirectory() as tmp:
-            profile=Path(tmp,'profile').as_uri()
-            subprocess.run([soffice,'-env:UserInstallation='+profile,'--headless','--convert-to','pdf','--outdir',str(Path(output).parent),str(output)],check=True,timeout=90,capture_output=True)
-        if not Path(output).with_suffix('.pdf').exists():raise ValueError('Renderer did not produce a PDF preview')
-    return {'docx':str(output),'pdf':str(Path(output).with_suffix('.pdf')) if soffice else None}
+    return {'docx':str(output)}
 
 def validate_template(data):
     parts=package(data);docs=roots(parts);tokens=[]
@@ -581,7 +588,7 @@ def demo_template(output):
     d.save(output)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout','report-details']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--soffice');p.add_argument('--family');args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout','report-details']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--family');args=p.parse_args()
     if args.action=='environmental-batch':
         from environmental_batch import scan
         result=scan(args.input,args.output)
@@ -598,7 +605,7 @@ def main():
     elif args.action=='environmental-layout':result=upgrade_environmental_layout(Path(args.input).read_bytes(),args.output)
     elif args.action=='report-details':
         payload=json.loads(Path(args.payload).read_text(encoding='utf8'));result=report_details(Path(args.input).read_bytes(),payload['fields'],payload.get('persistentDetails',False),payload.get('editableType',False))
-    elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output,args.soffice)
+    elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output)
     elif args.action=='validate':result=validate_template(Path(args.input).read_bytes())
     elif args.action=='prepare':result=prepare_template(Path(args.input).read_bytes(),args.output,args.family)
     else:demo_template(args.output);result={'path':args.output}

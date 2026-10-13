@@ -1,7 +1,7 @@
 import tempfile,unittest
 from pathlib import Path
 from docx import Document
-from docx_worker import demo_template,prepare_template,package,roots,text,validate_template,render,NS,W
+from docx_worker import demo_template,prepare_template,package,roots,text,validate_template,render,upgrade_environmental_layout,NS,W
 from environmental_formats import pattern,FAMILIES
 
 class FormatTests(unittest.TestCase):
@@ -17,6 +17,12 @@ class FormatTests(unittest.TestCase):
         for values in rows:
             for cell,value in zip(t.add_row().cells,values):cell.text=value
         d.save(file);return file
+    def test_generation_restores_bold_cleaning_validation_title(self):
+        source=self.folder/'source.docx';demo_template(source);document=Document(source);document.add_paragraph('Environmental Monitoring of Filling - Efficascent Boost Pain Relief Massage Roll On');document.save(source)
+        output=self.folder/'generated.docx';upgrade_environmental_layout(source.read_bytes(),output)
+        title=next(p for p in Document(output).paragraphs if 'Cleaning Validation of' in p.text)
+        self.assertEqual(title.text,'Cleaning Validation of {{area}} - {{sample.name}}');self.assertTrue(title.runs[0].bold)
+
     def test_water_four_columns_keeps_independent_result_and_remark_cells(self):
         source=self.source(['ANALYSIS DESIRED:','Standard Specifications','Results','Remarks'],[['Standard Plate Count (SPC)','100 cfu/mL','TNTC','Failed'],['Molds and Yeast','100 cfu/mL','23','Passed']])
         p=pattern(roots(package(source.read_bytes())));self.assertEqual(p['family'],FAMILIES[2]);self.assertEqual(len(p['blocks'][0]['instances']),2)
