@@ -34,16 +34,14 @@ test('selecting a pattern narrows equipment and counts its numbered locations',(
  assert.equal(resolve(selection,input).resolution.status,'ready');assert.equal(resolve({...selection,profileId:undefined},input).resolution.status,'conflict');
  assert.equal(resolve({profileId:'missing'}).resolution.status,'selection');
 });
-test('a selected single-method pattern still checks equipment counts from its locations and creates its report rows',()=>{
+test('a selected single-method pattern cannot silently drop the required Accupoint report',()=>{
  const selected=profile('single-method',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 1','Stainless Drum 2','Stainless Drum 3','Stainless Drum 4','Stainless Pail 1','Stainless Pail 2','Stainless Pail 3']);
  selected.outputs=selected.outputs.filter(output=>output.method==='spc-my');
  const setup=resolve({profileId:selected.id},[selected]);
- assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity,item.issue]),[['Mixing Tank',1,undefined],['Spatula',2,undefined],['Stainless Drum',4,undefined],['Stainless Pail',3,undefined]]);
- const fallback=resolve({profileId:selected.id},[selected]);assert.equal(fallback.resolution.status,'ready');assert.deepEqual(fallback.snapshot.equipment.selection.map((item:any)=>[item.id,item.quantity]),[['mixing tank',1],['spatula',2],['stainless drum',4],['stainless pail',3]]);
- const selection={profileId:selected.id,equipmentRevision:setup.equipment.revision,equipment:setup.equipment.items.map((item:any)=>({id:item.id,quantity:item.defaultQuantity}))};
- const result=resolve(selection,[selected]);
- assert.equal(result.resolution.status,'ready');assert.equal(result.pairedOutputs,undefined);assert.equal(result.snapshot.output.method,'spc-my');
- assert.equal(new Set(result.snapshot.output.instances.map((instance:any)=>instance.location)).size,10);
+ assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity,item.issue]),[['Mixing Tank',1,'Accupoint has no approved definition for Mixing Tank.'],['Spatula',2,'Accupoint has no approved definition for Spatula.'],['Stainless Drum',4,'Accupoint has no approved definition for Stainless Drum.'],['Stainless Pail',3,'Accupoint has no approved definition for Stainless Pail.']]);
+ assert.equal(setup.resolution.status,'selection');
+ const selection={profileId:selected.id,equipmentRevision:setup.equipment.revision,equipment:[{id:'mixing tank',quantity:1}]};
+ assert.equal(resolve(selection,[selected]).resolution.status,'conflict');
  const nonsequential=profile('nonsequential',['Stainless Drum 3','Stainless Drum 4']);nonsequential.outputs=nonsequential.outputs.filter(output=>output.method==='spc-my');
  assert.equal(resolve({profileId:nonsequential.id},[nonsequential]).equipment.items[0].defaultQuantity,2);
 });
@@ -57,7 +55,7 @@ test('invalid quantities, unknown equipment, duplicate labels and output overflo
 test('criteria conflicts, missing companion coverage, changed templates and stale source revisions are explicit',()=>{
  const conflict=structuredClone(profiles);conflict[1].outputs[0].instances[0].criterion='Not more than 200 RLU';
  assert.match(resolve({},conflict).equipment.items.find((i:any)=>i.id==='stainless drum').issue,/conflict/i);assert.equal(resolve(select(),conflict).resolution.status,'conflict');
- const singleMethod=structuredClone(profiles);singleMethod.forEach(p=>p.outputs=p.outputs.filter(o=>o.method==='spc-my'));assert.ok(resolve({},singleMethod).equipment.items.every((item:any)=>!item.issue));
+ const singleMethod=structuredClone(profiles);singleMethod.forEach(p=>p.outputs=p.outputs.filter(o=>o.method==='spc-my'));assert.ok(resolve({},singleMethod).equipment.items.every((item:any)=>item.issue?.includes('Accupoint')));assert.equal(resolve(select(),singleMethod).resolution.status,'conflict');
  assert.equal(resolve(select(),profiles,[{...template,revision:'layout-2'}]).resolution.status,'conflict');
  const changed=structuredClone(profiles);changed[0].revision='changed';assert.equal(resolve(select(),changed).resolution.status,'conflict');
  assert.equal(resolve(select(),profiles,[template],{...sample,source:{...sample.source,fingerprint:'changed-source'}}).resolution.status,'conflict');

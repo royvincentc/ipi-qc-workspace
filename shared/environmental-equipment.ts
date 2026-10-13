@@ -32,7 +32,6 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  const fail=(status:EnvironmentalSetup['resolution']['status'],message:string):EnvironmentalSetup=>({...base,resolution:{status,message}});
  if(selection.profileId&&!applicable.some(p=>p.id===selection.profileId))return fail('selection','The selected sampling pattern is unavailable for this activity.');
  const definitionProfiles=selection.profileId?applicable.filter(p=>p.id===selection.profileId):applicable;
- const activeMethods=methods.filter(method=>definitionProfiles.some(profile=>profile.outputs.some(output=>output.mode==='surface'&&output.method===method)));
  const sourceIssue=environmentalSourceIssue(sample);if(sourceIssue)return fail('conflict',sourceIssue);
  const definitions=new Map<string,{name:string;defaultQuantity:number;byMethod:Map<string,Definition[]>}>();
  for(const profile of definitionProfiles){
@@ -51,7 +50,7 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  const revision=JSON.stringify([sample.source.fingerprint,applicable.map(p=>[p.id,p.revision,p.outputs.map(o=>[o.id,o.templateId,o.templateRevision])])]);
  const items:EquipmentCatalog['items']=[...definitions].sort((a,b)=>a[0].localeCompare(b[0])).map(([id,entry])=>{
   let issue:string|undefined;const parameters:EquipmentCatalog['items'][number]['parameters']=[];
-  for(const method of activeMethods){
+  for(const method of methods){
    const choices=entry.byMethod.get(method)||[],label=method==='accupoint'?'Accupoint':'SPCMY';
    if(!choices.length){issue=issue||`${label} has no approved definition for ${entry.name}.`;continue;}
    if(new Set(choices.map(c=>c.signature)).size!==1){issue=issue||`Approved ${label} definitions conflict for ${entry.name}. Ask an administrator to reconcile the standards or layouts.`;continue;}
@@ -66,7 +65,7 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  const parsed=equipmentSelectionSchema.safeParse(selection);
  if(!parsed.success)return fail('conflict','Use whole-number equipment quantities from 0 to 300 and nonblank equipment labels.');
  const selectedQuantities=parsed.data.equipment?.filter(q=>q.quantity>0)||[];
- const usePatternDefaults=!selectedQuantities.length&&(Boolean(selection.profileId)||definitionProfiles.length===1)&&items.length>0&&items.every(item=>!item.issue);
+ const usePatternDefaults=!selectedQuantities.length&&Boolean(selection.profileId)&&items.length>0&&items.every(item=>!item.issue);
  const quantities:NonNullable<typeof parsed.data.equipment>=usePatternDefaults?items.filter(item=>item.defaultQuantity>0).map(item=>({id:item.id,quantity:item.defaultQuantity})):selectedQuantities;
  if(!quantities.length)return base;
  if(!usePatternDefaults&&selection.equipmentRevision!==revision)return fail('conflict','Approved equipment definitions or the source activity changed. Reload the equipment list before creating the session.');
@@ -81,7 +80,7 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  }
  if(new Set(labels.map(environmentalKey)).size!==labels.length)return fail('conflict','Equipment point labels must be unique across the session.');
  const outputs:EnvironmentalOutput[]=[],used=new Map<string,EnvironmentalProfile>();
- for(const method of activeMethods){
+ for(const method of methods){
   let output:EnvironmentalOutput|undefined;const instances:EnvironmentalOutput['instances']=[];
   for(const quantity of quantities){
    const definitionsForType=definitions.get(quantity.id)!.byMethod.get(method)!;
