@@ -23,12 +23,12 @@ export const environmentalProfileSchema=z.object({
 export type EnvironmentalOutput=z.infer<typeof environmentalOutputSchema>;
 export type EnvironmentalProfile=z.infer<typeof environmentalProfileSchema>&{id:string;revision:string;active:boolean;approvedBy:string;approvedAt:string;previousId?:string};
 export interface EquipmentQuantity {id:string;quantity:number;labels?:string[]}
-export interface EquipmentCatalog {revision:string;profileId?:string;items:{id:string;name:string;defaultQuantity:number;issue?:string;parameters:{method:string;test:string;label:string;criterion:string;unit:string}[]}[]}
+export interface EquipmentCatalog {revision:string;profileId?:string;items:{id:string;name:string;defaultQuantity:number;defaultLabels?:string[];issue?:string;parameters:{method:string;test:string;label:string;criterion:string;unit:string}[]}[]}
 export interface EquipmentSnapshot {selection:EquipmentQuantity[];sources:{id:string;revision:string;evidenceIds:string[]}[];revision:string}
-export interface EnvironmentalSelection {profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string}
+export interface EnvironmentalSelection {profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string;includeOpenPlate?:boolean}
 export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string;equipment?:EquipmentSnapshot}
 export interface LayoutResolution {status:'ready'|'missing'|'selection'|'conflict';message:string;choices?:{id:string;name:string}[]}
-export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[];equipment?:EquipmentCatalog;otherOutputs?:{profileId:string;outputId:string;name:string;mode:string}[]}
+export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[];equipment?:EquipmentCatalog;openPlate?:{included:boolean;issue?:string};otherOutputs?:{profileId:string;outputId:string;name:string;mode:string}[]}
 export {resolveEnvironmentalEquipment,equipmentSelectionSchema} from './environmental-equipment.js';
 /** Pair only surface methods in the same approved equipment pattern. */
 export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutput[]{

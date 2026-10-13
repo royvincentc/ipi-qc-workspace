@@ -62,5 +62,13 @@ test('one source activity creates a paired session with independent result revis
  await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[second.id,JSON.stringify(second)]);
  const secondCatalog=await resolveReportSetup(second.id,{},true);
  const later=await createAutomaticDraft(second.id,actor,{...selection,equipmentRevision:secondCatalog.environmental!.equipment!.revision});assert.notEqual(later.environmentalSession?.id,primary.environmentalSession?.id);
+ const withAir=await publishEnvironmentalProfile({...profile,name:'Fixture swab and air',outputs:[...profile.outputs,{...profile.outputs[1],id:'open-plate',name:'Envi Open Plate',mode:'open-plate',instances:[{...row,location:'Compounding room',unit:'cfu/plate',criterion:'Not more than 100 cfu/plate'}]}]},actor.email,profile.id,profile.revision);
+ const triple=await createAutomaticDraft(second.id,actor,{profileId:withAir.id});
+ assert.equal(triple.environmentalSession?.members.length,3);
+ const tripleReview=await environmentalSessionReview(triple.id);assert.equal(tripleReview.members[2].name,'Envi Open Plate');
+ const tripleSaved=await saveDraft(triple.id,triple.revision,triple.results,{...triple.fields,temperature:'25'},actor.email);
+ const air=await getDraft(tripleReview.members[2].draftId);assert.equal(air.fields.temperature,'25');assert.equal(air.results[0].value,'');assert.equal(air.results[0].unit,'cfu/plate');
+ await assert.rejects(generateEnvironmentalSession(tripleSaved.id,Object.fromEntries((await environmentalSessionReview(triple.id)).members.map(m=>[m.draftId,m.revision])),actor.email),/result required/);
+ const pairOnly=await createAutomaticDraft(second.id,actor,{profileId:withAir.id,includeOpenPlate:false});assert.equal(pairOnly.environmentalSession?.members.length,2);
  await db.query('DELETE FROM draft_revisions WHERE id=$1',[companion.id]);await db.query('DELETE FROM drafts WHERE id=$1',[companion.id]);await assert.rejects(environmentalSessionReview(primary.id),/companion draft is missing/);
 });

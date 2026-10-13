@@ -45,6 +45,37 @@ test('a selected single-method pattern cannot silently drop the required Accupoi
  const nonsequential=profile('nonsequential',['Stainless Drum 3','Stainless Drum 4']);nonsequential.outputs=nonsequential.outputs.filter(output=>output.method==='spc-my');
  assert.equal(resolve({profileId:nonsequential.id},[nonsequential]).equipment.items[0].defaultQuantity,2);
 });
+test('a selected SPCMY pattern retains its counts and labels while using scoped approved Accupoint definitions',()=>{
+ const selected=profile('selected',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 3','Stainless Drum 4']);
+ selected.outputs=selected.outputs.filter(o=>o.method==='spc-my');
+ const companion=profile('companion',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 2','Stainless Drum 3']);
+ companion.outputs=companion.outputs.filter(o=>o.method==='accupoint');
+ const setup=resolve({profileId:selected.id},[selected,companion]);
+ assert.equal(setup.resolution.status,'ready');
+ assert.deepEqual(setup.snapshot.equipment.selection.map((q:any)=>[q.id,q.quantity]),[['mixing tank',1],['spatula',2],['stainless drum',2]]);
+ assert.deepEqual(setup.pairedOutputs[0].instances.map((r:any)=>r.location),['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 3','Stainless Drum 4']);
+ assert.deepEqual(setup.snapshot.equipment.sources.map((p:any)=>p.id),['companion','selected']);
+ const conflicting=structuredClone(companion);conflicting.id='conflict';conflicting.outputs[0].instances[0].criterion='Not more than 50 RLU';
+ assert.notEqual(resolve({profileId:selected.id},[selected,companion,conflicting]).resolution.status,'ready');
+});
+test('detected open plate is a third session output and can be toggled off without losing either surface method',()=>{
+ const selected=profile('with-air',['Stainless Drum 3','Stainless Drum 4']);
+ selected.outputs.push({...selected.outputs[1],id:'open-plate',name:'Open plate',mode:'open-plate',instances:[{...row,location:'Compounding room',unit:'cfu/plate',criterion:'Not more than 100 cfu/plate'}]});
+ const setup=resolve({profileId:selected.id},[selected]);
+ assert.deepEqual(setup.pairedOutputs.map((o:any)=>o.name),['ACCUPOINT','SPCMY','Envi Open Plate']);
+ assert.equal(setup.pairedOutputs[2].instances.length,1);
+ const without=resolve({profileId:selected.id,includeOpenPlate:false},[selected]);
+ assert.deepEqual(without.pairedOutputs.map((o:any)=>o.method),['accupoint','spc-my']);
+});
+test('scanned SPC and MY rows on different numbered drums form one equipment panel without losing the four points',()=>{
+ const selected=profile('split-rows',['Stainless Drum 1','Stainless Drum 2','Stainless Drum 3','Stainless Drum 4']);
+ selected.outputs[1].instances=selected.outputs[1].instances.filter(r=>r.test===(['Stainless Drum 1','Stainless Drum 2'].includes(r.location)?'SPC':'MY'));
+ const setup=resolve({profileId:selected.id},[selected]);assert.equal(setup.resolution.status,'ready');
+ assert.equal(setup.equipment.items[0].defaultQuantity,4);assert.equal(setup.pairedOutputs[1].instances.length,8);
+ assert.deepEqual([...new Set(setup.pairedOutputs[1].instances.map((r:any)=>r.test))],['SPC','MY']);
+ selected.outputs[1].instances[1].criterion='Not more than 200 cfu/mL';
+ assert.notEqual(resolve({profileId:selected.id},[selected]).resolution.status,'ready');
+});
 test('invalid quantities, unknown equipment, duplicate labels and output overflow cannot form a session',()=>{
  for(const equipment of [[{id:'stainless drum',quantity:-1}],[{id:'stainless drum',quantity:1.5}],[{id:'unknown',quantity:1}],[{id:'stainless drum',quantity:151}],[{id:'stainless drum',quantity:2,labels:['Drum 3','Drum 3']}],[{id:'stainless drum',quantity:1},{id:'stainless drum',quantity:2}]]){
   assert.notEqual(resolve({...select(),equipment}).resolution.status,'ready');

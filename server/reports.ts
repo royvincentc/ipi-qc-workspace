@@ -419,7 +419,7 @@ export async function createAutomaticDraft(sampleId:string,actor:User,selection:
  if(!setup.template)throw new Fault(409,setup.layoutResolution?.message||'No compatible template');
  const pair=setup.environmental?.pairedOutputs,snapshot=setup.environmental?.snapshot;
  if(!pair?.length||!snapshot)return createDraft(sampleId,setup.specification.id,setup.template.id,actor,setup.specification,snapshot);
- // Prepare both outputs before persisting either. A failed companion cannot leave a half-created session.
+ // Prepare every output before persisting any. A failed companion cannot leave a half-created session.
  const drafts:Draft[]=[];
  for(const output of pair){
   const tests=environmentalCriteria(snapshot.profile,output);
@@ -427,7 +427,7 @@ export async function createAutomaticDraft(sampleId:string,actor:User,selection:
   drafts.push(await createDraft(sampleId,specification.id,output.templateId,actor,specification,{...snapshot,output},false));
  }
  if(snapshot.equipment){const active=await environmentalProfiles();if(snapshot.equipment.sources.some(source=>!active.some(p=>p.id===source.id&&p.active&&p.revision===source.revision)))throw new Fault(409,'Approved equipment definitions changed during setup. Reload before creating the session.');}
- const session={id:randomUUID(),members:drafts.map(d=>({draftId:d.id,outputId:d.environmentalSnapshot!.output.id,name:d.environmentalSnapshot!.output.method==='accupoint'?'Accupoint':'SPCMY',method:d.environmentalSnapshot!.output.method}))};
+ const session={id:randomUUID(),members:drafts.map(d=>({draftId:d.id,outputId:d.environmentalSnapshot!.output.id,name:d.environmentalSnapshot!.output.mode==='open-plate'?'Envi Open Plate':d.environmentalSnapshot!.output.method==='accupoint'?'Accupoint':'SPCMY',method:d.environmentalSnapshot!.output.method}))};
  for(const draft of drafts)draft.environmentalSession=session;
  await locked('environmental-session:'+session.id,async tx=>{
   await tx.query('BEGIN');try{
@@ -461,7 +461,7 @@ export async function createDraft(sampleId:string,specId:string,templateId:strin
 export async function saveDraft(id:string,expected:number,results:Result[],fields:Record<string,string>,actor:string){
  const initial=await getDraft(id),ids=(initial.environmentalSession?.members.map(m=>m.draftId)||[id]).sort();
  return locked('draft:'+ids[0],async(tx)=>{
-  if(!demo&&ids.length>1)await tx.query('SELECT pg_advisory_lock(hashtext($1))',['draft:'+ids[1]]);
+  if(!demo)for(const companionId of ids.slice(1))await tx.query('SELECT pg_advisory_lock(hashtext($1))',['draft:'+companionId]);
   try{const companions=initial.environmentalSession?await environmentalSessionDrafts(id,false):[];
 const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!old)throw new Fault(404,'Draft not found');if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');const keys=old.results.map(resultKey);if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');const preservedResults=results.map(r=>{const original=old.results.find(x=>resultKey(x)===resultKey(r));if(original&&['test','location','stage','replicate','channel','block'].some(k=>(r as any)[k]!== (original as any)[k]))throw new Fault(400,'Result sampling locations and test identities cannot be changed');const preserved={...r,sourceValue:original?.sourceValue,sourceHeader:original?.sourceHeader};const test=old.specification.tests.find(t=>resultKey(t)===resultKey(r));return test&&overallAnalystRemarks(old)!==undefined?updateResultRemark(test,original||preserved,{...preserved,remarkMode:r.remarkMode||(r.remarks?'manual':'automatic')}):preserved;});const shared=companions.length?editedSessionDetails(sharedSessionDetails(companions),fields):editedSessionDetails(sharedSessionDetails([old]),fields);const nextFields={...fields,...shared};const overall=overallAnalystRemarks({...old,results:preservedResults});if(overall!==undefined){nextFields.overallRemarks=overall;nextFields['overall.remarks']=overall;}const analystInput=firstText(old.sample.fields.analyzedBy,old.sample.fields.analyst,old.resultSource?.analyst,nextFields.analyst,nextFields.micAnalyst);if(analystInput){const connections=await setting('connections',defaultConnections);const details=await resolveAnalystDetails(connections.specifications||defaultConnections.specifications,analystInput);nextFields.analyst=firstText(details.analyst,analystInput);nextFields.mic=firstText(details.mic,nextFields.mic);nextFields.micAnalyst=nextFields.analyst;}const d={...old,results:preservedResults,fields:nextFields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};const templates=(await tx.query('SELECT data FROM templates')).rows.map(row=>row.data as Template);const isEnvironmental=d.configurationSnapshot?.sampleTypes.some(t=>t.id===d.sample.category&&t.register==='environmental');const routed=isEnvironmental?undefined:await routedTemplate(d.sample,d.results,templates);if(routed){d.templateId=routed.id;d.templateRevision=routed.revision;d.templateSnapshot=structuredClone(routed);}await tx.query('BEGIN');try{await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[d.revision,JSON.stringify(d),id]);await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[id,d.revision,JSON.stringify(d)]);for(const companion of companions.filter(c=>c.id!==id)){
  const companionFields={...companion.fields,...shared};
@@ -469,7 +469,7 @@ const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.
  const next={...companion,fields:companionFields,revision:companion.revision+1,analyst:actor,updatedAt:d.updatedAt};
  await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[next.revision,JSON.stringify(next),next.id]);
  await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[next.id,next.revision,JSON.stringify(next)]);
- }await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision,templateId:d.templateId,templateRevision:d.templateRevision});return d;}finally{if(!demo&&ids.length>1)await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+ids[1]]);}});}
+ }await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision,templateId:d.templateId,templateRevision:d.templateRevision});return d;}finally{if(!demo)for(const companionId of ids.slice(1).reverse())await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+companionId]);}});}
 function firstText(...values:unknown[]){return values.map(value=>String(value??'').trim()).find(Boolean)||'';}
 async function resolveAnalystDetails(spreadsheetUrl:string,analysts:string){return demo?{analyst:analysts,mic:''}:readMicAnalystDetails(spreadsheetUrl,analysts);}
 function formatReportDate(value:unknown,includeTime=false){
@@ -560,12 +560,13 @@ async function environmentalSessionDrafts(id:string,share=true):Promise<Draft[]>
  const draft=(await db.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;
  if(!draft)throw new Fault(404,'Draft not found');
  const session=draft.environmentalSession;
- if(!session||session.members.length!==2||new Set(session.members.map(m=>m.draftId)).size!==2||!session.members.some(m=>m.draftId===id))throw new Fault(409,'This draft has no paired surface-swab session. Create a new draft from a pattern containing Accupoint and SPCMY.');
+ if(!session||![2,3].includes(session.members.length)||new Set(session.members.map(m=>m.draftId)).size!==session.members.length||!session.members.some(m=>m.draftId===id))throw new Fault(409,'This draft has no paired surface-swab session. Create a new draft from a pattern containing Accupoint and SPCMY.');
  const rows=(await db.query('SELECT data FROM drafts WHERE id=ANY($1::text[])',[session.members.map(m=>m.draftId)])).rows;
  const drafts=session.members.map(member=>rows.find(row=>row.data.id===member.draftId)?.data as Draft|undefined);
- if(drafts.some(d=>!d||d.sampleId!==draft.sampleId||d.sample.source.fingerprint!==draft.sample.source.fingerprint||d.environmentalSession?.id!==session.id||JSON.stringify(d.environmentalSession.members)!==JSON.stringify(session.members)||d.environmentalSnapshot?.profile.revision!==draft.environmentalSnapshot?.profile.revision||d.environmentalSnapshot?.output.mode!=='surface'))throw new Fault(409,'A companion draft is missing or does not match this swabbing session. Create a new paired session.');
+ if(drafts.some(d=>!d||d.sampleId!==draft.sampleId||d.sample.source.fingerprint!==draft.sample.source.fingerprint||d.environmentalSession?.id!==session.id||JSON.stringify(d.environmentalSession.members)!==JSON.stringify(session.members)||d.environmentalSnapshot?.profile.revision!==draft.environmentalSnapshot?.profile.revision||!['surface','open-plate'].includes(d.environmentalSnapshot?.output.mode||'')))throw new Fault(409,'A companion draft is missing or does not match this swabbing session. Create a new paired session.');
  const complete=drafts as Draft[];
- if(new Set(complete.map(d=>d.environmentalSnapshot?.output.method)).size!==2||!complete.some(d=>d.environmentalSnapshot?.output.method==='accupoint')||!complete.some(d=>d.environmentalSnapshot?.output.method==='spc-my'))throw new Fault(409,'Both Accupoint and SPCMY are required for this surface-swab session.');
+ const surface=complete.filter(d=>d.environmentalSnapshot?.output.mode==='surface');
+ if(surface.length!==2||!surface.some(d=>d.environmentalSnapshot?.output.method==='accupoint')||!surface.some(d=>d.environmentalSnapshot?.output.method==='spc-my')||complete.filter(d=>d.environmentalSnapshot?.output.mode==='open-plate').length!==complete.length-2)throw new Fault(409,'Both Accupoint and SPCMY are required for this surface-swab session.');
  const fields=sharedSessionDetails(complete);
  return share?complete.map(d=>({...d,fields:{...d.fields,...fields}})):complete;
 }
@@ -576,19 +577,19 @@ export async function getDraft(id:string):Promise<Draft>{
 }
 export async function environmentalSessionReview(id:string){
  const drafts=await environmentalSessionDrafts(id);
- return {id:drafts[0].environmentalSession!.id,members:drafts.map(d=>({draftId:d.id,name:d.environmentalSnapshot!.output.method==='accupoint'?'Accupoint':'SPCMY',method:d.environmentalSnapshot!.output.method,revision:d.revision,issues:reportIssues(d)}))};
+ return {id:drafts[0].environmentalSession!.id,members:drafts.map(d=>({draftId:d.id,name:d.environmentalSnapshot!.output.mode==='open-plate'?'Envi Open Plate':d.environmentalSnapshot!.output.method==='accupoint'?'Accupoint':'SPCMY',method:d.environmentalSnapshot!.output.method,revision:d.revision,issues:reportIssues(d)}))};
 }
 export async function generateEnvironmentalSession(id:string,revisions:Record<string,number>,actor:string){
  const initial=await environmentalSessionDrafts(id),ids=initial.map(d=>d.id).sort();
- if(Object.keys(revisions).length!==ids.length||ids.some(key=>!Number.isInteger(revisions[key])))throw new Fault(400,'Review both draft revisions before generating the session reports.');
- // One global demo lock; on PostgreSQL acquire both draft locks in a stable order.
+ if(Object.keys(revisions).length!==ids.length||ids.some(key=>!Number.isInteger(revisions[key])))throw new Fault(400,'Review both draft revisions and any open plate revision before generating the session reports.');
+ // One global demo lock; on PostgreSQL acquire all draft locks in a stable order.
  return locked('draft:'+ids[0],async tx=>{
-  if(!demo)await tx.query('SELECT pg_advisory_lock(hashtext($1))',['draft:'+ids[1]]);
+  if(!demo)for(const companionId of ids.slice(1))await tx.query('SELECT pg_advisory_lock(hashtext($1))',['draft:'+companionId]);
   try{
    const drafts=await environmentalSessionDrafts(id);
    for(const draft of drafts){
-    const name=draft.environmentalSnapshot!.output.method==='accupoint'?'Accupoint':'SPCMY';
-    if(draft.revision!==revisions[draft.id])throw new Fault(409,`${name} changed. Review both current drafts before generation.`);
+    const name=draft.environmentalSnapshot!.output.mode==='open-plate'?'Envi Open Plate':draft.environmentalSnapshot!.output.method==='accupoint'?'Accupoint':'SPCMY';
+    if(draft.revision!==revisions[draft.id])throw new Fault(409,`${name} changed. Review all current drafts before generation.`);
     const issues=reportIssues(draft);
     if(issues.length)throw new Fault(422,`${name}: ${issues.join('; ')}`);
    }
@@ -597,10 +598,10 @@ export async function generateEnvironmentalSession(id:string,revisions:Record<st
     try{files.push(await generateReport(draft.id,draft.revision,actor));}
     catch(error){errors.push(`${draft.environmentalSnapshot!.output.name}: ${(error as Error).message}`);}
    }
-   const complete=files.length===2&&errors.length===0;
+   const complete=files.length===drafts.length&&errors.length===0;
    await audit(actor,'environmental_session_reports_generated',drafts[0].environmentalSession!.id,{revisions,fileIds:files.map(f=>f.id),complete,errors});
    return {sessionId:drafts[0].environmentalSession!.id,complete,files,errors};
-  }finally{if(!demo)await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+ids[1]]);}
+  }finally{if(!demo)for(const companionId of ids.slice(1).reverse())await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+companionId]);}
  });
 }
 async function reportArchiveDestination(file:any,actor:string,cache=new Map<string,string>()){
@@ -657,7 +658,7 @@ async function generateReport(id:string,revision:number,actor:string){
  }
  const fileId=randomUUID();await mkdir(privatePath('generated'),{recursive:true});const output=privatePath(`generated/${fileId}.docx`),payloadPath=privatePath(`generated/${fileId}.json`);const fields=reportTemplateFields(renderDraft,t);
  const rows=reportRows(renderDraft,t).map(({index,...row})=>{for(const [k,v]of Object.entries(row))fields[`result.${index}.${k}`]=String(v??'');return row;});
- await writeFile(payloadPath,JSON.stringify({fields,rows,blocks:Object.fromEntries([...new Set(rows.map(r=>r.block||'tests'))].map(block=>[block,rows.filter(r=>(r.block||'tests')===block)])),renderOptions:{environmental:!!d.environmentalSnapshot,rowGrouping:(t.manifest as any).rowGrouping,blocks:t.manifest.blocks,adaptiveBlocks:t.manifest.adaptiveBlocks===true},reportSettings:d.configurationSnapshot?.reports}));let renderTemplate=privatePath(t.path);if(d.environmentalSnapshot){renderTemplate=privatePath(`generated/${fileId}-layout.docx`);await worker(['environmental-layout','--input',privatePath(t.path),'--output',renderTemplate,'--family',t.family]);}const args=['generate','--input',renderTemplate,'--payload',payloadPath,'--output',output];await worker(args);const actorRecord=(await db.query('SELECT name FROM users WHERE email=$1',[actor])).rows[0];let file:any={renderContractRevision:'report-purpose-v5',sessionDetailsFingerprint,id:fileId,name:`${d.sample.batch||'Unknown'} - ${d.sample.name||'Unknown'}${d.environmentalSnapshot?' - '+d.environmentalSnapshot.output.name:''}.docx`.replace(/[<>:"/\\|?*]+/g, '_'),kind:'report',path:`generated/${fileId}.docx`,createdAt:new Date().toISOString(),sampleId:d.sampleId,ml:d.sample.ml,draftId:id,resultRevision:d.revision,specificationRevision:d.specification.revision,templateRevision:d.templateRevision,reportAnalyst,sourceSnapshot:d.sample.source,sourceChanged,configurationRevision:d.configurationRevision,sha256:createHash('sha256').update(await readFile(output)).digest('hex'),externalReviewRequired:true,environmentalSessionId:d.environmentalSession?.id,monitoringMethod:d.environmentalSnapshot?.output.method,category:d.sample.category,demo,analystEmail:actor,analystName:actorRecord?.name||actor};await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[fileId,JSON.stringify(file)]);await retainReportArtifact(fileId,'docx',await readFile(output));await audit(actor,'report_generated',fileId,{draftId:id,revision,reportAnalyst});if(!demo&&connections.reportFolder){try{file=await syncReportToDrive(file,actor);}catch(e:any){file.driveSyncError=String(e.message||e);await db.query('UPDATE files SET data=$1 WHERE id=$2',[JSON.stringify(file),fileId]);await audit(actor,'report_drive_sync_failed',fileId,{message:file.driveSyncError});}}return file;}
+ await writeFile(payloadPath,JSON.stringify({fields,rows,blocks:Object.fromEntries([...new Set(rows.map(r=>r.block||'tests'))].map(block=>[block,rows.filter(r=>(r.block||'tests')===block)])),renderOptions:{environmental:!!d.environmentalSnapshot,rowGrouping:(t.manifest as any).rowGrouping,blocks:t.manifest.blocks,adaptiveBlocks:t.manifest.adaptiveBlocks===true},reportSettings:d.configurationSnapshot?.reports}));let renderTemplate=privatePath(t.path);if(d.environmentalSnapshot){renderTemplate=privatePath(`generated/${fileId}-layout.docx`);await worker(['environmental-layout','--input',privatePath(t.path),'--output',renderTemplate,'--family',t.family]);}const args=['generate','--input',renderTemplate,'--payload',payloadPath,'--output',output];await worker(args);const actorRecord=(await db.query('SELECT name FROM users WHERE email=$1',[actor])).rows[0];let file:any={renderContractRevision:'report-purpose-v5',sessionDetailsFingerprint,id:fileId,name:`${d.sample.batch||'Unknown'} - ${d.sample.name||'Unknown'}${d.environmentalSnapshot?' - '+d.environmentalSnapshot.output.name:''}.docx`.replace(/[<>:"/\\|?*]+/g, '_'),kind:'report',path:`generated/${fileId}.docx`,createdAt:new Date().toISOString(),sampleId:d.sampleId,ml:d.sample.ml,draftId:id,resultRevision:d.revision,specificationRevision:d.specification.revision,templateRevision:d.templateRevision,reportAnalyst,sourceSnapshot:d.sample.source,sourceChanged,configurationRevision:d.configurationRevision,sha256:createHash('sha256').update(await readFile(output)).digest('hex'),externalReviewRequired:true,environmentalSessionId:d.environmentalSession?.id,monitoringMethod:d.environmentalSnapshot?.output.method,monitoringMode:d.environmentalSnapshot?.output.mode,category:d.sample.category,demo,analystEmail:actor,analystName:actorRecord?.name||actor};await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[fileId,JSON.stringify(file)]);await retainReportArtifact(fileId,'docx',await readFile(output));await audit(actor,'report_generated',fileId,{draftId:id,revision,reportAnalyst});if(!demo&&connections.reportFolder){try{file=await syncReportToDrive(file,actor);}catch(e:any){file.driveSyncError=String(e.message||e);await db.query('UPDATE files SET data=$1 WHERE id=$2',[JSON.stringify(file),fileId]);await audit(actor,'report_drive_sync_failed',fileId,{message:file.driveSyncError});}}return file;}
 
 
   export async function deleteDraft(id:string,actor:string){return locked('draft:'+id,async(tx)=>{const d=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as any;if(!d)throw new Fault(404,'Draft not found');await tx.query('DELETE FROM draft_revisions WHERE id=$1',[id]);await tx.query('DELETE FROM drafts WHERE id=$1',[id]);const files=(await tx.query("SELECT id, data FROM files WHERE data->>'draftId'=$1",[id])).rows;for(const f of files){await tx.query('DELETE FROM files WHERE id=$1',[f.id]);try{await unlink(privatePath(f.data.path));await unlink(privatePath(f.data.pdf));}catch(e){}}await audit(actor,'draft_deleted',id,{ml:d.sample?.ml});});}
