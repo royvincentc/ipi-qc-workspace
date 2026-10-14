@@ -3,6 +3,21 @@ import assert from 'node:assert/strict';
 import { resolveApplicabilityMatches, historicalCriteria } from '../server/reports.js';
 import * as reports from '../server/reports.js';
 
+test('raw material drafts pin the stock or direct supplier template without changing source metadata',async()=>{
+ const stock={id:'rm',name:'RM',category:'RM',revision:'stock-1',verified:true,manifest:{tokens:[]}};
+ const direct={...stock,id:'rmqa',name:'RMQA',revision:'direct-1'};
+ for(const supplier of ['Bodega/Stock','Direct Supplier','PRDD',"Pure Essence Int'l. Inc.",'Eunice (Salicylates and Chemical and Private Limited)']){
+  const sample={category:'RM',fields:{supplier}};
+  const draft={sample,specification:{tests:[]},results:[],fields:{}};
+  const initialized=await reports.initializeDraftReport(draft as any,[stock,direct] as any);
+  const expected=supplier==='Bodega/Stock'?stock:direct;
+  assert.equal(initialized.templateId,expected.id);
+  assert.equal(initialized.templateRevision,expected.revision);
+  assert.equal(initialized.templateSnapshot?.name,expected.name);
+  assert.deepEqual(initialized.sample,sample);
+ }
+});
+
 test('initial imported SFG remarks pin the QA format before a clean draft can be generated',async()=>{
  const initialize=(reports as any).initializeDraftReport;assert.equal(typeof initialize,'function');
  const standard={id:'sfg',name:'SFG',category:'SFG',revision:'standard-1',verified:true,manifest:{tokens:[]}},qa={...standard,id:'sfgqa',name:'SFGQA',revision:'qa-1'};

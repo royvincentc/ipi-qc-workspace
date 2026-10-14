@@ -36,8 +36,8 @@ export function reportFormatName(sample:Pick<Sample,'category'|'fields'>,results
  if(sample.category==='RM'){
   const supplier=firstText(sample.fields.supplier,(sample.fields as any).Supplier).toLocaleLowerCase();
   if(supplier==='bodega/stock')return 'RM';
-  if(supplier==='direct supplier')return 'RMQA';
-  throw new Fault(409,'Raw Material report format requires Supplier to be Bodega/Stock or Direct Supplier.');
+  if(supplier)return 'RMQA';
+  throw new Fault(409,'Raw Material Supplier is missing. Enter Bodega/Stock, a supplier name, or Direct Supplier in the source sheet.');
  }
  return null;
 }

@@ -121,7 +121,7 @@ test('report template aliases populate the approved custom template tags',()=>{
  assert.equal(fields['date.mfd'],'01/01/2026');assert.equal(fields['exp.date'],'01/01/2028');assert.equal(fields['fill.vol'],'60 mL');assert.equal(fields['requested.by'],'QC');assert.equal(fields.logbook,'MIC-42 p.7');assert.equal(fields['d.release'],'09/29/2026');assert.match(fields['t.release'],/^\d{2}:\d{2} (AM|PM)$/);
 });
 
-test('report format routing follows category and explicit Supplier values',()=>{
+test('report format routing follows category and accepts named direct suppliers',()=>{
  const source=(category:string,supplier='')=>({category,fields:{supplier}});
  assert.equal(reportFormatName(source('ST') as any),'STAB');
  assert.equal(reportFormatName(source('FG') as any),'FG');
@@ -130,7 +130,16 @@ test('report format routing follows category and explicit Supplier values',()=>{
  assert.equal(reportFormatName(source('SFG') as any,[{remarks:'Failed'} as any]),'SFGQA');
  assert.equal(reportFormatName(source('RM','Bodega/Stock') as any),'RM');
  assert.equal(reportFormatName(source('RM','Direct Supplier') as any),'RMQA');
- assert.throws(()=>reportFormatName(source('RM') as any),/Supplier/);
+ for(const supplier of ['PRDD',"Pure Essence Int'l. Inc.",'Eunice (Salicylates and Chemical and Private Limited)','Another supplier',' direct supplier ']){
+  assert.equal(reportFormatName(source('RM',supplier) as any),'RMQA');
+ }
+ assert.equal(reportFormatName(source('RM',' BODEGA/STOCK ') as any),'RM');
+ assert.equal(reportFormatName({category:'RM',fields:{Supplier:'PRDD'}} as any),'RMQA');
+ assert.equal(reportFormatName({category:'RM',fields:{supplier:' ',Supplier:'Bodega/Stock'}} as any),'RM');
+ assert.throws(()=>reportFormatName({category:'RM',fields:{}} as any),/Supplier is missing/);
+ for(const supplier of ['', '   ']){
+  assert.throws(()=>reportFormatName(source('RM',supplier) as any),/Supplier is missing/);
+ }
 });
 
 test('new report fields map from sample metadata and overall remarks use final analyst decisions',()=>{

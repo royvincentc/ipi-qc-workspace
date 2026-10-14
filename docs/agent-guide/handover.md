@@ -401,6 +401,7 @@
 ## Correct archive analyst identity — 2026-10-09
 - TASK-20261009-010 follows the owner's correction: use the generated report's Analyzed by value, not the authenticated uploader account. First folder contains the report analyst name only; legacy fallback uses the exact pinned draft, with missing names reported individually. Account attribution is preserved separately.
 - 132 application tests and build/typecheck pass. No UI layout changes, report content edits or laboratory result/source changes. Owner authorized commit/push and correction of the archive hierarchy; publish and rerun the existing archive organization after deployment.
+- Verified completion: cf199475b747fa1fc7c0ff397274e35b1cbdaf9e is pushed and live (dep-db4fhqeq1p3s73a1ssag). Corrected organization finished at 22:29:42 Asia/Taipei; 31 new successful folder-change audit events bring the total from 31 to 62. All existing archived reports now route by saved Analyzed by, with uploader attribution separate. Post-publication evidence is local.
 
 
 ## Shared-tool database transfer repair — 2026-10-11 Asia/Taipei
@@ -414,3 +415,9 @@
 - TASK-20261011-002 removes the 64-image refresh-manifest cutoff and waits for IndexedDB before snapshot requests. New authenticated read endpoint POST /api/collaboration/:id/snapshot uses a bounded full cache manifest, 204 for unchanged revisions and DB-side known-image filtering. Existing user-scoped cache/outbox and GET/export APIs remain intact.
 - Three collaboration integration workflows pass, including 70 cached images and real session revocation/origin controls; TypeScript and Vite production build pass. Real browser reload returned 16-byte revision checks with no image data; a remote title change returned a 323-byte snapshot with zero images, and the heading updated. No visual layout changes, schema migration or production record writes.
 - Next: publish and verify exact live Render build. First loads/new images, save/export operations, small revision checks and presence still consume transfer; cleared/evicted browser storage requires downloading again. Prior unrelated local docs/task.md edits remain unstaged.
+- Publication verified 2026-10-11 09:55 Asia/Taipei: browser-cache update 649941b2e4fd601b3cc7ad031a39e66a3c666b7f is live on Render dep-db5enmk9v7es7392auhg; public health and exact build identity confirmed. Operational daily transfer savings remain to be measured under normal use.
+
+## Named Raw Material supplier routing - 2026-10-15 Asia/Taipei
+- TASK-20261015-001 fixes named direct suppliers being rejected by reportFormatName. Bodega/Stock continues to use RM; every other nonblank Supplier uses RMQA, including PRDD, Pure Essence Int'l. Inc., Eunice and the generic Direct Supplier label. Blank/missing Supplier still blocks with clear guidance.
+- All 30 focused configuration/report tests passed, including actual draft template pinning and unchanged source metadata; regression failed before repair. Scoped diff whitespace check passed. No frontend/layout/template or live-source changes.
+- Fix remains local and uncommitted; deployment and live sample verification remain pending. Existing unrelated local edits are preserved. Full suite/build/browser were not run.
