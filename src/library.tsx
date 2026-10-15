@@ -1,4 +1,3 @@
-import Dialog from './dialog';
 import {Link} from 'react-router-dom';
 import {useContext,useEffect,useState} from 'react';
 import {ArrowUpRight,CloudUpload,FileText,RefreshCw,FolderTree} from 'lucide-react';
@@ -13,7 +12,7 @@ const kindLabels:Record<string,string>={
 };
 
 export default function FileLibrary(){
- const [q,setQ]=useState(''),[search,setSearch]=useState(''),[kind,setKind]=useState(''),[sort,setSort]=useState('numeric'),[page,setPage]=useState(1),[busy,setBusy]=useState(false),[syncing,setSyncing]=useState(''),[preview,setPreview]=useState<any>();
+ const [q,setQ]=useState(''),[search,setSearch]=useState(''),[kind,setKind]=useState(''),[sort,setSort]=useState('numeric'),[page,setPage]=useState(1),[busy,setBusy]=useState(false),[syncing,setSyncing]=useState('');
  const notify=useContext(Notice),{user,demo}=useContext(Session);
  const [syncFailures,setSyncFailures]=useState<{id:string;name:string;error:string}[]>([]);
  useEffect(()=>{const t=setTimeout(()=>{setSearch(q);setPage(1);},250);return()=>clearTimeout(t);},[q]);
@@ -42,14 +41,16 @@ export default function FileLibrary(){
       <div className="library-document"><strong title={f.name}>{f.name}</strong><small>{kindLabels[f.kind]||'Document'}{f.resultRevision?` · Result revision ${f.resultRevision}`:''}</small>{f.driveSyncError?<small className="library-sync-error">{f.driveSyncError}</small>:null}</div>
       <div className="library-record-state">{f.driveSyncError?<Badge tone="amber">Drive sync needs attention</Badge>:f.externalReviewRequired?<Badge tone="amber">External review required</Badge>:f.driveSyncedAt?<Badge tone="green">Synced to Drive</Badge>:<span className="library-state-quiet">Available</span>}</div>
       <div className="library-actions">
-       {f.hasPreview?<button className="button secondary small" aria-label={`Preview ${f.name}`} onClick={()=>setPreview(f)}>Preview</button>:null}
-       {f.kind==='report'&&f.draftId&&f.driveSyncError?<Link className="button secondary small" to={`/reports/${f.draftId}`} aria-label={`Open saved draft for ${f.name}`}>Open saved draft</Link>:null}{f.sourceUrl?<><a className="button secondary small" aria-label={`Open ${f.name} in Drive`} href={f.sourceUrl} target="_blank" rel="noreferrer">Open in Drive <ArrowUpRight size={14}/></a>{f.kind==='report'?<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>Download</a>:null}</>:f.kind==='report'&&user.role!=='viewer'&&!demo?<button className="button secondary small" aria-label={`Sync ${f.name} to Drive`} disabled={!!syncing} onClick={()=>syncReport(f.id)}><CloudUpload size={14}/>{syncing===f.id?'Syncing…':'Sync to Drive'}</button>:<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>Download</a>}
+       {f.hasPreview?<a className="button secondary small" aria-label={`Preview PDF for ${f.name}`} href={`/api/files/${f.id}/preview`} target="_blank" rel="noopener noreferrer">Preview PDF</a>:null}
+       {f.kind==='report'&&f.draftId&&f.driveSyncError?<Link className="button secondary small" to={`/reports/${f.draftId}`} aria-label={`Open saved draft for ${f.name}`}>Open saved draft</Link>:null}
+       {f.sourceUrl?<a className="button secondary small" aria-label={`Open ${f.name} in Drive`} href={f.sourceUrl} target="_blank" rel="noreferrer">Open in Drive <ArrowUpRight size={14}/></a>:null}
+       {f.kind==='report'||!f.sourceUrl?<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>{f.kind==='report'?'Download DOCX':'Download'}</a>:null}
+       {!f.sourceUrl&&f.kind==='report'&&user.role!=='viewer'&&!demo?<button className="button secondary small" aria-label={`Sync ${f.name} to Drive`} disabled={!!syncing} onClick={()=>syncReport(f.id)}><CloudUpload size={14}/>{syncing===f.id?'Syncing…':'Sync to Drive'}</button>:null}
       </div>
      </article>)}
     </div>
     <div className="pagination library-pagination"><span>{data.total} {data.total===1?'document':'documents'} <span className="library-page-position">· Page {data.page} of {pageCount}</span></span><div className="library-page-actions"><button className="button secondary small" disabled={page===1} onClick={()=>setPage(p=>p-1)}>Previous</button><button className="button secondary small" disabled={page*data.limit>=data.total} onClick={()=>setPage(p=>p+1)}>Next</button></div></div>
    </>:<Empty title={q||kind?'No documents match these filters':'Your documents will appear here'}>Generate a report or ask an administrator to connect an authorized library folder.</Empty>}
   </section>
-  {preview?<Dialog title={preview.name} onClose={()=>setPreview(undefined)} wide><iframe title="Document preview" src={`/api/files/${preview.id}/preview`}/></Dialog>:null}
  </div>;
 }

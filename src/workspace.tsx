@@ -1,7 +1,7 @@
 import {useContext,useEffect,useRef,useState} from 'react';
 import type {KeyboardEvent} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
-import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,Activity,SlidersHorizontal,ChevronRight,FolderOpen} from 'lucide-react';
+import {Search,Plus,ArrowRight,FileText,FlaskConical,RefreshCw,Activity,SlidersHorizontal,ChevronRight,FolderOpen,ExternalLink,Download} from 'lucide-react';
 import {api} from './api';
 import {useCatalog,useConfiguration,useUnsaved} from './configuration';
 import {LabMotionMark,PageTitle,Field,ErrorBox,Loading,Badge,Empty,Notice,Session,useLoad,useCanEdit,SampleList} from './ui';
@@ -110,7 +110,7 @@ export function Dashboard(){
           <div className={`dashboard-file-preview ${selectedFile?'has-selected-file':''}`}>
             {selectedFile?<>
               <div className="selected-file-heading"><FileText size={21}/><span><strong>{selectedFile.name}</strong><small>{selectedFile.kind==='report'?'Generated report':'Reference file'}{selectedFile.externalReviewRequired?' · External review required':''}</small></span><button className="file-close" type="button" aria-label="Clear file preview" onClick={()=>setSelectedFile(undefined)}>×</button></div>
-              {selectedFile.hasPreview?<iframe title={`Preview of ${selectedFile.name}`} src={`/api/files/${selectedFile.id}/preview#toolbar=0&navpanes=0`}/>:<p className="file-no-preview">Preview unavailable. <a href={`/api/files/${selectedFile.id}/download`}>Download the file</a>.</p>}
+              <div className="selected-file-preview-actions">{selectedFile.hasPreview?<a className="button primary" href={`/api/files/${selectedFile.id}/preview`} target="_blank" rel="noopener noreferrer"><ExternalLink size={16}/>Preview PDF in new tab</a>:null}{selectedFile.sourceUrl?<a className="button secondary" href={selectedFile.sourceUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={16}/>Open in Drive</a>:null}{selectedFile.kind==='report'||!selectedFile.sourceUrl?<a className="button secondary" href={`/api/files/${selectedFile.id}/download`}><Download size={16}/>Download {selectedFile.kind==='report'?'DOCX':'file'}</a>:null}</div>
             </>:fileError?<p className="file-state" role="alert">Files could not be loaded. Open the File Library to retry.</p>:!fileListing?<p className="file-state" role="status">Loading {filesTab==='reference'?'reference files':'generated reports'}…</p>:fileListing.items.length?<div className="dashboard-file-list" role="list" aria-label={filesTab==='reference'?'Reference files':'Generated reports'}>
               {fileListing.items.slice(0,2).map((file:any)=><button key={file.id} type="button" className="dashboard-file-row" role="listitem" onClick={()=>setSelectedFile(file)}><FileText size={20}/><span><strong>{file.name}</strong><small>{file.ml||'No linked control number'}{file.externalReviewRequired?' · External review required':''}</small></span><ChevronRight size={18}/></button>)}
               <Link className="dashboard-files-all" to="/library">Open all {filesTab==='reference'?'reference files':'generated reports'} <ArrowRight size={14}/></Link>

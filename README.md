@@ -23,15 +23,27 @@ In Settings, paste the Incoming, Environmental Monitoring and Specifications sha
 
 1. In Settings → Report references, inspect a historical DOCX. Confirm product name, exact testing context, test identities, criteria, units, explicit report date and date basis. The applicability spreadsheet decides which tests are required; historical reports provide candidate criteria. A report with an ambiguous date or criterion requires manual resolution.
 2. In Settings → Standardized templates, choose an inspected reference and prepare a copy. Download and inspect it in Word. The copy retains form geometry and recurring tables while recognized sample values, actual results and sign-off entries become blank placeholders. Confirm the binding of **every numbered result row** to its test, location, stage and replicate. The original historical file is untouched. Register only after inspecting sanitization, layout and continuous page numbering. A separately supplied blank DOCX can also be registered.
-3. In Analysis reports, select the sample and confirm its product, batch and context. Enter actual results manually and save revisions. Review the pinned criteria, results, missing fields and rendered PDF before downloading a DOCX. Generation never changes the source status or releases the sample.
+3. In Analysis reports, select the sample and confirm its product, batch and context. Enter actual results manually and save revisions. Generate the DOCX, then open Preview in a new browser tab to review its PDF. Download the original DOCX independently for external review and editing. Generation never changes the source status or releases the sample.
 
 Prepared copies may flag an unrecognized field structure or missing result row. Resolve these against the approved form before registration. Fixed form-control text, including revision details and signature area labels, remains in place. The separate logbook/page reference is editable; document pages use automatic PAGE and NUMPAGES fields.
+
+Previews use the authenticated app and the configured local Word or LibreOffice renderer; report bytes are never sent to a public document viewer. The first preview may take longer while its PDF is created. If rendering is unavailable, the preview tab explains the problem and the original DOCX remains downloadable. Drive library documents continue to open in Drive using native permissions.
+
+## Smart Assistant
+
+Miss Minutes is read-only. It can search saved sample snapshots and audit summaries for signed-in workspace users, including viewers. It cannot refresh Google Sheets, change laboratory records, generate reports, execute code or send messages. Refresh sources from Samples & history when current Google Sheets data is needed. Answers identify saved source data and its last successful refresh.
+
+Retrieved fields and audit text are marked as untrusted evidence, with bounded field lengths and result sizes. Embedded instructions must not control the assistant. Answers render text and limited formatting; external links, images and raw HTML remain inert. These controls reduce the impact of prompt injection but do not guarantee the accuracy of every AI answer.
+
+Default allowances per person are 30 questions, 30 generated conversation titles and 200,000 input/output tokens per UTC hour. These are initial workspace defaults, not a universal industry allowance. Override them with `AI_CHAT_REQUESTS_PER_HOUR`, `AI_TITLE_REQUESTS_PER_HOUR` and `AI_TOKENS_PER_HOUR`. PostgreSQL reserves usage atomically across tabs, restarts and server copies. Allowances reset at the next UTC hour; a rejected request returns HTTP 429 and `Retry-After`. Token reservations use a preflight count and are adjusted using reported usage; uncertain failures keep their reservation because an upstream request may still be billed.
+
+Each question is also bounded to 32,000 history characters, 50,000 processing tokens, five tool rounds and eight tool calls. Each model response allows at most 2,048 output tokens; titles allow 256. Responses include at most 12,000 characters of records per tool and 32,000 across the question. Automatic upstream retries are disabled, model calls time out after 45 seconds (30 for titles), and the chat has a two-minute cancellation deadline. Google project/model quotas still apply independently. App token allowances limit usage rather than guaranteeing a fixed currency spend.
 
 ## Technical notes
 
 - React, TypeScript and Vite UI; Express API; PostgreSQL; Python OOXML worker; Google Sheets/Drive service-account access on the server. Demo uses embedded PGlite.
 - Spreadsheet records keep stable internal IDs, source spreadsheet/tab/section/row/range, the original values, fingerprint and location history. Historical duplicate ML numbers remain distinct and visible.
-- Report files record source snapshot, specification revision, template revision, result revision and SHA-256 fingerprint. Rendered previews are required before a report file becomes downloadable.
+- Report files record source snapshot, specification revision, template revision, result revision and SHA-256 fingerprint. PDF previews are created on demand; original DOCX downloads do not depend on rendering.
 - `npm test`, `npm run test:worker`, and `npm run build` validate the domain rules, template row bindings, DOCX generation and type/build integrity. Live Google integration and visual comparison of every approved report family require deployment credentials and approved references.
 
 Do not use actual company records in the demo or check them into Git. `private/`, `.data/`, and `.env` are ignored.

@@ -7,14 +7,14 @@ try {
     $word.Visible = $false
     $word.DisplayAlerts = 0
     $word.AutomationSecurity = 3
-    $document = $word.Documents.Open($InputDocx, $false, $false, $false)
+    $word.Options.UpdateLinksAtOpen = $false
+    $document = $word.Documents.Open($InputDocx, $false, $true, $false)
     $document.Fields.Update() | Out-Null
     foreach ($section in $document.Sections) {
         foreach ($footer in $section.Footers) { $footer.Range.Fields.Update() | Out-Null }
         foreach ($header in $section.Headers) { $header.Range.Fields.Update() | Out-Null }
     }
     $document.Repaginate()
-    $document.Save()
     $document.ExportAsFixedFormat($OutputPdf, 17)
 } finally {
     if ($null -ne $document) { try { $document.Close(0) | Out-Null } catch {}; [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($document) }

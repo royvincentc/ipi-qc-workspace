@@ -14,7 +14,7 @@ export function registerSearch(app:Express,searchDb:DB=db){
   const total=Number((await searchDb.query(`SELECT count(*) FROM files ${filter}`,args)).rows[0].count);
   const order=req.query.sort==='recent'?'created_at DESC':"regexp_replace(coalesce(data->>'ml',data->>'name'),'[0-9]+.*$',''), substring(coalesce(data->>'ml',data->>'name') from '[0-9]+')::numeric, substring(data->>'ml' from '[0-9]+$')::numeric, data->>'name'";
   const rows=(await searchDb.query(`SELECT data FROM files ${filter} ORDER BY ${order},id LIMIT ${param(limit)} OFFSET ${param((page-1)*limit)}`,args)).rows;
-  res.json({items:rows.map(({data:{path,pdf,...f}})=>({...f,hasPreview:!!pdf})),total,page,limit});
+  res.json({items:rows.map(({data:{path,pdf,...f}})=>({...f,hasPreview:!!pdf||(f.kind==='report'&&!!path)})),total,page,limit});
  });
  app.get('/api/search',async(req,res)=>{
   const query=String(req.query.q||'').trim().slice(0,200);const category=String(req.query.category||'');const status=String(req.query.status||'');const from=String(req.query.from||''),to=String(req.query.to||'');
@@ -65,28 +65,29 @@ export function registerSearch(app:Express,searchDb:DB=db){
  });
  app.get('/api/work',async(_req,res)=>{
   const config=await getConfiguration();
-  // The dashboard only needs report-readiness fields. Keep large snapshots,
-  // criteria provenance, template manifests, and historical metadata in Neon.
-  const templates=(await searchDb.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','verified',data->'verified','manifest',jsonb_build_object('requiredFields',data->'manifest'->'requiredFields')) AS data FROM templates")).rows.map(r=>r.data);
+  // Keep the saved fields used by reportIssues without loading entire snapshots.
+  const templates=(await searchDb.query("SELECT jsonb_build_object('id',data->'id','revision',data->'revision','verified',data->'verified','manifest',jsonb_build_object('requiredFields',data->'manifest'->'requiredFields','tokens',data->'manifest'->'tokens')) AS data FROM templates")).rows.map(r=>r.data);
   const generated=(await searchDb.query("SELECT data->>'draftId' AS draft, data->>'resultRevision' AS revision FROM files WHERE data->>'kind'='report'")).rows;
   const generatedRevisions=new Set(generated.map(f=>`${f.draft}:${f.revision}`));
   const draftRows=(await searchDb.query(`SELECT jsonb_build_object(
-    'id',data->'id','sampleId',data->'sampleId','sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml'),
+    'id',data->'id','sampleId',data->'sampleId','sample',jsonb_build_object('name',data->'sample'->'name','ml',data->'sample'->'ml','category',data->'sample'->'category',
+      'fields',jsonb_build_object('mic',data->'sample'->'fields'->'mic','pageNumber',data->'sample'->'fields'->'pageNumber','page',data->'sample'->'fields'->'page')),
     'revision',data->'revision','updatedAt',data->'updatedAt','templateId',data->'templateId','templateRevision',data->'templateRevision',
     'fields',data->'fields',
-    'templateSnapshot',CASE WHEN data->'templateSnapshot' IS NULL THEN NULL ELSE jsonb_build_object('manifest',jsonb_build_object('requiredFields',data->'templateSnapshot'->'manifest'->'requiredFields')) END,
+    'templateSnapshot',CASE WHEN jsonb_typeof(data->'templateSnapshot')='object' THEN jsonb_build_object('revision',data->'templateSnapshot'->'revision','manifest',jsonb_build_object('requiredFields',data->'templateSnapshot'->'manifest'->'requiredFields','tokens',data->'templateSnapshot'->'manifest'->'tokens')) ELSE NULL END,
+    'configurationSnapshot',CASE WHEN jsonb_typeof(data->'configurationSnapshot')='object' THEN jsonb_build_object('general',jsonb_build_object('dateFormat',data->'configurationSnapshot'->'general'->'dateFormat')) ELSE NULL END,
     'specification',data->'specification',
     'results',data->'results'
   ) AS data FROM drafts ORDER BY data->>'updatedAt' DESC LIMIT 100`)).rows.map(r=>r.data);
   const sourceIds=[...new Set(draftRows.map((draft:any)=>draft.sampleId).filter(Boolean))];
-  const sourceRows=sourceIds.length?(await searchDb.query('SELECT id,data FROM samples WHERE id=ANY($1)',[sourceIds])).rows:[];
+  const sourceRows=sourceIds.length?(await searchDb.query("SELECT id,jsonb_build_object('category',data->'category','batch',data->'batch','status',data->'status') AS data FROM samples WHERE id=ANY($1)",[sourceIds])).rows:[];
   const sourceById=new Map(sourceRows.map((row:any)=>[row.id,row.data]));
   const drafts=draftRows.map((d:any)=>{
     const t=d.templateSnapshot||templates.find(t=>t.id===d.templateId);
     const referenceIssue=!t||t.revision!==d.templateRevision;
-    const required=d.templateSnapshot?0:(t?.manifest.requiredFields||[]).filter((k:string)=>!d.fields[k]?.trim()).length;
     const source=sourceById.get(d.sampleId);
-    return {id:d.id,sample:{...d.sample,...(source?{id:d.sampleId,category:source.category,batch:source.batch,status:source.status}: {})},revision:d.revision,updatedAt:d.updatedAt,generated:generatedRevisions.has(`${d.id}:${d.revision}`),referenceIssue,missing:reportIssues(d).length+required+(referenceIssue?1:0)};
+    const {fields,...sample}=d.sample;
+    return {id:d.id,sample:{...sample,...(source?{id:d.sampleId,category:source.category,batch:source.batch,status:source.status}: {})},revision:d.revision,updatedAt:d.updatedAt,generated:generatedRevisions.has(`${d.id}:${d.revision}`),referenceIssue,missing:reportIssues({...d,templateSnapshot:t}).length+(referenceIssue?1:0)};
   });
   const recent=(await searchDb.query('SELECT id,data FROM samples ORDER BY updated_at DESC LIMIT 6')).rows.map(r=>({...r.data,id:r.id}));
   const today=new Intl.DateTimeFormat('en-CA',{timeZone:config.value.general.timezone}).format(new Date());

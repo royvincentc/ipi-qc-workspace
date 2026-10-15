@@ -1,4 +1,5 @@
 import {reportArtifact} from './report-artifacts.js';
+import {ensureReportPdf} from './report-preview.js';
 import { deleteDraft } from './reports.js';
 import {registerSearch} from './search.js';
 import {registerCollaboration} from './collaboration.js';
@@ -236,13 +237,13 @@ app.get('/api/drafts/:id/session',async(req,res)=>res.json(await environmentalSe
 app.post('/api/drafts/:id/generate-session',requireRole('administrator','analyst'),async(req,res)=>{
  const b=z.object({revisions:z.record(z.number().int().positive())}).parse(req.body);
  const result=await generateEnvironmentalSession(String(req.params.id),b.revisions,req.user.email);
- res.json({...result,files:result.files.map(({path,pdf,...file}:any)=>({...file,hasPreview:!!pdf}))});
+ res.json({...result,files:result.files.map(({path,pdf,...file}:any)=>({...file,hasPreview:!!(pdf||path)}))});
 });
 app.get('/api/drafts/:id/report-details',async(req,res)=>res.json(await inspectReportDetails(String(req.params.id))));
 app.put('/api/drafts/:id',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),results:z.array(resultSchema).max(300),fields:z.record(z.string().max(2000))}).parse(req.body);res.json(await saveDraft(String(req.params.id),b.revision,b.results,b.fields,req.user.email));});
 app.get('/api/drafts/:id/history',async(req,res)=>res.json((await db.query('SELECT revision,data FROM draft_revisions WHERE id=$1 ORDER BY revision DESC',[req.params.id])).rows));
-app.post('/api/drafts/:id/generate',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive()}).parse(req.body);const f=await generate(String(req.params.id),b.revision,req.user.email);const {path,pdf,...safe}=f;res.json({...safe,hasPreview:!!pdf});});
-app.get('/api/files',async(req,res)=>{const q=String(req.query.q||'').trim();const where=q?"WHERE concat_ws(' ',data->>'name',data->>'ml',data->>'kind') ILIKE $1":'';const args=q?[`%${q.replace(/[\\%_]/g,'\\$&')}%`]:[];const list=(await db.query(`SELECT (data-'path'-'pdf') || jsonb_build_object('hasPreview',COALESCE(jsonb_typeof(data->'pdf')='string',false)) AS data FROM files ${where}`,args)).rows.map(r=>r.data);list.sort((a,b)=>String(a.ml||a.name).localeCompare(String(b.ml||b.name),undefined,{numeric:true}));res.json(list);});
+app.post('/api/drafts/:id/generate',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive()}).parse(req.body);const f=await generate(String(req.params.id),b.revision,req.user.email);const {path,pdf,...safe}=f;res.json({...safe,hasPreview:!!(pdf||path)});});
+app.get('/api/files',async(req,res)=>{const q=String(req.query.q||'').trim();const where=q?"WHERE concat_ws(' ',data->>'name',data->>'ml',data->>'kind') ILIKE $1":'';const args=q?[`%${q.replace(/[\\%_]/g,'\\$&')}%`]:[];const list=(await db.query(`SELECT (data-'path'-'pdf') || jsonb_build_object('hasPreview',(COALESCE(data->>'pdf','')<>'' OR (data->>'kind'='report' AND COALESCE(data->>'path','')<>''))) AS data FROM files ${where}`,args)).rows.map(r=>r.data);list.sort((a,b)=>String(a.ml||a.name).localeCompare(String(b.ml||b.name),undefined,{numeric:true}));res.json(list);});
 app.post('/api/files/sync-all',requireRole('administrator','analyst'),async(req,res)=>{
  if(demo)throw new Fault(409,'Google Drive sync is unavailable in the local demo');
  const connections=await setting('connections',defaultConnections);
@@ -252,7 +253,33 @@ app.post('/api/files/sync-all',requireRole('administrator','analyst'),async(req,
 });
 app.post('/api/files/organize-drive',requireRole('administrator'),async(req,res)=>res.json(await organizeReportDriveFolders(req.user.email)));
 app.post('/api/files/:id/sync',requireRole('administrator','analyst'),async(req,res)=>res.json(await retryReportDriveSync(String(req.params.id),req.user.email)));
-app.get('/api/files/:id/:action',async(req,res)=>{const file=(await db.query('SELECT data FROM files WHERE id=$1',[req.params.id])).rows[0]?.data;if(!file)throw new Fault(404,'File not found');const preview=req.params.action==='preview',pdfDownload=req.params.action==='download-pdf';if(!preview&&!pdfDownload&&req.params.action!=='download')throw new Fault(404,'Unknown file action');if((preview||pdfDownload)&&!file.pdf)throw new Fault(409,'PDF file is unavailable');await audit(req.user.email,preview?'file_preview':pdfDownload?'pdf_download':'file_download',file.id);res.setHeader('Cache-Control','private, no-store');if(file.driveId&&file.kind==='library'){const config=await setting('connections',defaultConnections);const meta=await google<any>(`https://www.googleapis.com/drive/v3/files/${file.driveId}?fields=id,name,parents,capabilities(canDownload),mimeType`);if(!await isDriveFileInLinkedFolder(file.driveId,config.folders)||!meta.capabilities?.canDownload)throw new Fault(403,'File access is no longer authorized');throw new Fault(409,'Open this source in Google Drive to preview or download with its native permissions');}if(file.kind==='report')await reportArtifact(file,preview||pdfDownload?'pdf':'docx',privatePath(preview||pdfDownload?file.pdf:file.path));if(preview)res.type('pdf').sendFile(privatePath(file.pdf));else if(pdfDownload)res.download(privatePath(file.pdf),String(file.name).replace(/\.docx$/i,'.pdf'));else res.download(privatePath(file.path),file.name);});
+app.get('/api/files/:id/:action',async(req,res)=>{
+ const file=(await db.query('SELECT data FROM files WHERE id=$1',[req.params.id])).rows[0]?.data;
+ if(!file)throw new Fault(404,'File not found');
+ const preview=req.params.action==='preview',pdfDownload=req.params.action==='download-pdf';
+ if(!preview&&!pdfDownload&&req.params.action!=='download')throw new Fault(404,'Unknown file action');
+ res.setHeader('Cache-Control','private, no-store');
+ if(file.driveId&&file.kind==='library'){
+  const config=await setting('connections',defaultConnections);
+  const meta=await google<any>(`https://www.googleapis.com/drive/v3/files/${file.driveId}?fields=id,name,parents,capabilities(canDownload),mimeType`);
+  if(!await isDriveFileInLinkedFolder(file.driveId,config.folders)||!meta.capabilities?.canDownload)throw new Fault(403,'File access is no longer authorized');
+  throw new Fault(409,'Open this source in Google Drive to preview or download with its native permissions');
+ }
+ if((preview||pdfDownload)&&file.kind==='report'){
+  try{file.pdf=await ensureReportPdf(file.id);}
+  catch(error){
+   if(!preview)throw error;
+   const reason=(error instanceof Fault?error.message:'The PDF preview could not be created. Ask an administrator to check the document renderer.').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+   return res.status(error instanceof Fault?error.status:503).type('html').send(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Report preview unavailable</title></head><body><main><h1>Report preview unavailable</h1><p>${reason}</p><p><a href="/api/files/${encodeURIComponent(file.id)}/download">Download original DOCX</a></p><p>If the original file is unavailable, open its saved draft and generate a new report.</p></main></body></html>`);
+  }
+ }
+ if((preview||pdfDownload)&&!file.pdf)throw new Fault(409,'PDF file is unavailable');
+ await audit(req.user.email,preview?'file_preview':pdfDownload?'pdf_download':'file_download',file.id);
+ if(file.kind==='report'&&!preview&&!pdfDownload)await reportArtifact(file,'docx',privatePath(file.path));
+ if(preview)res.type('pdf').set('Content-Disposition','inline').sendFile(privatePath(file.pdf));
+ else if(pdfDownload)res.download(privatePath(file.pdf),String(file.name).replace(/\.docx$/i,'.pdf'));
+ else res.download(privatePath(file.path),file.name);
+});
 app.post('/api/library/sync',requireRole('administrator'),async(req,res)=>res.json(await syncDriveLibrary(req.user.email)));
 app.post('/api/references/inspect',requireRole('administrator'),async(req,res)=>{const b=z.object({name:z.string().max(200),base64:z.string().max(16_000_000)}).parse(req.body);if(!b.name.toLowerCase().endsWith('.docx'))throw new Fault(400,'Upload one DOCX at a time');const id=randomUUID();await mkdir(privatePath('references'),{recursive:true});const file=`references/${id}.docx`;await writeFile(privatePath(file),Buffer.from(b.base64,'base64'));const evidence=await worker(['inventory','--input',privatePath(file),...(/\bGIP\b/i.test(b.name)?['--family','environmental-gip-4c']:[])]);await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[id,JSON.stringify({id,path:file,name:b.name,kind:'reference',evidence,createdAt:new Date().toISOString()})]);await audit(req.user.email,'reference_inspected',id);res.json({id,evidence});});
 app.post('/api/references/:id/prepare-template',requireRole('administrator'),async(req,res)=>{const source=(await db.query('SELECT data FROM files WHERE id=$1',[req.params.id])).rows[0]?.data;if(!source||source.kind!=='reference')throw new Fault(404,'Inspected reference document not found');const id=randomUUID();await mkdir(privatePath('templates'),{recursive:true});const file=`templates/${id}.docx`;const format=z.object({family:z.enum(['environmental-grouped-5c','environmental-gip-4c','environmental-water-4c','environmental-warehouse-phase-air-7c']).optional()}).parse(req.body||{});const manifest=await worker(['prepare','--input',privatePath(source.path),'--output',privatePath(file),...((format.family||source.evidence?.environmentalPattern?.family||(/\bGIP\b/i.test(source.name)?'environmental-gip-4c':undefined))?['--family',format.family||source.evidence?.environmentalPattern?.family||'environmental-gip-4c']:[])]);const validation=await worker(['validate','--input',privatePath(file)]);const candidate={id,name:`Prepared · ${source.name}`,kind:'template-candidate',path:file,manifest:{...manifest,...validation},createdAt:new Date().toISOString(),sourceId:source.id};await db.query('INSERT INTO files(id,data) VALUES($1,$2)',[id,JSON.stringify(candidate)]);await audit(req.user.email,'template_prepared',id,{sourceId:source.id,issues:manifest.issues});res.json({id,name:candidate.name,manifest:candidate.manifest});});

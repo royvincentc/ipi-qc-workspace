@@ -505,6 +505,9 @@ input:not([type="checkbox"]):not([type="radio"]),select,textarea { min-height:42
 .app-dashboard .selected-file-heading span { display:grid; min-width:0; flex:1; }
 .app-dashboard .selected-file-heading strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .app-dashboard .selected-file-heading small { color:var(--text-secondary); }
+.app-dashboard .dashboard-file-preview.has-selected-file { max-height:none; }
+.app-dashboard .selected-file-preview-actions { display:flex; flex-wrap:wrap; gap:8px; padding:4px 12px 12px; }
+.app-dashboard .selected-file-preview-actions .button { min-height:44px; }
 .app-dashboard .file-close { width:34px; height:34px; border:0; border-radius:50%; color:var(--text-primary); background:var(--bg-surface); cursor:pointer; }
 .app-dashboard .file-no-preview { padding:14px; font-size:12px; }
 .app-dashboard .dashboard-footer { display:flex; align-items:center; gap:9px; min-height:26px; margin:6px 12px 0 -10px; color:var(--text-secondary); font-size:12px; }

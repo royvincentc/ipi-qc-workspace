@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (email text PRIMARY KEY, name text NOT NULL, role text NOT NULL CHECK(role IN ('administrator','analyst','viewer')), active boolean NOT NULL DEFAULT true);
 CREATE TABLE IF NOT EXISTS sessions (token_hash text PRIMARY KEY, email text REFERENCES users(email), expires_at timestamptz NOT NULL);
 CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS ai_usage (email text PRIMARY KEY, window_start timestamptz NOT NULL, chat_requests integer NOT NULL DEFAULT 0 CHECK(chat_requests>=0), title_requests integer NOT NULL DEFAULT 0 CHECK(title_requests>=0), tokens integer NOT NULL DEFAULT 0 CHECK(tokens>=0));
 CREATE TABLE IF NOT EXISTS samples (id text PRIMARY KEY, source_key text UNIQUE, data jsonb NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS worksheet_notes (sample_id text PRIMARY KEY REFERENCES samples(id) ON DELETE CASCADE, note text NOT NULL CHECK (char_length(note) <= 500), updated_by text NOT NULL, updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS source_history (id text PRIMARY KEY, sample_id text NOT NULL REFERENCES samples(id), data jsonb NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
