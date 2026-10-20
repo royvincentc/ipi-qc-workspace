@@ -98,21 +98,28 @@
   pointer-events: none;
   user-select: none;
   contain: strict;
-  color: rgba(38, 86, 98, 0.55);
-  opacity: 0.2;
-  /* Keep decorative strokes away from the navigation and workspace heading. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0px, transparent 250px, rgba(0, 0, 0, 0.45) 360px, #000 490px);
-  mask-image: linear-gradient(to bottom, transparent 0px, transparent 250px, rgba(0, 0, 0, 0.45) 360px, #000 490px);
   transform: translateZ(0);
 }
 :root[data-theme="dark"] .science-matrix {
   color: rgba(168, 198, 176, 0.42);
-  opacity: 0.22;
+}
+.app-workspace .science-matrix::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, var(--bg-app) 0px, var(--bg-app) 250px, transparent 480px);
+  pointer-events: none;
 }
 .science-matrix-svg {
   width: 100%;
   height: 100%;
   display: block;
+  color: rgba(38, 86, 98, 0.55);
+  opacity: 0.2;
+}
+:root[data-theme="dark"] .science-matrix-svg {
+  color: rgba(168, 198, 176, 0.42);
+  opacity: 0.22;
 }
 .science-matrix-base {
   opacity: 0.65;
@@ -173,16 +180,16 @@
 .reception-motion-status::before { content:""; width:5px; height:5px; border-radius:50%; background:currentColor; }
 .reception-motion .reception-motion-status { color:var(--accent); }
 .reception-actions { display:flex; gap:14px; padding-bottom:3px; }
-.reception-actions a { display:grid; place-items:center; width:55px; height:54px; border-radius:18px; color:var(--text-primary); border:1px solid var(--reception-edge); background:var(--reception-control); box-shadow:var(--reception-shadow); backdrop-filter:blur(16px); transition:transform 180ms cubic-bezier(.16,1,.3,1),background-color 180ms; }
+.reception-actions a { display:grid; place-items:center; width:55px; height:54px; border-radius:18px; color:var(--text-primary); border:1px solid var(--reception-edge); background:var(--reception-control); box-shadow:var(--reception-shadow); backdrop-filter:none; -webkit-backdrop-filter:none; transition:transform 180ms cubic-bezier(.16,1,.3,1),background-color 180ms; }
 .reception-actions a:hover { transform:translateY(-2px); background:var(--bg-surface); }
 .reception-actions a:active { transform:scale(.96); }
-.reception-glass { border:1px solid var(--reception-edge); border-radius:25px; background:var(--reception-panel); box-shadow:var(--reception-shadow); backdrop-filter:blur(22px) saturate(1.18); -webkit-backdrop-filter:blur(22px) saturate(1.18); transform:translateZ(0); backface-visibility:hidden; }
+.reception-glass { border:1px solid var(--reception-edge); border-radius:25px; background:var(--reception-panel); box-shadow:var(--reception-shadow); backdrop-filter:none; -webkit-backdrop-filter:none; transform:translateZ(0); backface-visibility:hidden; }
 .reception-chart-panel { position:relative; padding:26px 24px 12px; margin-bottom:20px; }
 .reception-month {
   position:absolute; z-index:3; top:-25px; left:50%; transform:translateX(-50%);
   display:flex; align-items:center; gap:6px; padding:3px 10px; min-width:264px; height:49px;
   border-radius:29px; border:1px solid var(--reception-edge); background:var(--reception-panel);
-  backdrop-filter:blur(24px) saturate(1.2); box-shadow:0 3px 9px rgba(33,67,77,.055),inset 0 1px 3px rgba(255,255,255,.25),0 0 0 8px var(--bg-app);
+  backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:0 3px 9px rgba(33,67,77,.055),inset 0 1px 3px rgba(255,255,255,.25),0 0 0 8px var(--bg-app);
 }
 .reception-month span { min-width:154px; flex:1; text-align:center; font-size:17px; font-weight:500; letter-spacing:-.025em; white-space:nowrap; }
 .reception-month button { display:grid; flex:0 0 38px; place-items:center; height:40px; border:0; border-radius:50%; background:transparent; color:var(--text-primary); cursor:pointer; }
@@ -269,7 +276,7 @@
 .app-workspace .reception-filters :is(select,input) { min-width:180px; padding:8px 12px; font-size:12px; }
 .reception-clear { display:flex; align-items:center; gap:6px; min-height:42px; border:0; background:transparent; color:var(--accent); cursor:pointer; }
 .reception-results-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:24px; padding:0 10px 4px; font-size:10px; color:var(--text-tertiary); }
-.reception-table-scroll { max-height:446px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--border) transparent; transition:opacity 120ms ease; }
+.reception-table-scroll { max-height:446px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--border) transparent; transition:opacity 120ms ease; contain:paint; transform:translateZ(0); will-change:scroll-position; background:var(--reception-panel); border-radius:14px; }
 .reception-table-scroll.is-loading { opacity:.55; pointer-events:none; }
 .reception-motion .reception-table-scroll:not(.is-loading) .reception-table tbody { animation:reception-log-in 320ms cubic-bezier(.16,1,.3,1) both; }
 .reception-table { border-collapse:separate; border-spacing:0; width:100%; min-width:760px; table-layout:fixed; text-align:left; font-size:12px; font-variant-numeric:tabular-nums; }
@@ -292,7 +299,7 @@
 .reception-product > span { display:grid; flex:0 0 33px; width:33px; height:33px; place-items:center; background:var(--reception-inset); border-radius:50%; }
 .reception-product strong { font-weight:500; line-height:1.4; }
 .reception-product:hover strong { text-decoration:underline; text-underline-offset:3px; }
-.reception-table tr:has(.reception-product):hover { background:var(--reception-inset); }
+.reception-table tbody tr:not(.reception-group):hover { background:var(--reception-inset); }
 .reception-open { display:grid; width:34px; height:34px; min-height:34px; place-items:center; border-radius:50%; color:var(--text-secondary); background:var(--reception-inset); border:1px solid var(--border-subtle); transition:transform 180ms cubic-bezier(.16,1,.3,1),background-color 180ms,color 180ms,box-shadow 180ms; }
 .reception-table tr:hover .reception-open { transform:translateX(3px); color:var(--accent); background:var(--reception-control); border-color:var(--accent); box-shadow:0 2px 8px rgba(0,0,0,.08); }
 .reception-status-badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:16px; font-size:11px; font-weight:500; background:var(--reception-inset); border:1px solid var(--border-subtle); color:var(--text-secondary); white-space:nowrap; }
@@ -307,7 +314,7 @@
 :root[data-theme="dark"] .reception-status-badge.status-on-going .status-dot,:root[data-theme="dark"] .reception-status-badge.status-ongoing .status-dot,:root[data-theme="dark"] .reception-status-badge.status-pending .status-dot { background:#fbbf24; box-shadow:0 0 8px rgba(251,191,36,.6); }
 
 /* Miss Minutes Floating Pet Trigger & Aura */
-.app-dashboard .lab-pet.miss-minutes,.app-workspace .lab-pet.miss-minutes,.lab-pet.miss-minutes { display:flex!important; position:fixed; right:28px; bottom:28px; z-index:80; width:62px; height:62px; border-radius:50%; border:1px solid var(--reception-edge); background:var(--reception-panel); backdrop-filter:blur(20px) saturate(1.2); box-shadow:0 12px 32px rgba(0,0,0,.18),inset 0 1px 2px rgba(255,255,255,.5); cursor:pointer; align-items:center; justify-content:center; transition:transform 220ms cubic-bezier(.16,1,.3,1),box-shadow 220ms; }
+.app-dashboard .lab-pet.miss-minutes,.app-workspace .lab-pet.miss-minutes,.lab-pet.miss-minutes { display:flex!important; position:fixed; right:28px; bottom:28px; z-index:80; width:62px; height:62px; border-radius:50%; border:1px solid var(--reception-edge); background:var(--reception-panel); backdrop-filter:none; -webkit-backdrop-filter:none; box-shadow:0 12px 32px rgba(0,0,0,.18),inset 0 1px 2px rgba(255,255,255,.5); cursor:pointer; align-items:center; justify-content:center; transition:transform 220ms cubic-bezier(.16,1,.3,1),box-shadow 220ms; }
 .lab-pet.miss-minutes:hover { transform:translateY(-4px) scale(1.05); box-shadow:0 18px 40px rgba(0,0,0,.24),0 0 24px color-mix(in srgb,var(--accent) 30%,transparent); }
 .lab-pet.miss-minutes:active { transform:scale(.96); }
 .pet-aura { position:absolute; inset:-6px; border-radius:50%; background:radial-gradient(circle,color-mix(in srgb,var(--accent) 25%,transparent),transparent 70%); pointer-events:none; animation:pet-aura-breathe 3.5s ease-in-out infinite; }
