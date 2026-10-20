@@ -5,7 +5,7 @@
   --text-tertiary:#586c82; --accent:#087d61; --accent-action:#087d61;
   --accent-ink:#fff; --focus-ring:#08826b; --border-subtle:rgba(70,102,119,.12);
   --border:rgba(70,102,119,.18); --selection-ink:#fff;
-  --reception-panel:rgba(250,253,254,.965); --reception-edge:rgba(255,255,255,.86);
+  --reception-panel:#fafdfe; --reception-edge:rgba(255,255,255,.86);
   --reception-control:rgba(255,255,255,.56); --reception-inset:rgba(204,222,228,.23);
   --reception-shadow:0 12px 34px rgba(38,76,93,.055),inset 0 1px 0 rgba(255,255,255,.85);
   --reception-active:linear-gradient(150deg,#13866a,#076b52);
@@ -21,7 +21,7 @@
   --text-tertiary:#aebbb0; --accent:#d8f5ae; --accent-action:#d8f5ae;
   --accent-ink:#1c2b1b; --focus-ring:#c8efa0; --border-subtle:rgba(222,237,217,.13);
   --border:rgba(222,237,217,.2); --selection-ink:#1c2b1b;
-  --reception-panel:rgba(42,48,44,.965); --reception-edge:rgba(229,240,224,.2);
+  --reception-panel:#2a302c; --reception-edge:rgba(229,240,224,.2);
   --reception-control:rgba(77,84,78,.26); --reception-inset:rgba(185,200,181,.055);
   --reception-shadow:0 14px 36px rgba(0,0,0,.13),inset 0 1px 0 rgba(255,255,255,.06);
   --reception-active:linear-gradient(145deg,#e5fac5,#d4f2b0);
@@ -81,7 +81,7 @@
 :root[data-theme="dark"] .app-workspace .rail-selection { background:var(--reception-active); }
 :root[data-theme="dark"] .app-workspace .sidebar nav a.active { color:#20311d; }
 .reception-home { position:relative; }
-.reception-ambient { position:fixed; z-index:-1; inset:0; overflow:hidden; pointer-events:none; opacity:var(--reception-ambient-opacity); contain:strict; }
+.reception-ambient { position:fixed; z-index:-1; inset:0; overflow:hidden; pointer-events:none; opacity:var(--reception-ambient-opacity); contain:strict; transform:translate3d(0,0,0); backface-visibility:hidden; }
 .reception-ambient i { position:absolute; width:48vw; height:48vh; min-width:420px; border-radius:50%; background:radial-gradient(ellipse,rgba(81,185,200,.22),transparent 68%); top:-15%; right:-12%; will-change:transform; transform:translateZ(0); }
 .reception-ambient i:nth-child(2) { top:32%; left:-18%; background:radial-gradient(ellipse,rgba(65,170,136,.18),transparent 69%); }
 .reception-ambient i:nth-child(3) { top:55%; right:-15%; width:44vw; background:radial-gradient(ellipse,rgba(220,185,128,.12),transparent 70%); }
@@ -98,7 +98,9 @@
   pointer-events: none;
   user-select: none;
   contain: strict;
-  transform: translateZ(0);
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+  will-change: transform;
 }
 :root[data-theme="dark"] .science-matrix {
   color: rgba(168, 198, 176, 0.42);
@@ -216,7 +218,7 @@
 .app-workspace .reception-specimen .lab-object svg { width:100%; height:100%; transform:none!important; }
 .reception-specimen .dish-highlight { animation:reception-specular 7s ease-in-out infinite; }
 .reception-specimen .dish-colonies { animation:reception-colony-drift 7s ease-in-out infinite; }
-.reception-chart { position:relative; width:100%; height:460px; min-height:0; overflow:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; scrollbar-color:var(--border) transparent; }
+.reception-chart { position:relative; width:100%; height:460px; min-height:0; overflow:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; scrollbar-color:var(--border) transparent; transform:translateZ(0); }
 .reception-chart-plot { position:relative; height:100%; min-width:720px; }
 .reception-chart-canvas { position:absolute; inset:0; }
 .reception-chart-controls { position:absolute; inset:22px 7px 38px; display:grid; z-index:2; }
@@ -276,7 +278,7 @@
 .app-workspace .reception-filters :is(select,input) { min-width:180px; padding:8px 12px; font-size:12px; }
 .reception-clear { display:flex; align-items:center; gap:6px; min-height:42px; border:0; background:transparent; color:var(--accent); cursor:pointer; }
 .reception-results-meta { display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:24px; padding:0 10px 4px; font-size:10px; color:var(--text-tertiary); }
-.reception-table-scroll { max-height:446px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--border) transparent; transition:opacity 120ms ease; contain:paint; transform:translateZ(0); will-change:scroll-position; background:var(--reception-panel); border-radius:14px; }
+.reception-table-scroll { max-height:446px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--border) transparent; transition:opacity 120ms ease; contain:layout; transform:translateZ(0); will-change:scroll-position; background:var(--reception-panel); }
 .reception-table-scroll.is-loading { opacity:.55; pointer-events:none; }
 .reception-motion .reception-table-scroll:not(.is-loading) .reception-table tbody { animation:reception-log-in 320ms cubic-bezier(.16,1,.3,1) both; }
 .reception-table { border-collapse:separate; border-spacing:0; width:100%; min-width:760px; table-layout:fixed; text-align:left; font-size:12px; font-variant-numeric:tabular-nums; }
@@ -300,8 +302,9 @@
 .reception-product strong { font-weight:500; line-height:1.4; }
 .reception-product:hover strong { text-decoration:underline; text-underline-offset:3px; }
 .reception-table tbody tr:not(.reception-group):hover { background:var(--reception-inset); }
-.reception-open { display:grid; width:34px; height:34px; min-height:34px; place-items:center; border-radius:50%; color:var(--text-secondary); background:var(--reception-inset); border:1px solid var(--border-subtle); transition:transform 180ms cubic-bezier(.16,1,.3,1),background-color 180ms,color 180ms,box-shadow 180ms; }
-.reception-table tr:hover .reception-open { transform:translateX(3px); color:var(--accent); background:var(--reception-control); border-color:var(--accent); box-shadow:0 2px 8px rgba(0,0,0,.08); }
+.reception-open { display:grid; width:34px; height:34px; min-height:34px; place-items:center; border-radius:50%; color:var(--text-secondary); background:var(--reception-inset); border:1px solid var(--border-subtle); transition:color 150ms ease,border-color 150ms ease,background-color 150ms ease,transform 150ms ease; }
+.reception-table tbody tr:not(.reception-group):hover .reception-open { color:var(--accent); border-color:var(--accent); background:var(--reception-control); }
+.reception-open:hover { transform:translateX(3px) scale(1.05); }
 .reception-status-badge { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:16px; font-size:11px; font-weight:500; background:var(--reception-inset); border:1px solid var(--border-subtle); color:var(--text-secondary); white-space:nowrap; }
 .reception-status-badge .status-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:currentColor; }
 .reception-status-badge.status-released { color:#08664e; background:rgba(13,138,104,.1); border-color:rgba(13,138,104,.25); }
@@ -323,7 +326,7 @@
 
 /* Assistant Drawer & Floating Chat */
 .assistant-drawer { padding:0; border:none; background:transparent; overflow:visible; }
-.floating-chat { display:flex; flex-direction:column; width:440px; max-width:calc(100vw - 32px); height:600px; max-height:calc(100dvh - 64px); border-radius:26px; background:var(--reception-panel); border:1px solid var(--reception-edge); box-shadow:var(--reception-shadow),0 24px 64px rgba(0,0,0,.22); backdrop-filter:blur(28px) saturate(1.2); overflow:hidden; }
+.floating-chat { display:flex; flex-direction:column; width:440px; max-width:calc(100vw - 32px); height:600px; max-height:calc(100dvh - 64px); border-radius:26px; background:var(--reception-panel); border:1px solid var(--reception-edge); box-shadow:var(--reception-shadow),0 24px 64px rgba(0,0,0,.22); backdrop-filter:none; -webkit-backdrop-filter:none; overflow:hidden; }
 .chat-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border-subtle); background:var(--reception-inset); }
 .chat-title { display:flex; align-items:center; gap:12px; }
 .chat-pet { display:grid; place-items:center; width:40px; height:40px; border-radius:50%; background:var(--reception-control); border:1px solid var(--reception-edge); overflow:hidden; }

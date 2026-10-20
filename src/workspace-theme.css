@@ -63,11 +63,11 @@
 .app-workspace .reception-actions a { backdrop-filter:none; }
 .app-workspace .reception-actions svg { width:25px; height:25px; }
 .app-workspace .reception-glass {
-  background:linear-gradient(125deg,rgba(255,255,255,.045),transparent 42%),var(--reception-panel);
+  background:var(--reception-panel);
   backdrop-filter:none; -webkit-backdrop-filter:none;
 }
 .app-workspace .route-stage :is(.panel,.assistant-shell,.settings-content,.shared-resource-list) {
-  background:linear-gradient(125deg,rgba(255,255,255,.045),transparent 42%),var(--reception-panel);
+  background:var(--reception-panel);
   border:1px solid var(--reception-edge);
   border-radius:var(--radius-panel);
   box-shadow:var(--reception-shadow);
@@ -404,10 +404,12 @@
 .app-workspace.app-low-performance :is(.reception-ambient i,.pet-aura,.dish-highlight,.dish-colonies,.assay-sweep,.status-dot) {
   animation:none!important; will-change:auto; filter:none;
 }
+.app-workspace.app-low-performance .reception-ambient { display:none!important; }
 .app-workspace.app-low-performance .reception-ambient i { transform:none; }
 .app-workspace.app-low-performance .reception-ambient i:not(:first-child) { display:none; }
 .app-workspace.app-low-performance .reception-log.has-selected-day { animation:none; }
 .app-workspace.app-low-performance .lab-object svg { transform:none!important; }
+.app-workspace.motion-off .reception-ambient { display:none!important; }
 .app-workspace.motion-off :is(.reception-ambient i,.pet-aura,.lab-object svg *) { animation-play-state:paused!important; }
 @media (prefers-reduced-motion:reduce) {
   .app-workspace :is(.reception-ambient i,.pet-aura,.lab-object svg *,.reception-motion-icon svg) { animation:none!important; will-change:auto; }
