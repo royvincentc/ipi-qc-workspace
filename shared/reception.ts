@@ -141,7 +141,7 @@ export function parseReceivedDate(raw: unknown): { date: string; timestamp: numb
   }
 
   // Format 2: US MM/DD/YYYY
-  const usMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s*@\s*(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?)?$/);
+  const usMatch = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s*@\s*(\d{1,2})\s*:\s*(\d{2})(?:\s*([APap][Mm]))?)?$/);
   if (usMatch) {
     const dateStr = `${usMatch[3]}-${usMatch[1].padStart(2, "0")}-${usMatch[2].padStart(2, "0")}`;
     const day = reportDateRange(dateStr);

@@ -1,11 +1,11 @@
 import {getConfiguration,saveConfiguration,sourceTypes} from './configuration.js';
-import {type SampleType,formatNumber,validateIntake} from '../shared/configuration.js';
+import {type SampleType,type ConfigurationRevision,formatNumber,validateIntake} from '../shared/configuration.js';
 import {randomUUID} from 'node:crypto';
 import {db,locked,setting,setSetting,audit,demo,tryLocked} from './db.js';
 import {readWorkbook,rangeValues,writeRange,readApplicability} from './google.js';
-import {allocate,Fault,hash,mappings,validateLayout,sectionRows,sourceLayout,column,type Mapping,type Sheet} from './domain.js';
+import {allocate,Fault,hash,mappings,validateLayout,sectionRows,sourceLayout,column,googleId,type Mapping,type Sheet} from './domain.js';
 import {categories,type Category,type Sample,type Source} from '../shared/model.js';
-import {planSourceSync,persistSourceUpdates,type SourceIdentityConflict} from './source-sync.js';
+import {collectSourceSections,planSourceSync,persistSourceUpdates,sourceScopeKey,sourceSyncDue,type SourceIdentityConflict} from './source-sync.js';
 let lastApplicabilityFingerprint:string|undefined;
 let syncInFlight:Promise<any>|undefined;
 export interface Connections {incoming:string;environmental:string;specifications:string;folders:string[];reportFolder:string;timezone:string;reservationsReconciled:boolean;manualIntakeCoordinated:boolean;writesEnabled:boolean}
@@ -49,25 +49,88 @@ async function autoCreateProducts(actor:string){
  }
 }
 export async function syncSources(actor:string){if(demo)return {count:0,message:'De-identified demo; live synchronization is disabled'};if(syncInFlight)return syncInFlight;const running=tryLocked('source-sync',()=>syncSourcesOnce(actor)).then(result=>{if(result)return result;if(actor==='system')return {count:0,skipped:true,message:'Source synchronization is already running on another instance'};return {count:0,skipped:true,message:'Source synchronization is already running. Try again shortly.'};});syncInFlight=running;try{return await running;}finally{if(syncInFlight===running)syncInFlight=undefined;}}
-async function syncSourcesOnce(actor:string){const config=await setting('connections',defaultConnections);const managed=await getConfiguration();const sourceCatalog=await sourceTypes();let count=0;const conflicts:SourceIdentityConflict[]=[];
- for(const [url,cs] of [[config.incoming,sourceCatalog.filter(t=>t.register==='incoming').map(t=>t.id)],[config.environmental,sourceCatalog.filter(t=>t.register==='environmental').map(t=>t.id)]] as [string,Category[]][]){if(!url)continue;const book=await readWorkbook(url);await locked(book.id,async()=>{const records:Sample[]=[];for(const sheet of book.sheets)for(const c of cs){const type=managed.value.sampleTypes.find(t=>t.id===c)!;const layout=sourceLayout(sheet,c,type,new Date(),managed.value.general.timezone);for(const r of sectionRows(sheet,c,type,layout))if(r.occupied&&!r.reserved&&r.ml.trim())records.push(sourceSample(book.id,sheet,c,r.row,r.values,type,managed.revision,layout));}
-  // Plan the entire workbook before persisting. Identity conflicts block only
-  // their own rows and relocated copies, while preserving the saved snapshots.
-  const existing = (await db.query('SELECT id, data->>\'ml\' as ml, data->\'source\'->>\'sheet\' as sheet, data->\'source\'->>\'sheetId\' as sheet_id, data->>\'category\' as category, data->\'source\'->>\'row\' as row, data->\'source\'->>\'fingerprint\' as fingerprint, data->>\'configurationRevision\' as rev FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1', [book.id])).rows.filter(r => r.ml?.trim());
-    const old_records = existing.map(r => ({ id: r.id, ml: r.ml, category: r.category, rev: Number(r.rev), source: { sheet: r.sheet, sheetId: Number(r.sheet_id), row: Number(r.row), fingerprint: r.fingerprint } }));
-    const plan=planSourceSync(records,old_records);conflicts.push(...plan.conflicts);
-    const persisted=await persistSourceUpdates(plan.updates,saveSnapshot);count+=persisted.count;
-    if(persisted.failure)throw persisted.failure.reason;
- });}
- if(config.specifications){const applicability=await readApplicability(config.specifications);const fingerprint=hash({url:config.specifications,applicability});if(fingerprint!==lastApplicabilityFingerprint){await setSetting('applicability',applicability);lastApplicabilityFingerprint=fingerprint;}}
+// Callers hold the workbook lock from source capture through persistence.
+async function importSourceWorkbook(book:{id:string;sheets:Sheet[]},types:SampleType[],managed:ConfigurationRevision,capturedAt:string,complete=false){
+  const {records,scopes,errors}=collectSourceSections(book.sheets,types,managed.value.general.timezone,(sheet,type,row,values,layout)=>{
+   const record=sourceSample(book.id,sheet,type.id,row,values,type,managed.revision,layout);
+   record.source.observedAt=new Date(Number(capturedAt)).toISOString();
+   return record;
+  });
+  const existing = (await db.query('SELECT id, data->>\'ml\' as ml, data->\'source\'->>\'sheet\' as sheet, data->\'source\'->>\'sheetId\' as sheet_id, data->>\'category\' as category, data->\'source\'->>\'row\' as row, data->\'source\'->>\'fingerprint\' as fingerprint, data->\'source\'->>\'observedAt\' as observed_at, data->>\'configurationRevision\' as rev FROM samples WHERE data->\'source\'->>\'spreadsheetId\'=$1', [book.id])).rows.filter(r => r.ml?.trim());
+  const saved=existing.map(r=>({id:r.id,ml:r.ml,category:r.category,rev:Number(r.rev),source:{sheet:r.sheet,sheetId:Number(r.sheet_id),row:Number(r.row),fingerprint:r.fingerprint,observedAt:r.observed_at}}));
+  const observationKey=`source-observations:${book.id}`,observations=await setting<Record<string,number>>(observationKey,{});
+  const plan=planSourceSync(records,saved,{scopes,capturedAt,observations,workbookSheetIds:complete?book.sheets.map(sheet=>sheet.id):undefined});
+  // Unchanged, empty, and confirmed-deleted sections also supersede older pushes.
+  const observedScopes=new Set(scopes.map(sourceScopeKey));
+  if(complete){
+   const presentTabs=new Set(book.sheets.map(sheet=>sheet.id));
+   for(const old of saved)if(!presentTabs.has(old.source.sheetId))observedScopes.add(sourceScopeKey({sheetId:old.source.sheetId,category:old.category}));
+  }
+  for(const key of observedScopes)observations[key]=Math.max(observations[key]||0,Number(capturedAt));
+  if(observedScopes.size)await setSetting(observationKey,observations);
+  const persisted=await persistSourceUpdates(plan.updates,saveSnapshot);
+  if(persisted.failure)errors.push(`Saving source records: ${persisted.failure.reason instanceof Error?persisted.failure.reason.message:'Database write failed'}`);
+  return {count:persisted.count,conflicts:plan.conflicts,errors};
+}
+async function syncSourcesOnce(actor:string){
+ const attemptedAt=new Date().toISOString();
+ await setSetting('sync',{...await setting('sync',{}),lastAttempt:attemptedAt});
+ const config=await setting('connections',defaultConnections),managed=await getConfiguration(),sourceCatalog=await sourceTypes();
+ let count=0;const conflicts:SourceIdentityConflict[]=[],errors:string[]=[];
+ for(const kind of ['incoming','environmental'] as const){
+  if(!config[kind])continue;
+  try{
+   const result=await locked(googleId(config[kind]),async()=>{
+    const book=await readWorkbook(config[kind]);
+    return importSourceWorkbook(book,sourceCatalog.filter(type=>type.register===kind),managed,String(Date.now()),true);
+   });
+   count+=result.count;conflicts.push(...result.conflicts);errors.push(...result.errors);
+  }catch(error){errors.push(`${kind} logbook: ${error instanceof Error?error.message:'Read failed'}`);}
+ }
+ if(config.specifications)try{
+  const applicability=await readApplicability(config.specifications),fingerprint=hash({url:config.specifications,applicability});
+  if(fingerprint!==lastApplicabilityFingerprint){await setSetting('applicability',applicability);lastApplicabilityFingerprint=fingerprint;}
+ }catch(error){errors.push(`Specifications: ${error instanceof Error?error.message:'Read failed'}`);}
  // Auto-create managed products for any sample names without a matching product entry
  const added=count?await autoCreateProducts(actor):0;
- const message=conflicts.length?`Synchronized ${count} source records; ${conflicts.length} historical source record${conflicts.length===1?'':'s'} require reconciliation. ${conflicts[0].message}`:null;
- const previous=await setting<any>('sync',{});const attemptedAt=new Date().toISOString();
- await setSetting('sync',{...previous,lastSuccess:conflicts.length?previous.lastSuccess||null:attemptedAt,lastAttempt:attemptedAt,count,error:message,conflicts});
- if(actor!=='system'||count||added||JSON.stringify(previous.conflicts||[])!==JSON.stringify(conflicts))await audit(actor,'synchronize','sources',{count,productsAutoCreated:added,conflicts});
- if(message)throw new Fault(409,message);
- return {count,productsAutoCreated:added};
+ if(conflicts.length)errors.push(`${conflicts.length} source record(s) require reconciliation. ${conflicts[0].message}`);
+ const previous=await setting<any>('sync',{});
+ await setSetting('sync',{...previous,lastSuccess:errors.length?previous.lastSuccess||null:new Date().toISOString(),lastAttempt:attemptedAt,count,error:errors.join('; ')||null,errors,conflicts});
+ if(actor!=='system'||count||added||errors.length||JSON.stringify(previous.conflicts||[])!==JSON.stringify(conflicts))await audit(actor,'synchronize','sources',{count,productsAutoCreated:added,errors,conflicts});
+ return {count,productsAutoCreated:added,errors,conflicts};
+}
+export async function syncSourcesIfDue(){
+ if(demo||!sourceSyncDue(await setting('sync',{})))return;
+ try{await syncSources('system');}
+ catch(error){await setSetting('sync',{...await setting('sync',{}),lastAttempt:new Date().toISOString(),error:error instanceof Error?error.message:'Automatic synchronization failed'});}
+}
+
+export async function pushSourceSheet(input:{spreadsheetId:string;sheet:Sheet},timestamp:string,digest:string){
+ if(demo)throw new Fault(409,'Live source pushes are disabled in demonstration mode');
+ const result=await tryLocked('source-sync',async()=>{
+  const connections=await setting('connections',defaultConnections);
+  const kind=(['incoming','environmental'] as const).find(key=>connections[key]&&googleId(connections[key])===input.spreadsheetId);
+  if(!kind)throw new Fault(403,'This workbook is not a configured logbook');
+  return locked(input.spreadsheetId,async()=>{
+   const key=`sheets-push:${input.spreadsheetId}:${input.sheet.id}`,previous=await setting<any>(key,{});
+   if(previous.timestamp&&Number(timestamp)<=Number(previous.timestamp)){
+    if(timestamp===previous.timestamp&&digest===previous.digest)return {...previous.result,replayed:true};
+    throw new Fault(409,'An equal or newer snapshot was already accepted. Run a fresh push.');
+   }
+   const managed=await getConfiguration(),types=(await sourceTypes()).filter(type=>type.register===kind);
+   if(!types.length)throw new Fault(409,'No source sections are configured for this logbook');
+   const imported=await importSourceWorkbook({id:input.spreadsheetId,sheets:[input.sheet]},types,managed,timestamp);
+   const added=await autoCreateProducts('google-apps-script');
+   if(imported.conflicts.length)imported.errors.push(`${imported.conflicts.length} source record(s) require reconciliation. ${imported.conflicts[0].message}`);
+   const summary={count:imported.count,productsAutoCreated:added,errors:imported.errors,conflicts:imported.conflicts.length,sheet:input.sheet.name,acceptedAt:new Date().toISOString()};
+   await setSetting(key,{timestamp,digest,result:summary});
+   await setSetting('sync',{...await setting('sync',{}),lastPush:summary});
+   await audit('google-apps-script','sheets_push',input.spreadsheetId,summary);
+   return summary;
+  });
+ });
+ if(!result)throw new Fault(503,'Source synchronization is busy; retry this push shortly');
+ return result;
 }
 export async function submitSample(actor:string,input:{submissionId:string;category:Category;fields:Record<string,string>}){const managed=await getConfiguration();const type=managed.value.sampleTypes.find(t=>t.id===input.category);if(!type?.active)throw new Fault(400,'Choose an active sample type');const issues=validateIntake(type,input.fields,managed.value);if(issues.length)throw new Fault(400,issues.join('; '));if(demo)return submitDemo(actor,input,type,managed.revision,managed.value.general.timezone);const config=await setting('connections',defaultConnections);if(!config.writesEnabled||!config.reservationsReconciled||!config.manualIntakeCoordinated)throw new Fault(409,'An administrator must validate connections, reconcile reservations and coordinate manual intake before enabling writes');const url=type.register==='environmental'?config.environmental:config.incoming;if(!url)throw new Fault(409,'Configure the logbook connection first');const payloadHash=hash(input);const book=await readWorkbook(url);
  return locked(book.id,async()=>{const old=(await db.query('SELECT * FROM submissions WHERE id=$1',[input.submissionId])).rows[0];if(old){if(old.payload_hash!==payloadHash)throw new Fault(409,'Submission ID was already used with different values');if(old.state==='complete')return old.data.sample;throw new Fault(409,'This submission requires reconciliation; it will not be sent again automatically');}

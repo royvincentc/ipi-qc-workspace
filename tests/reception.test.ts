@@ -73,6 +73,8 @@ test('parseReceivedDate rejects invalid dates, times, and offsets', () => {
     '2026-10-16T09:00+08:60', '2026-10-16T09:00.5',
     '10/16/2026 @ 00:30 AM', '10/16/2026 @ 13:00 PM',
     '10/16/2026 @ 25:00', '10/16/2026 @ 12:60 PM',
+    '10/20/2026 @ 08: 60 AM', '10/20/2026 @ 13 : 46 AM',
+    '10/20/2026 @ 08: 4 6 AM',
     '2026-10-16 junk',
   ]) {
     assert.equal(parseReceivedDate(value), null, String(value));
@@ -96,10 +98,36 @@ test('parseReceivedDate uses stable timestamps for ISO and US receipt formats', 
     ['10/16/2026 @ 12:00 PM', '2026-10-16', '2026-10-16T12:00:00Z'],
     ['10/16/2026 @ 1:30 pm', '2026-10-16', '2026-10-16T13:30:00Z'],
     ['10/16/2026 @ 23:59', '2026-10-16', '2026-10-16T23:59:00Z'],
+    ['10/20/2026 @ 08: 46 AM', '2026-10-20', '2026-10-20T08:46:00Z'],
+    ['10/20/2026 @ 08 : 46 AM', '2026-10-20', '2026-10-20T08:46:00Z'],
   ];
   for (const [raw, date, timestamp] of cases) {
     assert.deepEqual(parseReceivedDate(raw), {date, timestamp: Date.parse(timestamp)}, raw);
   }
+});
+
+test('20 October receipts include all nine WATER rows with a spaced time separator', async () => {
+  const rows = Object.entries({SFG: 1, FG: 4, RM: 1, WS: 9}).flatMap(([category, count]) =>
+    Array.from({length: count}, (_, i) => ({
+      id: `${category}-${i}`, ml: `ML-${category}-26-${i + 1}`, category,
+      name: 'Receipt', batch: '', status: 'ON-GOING',
+      received: category === 'WS' ? '10/20/2026 @ 08: 46 AM' : '10/20/2026 @08:46 AM',
+    })),
+  );
+  let handler: any, overview!: ReceptionOverview;
+  registerReception({get: (_path: string, route: any) => {handler = route;}} as unknown as Express, {
+    query: async <T>() => ({rows: rows as unknown as T[]}),
+  }, {timezone: 'Asia/Manila', now: () => new Date('2026-10-20T07:00:00Z')});
+  await handler({query: {month: '2026-10', date: '2026-10-20'}}, {
+    json: (data: ReceptionOverview) => {overview = data;},
+  });
+  assert.deepEqual(overview.days.find(day => day.date === '2026-10-20'), {
+    date: '2026-10-20', total: 15, counts: {SFG: 1, FG: 4, RM: 1, WS: 9},
+  });
+  assert.equal(overview.total, 15);
+  assert.equal(overview.tableTotal, 15);
+  assert.equal(overview.undated, 0);
+  assert.equal(overview.items.filter(item => item.category === 'WS').length, 9);
 });
 
 test('GET /api/reception aggregates receipts and filters grouped pages', async (t) => {

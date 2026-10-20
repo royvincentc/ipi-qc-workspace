@@ -3,6 +3,7 @@ import {ensureReportPdf} from './report-preview.js';
 import { deleteDraft } from './reports.js';
 import {registerSearch} from './search.js';
 import {registerReception} from './reception.js';
+import {registerSheetsPush} from './sheets-push.js';
 import {registerCollaboration} from './collaboration.js';
 import {getConfiguration,saveConfiguration,sourceTypes,migrateConfigurationColumns,connectionFingerprint} from './configuration.js';
 import {validateIntake} from '../shared/configuration.js';
@@ -18,7 +19,7 @@ import {db,migrate,demo,setting,setSetting,audit,locked} from './db.js';
 import {authenticate,requireRole,sameOrigin,beginAuth,finishAuth,signOut} from './auth.js';
 import {Fault,googleId,hash,column,currentMonth,monthOf,sourceLayout} from './domain.js';
 import {readWorkbook,readApplicability,google,driveFolder} from './google.js';
-import {defaultConnections,prepareSample,commitPreparedBatch,cancelPreparedBatch,syncSources,reconcileSubmission} from './samples.js';
+import {defaultConnections,prepareSample,commitPreparedBatch,cancelPreparedBatch,syncSources,syncSourcesIfDue,reconcileSubmission} from './samples.js';
 import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
 import {syncPendingReports} from './report-drive-sync.js';
 import {getDraft,inspectReportDetails,createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,environmentalSessionReview,generateEnvironmentalSession,worker,privatePath,storage,retryReportDriveSync,organizeReportDriveFolders} from './reports.js';
@@ -84,7 +85,7 @@ if (Number((await db.query('SELECT count(*) FROM templates')).rows[0].count) ===
     console.error('Failed to auto-seed template', e);
   }
 await getConfiguration();await migrateConfigurationColumns();
-export const app=express();app.disable('x-powered-by');app.use(helmet({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'",'data:'],frameSrc:["'self'"],objectSrc:["'none'"]},},crossOriginEmbedderPolicy:false}));app.use(express.json({limit:'18mb'}));app.use(cookieParser());app.use('/api',sameOrigin);
+export const app=express();app.disable('x-powered-by');app.use(helmet({contentSecurityPolicy:{directives:{defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'","'unsafe-inline'"],imgSrc:["'self'",'data:'],frameSrc:["'self'"],objectSrc:["'none'"]},},crossOriginEmbedderPolicy:false}));registerSheetsPush(app);app.use(express.json({limit:'18mb'}));app.use(cookieParser());app.use('/api',sameOrigin);
 app.get('/api/health',(_req,res)=>res.json({ok:true,demo}));app.get('/api/build',(_req,res)=>res.json({id:deploymentBuildId||null}));app.get('/api/auth/login',beginAuth);app.get('/api/auth/callback',finishAuth);app.use('/api',authenticate);
 app.get('/api/configuration',async(_req,res)=>res.json(await getConfiguration()));
 app.put('/api/configuration',requireRole('administrator'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),value:z.unknown()}).parse(req.body);res.json(await saveConfiguration(b.value,b.revision,req.user.email));});
@@ -147,13 +148,13 @@ app.put('/api/worksheet/:sampleId/note',requireRole('administrator','analyst'),a
  app.post('/api/submissions/prepare',requireRole('administrator','analyst'),async(req,res)=>{const body=z.object({batchId:z.string().uuid(),items:z.array(z.object({submissionId:z.string().uuid(),category:categorySchema,fields:z.record(z.string().max(1000))})).min(1).max(50)}).parse(req.body);if(new Set(body.items.map(i=>i.submissionId)).size!==body.items.length)throw new Fault(400,'Each row needs a distinct submission ID.');if(new Set(body.items.map(i=>i.category)).size!==1)throw new Fault(400,'Review one sample type per batch.');const managed=await getConfiguration(),results=[];for(let index=0;index<body.items.length;index++){const item=body.items[index];try{results.push(await prepareSample(req.user.email,item as any,body.batchId,index));}catch(e:any){results.push({submissionId:item.submissionId,category:item.category,state:'blocked',name:item.fields.name||'',batch:item.fields.batch||'',received:item.fields.received||'',error:e.message});}}res.json({batchId:body.batchId,configurationRevision:managed.revision,items:results});});
  app.post('/api/submissions/commit',requireRole('administrator','analyst'),async(req,res)=>{const body=z.object({batchId:z.string().uuid(),submissionIds:z.array(z.string().uuid()).min(1).max(50)}).parse(req.body);if(new Set(body.submissionIds).size!==body.submissionIds.length)throw new Fault(400,'Submission IDs must be unique.');for(const id of body.submissionIds){const row=(await db.query('SELECT data FROM submissions WHERE id=$1',[id])).rows[0];if(!row||row.data.batchId!==body.batchId||row.data.preparedBy!==req.user.email)throw new Fault(403,'This reviewed batch belongs to another session or has expired. Prepare it again.');}res.json({batchId:body.batchId,items:await commitPreparedBatch(req.user.email,body.submissionIds)});});
  app.post('/api/submissions/cancel',requireRole('administrator','analyst'),async(req,res)=>{const body=z.object({batchId:z.string().uuid()}).parse(req.body);res.json(await cancelPreparedBatch(req.user.email,body.batchId));});
-app.post('/api/sync',requireRole('administrator','analyst'),async(req,res)=>{try{res.json(await syncSources(req.user.email));}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});throw e;}});
+app.post('/api/sync',requireRole('administrator','analyst'),async(req,res)=>{try{const result=await syncSources(req.user.email);res.status(result.errors?.length?409:200).json({...result,error:result.errors?.length?`Updated ${result.count} sheet records. Issues: ${result.errors.join('; ')}`:undefined});}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});throw e;}});
 app.post('/api/sync-all',requireRole('administrator','analyst','viewer'),async(req,res)=>{
  if(demo){res.json({sources:{count:0,message:'Live synchronization is disabled in the de-identified demo'},library:{count:0,removed:0},errors:[]});return;}
  const errors:string[]=[];
  let sources:any={count:0};
  let library:any={count:0,removed:0};
- try{sources=await syncSources(req.user.email);}catch(e:any){errors.push(`Google Sheets: ${e.message}`);await setSetting('sync',{...await setting('sync',{}),error:e.message});}
+ try{sources=await syncSources(req.user.email);errors.push(...(sources.errors||[]).map((message:string)=>`Google Sheets: ${message}`));}catch(e:any){errors.push(`Google Sheets: ${e.message}`);await setSetting('sync',{...await setting('sync',{}),error:e.message});}
  try{library=await syncDriveLibrary(req.user.email);}catch(e:any){errors.push(`Google Drive: ${e.message}`);}
  res.json({sources,library,errors});
 });
@@ -360,5 +361,7 @@ setTimeout(async () => {
 }, 2000);
 
 const server=app.listen(Number(process.env.PORT||3001),demo?'127.0.0.1':'0.0.0.0',()=>console.log(`IPI API listening on ${process.env.PORT||3001}${demo?' (de-identified demo)':''}`));
-const interval=setInterval(async()=>{if(demo)return;try{await syncSources('system');}catch(e:any){await setSetting('sync',{...await setting('sync',{}),error:e.message});}},4*60*60*1000);interval.unref();
+const automaticSync=()=>{void syncSourcesIfDue().catch(error=>console.error('Automatic source synchronization failed:',error.message));};
+automaticSync();
+const interval=setInterval(automaticSync,15*60*1000);interval.unref();
 

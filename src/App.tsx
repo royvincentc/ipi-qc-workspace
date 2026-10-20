@@ -120,13 +120,12 @@ function Workspace({data}:{data:any}){
     setSyncing(true);
     try{
       const result=await api<{sources?:{count?:number;message?:string};library?:{count?:number;removed?:number};errors?:string[]}>('/sync-all','POST');
-      window.dispatchEvent(new Event('ipi:sync-complete'));
       const summary=result.errors?.length
-        ?`Sync finished with issues: ${result.errors.join(' · ')}`
+        ?`Updated ${result.sources?.count||0} sheet records and ${result.library?.count||0} Drive files. Issues: ${result.errors.join(' · ')}`
         :result.sources?.message||`Synced ${result.sources?.count||0} sheet records and ${result.library?.count||0} Drive files${result.library?.removed?`; removed ${result.library.removed} no longer in Drive`:''}.`;
       notify(summary,Boolean(result.errors?.length));
     }catch(e:any){notify(e.message,true);}
-    finally{setSyncing(false);}
+    finally{window.dispatchEvent(new Event('ipi:sync-complete'));setSyncing(false);}
   };
 
   useEffect(() => {
