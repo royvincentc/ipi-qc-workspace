@@ -81,8 +81,10 @@ async function syncSourcesOnce(actor:string){
   if(!config[kind])continue;
   try{
    const result=await locked(googleId(config[kind]),async()=>{
-    const book=await readWorkbook(config[kind]);
-    return importSourceWorkbook(book,sourceCatalog.filter(type=>type.register===kind),managed,String(Date.now()),true);
+    const book=await readWorkbook(config[kind],{allowNoMonthlyTabs:true});
+    const imported=await importSourceWorkbook(book,sourceCatalog.filter(type=>type.register===kind),managed,String(Date.now()),true);
+    if(!book.sheets.length)imported.errors.push('No recognized monthly logbook tabs found');
+    return imported;
    });
    count+=result.count;conflicts.push(...result.conflicts);errors.push(...result.errors);
   }catch(error){errors.push(`${kind} logbook: ${error instanceof Error?error.message:'Read failed'}`);}

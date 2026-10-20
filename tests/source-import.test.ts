@@ -2,7 +2,7 @@ import {after,afterEach,beforeEach,mock,test} from 'node:test';
 import assert from 'node:assert/strict';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {Fault,mappings,type Sheet} from '../server/domain.js';
+import {Fault,column,mappings,type Sheet} from '../server/domain.js';
 import {sourceScopeKey} from '../server/source-sync.js';
 import type {Configuration,SampleType} from '../shared/configuration.js';
 import type {Sample,Source} from '../shared/model.js';
@@ -110,18 +110,40 @@ if(!process.execArgv.includes('--experimental-test-module-mocks')){
    return structuredClone(state.managed);
   }
  }});
- const unexpectedGoogle=async()=>{throw new Error('Unexpected Google operation');};
- mock.module(new URL('../server/google.js',import.meta.url),{namedExports:{
-  readWorkbook:async(link:string)=>{
-   assert.equal(link,url);
-   assert.ok(state.locks.has(bookId),'Capture the source while holding the workbook lock');
+ const columnIndex=(letters:string)=>[...letters].reduce((index,letter)=>index*26+letter.charCodeAt(0)-64,0)-1;
+ async function googleRequest(request:{url:string;method:string}){
+  assert.equal(request.method,'GET','Imports must only read Google Sheets');
+  assert.ok(state.locks.has(bookId),'Capture the source while holding the workbook lock');
+  const address=new URL(request.url),base=`/v4/spreadsheets/${bookId}`;
+  assert.equal(address.origin,'https://sheets.googleapis.com');
+  if(address.pathname===base){
+   assert.equal(address.searchParams.get('fields'),'spreadsheetId,properties(title),sheets(properties,merges)');
    state.reads++;
    const book=structuredClone(state.book);
+   const sheets=book.sheets.map(tab=>({
+    properties:{sheetId:tab.id,title:tab.name,gridProperties:{rowCount:tab.rowCount,columnCount:type.layout.end+1}},
+    merges:tab.merges.map(merge=>{
+     const [,start,startRow,end,endRow]=merge.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/)!;
+     return {startColumnIndex:columnIndex(start),endColumnIndex:columnIndex(end)+1,startRowIndex:Number(startRow)-1,endRowIndex:Number(endRow)};
+    })
+   }));
+   sheets.push({properties:{sheetId:99,title:'Summary',gridProperties:{rowCount:10,columnCount:10}},merges:[]});
    await state.onRead();
-   return book;
-  },
-  rangeValues:unexpectedGoogle,writeRange:unexpectedGoogle,readApplicability:unexpectedGoogle
+   return {data:{spreadsheetId:book.id,properties:{title:'Source import test'},sheets}};
+  }
+  if(address.pathname.startsWith(`${base}/values/`)){
+   assert.equal(address.searchParams.get('valueRenderOption'),'FORMATTED_VALUE');
+   const range=decodeURIComponent(address.pathname.slice(`${base}/values/`.length));
+   const tab=state.book.sheets.find(tab=>range===`'${tab.name.replaceAll("'","''")}'!A1:${column(type.layout.end)}${tab.rowCount}`);
+   assert.ok(tab,`Unexpected source range: ${range}`);
+   return {data:{values:structuredClone(tab.rows)}};
+  }
+  throw new Error(`Unexpected Google operation: ${request.url}`);
+ }
+ mock.module('google-auth-library',{namedExports:{
+  GoogleAuth:class{async getClient(){return {request:googleRequest};}}
  }});
+ const {readWorkbook}=await import('../server/google.js');
  const {syncSources,pushSourceSheet}=await import('../server/samples.js');
  beforeEach(()=>{
   state=fixture();
@@ -132,6 +154,19 @@ if(!process.execArgv.includes('--experimental-test-module-mocks')){
   assert.equal(state.locks.size,0,'Release locks even after a rejected import');
  });
  after(()=>mock.restoreAll());
+
+ test('the real reader rejects no monthly tabs by default and returns an empty list only by opt-in',async()=>{
+  state.book.sheets=[];
+  await locked('source-sync',()=>locked(bookId,async()=>{
+   await assert.rejects(readWorkbook(url),error=>error instanceof Fault&&error.status===409&&/No recognized monthly logbook tabs found/.test(error.message));
+   const empty=await readWorkbook(url,{allowNoMonthlyTabs:true});
+   assert.equal(empty.id,bookId);
+   assert.deepEqual(empty.sheets,[]);
+  }));
+  assert.equal(state.reads,2);
+  assert.equal(state.samples.size,0);
+  assert.equal(state.settings.has(observationKey),false);
+ });
 
  test('an unchanged pull rejects a push captured during its workbook read',async()=>{
   const first=await syncSources('reviewer');
@@ -237,6 +272,7 @@ if(!process.execArgv.includes('--experimental-test-module-mocks')){
    const missing=missingAll?[august,october]:[august];
    assert.equal(complete.count,0);
    assert.equal(complete.conflicts.length,missing.length);
+   if(missingAll)assert.match(complete.errors.join('; '),/No recognized monthly logbook tabs found/);
    assert.equal(state.settings.get('sync').lastSuccess,lastSuccess);
    assert.deepEqual(state.samples,before);
    for(const tab of missing){
