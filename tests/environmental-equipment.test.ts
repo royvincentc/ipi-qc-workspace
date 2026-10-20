@@ -97,4 +97,13 @@ test('scope and effective-date checks cannot be bypassed, and non-surface output
  assert.equal(resolve({profileId:nonSurface.id,outputId:'spcmy'},[nonSurface]).snapshot.output.mode,'open-plate');
  assert.equal(resolve({profileId:nonSurface.id},[...profiles,nonSurface]).snapshot?.output.mode,'open-plate');
  assert.notEqual(resolve({...select(),profileId:nonSurface.id,outputId:'spcmy'},[nonSurface]).resolution.status,'ready');
+ const pilotSample={...sample,context:'Pilot'};
+ const pilotAccupoint={...profile('pilot-accu',['Mixing Tank','Spatula 1','Spatula 2']),context:'Pilot'};
+ pilotAccupoint.outputs=pilotAccupoint.outputs.filter(o=>o.method==='accupoint');
+ const validationPaired={...profile('val-paired',['Mixing Tank','Spatula 1','Spatula 2']),context:'Process Validation'};
+ const regularDrums=profile('regular-drums',['Inlet Hose','Outlet Hose','Stainless Drum 1','Stainless Drum 2']);
+ const pilotSetup=resolve({},[pilotAccupoint,validationPaired,regularDrums],[template],pilotSample);
+ assert.deepEqual(pilotSetup.profiles.map((p:any)=>p.id),['pilot-accu','regular-drums','val-paired']);
+ assert.equal(resolve({profileId:'regular-drums'},[pilotAccupoint,validationPaired,regularDrums],[template],pilotSample).resolution.status,'ready');
+ assert.equal(resolve({profileId:'pilot-accu'},[pilotAccupoint,validationPaired,regularDrums],[template],pilotSample).resolution.status,'ready');
 });

@@ -26,10 +26,11 @@ function equipmentDefinition(profile:EnvironmentalProfile,output:EnvironmentalOu
 
 export function resolveEnvironmentalEquipment(sample:Sample,productId:string,profiles:EnvironmentalProfile[],templates:Template[],selection:EnvironmentalSelection={}):EnvironmentalSetup{
  const activityDate=environmentalActivityDate(sample);
- const applicable=profiles.filter(p=>p.active&&p.productId===productId&&p.category===sample.category&&environmentalKey(p.facility)===environmentalKey(sample.fields.facility||'')&&processArea(p.area)===processArea(sample.fields.area||'')&&(!p.context||environmentalKey(p.context)===environmentalKey(sample.context))&&activityDate&&p.effectiveFrom<=activityDate&&(!p.effectiveTo||p.effectiveTo>=activityDate)).sort((a,b)=>a.id.localeCompare(b.id));
+ const contextMatches=(p:EnvironmentalProfile)=>!p.context||environmentalKey(p.context)===environmentalKey(sample.context);
+ const applicable=profiles.filter(p=>p.active&&p.productId===productId&&p.category===sample.category&&environmentalKey(p.facility)===environmentalKey(sample.fields.facility||'')&&processArea(p.area)===processArea(sample.fields.area||'')&&(p.outputs.some(o=>o.mode==='surface')||contextMatches(p))&&activityDate&&p.effectiveFrom<=activityDate&&(!p.effectiveTo||p.effectiveTo>=activityDate)).sort((a,b)=>a.id.localeCompare(b.id));
  const selectedProfile=selection.profileId?applicable.find(p=>p.id===selection.profileId):undefined;
  const selectedOutput=selectedProfile?.outputs.find(o=>o.id===selection.outputId);
- const otherOutputs=applicable.flatMap(p=>p.outputs.filter(o=>o.mode!=='surface').map(o=>({profileId:p.id,outputId:o.id,name:`${p.name} · ${o.name}`,mode:o.mode})));
+ const otherOutputs=applicable.filter(contextMatches).flatMap(p=>p.outputs.filter(o=>o.mode!=='surface').map(o=>({profileId:p.id,outputId:o.id,name:`${p.name} · ${o.name}`,mode:o.mode})));
  if(selectedOutput&&selectedOutput.mode!=='surface'||selectedProfile&&!selectedProfile.outputs.some(o=>o.mode==='surface')||!applicable.some(p=>p.outputs.some(o=>o.mode==='surface'))){
   const legacy=resolveEnvironmentalProfile(sample,productId,profiles,templates,selection);
   return selection.equipment?.some(q=>q.quantity>0)?{profiles:legacy.profiles,outputs:legacy.outputs,otherOutputs,resolution:{status:'conflict',message:'Equipment quantities require approved surface-swab outputs for this activity. Reload the applicable monitoring output.'}}:{...legacy,otherOutputs};
@@ -80,7 +81,7 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  });
  base.equipment={revision,profileId:selection.profileId,items};
  const selectedAir=selectedProfile?.outputs.filter(o=>o.mode==='open-plate')||[];
- const airChoices=(selectedAir.length?selectedAir.map(output=>({profile:selectedProfile!,output})):applicable.filter(p=>!selectedProfile||environmentalKey(p.areaType||'')===environmentalKey(selectedProfile.areaType||'')).flatMap(profile=>profile.outputs.filter(o=>o.mode==='open-plate').map(output=>({profile,output}))));
+ const airChoices=(selectedAir.length?selectedAir.map(output=>({profile:selectedProfile!,output})):applicable.filter(p=>contextMatches(p)&&(!selectedProfile||environmentalKey(p.areaType||'')===environmentalKey(selectedProfile.areaType||''))).flatMap(profile=>profile.outputs.filter(o=>o.mode==='open-plate').map(output=>({profile,output}))));
  const air=airChoices[0],includeAir=selection.includeOpenPlate!==false&&Boolean(air);
  const airIssue=airChoices.length>1?'Multiple approved open plate patterns apply. Select a pattern with the required open plate output.':air?(environmentalTemplateIssue(templates.find(t=>t.id===air.output.templateId),air.output.instances,sample.category)|| (templates.find(t=>t.id===air.output.templateId)?.revision!==air.output.templateRevision?'The open plate template revision changed.':undefined)):undefined;
  if(air)base.openPlate={included:includeAir,issue:airIssue};
