@@ -2,7 +2,7 @@ import Dialog from './dialog';
 import {useSearchParams} from 'react-router-dom';
 import AuditLog from './audit';
 import {useContext,useEffect,useState} from 'react';
-import {Plus,Save,Search,Settings2} from 'lucide-react';
+import {Plus,Save,Search,Settings2} from './components/LabIcons';
 import {api} from './api';
 import {useConfiguration,useUnsaved} from './configuration';
 import {PageTitle,Field,ErrorBox,Notice,Badge,Empty} from './ui';

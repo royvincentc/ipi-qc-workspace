@@ -1,5 +1,5 @@
 import {useId} from 'react';
-import {Check, X} from 'lucide-react';
+import {Check, X} from './components/LabIcons';
 
 /** Explicit analyst choice; an empty result never defaults to Passed. */
 export function AnalystRemarks({value,disabled,onChange,mode,onAutomatic}:{value:string;disabled:boolean;onChange:(value:string)=>void;mode?:'automatic'|'manual';onAutomatic?:()=>void}){

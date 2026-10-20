@@ -2,11 +2,13 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {Home,Sparkles,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Table2,ChevronDown,Columns3} from 'lucide-react';
+import {Home,Sparkles,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon,Table2,ChevronDown,Columns3} from './components/LabIcons';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
 import {RouteExperience,SelectionMotion} from './Experience';
+import {ScienceMatrix} from './ScienceMatrix';
+import {LabIconHome,LabIconIntake,LabIconSearch,LabIconWorksheet,LabIconReports,LabIconLibrary,LabIconShared,LabIconAssistant,LabIconSync,LabIconSettings} from './components/LabIcons';
 import Dialog from './dialog';
 import {isConstrainedDevice} from './motion';
 const AdminCenter=lazy(()=>import('./admin'));
@@ -20,14 +22,14 @@ const SharedToolsRoute=lazy(()=>import('./collaboration'));
 const SharedEditorRoute=lazy(()=>import('./collaboration').then(module=>({default:module.SharedEditor})));
 
 const navigation=[
-  ['/','Dashboard',Home],
-  ['/new','Log Sample',FlaskConical],
-  ['/samples','Samples',Search],
-  ['/worksheet','Worksheet',Table2],
-  ['/reports','Results & Reports',FileText],
-  ['/library','File Library',FolderOpen],
-  ['/shared','Shared tools',Columns3],
-  ['/assistant','Smart Assistant',Bot]
+  ['/','Dashboard',LabIconHome],
+  ['/new','Log Sample',LabIconIntake],
+  ['/samples','Samples',LabIconSearch],
+  ['/worksheet','Worksheet',LabIconWorksheet],
+  ['/reports','Results & Reports',LabIconReports],
+  ['/library','File Library',LabIconLibrary],
+  ['/shared','Shared tools',LabIconShared],
+  ['/assistant','Smart Assistant',LabIconAssistant]
 ] as const;
 
 function DeploymentUpdate(){
@@ -172,7 +174,9 @@ function Workspace({data}:{data:any}){
   return (
     <Session.Provider value={data}>
       <Notice.Provider value={notify}>
-        <div className={`app ${lowPerformanceMode?'app-low-performance':''} ${location.pathname==='/'?'app-dashboard':''}`}>
+        <div className={`app app-workspace reception-motion ${lowPerformanceMode?'app-low-performance':''} ${location.pathname==='/'?'app-dashboard':''}`}>
+          <div className="reception-ambient" aria-hidden="true"><i/><i/><i/></div>
+          <ScienceMatrix/>
           <RouteExperience/>
           <SelectionMotion/>
           <a className="skip-to-content" href="#workspace-main">Skip to workspace</a>
@@ -210,12 +214,12 @@ function Workspace({data}:{data:any}){
             <div className="nav-label">SYSTEM</div>
             <nav aria-label="System navigation">
               <button type="button" className="nav-sync-button" title="Sync with Database" aria-label="Sync with Database" disabled={syncing} onClick={()=>void syncWithDatabase()}>
-                <RefreshCw size={18} className={syncing?'syncing-icon':''}/>
+                <LabIconSync size={18} className={syncing?'syncing-icon':''}/>
                 <span>{syncing?'Syncing…':'Sync with Database'}</span>
               </button>
               {data.user.role==='administrator' && (
                 <NavLink to="/settings" title="Settings" aria-label="Settings" onClick={()=>setMobileNav(false)}>
-                  <Settings size={18}/>
+                  <LabIconSettings size={18}/>
                   <span>Settings</span>
                 </NavLink>
               )}
@@ -229,19 +233,41 @@ function Workspace({data}:{data:any}){
               <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>IPI</b><span>QC MICROBIOLOGY</span></Link>
               <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Workspace'],['/new','Log Sample'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','File Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
-                <div className="workspace-status" title={data.demo?'Local workspace. External writes are disabled.':'Authenticated live workspace'}>
-                  <span className={`status-dot ${data.demo ? 'pending' : ''}`}/>
-                  {data.demo?'Demo workspace':'Live workspace'}
-                </div>
-                {syncing?<div className="sync-progress-inline" role="status" aria-live="polite"><span>Syncing sources</span><div className="sync-progress-track" role="progressbar" aria-label="Database synchronization progress" aria-valuetext="A reliable percentage is not available yet"><span/></div><span className="sr-only">Synchronization is in progress. Percentage is unavailable until completion.</span></div>:null}
-                <button type="button" className="global-search" onClick={() => setCmdOpen(true)} aria-label={`Open global sample search (${searchShortcut})`} title={`Find a sample · ${searchShortcut}`}><Search size={22}/><span>Search a sample, batch, or control number...</span><kbd>{searchShortcut}</kbd></button>
-                <button className="icon-button topbar-theme" aria-label={`Switch to ${theme==='light'?'dark':'light'} theme`} onClick={()=>setTheme(theme==='light'?'dark':'light')}><Sun size={22}/></button>
-                <div className="account-menu-anchor" ref={accountMenu}>
-                  <button type="button" className="account-trigger" aria-label={`Account menu for ${data.user.name}`} aria-haspopup="menu" aria-expanded={accountOpen} onClick={()=>setAccountOpen(value=>!value)}><span className="avatar" title={data.user.name}>{data.user.name.slice(0,2).toUpperCase()}</span><ChevronDown size={15}/></button>
-                  {accountOpen?<div className="account-menu" role="menu" aria-label="Account">
-                    <strong>{data.user.name}</strong><span className="account-role">{data.user.role}</span>
-                    {data.demo?<span className="account-demo-note">Local demo · Google writes disabled</span>:<button type="button" role="menuitem" onClick={()=>api('/auth/logout','POST').then(()=>window.location.reload())}><LogOut size={15}/> Sign out</button>}
-                  </div>:null}
+                {syncing ? (
+                  <div className="sync-progress-inline" role="status" aria-live="polite">
+                    <span>Syncing sources</span>
+                    <div className="sync-progress-track" role="progressbar" aria-label="Database synchronization progress" aria-valuetext="A reliable percentage is not available yet"><span/></div>
+                    <span className="sr-only">Synchronization is in progress. Percentage is unavailable until completion.</span>
+                  </div>
+                ) : null}
+                <div className="apple-glass-island" role="toolbar" aria-label="Quick actions and profile">
+                  <div className="island-segment island-status" title={data.demo ? 'Local workspace. External writes are disabled.' : 'Authenticated live workspace'}>
+                    <span className={`status-dot ${data.demo ? 'pending' : ''}`} />
+                    <span className="status-label">{data.demo ? 'Demo' : 'Live'}</span>
+                  </div>
+                  <div className="island-divider" aria-hidden="true" />
+                  <button type="button" className="island-segment island-search" onClick={() => setCmdOpen(true)} aria-label={`Open global sample search (${searchShortcut})`} title={`Find a sample · ${searchShortcut}`}>
+                    <Search size={18} />
+                    <span className="search-hint">Search…</span>
+                    <kbd>{searchShortcut}</kbd>
+                  </button>
+                  <div className="island-divider" aria-hidden="true" />
+                  <button type="button" className="island-segment island-theme" aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+                    {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                  </button>
+                  <div className="island-divider" aria-hidden="true" />
+                  <div className="island-segment island-account account-menu-anchor" ref={accountMenu}>
+                    <button type="button" className="account-trigger" aria-label={`Account menu for ${data.user.name}`} aria-haspopup="menu" aria-expanded={accountOpen} onClick={() => setAccountOpen(value => !value)}>
+                      <span className="avatar" title={data.user.name}>{data.user.name.slice(0, 2).toUpperCase()}</span>
+                      <ChevronDown size={13} className="account-chevron" />
+                    </button>
+                    {accountOpen ? (
+                      <div className="account-menu" role="menu" aria-label="Account">
+                        <strong>{data.user.name}</strong><span className="account-role">{data.user.role}</span>
+                        {data.demo ? <span className="account-demo-note">Local demo · Google writes disabled</span> : <button type="button" role="menuitem" onClick={() => api('/auth/logout', 'POST').then(() => window.location.reload())}><LogOut size={15} /> Sign out</button>}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             </header>
@@ -337,6 +363,7 @@ export default function App(){
           <p className="login-story-footer">INTERNATIONAL PHARMACEUTICALS, INC.</p>
         </aside>
         <section className="login-panel" aria-label="Sign in to IPI Micro-QC">
+          <ScienceMatrix/>
           <main className="login-card" aria-labelledby="login-heading">
             <div className="login-brand-mark" aria-hidden="true"><FlaskConical size={23} strokeWidth={1.8}/></div>
             <h1 id="login-heading">IPI Micro-QC</h1>

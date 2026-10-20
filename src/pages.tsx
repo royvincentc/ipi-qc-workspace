@@ -1,7 +1,7 @@
 import {useCatalog,useUnsaved,useConfiguration} from './configuration';
 import {useContext,useEffect,useState} from 'react';
 import {Link,useNavigate,useParams} from 'react-router-dom';
-import {ArrowRight,ArrowUpRight,Plus,FileText,FlaskConical,RefreshCw,Link2,Clock3,CheckCircle2,FolderOpen} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,Plus,FileText,FlaskConical,RefreshCw,Link2,Clock3,CheckCircle2,FolderOpen} from './components/LabIcons';
 import {api} from './api';
 import {PageTitle,SampleList,useLoad,Session,Notice,Badge,Field,SearchInput,ErrorBox,Loading,Empty,useCanEdit} from './ui';
 import {type Category,type Sample} from '../shared/model';

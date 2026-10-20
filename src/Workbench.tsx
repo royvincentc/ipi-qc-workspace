@@ -1,6 +1,6 @@
 import {useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowRight,Beaker,ChevronDown,FileText,FlaskConical,FolderOpen,MapPin,MessageSquare,Plus,Search,Thermometer} from 'lucide-react';
+import {ArrowRight,Beaker,ChevronDown,FileText,FlaskConical,FolderOpen,MapPin,MessageSquare,Plus,Search,Thermometer} from './components/LabIcons';
 import {LabGraphic} from './LabGraphic';
 import {Badge,ErrorBox,useLoad} from './ui';
 import {api} from './api';

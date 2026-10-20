@@ -40,7 +40,9 @@ export function SelectionMotion(){
     };
     const schedule=()=>{if(!frame)frame=requestAnimationFrame(update);};
     // Only state attributes are watched. Our layer's style updates cannot feed back.
-    const observer=new MutationObserver(schedule);
+    const observer=new MutationObserver(records => {
+      if (records.some(r => (r.target as HTMLElement).closest?.('.workspace-tabs,.tabs,.intake-mode,.worksheet-type-tabs,.assay-selector,.sidebar'))) schedule();
+    });
     observer.observe(document.querySelector('.app')!,{subtree:true,attributes:true,attributeFilter:['aria-pressed','aria-selected','aria-current'],childList:true});
     window.addEventListener('resize',schedule);document.addEventListener('click',schedule);
     const visibility=()=>{document.documentElement.classList.toggle('motion-paused',document.hidden);};

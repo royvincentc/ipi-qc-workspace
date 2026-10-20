@@ -35,7 +35,7 @@ import {
   Plus,
   Trash2,
   X,
-} from "lucide-react";
+} from './components/LabIcons';
 import * as Y from "yjs";
 import { Field, Notice } from "./ui";
 import Dialog from "./dialog";

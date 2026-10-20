@@ -1,6 +1,6 @@
 import {Link} from 'react-router-dom';
 import {useContext,useEffect,useState} from 'react';
-import {ArrowUpRight,CloudUpload,FileText,RefreshCw,FolderTree} from 'lucide-react';
+import {ArrowUpRight,CloudUpload,FileText,RefreshCw,FolderTree} from './components/LabIcons';
 import {api} from './api';
 import {PageTitle,useLoad,Notice,Session,SearchInput,ErrorBox,Loading,Empty,Badge} from './ui';
 

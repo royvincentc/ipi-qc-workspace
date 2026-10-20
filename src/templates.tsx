@@ -4,7 +4,7 @@ import {useCatalog,useUnsaved} from './configuration';
 
 import {useContext,useRef,useState} from 'react';
 
-import {FileText,Upload} from 'lucide-react';
+import {FileText,Upload} from './components/LabIcons';
 
 import {api,fileBase64} from './api';
 

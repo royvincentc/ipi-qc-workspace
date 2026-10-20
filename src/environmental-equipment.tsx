@@ -1,5 +1,5 @@
 import {useId,useState} from 'react';
-import {Minus,Plus,Layers,Check} from 'lucide-react';
+import {Minus,Plus,Layers,Check} from './components/LabIcons';
 import type {EquipmentCatalog,EquipmentQuantity} from '../shared/environmental';
 import {SearchInput} from './ui';
 

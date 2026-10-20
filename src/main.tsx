@@ -2,6 +2,7 @@ import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {createBrowserRouter,RouterProvider} from 'react-router-dom';
 import App from './App';
+import './tailwind.css';
 import './styles.css';
 const router=createBrowserRouter([{path:'*',element:<App/>,errorElement:<div className="login"><h1>We couldn’t open this page</h1><p>Your saved records are safe. Reload the workspace to continue.</p><button className="button primary" onClick={()=>location.reload()}>Reload workspace</button></div>}]);
 createRoot(document.getElementById('root')!).render(<React.StrictMode><RouterProvider router={router}/></React.StrictMode>);
@@ -12,6 +13,8 @@ import './experience.css';
 import './report-design.css';
 import './route-redesign.css';
 import './laboratory.css';
+import './reception.css';
+import './workspace-theme.css';
 
 // Production builds can reopen previously visited shared boards without a network.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
@@ -27,4 +30,5 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
     resources.observe({ type: 'resource', buffered: true });
   }).catch(() => { /* IndexedDB editing remains available in the current tab. */ });
 }
+
 

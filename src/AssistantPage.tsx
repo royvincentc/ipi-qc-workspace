@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Search, RefreshCw, Sparkles, Plus, MessageSquare, Trash2 } from 'lucide-react';
+import { Send, User, Search, RefreshCw, Sparkles, Plus, MessageSquare, Trash2 } from './components/LabIcons';
 import { api } from './api';
 import { MissMinutesAvatar } from './MissMinutesAvatar';
 import { AssistantMarkdown } from './AssistantMarkdown';
@@ -9,6 +9,11 @@ type Message = {role: 'user' | 'model', parts: {text: string}[], error?: boolean
 type Conversation = {id: string; title: string; updatedAt: string; messages: Message[]};
 const greeting: Message = { role: 'model', parts: [{ text: 'Hi, I’m Miss Minutes, your QC lab companion. I can help find authorized records, summarize documented results, and review audit history. What are you working on?' }] };
 const historyKey = 'ipi.assistant.conversations';
+const STARTER_PROMPTS = [
+  'Summarize recent SFG and FG sample receipts',
+  'Find stability samples with pending or draft reports',
+  'Show recent water system and environmental monitoring records',
+];
 
 function readHistory(): Conversation[] {
   try {
@@ -44,15 +49,17 @@ export function AssistantPage() {
     });
   }, [conversationId, messages]);
 
-  const handleSend = async (e?: React.FormEvent) => {
-    e?.preventDefault(); if (!input.trim() || loading) return;
-    const newMessages = [...messages, { role: 'user' as const, parts: [{ text: input }] }]; setMessages(newMessages); setInput(''); setLoading(true);
+  const handleSend = async (e?: React.FormEvent, promptOverride?: string) => {
+    e?.preventDefault();
+    const text = (promptOverride ?? input).trim();
+    if (!text || loading) return;
+    const newMessages = [...messages, { role: 'user' as const, parts: [{ text }] }]; setMessages(newMessages); setInput(''); setLoading(true);
     try {
       const response = await api('/ai/chat', 'POST', { messages: newMessages });
       setMessages([...newMessages, response]);
       if (newMessages.filter(message => message.role === 'user').length === 1) {
         try {
-          const generated = await api('/ai/title', 'POST', { prompt: input.trim() });
+          const generated = await api('/ai/title', 'POST', { prompt: text });
           if (generated.title) setHistory(previous => {
             const next = previous.map(item => item.id === conversationId ? {...item, title: generated.title} : item);
             localStorage.setItem(historyKey, JSON.stringify(next));
@@ -83,7 +90,7 @@ export function AssistantPage() {
     </aside>
     <div className="assistant-page">
       <div className="assistant-header"><div className="assistant-heading"><div className="assistant-avatar"><MissMinutesAvatar /></div><div><div className="eyebrow"><Sparkles size={12}/> QC lab companion</div><h2>Miss Minutes</h2><small>Searches authorized QC records and audit history</small></div></div><button className="button secondary" onClick={newConversation}><RefreshCw size={14}/> New chat</button></div>
-      <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}${m.error ? ' is-error' : ''}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <MissMinutesAvatar className="assistant-message-mark"/>}</div><div className="assistant-bubble" role={m.error ? 'alert' : undefined}>{m.parts.map((p, partIndex) => <AssistantMarkdown key={partIndex} text={p.text}/>)}</div></div>)}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><MissMinutesAvatar className="assistant-message-mark"/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
+      <div className="assistant-messages">{messages.map((m, i) => <div key={i} className={`assistant-message ${m.role}${m.error ? ' is-error' : ''}`}><div className="assistant-message-avatar">{m.role === 'user' ? <User size={18}/> : <MissMinutesAvatar className="assistant-message-mark"/>}</div><div className="assistant-bubble" role={m.error ? 'alert' : undefined}>{m.parts.map((p, partIndex) => <AssistantMarkdown key={partIndex} text={p.text}/>)}</div></div>)}{messages.length <= 1 && !loading ? <div className="floating-starters"><span className="floating-starters-label">Suggested queries</span><div className="floating-starters-chips">{STARTER_PROMPTS.map(prompt => <button key={prompt} type="button" className="floating-starter-chip" onClick={() => handleSend(undefined, prompt)}>{prompt}</button>)}</div></div> : null}{loading ? <div className="assistant-message model"><div className="assistant-message-avatar"><MissMinutesAvatar className="assistant-message-mark"/></div><div className="assistant-bubble assistant-thinking"><i/><i/><i/><span>Searching records</span></div></div> : null}<div ref={messagesEndRef}/></div>
       <div className="assistant-composer"><form onSubmit={handleSend}><div className="assistant-input-wrap"><Search size={18}/><input type="text" className="input" placeholder="Ask about QC samples, results, or audit history…" value={input} onChange={e => setInput(e.target.value)} disabled={loading} aria-label="Ask about QC records" /></div><button type="submit" className="button primary assistant-send" disabled={loading || !input.trim()}><Send size={16}/> Send</button></form></div>
     </div>
   </div></>;

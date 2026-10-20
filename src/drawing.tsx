@@ -12,7 +12,7 @@ import {
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import type { RemoteExcalidrawElement } from "@excalidraw/excalidraw/data/reconcile";
 import "@excalidraw/excalidraw/index.css";
-import { Download, Upload, Scan, Maximize, Minimize } from "lucide-react";
+import { Download, Upload, Scan, Maximize, Minimize } from './components/LabIcons';
 import { useUnsaved } from "./configuration";
 import { ErrorBox } from "./ui";
 import { api, fileBase64 } from "./api";

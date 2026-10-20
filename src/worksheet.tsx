@@ -1,6 +1,6 @@
 import {useContext,useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
-import {ArrowDown,ArrowUp,ArrowUpDown,ArrowUpRight,ChevronDown,Columns3,Database,Lock,RefreshCw,Rows3,Save,Search,Unlock,X} from 'lucide-react';
+import {ArrowDown,ArrowUp,ArrowUpDown,ArrowUpRight,ChevronDown,Columns3,Database,Lock,RefreshCw,Rows3,Save,Search,Unlock,X} from './components/LabIcons';
 import type {Sample} from '../shared/model';
 import {defaultWorksheetLayout,worksheetColumnDefinitions,type WorksheetColumnId,type WorksheetLayout} from '../shared/worksheet-layout';
 import {useConfiguration} from './configuration';

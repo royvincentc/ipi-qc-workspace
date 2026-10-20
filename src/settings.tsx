@@ -1,6 +1,6 @@
 import {useCatalog} from './configuration';
 import {useContext,useState} from 'react';
-import {Link2,Check,Upload,ShieldCheck,Save,FileText,Users,Settings,RefreshCw,Plus} from 'lucide-react';
+import {Link2,Check,Upload,ShieldCheck,Save,FileText,Users,Settings,RefreshCw,Plus} from './components/LabIcons';
 import {api,fileBase64} from './api';
 import {PageTitle,useLoad,Notice,Field,ErrorBox,Loading,Badge,Session} from './ui';
 import {type Category,type Criterion} from '../shared/model';

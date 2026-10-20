@@ -20,7 +20,7 @@ import {
   Trash2,
   Users,
   Upload,
-} from "lucide-react";
+} from './components/LabIcons';
 import { api } from "./api";
 import {
   ErrorBox,
