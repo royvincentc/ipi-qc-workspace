@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "concurrently -k \"tsx watch server/index.ts\" \"vite\"",
     "build": "tsc --noEmit && vite build",
+    "lint": "tsc --noEmit",
     "start": "tsx server/index.ts",
     "test": "tsx --test tests/*.test.ts",
     "db:migrate": "tsx server/migrate.ts",

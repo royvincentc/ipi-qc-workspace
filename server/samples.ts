@@ -72,8 +72,10 @@ async function importSourceWorkbook(book:{id:string;sheets:Sheet[]},types:Sample
   if(persisted.failure)errors.push(`Saving source records: ${persisted.failure.reason instanceof Error?persisted.failure.reason.message:'Database write failed'}`);
   return {count:persisted.count,conflicts:plan.conflicts,errors};
 }
+let cachedSyncStatus:{lastSuccess?:string;lastAttempt?:string;[key:string]:any}|null=null;
 async function syncSourcesOnce(actor:string){
  const attemptedAt=new Date().toISOString();
+ cachedSyncStatus={...(cachedSyncStatus||{}),lastAttempt:attemptedAt};
  await setSetting('sync',{...await setting('sync',{}),lastAttempt:attemptedAt});
  const config=await setting('connections',defaultConnections),managed=await getConfiguration(),sourceCatalog=await sourceTypes();
  let count=0;const conflicts:SourceIdentityConflict[]=[],errors:string[]=[];
@@ -97,14 +99,22 @@ async function syncSourcesOnce(actor:string){
  const added=count?await autoCreateProducts(actor):0;
  if(conflicts.length)errors.push(`${conflicts.length} source record(s) require reconciliation. ${conflicts[0].message}`);
  const previous=await setting<any>('sync',{});
- await setSetting('sync',{...previous,lastSuccess:errors.length?previous.lastSuccess||null:new Date().toISOString(),lastAttempt:attemptedAt,count,error:errors.join('; ')||null,errors,conflicts});
+ const nextSync={...previous,lastSuccess:errors.length?previous.lastSuccess||null:new Date().toISOString(),lastAttempt:attemptedAt,count,error:errors.join('; ')||null,errors,conflicts};
+ cachedSyncStatus=nextSync;
+ await setSetting('sync',nextSync);
  if(actor!=='system'||count||added||errors.length||JSON.stringify(previous.conflicts||[])!==JSON.stringify(conflicts))await audit(actor,'synchronize','sources',{count,productsAutoCreated:added,errors,conflicts});
  return {count,productsAutoCreated:added,errors,conflicts};
 }
 export async function syncSourcesIfDue(){
- if(demo||!sourceSyncDue(await setting('sync',{})))return;
+ if(demo)return;
+ if(!cachedSyncStatus){try{cachedSyncStatus=await setting('sync',{});}catch{return;}}
+ if(!sourceSyncDue(cachedSyncStatus))return;
  try{await syncSources('system');}
- catch(error){await setSetting('sync',{...await setting('sync',{}),lastAttempt:new Date().toISOString(),error:error instanceof Error?error.message:'Automatic synchronization failed'});}
+ catch(error){
+  const nextSync={...(cachedSyncStatus||{}),lastAttempt:new Date().toISOString(),error:error instanceof Error?error.message:'Automatic synchronization failed'};
+  cachedSyncStatus=nextSync;
+  await setSetting('sync',nextSync);
+ }
 }
 
 export async function pushSourceSheet(input:{spreadsheetId:string;sheet:Sheet},timestamp:string,digest:string){
@@ -126,7 +136,9 @@ export async function pushSourceSheet(input:{spreadsheetId:string;sheet:Sheet},t
    if(imported.conflicts.length)imported.errors.push(`${imported.conflicts.length} source record(s) require reconciliation. ${imported.conflicts[0].message}`);
    const summary={count:imported.count,productsAutoCreated:added,errors:imported.errors,conflicts:imported.conflicts.length,sheet:input.sheet.name,acceptedAt:new Date().toISOString()};
    await setSetting(key,{timestamp,digest,result:summary});
-   await setSetting('sync',{...await setting('sync',{}),lastPush:summary});
+   const pushSync={...await setting('sync',{}),lastPush:summary};
+   cachedSyncStatus=pushSync;
+   await setSetting('sync',pushSync);
    await audit('google-apps-script','sheets_push',input.spreadsheetId,summary);
    return summary;
   });

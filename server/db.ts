@@ -43,9 +43,11 @@ if (!demo) {
   pool = new pg.Pool({
     ...dbConfig,
     keepAlive: true,
-    idleTimeoutMillis: 15000,
+    min: 0,
+    idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 10000,
-    max: 15
+    max: 15,
+    allowExitOnIdle: true
   });
   pool.on('error', err => console.error('Unexpected error on idle client', err));
 }

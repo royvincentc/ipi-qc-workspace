@@ -140,6 +140,7 @@ export async function mutateSharedBatch(id: string, input: { operationId: string
     return next;
   });
   updates.emit(id);
+  scheduleCollaborationQueue(2_000);
   return result;
 }
 async function syncResource(id: string) {
@@ -214,7 +215,9 @@ async function syncResource(id: string) {
 }
 async function attemptSync(id: string) {
   try {
-    return await syncResource(id);
+    const res = await syncResource(id);
+    updates.emit(id);
+    return res;
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Drive saving failed";
@@ -228,7 +231,38 @@ async function attemptSync(id: string) {
           [id, JSON.stringify({ ...row.data, driveError: message })],
         );
     });
+    updates.emit(id);
     throw error;
+  }
+}
+let queueBusy = false;
+let queueTimer: NodeJS.Timeout | null = null;
+export function scheduleCollaborationQueue(delayMs = 2_000) {
+  if (demo || queueTimer) return;
+  queueTimer = setTimeout(async () => {
+    queueTimer = null;
+    await drainCollaborationQueue();
+  }, delayMs);
+  queueTimer.unref();
+}
+async function drainCollaborationQueue() {
+  if (demo || queueBusy) return;
+  queueBusy = true;
+  try {
+    if (!(await setting("sharedDriveFolder", ""))) return;
+    const pending = (
+      await db.query(
+        "SELECT id FROM shared_resources WHERE revision>drive_revision AND data->>'deletedAt' IS NULL AND retry_at<=now() ORDER BY retry_at LIMIT 4",
+      )
+    ).rows;
+    for (const row of pending) await attemptSync(row.id).catch(() => {});
+    if (pending.length > 0) {
+      scheduleCollaborationQueue(pending.length >= 4 ? 2_000 : 60_000);
+    }
+  } catch {
+    scheduleCollaborationQueue(60_000);
+  } finally {
+    queueBusy = false;
   }
 }
 export function registerCollaboration(app: express.Express, reauthorize = authenticate) {
@@ -250,6 +284,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
         "Share a Drive folder with the IPI service account as Editor",
       );
     await setSetting("sharedDriveFolder", input.driveFolder);
+    scheduleCollaborationQueue(1_000);
     await audit(req.user.email, "shared_drive_connected", "shared-tools", {
       folderId: folder.id,
     });
@@ -290,6 +325,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       id,
       JSON.stringify(resource),
     ]);
+    scheduleCollaborationQueue(2_000);
     await audit(req.user.email, "shared_resource_created", id, {
       kind: b.kind,
     });
@@ -400,6 +436,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       resource.id,
       JSON.stringify(resource),
     ]);
+    scheduleCollaborationQueue(2_000);
     await audit(req.user.email, "shared_resource_imported", resource.id, {
       kind,
     });
@@ -495,6 +532,8 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
         [id, JSON.stringify(data), data.revision],
       );
     });
+    updates.emit(id);
+    scheduleCollaborationQueue(2_000);
     await audit(req.user.email, "shared_resource_deleted", id);
     res.json({ ok: true });
   });
@@ -517,6 +556,8 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
       );
       return data;
     });
+    updates.emit(id);
+    scheduleCollaborationQueue(2_000);
     await audit(req.user.email, "shared_resource_restored", id);
     res.json(result);
   });
@@ -577,6 +618,7 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
         [id, driveRevision],
       );
     });
+    scheduleCollaborationQueue(2_000);
     res.json({ ok: true });
   });
   router.post("/:id/sync", editor, async (req, res) => {
@@ -590,6 +632,15 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
         (await resourceById(String(req.params.id))),
     );
   });
+  let lastPresenceCleanup = 0;
+  const lastPresenceEmit = new Map<string, number>();
+  function notifyPresence(id: string) {
+    const now = Date.now();
+    if (now - (lastPresenceEmit.get(id) || 0) >= 1_000) {
+      lastPresenceEmit.set(id, now);
+      updates.emit(id);
+    }
+  }
   router.post("/:id/presence", async (req, res) => {
     const id = identifier.parse(req.params.id);
     if (!(await db.query("SELECT 1 FROM shared_resources WHERE id=$1 AND data->>'deletedAt' IS NULL", [id])).rows.length)
@@ -618,6 +669,16 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
         JSON.stringify(b.pointer || null),
       ],
     );
+    notifyPresence(id);
+    const now = Date.now();
+    if (now - lastPresenceCleanup > 60_000) {
+      lastPresenceCleanup = now;
+      void db
+        .query(
+          "DELETE FROM shared_presence WHERE expires_at < now()-interval '1 minute'",
+        )
+        .catch(() => {});
+    }
     res.json({ ok: true });
   });
   router.get("/:id/events", async (req, res) => {
@@ -692,33 +753,5 @@ export function registerCollaboration(app: express.Express, reauthorize = authen
     void send();
   });
   app.use("/api/collaboration", router);
-  const cleanup = setInterval(
-    () =>
-      void db
-        .query(
-          "DELETE FROM shared_presence WHERE expires_at < now()-interval '1 minute'",
-        )
-        .catch(() => {}),
-    60_000,
-  );
-  cleanup.unref();
-  let queueBusy = false;
-  const timer = setInterval(async () => {
-    if (demo || queueBusy) return;
-    queueBusy = true;
-    try {
-      if (!(await setting("sharedDriveFolder", ""))) return;
-      const pending = (
-        await db.query(
-          "SELECT id FROM shared_resources WHERE revision>drive_revision AND data->>'deletedAt' IS NULL AND retry_at<=now() ORDER BY retry_at LIMIT 4",
-        )
-      ).rows;
-      for (const row of pending) await attemptSync(row.id).catch(() => {});
-    } catch {
-      /* The persistent queue retries on the next pass. */
-    } finally {
-      queueBusy = false;
-    }
-  }, 60_000);
-  timer.unref();
+  scheduleCollaborationQueue(5_000);
 }
