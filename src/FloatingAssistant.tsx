@@ -15,7 +15,7 @@ const STARTER_PROMPTS = [
 
 export function FloatingAssistant() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'Hi, I’m Miss Minutes, your QC lab companion. I can help find authorized records, summarize documented results, and review audit history. What are you working on?' }] }]);
+  const [messages, setMessages] = useState<{role: 'user' | 'model', parts: {text: string}[]}[]>([{ role: 'model', parts: [{ text: 'I am the QC Microbiology assistant. I can help find authorized records, summarize documented results, and review audit history. What are you working on?' }] }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -69,10 +69,9 @@ export function FloatingAssistant() {
       <button
         className="lab-pet miss-minutes"
         onClick={() => setOpen(true)}
-        aria-label="Open Miss Minutes Assistant"
-        title="Ask Miss Minutes, QC lab companion"
+        aria-label="Open QC Assistant"
+        title="Open QC Assistant"
       >
-        <span className="pet-aura" aria-hidden="true"/>
         <MissMinutesAvatar />
         <span className="pet-online-dot" aria-hidden="true"/>
       </button>
@@ -80,13 +79,13 @@ export function FloatingAssistant() {
   }
 
   return (
-    <Dialog title="Smart assistant" onClose={()=>setOpen(false)} className="assistant-drawer"><div className="floating-chat">
+    <Dialog title="QC Assistant" onClose={()=>setOpen(false)} className="assistant-drawer"><div className="floating-chat">
         <div className="chat-header">
           <div className="chat-title">
             <span className="chat-pet"><MissMinutesAvatar /></span>
             <span>
-              <strong>Miss Minutes</strong>
-              <small><i className="status-dot" aria-hidden="true"/> QC lab companion &middot; Online</small>
+              <strong>QC Assistant</strong>
+              <small><i className="status-dot" aria-hidden="true"/> Microbiology &middot; Online</small>
             </span>
           </div>
           <button className="icon-button chat-close-btn" onClick={() => setOpen(false)} aria-label="Close assistant">
@@ -97,7 +96,7 @@ export function FloatingAssistant() {
           {messages.map((m, i) => (
             <div key={i} className={`floating-message ${m.role}`}>
               <div className="floating-message-label">
-                {m.role === 'user' ? <><User size={12}/> You</> : <><MissMinutesAvatar className="floating-message-mark"/> Miss Minutes</>}
+                {m.role === 'user' ? <><User size={12}/> You</> : <><MissMinutesAvatar className="floating-message-mark"/> QC Assistant</>}
               </div>
               <div className="floating-bubble">
                 {m.role === 'model'

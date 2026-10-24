@@ -1,0 +1,492 @@
+/* Route composition only; shell, reception and login are owned separately. */
+.app-workspace .route-stage > :not(.reception-home) {
+  --ink-primary: var(--text-primary);
+  --ink-secondary: var(--text-secondary);
+  --ink-tertiary: var(--text-tertiary);
+  --bg-surface-elevated: var(--bg-elevated);
+  --border-subtle: var(--border);
+  min-width: 0;
+  max-width: 100%;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+
+.app-workspace .route-stage > :not(.reception-home) :is(
+  .panel, .stack, .settings-content, .entity-items, .field, .form-grid,
+  .reports-layout, .intake-rows, .library-document, .assistant-page,
+  .assistant-history, .shared-editor, .shared-resource-row > div
+) { min-width: 0; }
+
+.app-workspace .route-stage > :is(.page-heading, .library-page, .worksheet-page, .reports-workbench, .shared-tools) .page-heading,
+.app-workspace .route-stage > .page-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 0 28px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.app-workspace .route-stage > :not(.reception-home) .page-heading-copy,
+.app-workspace .route-stage > .page-heading .page-heading-copy { flex: 1 1 240px; min-width: 0; }
+.app-workspace .route-stage > :not(.reception-home) :is(h1, h2, h3) {
+  color: var(--text-primary);
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+.app-workspace .route-stage > :not(.reception-home) h1 { margin: 0; font-size: clamp(26px, 2.4vw, 34px); line-height: 1.2; font-weight: 650; }
+.app-workspace .route-stage > :not(.reception-home) h2 { font-size: 18px; line-height: 1.35; font-weight: 650; }
+.app-workspace .route-stage > :not(.reception-home) h3 { font-size: 15px; line-height: 1.4; }
+.app-workspace .route-stage > :not(.reception-home) .page-title-mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--accent);
+  background: var(--bg-elevated);
+  box-shadow: none;
+}
+.app-workspace .route-stage > :not(.reception-home) .page-heading p {
+  max-width: 70ch;
+  margin: 7px 0 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.app-workspace .route-stage > :not(.reception-home) .page-heading-action { margin-inline-start: auto; max-width: 100%; }
+.app-workspace .route-stage .page-heading .worksheet-refresh { width:auto; min-width:145px; flex:0 0 auto; white-space:nowrap; }
+.app-workspace .route-stage > :not(.reception-home) :is(.record-heading-id, .muted, .field small) { color: var(--text-secondary); }
+.app-workspace .route-stage > :not(.reception-home) :is(.panel, .assistant-shell, .shared-resource-list),
+.app-workspace .route-stage > .panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  box-shadow: none;
+}
+.app-workspace .route-stage > :not(.reception-home) :is(.padded, .form-panel),
+.app-workspace .route-stage > :is(.padded, .form-panel) { padding: clamp(20px, 2.3vw, 32px); }
+.app-workspace .route-stage > :not(.reception-home) .panel .panel { box-shadow: none; }
+.app-workspace .route-stage > :not(.reception-home) :is(.section-heading, .people-directory-head, .people-heading) {
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.app-workspace .route-stage > :not(.reception-home) .section-heading h2 { margin: 0; }
+.app-workspace .route-stage > :not(.reception-home) :is(.stack, .people-panel) { gap: 24px; }
+.app-workspace .route-stage > .two-col,
+.app-workspace .route-stage > :not(.reception-home) .two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+}
+
+/* Controls inherit Assistant from the application and keep native input behavior. */
+.app-workspace .route-stage > :not(.reception-home) :is(button, input, select, textarea, .button) { font-family: inherit; }
+.app-workspace .route-stage > :not(.reception-home) :is(.button, .icon-button, .text-button) {
+  min-height: 40px;
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.app-workspace .route-stage > :not(.reception-home) .button { gap: 8px; padding: 10px 16px; white-space: normal; text-align: center; }
+.app-workspace .route-stage > :not(.reception-home) .button.primary {
+  background: var(--accent-action);
+  color: var(--accent-ink);
+  border: 1px solid var(--accent-action);
+}
+.app-workspace .route-stage > :not(.reception-home) .button.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent-action) 87%, var(--text-primary)); }
+.app-workspace .route-stage > :not(.reception-home) :is(.button.secondary, .icon-button) {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+.app-workspace .route-stage > :not(.reception-home) :is(.button.secondary, .icon-button):hover:not(:disabled) { background: var(--bg-elevated); border-color: var(--accent); }
+.app-workspace .route-stage > :not(.reception-home) :is(button, .button):disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.app-workspace .route-stage > :not(.reception-home) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.45;
+  caret-color: var(--accent);
+  box-shadow: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+.app-workspace .route-stage > :not(.reception-home) textarea { min-height: 108px; resize: vertical; }
+.app-workspace .route-stage > :not(.reception-home) :is(input, textarea)::placeholder { color: var(--text-tertiary); opacity: 1; }
+.app-workspace .route-stage > :not(.reception-home) :is(input, select, textarea):disabled { background: var(--bg-elevated); color: var(--text-secondary); }
+.app-workspace .route-stage > :not(.reception-home) :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--accent); flex-shrink: 0; }
+.app-workspace .route-stage > :not(.reception-home) :focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 3px; }
+.app-workspace .route-stage > :not(.reception-home) ::selection { background: var(--accent-action); color: var(--accent-ink); }
+.app-workspace .route-stage > :not(.reception-home) .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 24px; }
+.app-workspace .route-stage > :not(.reception-home) .field { gap: 8px; margin-bottom: 4px; }
+.app-workspace .route-stage > :not(.reception-home) .field > span { color: var(--text-secondary); font-size: 12px; font-weight: 600; line-height: 1.5; }
+.app-workspace .route-stage > :not(.reception-home) .field small { font-size: 12px; line-height: 1.5; }
+.app-workspace .route-stage > :not(.reception-home) :is(.search, .settings-filter) { min-width: 0; min-height: 42px; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--bg-app); }
+.app-workspace .route-stage > :not(.reception-home) :is(.search, .settings-filter) input { width: 100%; min-width: 0; border: 0; background: transparent; box-shadow: none; }
+.app-workspace .route-stage > :not(.reception-home) :is(.form-footer, .report-setup-footer, .actions, .people-editor-actions) { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; margin-top: 24px; }
+.app-workspace .route-stage > :not(.reception-home) :is(.form-footer, .report-setup-footer) { border-top: 1px solid var(--border); padding-top: 20px; }
+.app-workspace .route-stage > :not(.reception-home) :is(.form-footer > span, .form-footer > small) { color: var(--text-secondary); line-height: 1.5; }
+.app-workspace .route-stage > :is(.tabs, .intake-mode),
+.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .swab-method-switcher, .worksheet-types) {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 5px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  overflow-x: auto;
+}
+.app-workspace .route-stage > .tabs { margin-bottom: 24px; }
+.app-workspace .route-stage > :is(.tabs, .intake-mode) > button,
+.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .swab-method-switcher, .worksheet-types) > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 16px 1px;
+  line-height: 1;
+  text-align: center;
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+.app-workspace .route-stage > :is(.tabs, .intake-mode) > button:is(.active, .selected, [aria-selected="true"], [aria-pressed="true"]),
+.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .swab-method-switcher, .worksheet-types) > button:is(.active, .selected, [aria-selected="true"], [aria-pressed="true"]) {
+  background: var(--accent-action);
+  color: var(--accent-ink);
+  box-shadow: none;
+}
+
+/* Registers preserve semantic tables and scroll within their own region. */
+.app-workspace .route-stage > :not(.reception-home) :is(.table-scroll, .worksheet-table-scroll) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-tertiary) var(--bg-app);
+  border-radius: 0;
+}
+.app-workspace .route-stage > :not(.reception-home) table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+.app-workspace .route-stage > :not(.reception-home) thead th {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: start;
+  white-space: nowrap;
+}
+.app-workspace .route-stage > :not(.reception-home) tbody td { padding: 17px 18px; border-bottom: 1px solid var(--border); vertical-align: middle; background: var(--bg-surface); }
+.app-workspace .route-stage > :not(.reception-home) tbody tr:last-child td { border-bottom: 0; }
+.app-workspace .route-stage > :not(.reception-home) tbody tr:is(:hover, :focus-within) td { background: color-mix(in srgb, var(--bg-elevated) 55%, var(--bg-surface)); }
+.app-workspace .route-stage > :not(.reception-home) td :is(small, .mono) { color: var(--text-secondary); font-size: 12px; }
+.app-workspace .route-stage > :not(.reception-home) td a { text-underline-offset: 3px; }
+.app-workspace .route-stage > :not(.reception-home) .badge { padding: 4px 9px; border-radius: 7px; font-size: 11px; font-weight: 600; line-height: 1.5; }
+.app-workspace .route-stage > :not(.reception-home) :is(.pagination, .report-pagination) { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; padding: 18px 22px; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 12px; }
+.app-workspace .route-stage > :not(.reception-home) .pagination > span:first-child { margin-inline-end: auto; }
+.app-workspace .route-stage > :not(.reception-home) :is(.filters, .worksheet-toolbar, .library-toolbar) { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 22px; border-bottom: 1px solid var(--border); background: transparent; }
+.app-workspace .route-stage > :not(.reception-home) :is(.filters, .worksheet-toolbar, .library-toolbar) .search { flex: 1 1 240px; }
+.app-workspace .route-stage > :not(.reception-home) .secondary-filters { padding-top: 14px; padding-bottom: 18px; background: var(--bg-app); }
+.app-workspace .route-stage > :not(.reception-home) .secondary-filters .field { flex: 0 1 190px; }
+.app-workspace .route-stage > :not(.reception-home) :is(.worksheet-page-actions, .worksheet-layout-actions, .worksheet-note-actions, .library-header-actions, .library-page-actions) { display: flex; flex-wrap: wrap; gap: 8px; }
+.app-workspace .route-stage > :not(.reception-home) .worksheet-types { width: fit-content; margin-bottom: 20px; }
+.app-workspace .route-stage > :not(.reception-home) .worksheet-layout-details { padding: 18px 22px; border-top: 1px solid var(--border); background: var(--bg-surface); }
+.app-workspace .route-stage > :not(.reception-home) :is(.worksheet-layout-editor, .worksheet-note-editor) { padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-app); }
+.app-workspace .route-stage > :not(.reception-home) .worksheet-note-editor textarea { width: 100%; }
+.app-workspace .route-stage > :not(.reception-home) .worksheet-table th { position: sticky; top: 0; z-index: 1; }
+
+/* Intake separates editable samples from quiet logbook context. */
+.app-workspace .route-stage > .intake-workflow { display: flex; flex-wrap: wrap; gap: 12px 0; margin: 0 0 28px; padding: 0; }
+.app-workspace .route-stage > .intake-workflow li.active > span { color: var(--accent-ink); background: var(--accent-action); border-color: var(--accent-action); }
+.app-workspace .route-stage > .intake-mode { width: fit-content; margin-bottom: 24px; }
+.app-workspace .route-stage > .category-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr)); gap: 18px; }
+.app-workspace .route-stage > .category-grid .category-card {
+  min-width: 0;
+  min-height: 180px;
+  padding: 24px;
+  text-align: start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: none;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+.app-workspace .route-stage > .category-grid .category-card:hover { transform: none; border-color: var(--accent); background: var(--bg-elevated); }
+.app-workspace .route-stage > .category-grid .category-card h2 { margin: 16px 0 6px; }
+.app-workspace .route-stage > .category-grid .category-card p { color: var(--text-secondary); line-height: 1.5; }
+.app-workspace .route-stage > :not(.reception-home) .intake-workspace { grid-template-columns: minmax(0, 1fr) 230px; gap: 28px; margin-top: 24px; }
+.app-workspace .route-stage > :not(.reception-home) .intake-row { padding: 0 0 24px; margin-bottom: 24px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; }
+.app-workspace .route-stage > :not(.reception-home) .intake-row:last-child { margin-bottom: 0; }
+.app-workspace .route-stage > :not(.reception-home) .intake-row-heading { margin-bottom: 22px; }
+.app-workspace .route-stage > :not(.reception-home) :is(.intake-context, .report-setup-help, .people-policy) {
+  padding: 20px;
+  border: 0;
+  border-radius: 14px;
+  color: var(--text-primary);
+  background: var(--op-blue, var(--bg-elevated));
+  box-shadow: none;
+}
+.app-workspace .route-stage > :not(.reception-home) .intake-context :is(p, dt, dd) { color: inherit; }
+.app-workspace .route-stage > :not(.reception-home) .intake-context p { font-size: 12px; line-height: 1.6; }
+.app-workspace .route-stage > :not(.reception-home) .intake-review-row { margin-top: 16px; padding: 20px 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+.app-workspace .route-stage > :not(.reception-home) .intake-review-fields { gap: 16px; }
+.app-workspace .route-stage > :not(.reception-home) .intake-destination { background: var(--bg-elevated); border-radius: 12px; padding: 16px 20px; }
+
+/* Report setup, result entry and saved drafts share a clear reading rhythm. */
+.app-workspace .route-stage > .reports-workbench .reports-layout { grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); gap: 24px; }
+.app-workspace .route-stage > :not(.reception-home) .saved-reports-panel { position: sticky; top: 24px; }
+.app-workspace .route-stage > :not(.reception-home) :is(.draft-link, .file-row, .user-row) { padding: 18px 0; border-bottom: 1px solid var(--border); background: transparent; box-shadow: none; }
+.app-workspace .route-stage > :not(.reception-home) .draft-identity { min-width: 0; overflow-wrap: anywhere; }
+.app-workspace .route-stage > :not(.reception-home) :is(.sample-confirm, .report-selected-sample) { padding: 20px; border: 0; border-radius: 12px; background: var(--bg-elevated); }
+.app-workspace .route-stage > :not(.reception-home) :is(.report-results-panel, .report-setup-panel) { padding: clamp(20px, 2.3vw, 32px); }
+.app-workspace .route-stage > :not(.reception-home) .result-entry-row { gap: 20px 28px; padding: 24px 0; border-color: var(--border); background: transparent; }
+.app-workspace .route-stage > :not(.reception-home) .result-grid { min-width: 0; gap: 14px; }
+.app-workspace .route-stage > :not(.reception-home) .result-with-unit { min-width: 0; }
+.app-workspace .route-stage > :not(.reception-home) :is(.test-card, .field-editor, .history, .template-route) { margin-top: 16px; padding: 18px 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+.app-workspace .route-stage > :not(.reception-home) summary { cursor: pointer; color: var(--text-primary); line-height: 1.6; }
+.app-workspace .route-stage > :not(.reception-home) :is(.history, .field-editor)[open] > summary { margin-bottom: 20px; }
+.app-workspace .route-stage > :not(.reception-home) .document-output { padding: 24px; border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--bg-surface); }
+.app-workspace .route-stage > :not(.reception-home) :is(.document-output-head, .document-output-actions, .document-output-file) { display: flex; flex-wrap: wrap; gap: 12px; }
+.app-workspace .route-stage > :not(.reception-home) :is(.document-output-copy, .document-output-footer, .fingerprint, .account) { min-width: 0; overflow-wrap: anywhere; }
+.app-workspace .route-stage > :not(.reception-home) .details > div { padding-block: 14px; border-bottom: 1px solid var(--border); }
+.app-workspace .route-stage > :not(.reception-home) .details dt { color: var(--text-secondary); font-size: 12px; }
+.app-workspace .route-stage > :not(.reception-home) .details dd { min-width: 0; color: var(--text-primary); overflow-wrap: anywhere; line-height: 1.6; }
+.app-workspace .route-stage > :not(.reception-home) :is(.sticky-actions, .save-bar),
+.app-workspace .route-stage > .save-bar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  margin-top: 28px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--text-primary) 8%, transparent);
+}
+.app-workspace .route-stage > :not(.reception-home) .sticky-actions > div { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Library keeps document identity dominant and action groups easy to scan. */
+.app-workspace .route-stage > .library-page .library-list-heading { background: var(--bg-elevated); color: var(--text-secondary); padding-block: 13px; font-size: 12px; font-weight: 600; }
+.app-workspace .route-stage > .library-page .library-row { grid-template-columns: 28px minmax(160px, 1fr) minmax(130px, .4fr) minmax(150px, .65fr); gap: 16px; padding: 22px; border-bottom: 1px solid var(--border); background: transparent; }
+.app-workspace .route-stage > .library-page .library-row:hover { background: var(--bg-app); }
+.app-workspace .route-stage > .library-page .library-document strong { display: block; overflow-wrap: anywhere; white-space: normal; font-size: 14px; line-height: 1.5; }
+.app-workspace .route-stage > .library-page .library-document small { display: block; margin-top: 5px; color: var(--text-secondary); line-height: 1.5; }
+.app-workspace .route-stage > .library-page .library-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.app-workspace .route-stage > .library-page .library-file-icon { color: var(--accent); }
+
+/* Settings uses a quiet navigation column, with a dark selected pill. */
+.app-workspace .route-stage > .settings-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; align-items: start; }
+.app-workspace .route-stage > .settings-layout.nav-collapsed { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
+.app-workspace .route-stage > .settings-layout .settings-nav { position: sticky; top: 24px; min-width: 0; padding: 0; border: 0; background: transparent; }
+.app-workspace .route-stage > .settings-layout .settings-filter { margin-bottom: 16px; background: var(--bg-surface); }
+.app-workspace .route-stage > .settings-layout .settings-nav > button { padding: 12px 15px; margin-bottom: 4px; border-radius: 14px; background: transparent; color: var(--text-secondary); box-shadow: none; transition: background-color 160ms ease, color 160ms ease; }
+.app-workspace .route-stage > .settings-layout .settings-nav > button:hover { background: var(--bg-elevated); transform: none; }
+.app-workspace .route-stage > .settings-layout .settings-nav > button.active { color: var(--accent-ink); background: var(--accent-action); box-shadow: none; }
+.app-workspace .route-stage > .settings-layout .settings-nav > button.active strong { color: inherit; }
+.app-workspace .route-stage > .settings-layout .settings-nav > button.active small { color: inherit; opacity: .85; }
+.app-workspace .route-stage > .settings-layout .settings-nav strong { font-size: 13px; }
+.app-workspace .route-stage > .settings-layout .settings-nav small { margin-top: 4px; font-size: 11px; line-height: 1.5; }
+.app-workspace .route-stage > .settings-layout .settings-content { padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.app-workspace .route-stage > .settings-layout .entity-layout { grid-template-columns: minmax(180px, .7fr) minmax(0, 1.5fr); gap: 20px; }
+.app-workspace .route-stage > .settings-layout .entity-list { padding: 20px; gap: 18px; }
+.app-workspace .route-stage > .settings-layout .entity-items > button { padding: 14px 12px; border-radius: 10px; background: transparent; }
+.app-workspace .route-stage > .settings-layout .entity-items > button:hover { transform: none; background: var(--bg-elevated); }
+.app-workspace .route-stage > .settings-layout .entity-items > button.selected { color: var(--text-primary); background: var(--bg-elevated); border-color: var(--accent); }
+.app-workspace .route-stage > .settings-layout .entity-item-copy small { color: var(--text-secondary); }
+.app-workspace .route-stage > :not(.reception-home) .connection-field { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin: 24px 0; }
+.app-workspace .route-stage > :not(.reception-home) .connection-field .field { flex: 1 1 240px; margin: 0; }
+.app-workspace .route-stage > :not(.reception-home) .people-policy { gap: 20px; }
+.app-workspace .route-stage > :not(.reception-home) .people-policy :is(strong, span) { color: inherit; }
+.app-workspace .route-stage > :not(.reception-home) .people-stats { padding-block: 16px; border-block: 1px solid var(--border); background: transparent; }
+.app-workspace .route-stage > :not(.reception-home) .people-account { padding: 18px 12px; border-radius: 10px; box-shadow: none; }
+.app-workspace .route-stage > :not(.reception-home) .people-account.selected { background: var(--bg-elevated); border-color: var(--accent); }
+.app-workspace .route-stage > :not(.reception-home) .people-editor { padding: 24px 0 0; border: 0; border-top: 1px solid var(--border); border-radius: 0; background: transparent; }
+
+/* Keep shared canvases and drag behavior untouched; style their surrounding chrome. */
+.app-workspace .route-stage > :is(.shared-tools, .shared-editor) :is(.shared-tools-bar, .shared-editor-heading) { gap: 16px; margin-bottom: 20px; }
+.app-workspace .route-stage > :is(.shared-tools, .shared-editor) .shared-access { margin-block: 20px; color: var(--text-secondary); }
+.app-workspace .route-stage > .shared-tools .shared-resource-list { padding: 0 24px; }
+.app-workspace .route-stage > .shared-tools .shared-resource-row { gap: 18px; padding-block: 24px; }
+.app-workspace .route-stage > .shared-tools .shared-resource-row:last-child { border-bottom: 0; }
+.app-workspace .route-stage > .shared-editor .shared-live-bar { padding: 14px 18px; border-radius: 12px; border: 0; background: var(--bg-elevated); color: var(--text-secondary); }
+
+/* Conversation history and messages are separate scroll regions. */
+.app-workspace .route-stage > .assistant-shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  height: clamp(520px, calc(100dvh - 240px), 880px);
+  min-height: 0;
+  overflow: hidden;
+}
+.app-workspace .route-stage > .assistant-shell .assistant-history { padding: 22px 16px; border: 0; border-inline-end: 1px solid var(--border); border-radius: 0; background: var(--bg-app); overflow-y: auto; }
+.app-workspace .route-stage > .assistant-shell .assistant-history-heading { align-items: center; gap: 10px; }
+.app-workspace .route-stage > .assistant-shell .assistant-history-heading h2 { font-size: 16px; }
+.app-workspace .route-stage > .assistant-shell .assistant-new-chat { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-surface); color: var(--text-primary); }
+.app-workspace .route-stage > .assistant-shell .assistant-history-row { margin-top: 8px; border: 0; border-radius: 10px; }
+.app-workspace .route-stage > .assistant-shell .assistant-history-row.active { background: var(--bg-elevated); color: var(--text-primary); }
+.app-workspace .route-stage > .assistant-shell .assistant-history-item { min-width: 0; color: var(--text-primary); }
+.app-workspace .route-stage > .assistant-shell .assistant-history-item strong { white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
+.app-workspace .route-stage > .assistant-shell .assistant-page { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 0; border: 0; border-radius: 0; background: var(--bg-surface); }
+.app-workspace .route-stage > .assistant-shell .assistant-header { flex-shrink: 0; gap: 16px; padding: 22px 26px; border-bottom: 1px solid var(--border); background: transparent; }
+.app-workspace .route-stage > .assistant-shell .assistant-messages { flex: 1; min-height: 0; padding: 28px; background: transparent; overflow-y: auto; overscroll-behavior-y: contain; }
+.app-workspace .route-stage > .assistant-shell .assistant-message { gap: 12px; margin-bottom: 24px; }
+.app-workspace .route-stage > .assistant-shell .assistant-bubble { min-width: 0; max-width: min(100%, 72ch); padding: 16px 20px; border: 0; border-radius: 14px; background: var(--bg-app); color: var(--text-primary); box-shadow: none; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; overflow-x: auto; }
+.app-workspace .route-stage > .assistant-shell .assistant-message.user .assistant-bubble { background: var(--op-blue, var(--bg-elevated)); color: var(--text-primary); }
+.app-workspace .route-stage > .assistant-shell .assistant-message.is-error .assistant-bubble { background: var(--color-critical-bg); color: var(--color-critical); }
+.app-workspace .route-stage > .assistant-shell .assistant-composer { flex-shrink: 0; padding: 20px 26px; border-top: 1px solid var(--border); background: var(--bg-surface); }
+.app-workspace .route-stage > .assistant-shell .assistant-composer form { display: flex; gap: 10px; }
+.app-workspace .route-stage > .assistant-shell .assistant-input-wrap { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-app); }
+.app-workspace .route-stage > .assistant-shell .assistant-input-wrap input { width: 100%; border: 0; background: transparent; }
+.app-workspace .route-stage > .assistant-shell .floating-starter-chip { padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-surface); color: var(--text-secondary); white-space: normal; text-align: start; transition: border-color 160ms ease, background-color 160ms ease; }
+.app-workspace .route-stage > .assistant-shell .floating-starter-chip:hover { border-color: var(--accent); background: var(--bg-elevated); transform: none; }
+.app-workspace .route-stage > :not(.reception-home) :is(.empty, .shared-empty) { padding: 64px 24px; color: var(--text-secondary); }
+.app-workspace .route-stage > :not(.reception-home) :is(.empty, .shared-empty) p { max-width: 55ch; margin-inline: auto; line-height: 1.6; }
+
+@media (max-width: 1180px) {
+  .app-workspace .route-stage > .settings-layout { grid-template-columns: 190px minmax(0, 1fr); gap: 20px; }
+  .app-workspace .route-stage > .settings-layout .entity-layout { grid-template-columns: minmax(0, 1fr); }
+  .app-workspace .route-stage > .settings-layout .entity-items { max-height: 280px; }
+  .app-workspace .route-stage > .library-page .library-row { grid-template-columns: 24px minmax(0, 1fr) minmax(120px, .5fr); }
+  .app-workspace .route-stage > .library-page .library-actions { grid-column: 2 / -1; justify-content: flex-start; }
+  .app-workspace .route-stage > .reports-workbench .reports-layout { grid-template-columns: minmax(0, 1fr); }
+  .app-workspace .route-stage > :not(.reception-home) .saved-reports-panel { position: static; }
+}
+@media (max-width: 900px) {
+  .app-workspace .route-stage > .two-col,
+  .app-workspace .route-stage > :not(.reception-home) .two-col,
+  .app-workspace .route-stage > :not(.reception-home) .intake-workspace { grid-template-columns: minmax(0, 1fr); }
+  .app-workspace .route-stage > :not(.reception-home) .intake-context { position: static; }
+  .app-workspace .route-stage > .assistant-shell { grid-template-columns: 190px minmax(0, 1fr); }
+  .app-workspace .route-stage > .settings-layout .two-col { gap: 20px; }
+}
+@media (max-width: 760px) {
+  .app-workspace .route-stage > :not(.reception-home) :is(.page-heading, .page-heading-action) { width: 100%; }
+  .app-workspace .route-stage > .page-heading { gap: 12px; margin-bottom: 24px; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.button, .icon-button, .text-button, select, summary) { min-height: 44px; }
+  .app-workspace .route-stage > :not(.reception-home) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 16px; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.form-grid, .people-form-grid, .equipment-label-grid, .report-date-pair, .result-entry-row, .result-grid, .intake-review-fields) { grid-template-columns: minmax(0, 1fr); }
+  .app-workspace .route-stage > :not(.reception-home) :is(.form-grid, .result-grid) > * { min-width: 0; grid-column: auto; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.filters, .worksheet-toolbar, .library-toolbar) { padding: 16px; align-items: stretch; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.filters, .worksheet-toolbar, .library-toolbar) > :is(select, label, .search) { flex: 1 1 100%; width: 100%; }
+  .app-workspace .route-stage > :not(.reception-home) .secondary-filters .field { flex-basis: 100%; }
+  .app-workspace .route-stage > :not(.reception-home) table { min-width: 640px; }
+  .app-workspace .route-stage > :not(.reception-home) :is(th, td) { padding: 14px; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.form-footer, .report-setup-footer) { align-items: stretch; flex-direction: column; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.form-footer, .report-setup-footer) .button { width: 100%; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.sticky-actions, .save-bar),
+  .app-workspace .route-stage > .save-bar { bottom: 10px; padding: 14px; gap: 12px; }
+  .app-workspace .route-stage > :not(.reception-home) .sticky-actions > div { width: 100%; }
+  .app-workspace .route-stage > :not(.reception-home) .sticky-actions > div > .button { flex: 1; }
+  .app-workspace .route-stage > .settings-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .app-workspace .route-stage > .settings-layout .settings-nav { position: static; display: block; }
+  .app-workspace .route-stage > .settings-layout .settings-nav > :is(button, .settings-filter) { display: none; }
+  .app-workspace .route-stage > .settings-layout .mobile-settings-select { display: block; width: 100%; }
+  .app-workspace .route-stage > .settings-layout.nav-collapsed { grid-template-columns: minmax(0, 1fr); }
+  .app-workspace .route-stage > .settings-layout.nav-collapsed .settings-nav { display: none; }
+  .app-workspace .route-stage > :not(.reception-home) :is(.people-policy, .people-stats) { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .app-workspace .route-stage > :not(.reception-home) .people-account { flex-wrap: wrap; gap: 12px; }
+  .app-workspace .route-stage > :not(.reception-home) .people-account-copy { min-width: 0; overflow-wrap: anywhere; }
+  .app-workspace .route-stage > .library-page .library-list-heading { display: none; }
+  .app-workspace .route-stage > .library-page .library-row { grid-template-columns: 24px minmax(0, 1fr); padding: 20px 16px; gap: 12px; }
+  .app-workspace .route-stage > .library-page :is(.library-record-state, .library-actions) { grid-column: 2; min-width: 0; }
+  .app-workspace .route-stage > :is(.shared-tools, .shared-editor) :is(.shared-tools-bar, .shared-editor-heading, .shared-live-bar) { align-items: flex-start; }
+  .app-workspace .route-stage > .shared-tools .shared-resource-list { padding-inline: 16px; }
+  .app-workspace .route-stage > .shared-tools .shared-resource-row { flex-wrap: wrap; gap: 12px; }
+  .app-workspace .route-stage > .assistant-shell { display: flex; flex-direction: column; height: auto; overflow: visible; }
+  .app-workspace .route-stage > .assistant-shell .assistant-history { max-height: 220px; border-inline-end: 0; border-bottom: 1px solid var(--border); border-radius: var(--radius-panel) var(--radius-panel) 0 0; }
+  .app-workspace .route-stage > .assistant-shell .assistant-page { flex: none; height: max(500px, calc(100dvh - 160px)); min-height: 0; border-radius: 0 0 var(--radius-panel) var(--radius-panel); overflow: hidden; }
+  .app-workspace .route-stage > .assistant-shell :is(.assistant-header, .assistant-messages, .assistant-composer) { padding: 18px 16px; }
+  .app-workspace .route-stage > .assistant-shell .assistant-header { flex-wrap: wrap; }
+  .app-workspace .route-stage > .assistant-shell .assistant-header .button { width:auto; flex:0 0 auto; padding:10px 14px; white-space:nowrap; }
+  .app-workspace .route-stage > .assistant-shell .assistant-send { width:44px; flex:0 0 44px; padding:0; font-size:0; gap:0; }
+  .app-workspace .route-stage > .assistant-shell .assistant-bubble { padding: 14px; }
+  .app-workspace .route-stage > .assistant-shell .assistant-message { gap: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-workspace .route-stage > :not(.reception-home),
+  .app-workspace .route-stage > :not(.reception-home) * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* A quiet, low-profile Remotion strip per route keeps the working surfaces primary. */
+.app-workspace .workflow-film { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:16px; margin:0 0 16px; padding:4px 14px 4px 4px; border:1px solid var(--border); border-radius:14px; background:var(--bg-surface); color:var(--text-primary); contain:layout paint; }
+.workflow-film-art { position:relative; width:100%; min-width:0; height:86px; background:#0C0E09; border-radius:10px; pointer-events:none; }
+.workflow-film-controls { position:relative; z-index:1; display:flex; align-items:center; gap:6px; font-size:11px; color:var(--text-secondary); white-space:nowrap; }
+.workflow-film-controls>span { display:none; }
+.workflow-film-controls button { min-height:28px; border:1px solid var(--border); border-radius:999px; background:var(--bg-elevated); color:var(--text-primary); font:inherit; padding:3px 10px; cursor:pointer; }
+.workflow-film-controls button:hover:not(:disabled) { background:var(--bg-surface-hover); }
+.workflow-film-controls button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.workflow-film-controls button:disabled { opacity:.55; cursor:default; }
+.app.app-workspace .route-stage { animation:workflow-route-arrive 320ms cubic-bezier(.22,1,.36,1) both; }
+.workspace-motion-paused .app-workspace :is(*,*::before,*::after) { animation-play-state:paused!important; }
+.workspace-motion-paused .app-workspace .route-stage { animation:none!important; }
+.workspace-motion-paused .app-workspace .selection-layer { transition:none!important; }
+@keyframes workflow-route-arrive { from { opacity:.72; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@media(max-width:767px) {
+  .app-workspace .workflow-film { grid-template-columns:minmax(0,1fr); margin-bottom:12px; padding:4px; gap:4px; }
+  .workflow-film-art { height:86px; }
+  .workflow-film-controls { justify-content:flex-end; padding:2px 4px 4px; }
+  .workflow-film-controls button { min-height:36px; padding:4px 9px; font-size:11px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  .app.app-workspace .route-stage { animation:none; }
+}
+@media print {
+  .workflow-film { display:none!important; }
+  .app-workspace .route-stage > :not(.reception-home) {
+    --bg-app: #fff;
+    --bg-surface: #fff;
+    --bg-elevated: #eee;
+    --text-primary: #000;
+    --text-secondary: #333;
+    --text-tertiary: #444;
+    --border: #ccc;
+    --op-blue: #eee;
+  }
+  .app-workspace .route-stage > :not(.reception-home) :is(.sticky-actions, .save-bar, .saved-reports-panel),
+  .app-workspace .route-stage > .save-bar { position: static; box-shadow: none; }
+}

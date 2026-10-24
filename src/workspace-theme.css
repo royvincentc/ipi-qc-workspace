@@ -1,3 +1,4 @@
+.reception-ambient, .science-matrix, .reception-specimen, .pet-aura, .reception-motion-control { display:none!important; }
 /* Reuse reception tokens without enabling legacy dashboard layouts on other routes. */
 .app-workspace {
   --ink-primary:var(--text-primary);
@@ -9,8 +10,8 @@
   --accent-strong:var(--accent);
   --accent-action-hover:var(--accent);
   --surface-shadow:var(--reception-shadow);
-  --radius-panel:22px;
-  --radius-control:12px;
+  --radius-panel:8px;
+  --radius-control:6px;
   --control-top:rgba(255,255,255,.86);
   --control-shadow:0 3px 8px rgba(30,62,78,.055),inset 0 1px 0 var(--control-top),inset 0 -1px 0 rgba(34,65,78,.035);
   --field-surface:rgba(241,247,249,.94);
@@ -61,7 +62,20 @@
 .app-workspace .reception-product { gap:14px; }
 .app-workspace .reception-product > span { color:var(--category-color,var(--text-primary)); }
 .app-workspace .reception-actions a { backdrop-filter:none; }
-.app-workspace .reception-actions svg { width:25px; height:25px; }
+.app-workspace .reception-actions { display:flex; align-items:center; gap:8px; }
+.app-workspace .reception-actions .reception-action-btn {
+  display:inline-flex; align-items:center; gap:8px; height:38px; width:auto;
+  padding:0 14px; border-radius:6px; font-size:13px; font-weight:550;
+  color:var(--text-primary); border:1px solid var(--border);
+  background:var(--reception-control); text-decoration:none;
+  box-shadow:0 1px 2px rgba(0,0,0,.04); transition:background-color 140ms ease, border-color 140ms ease;
+}
+.app-workspace .reception-actions .reception-action-btn:hover { background:var(--bg-surface-hover); border-color:var(--text-tertiary); }
+.app-workspace .reception-actions .reception-action-btn.reception-action-primary {
+  background:var(--accent); color:var(--accent-ink); border-color:var(--accent);
+}
+.app-workspace .reception-actions .reception-action-btn.reception-action-primary:hover { filter:brightness(1.08); }
+.app-workspace .reception-actions .reception-action-btn svg { width:16px; height:16px; flex-shrink:0; }
 .app-workspace .reception-glass {
   background:var(--reception-panel);
   backdrop-filter:none; -webkit-backdrop-filter:none;
@@ -106,8 +120,8 @@
 .app-workspace .field > span { color:var(--text-primary); font-size:12px; font-weight:550; }
 .app-workspace :is(input,textarea):disabled { opacity:.65; cursor:not-allowed; }
 .app-workspace :is(input,textarea)[readonly] { background-color:var(--reception-inset); color:var(--text-secondary); }
-.app-workspace :is(.search-field,.reception-search,.assistant-input-wrap) {
-  min-height:46px; border:1px solid var(--field-edge); border-radius:999px;
+.app-workspace :is(.search-field,.assistant-input-wrap) {
+  min-height:46px; border:1px solid var(--field-edge); border-radius:8px;
   background:var(--field-surface); box-shadow:var(--field-inset); color:var(--text-secondary);
 }
 .app-workspace :is(.search-field,.reception-search,.assistant-input-wrap):focus-within {
@@ -122,7 +136,7 @@
 .app-workspace .reception-search { box-shadow:var(--field-inset); }
 .app-workspace .reception-filter-button { background:var(--reception-control); box-shadow:var(--control-shadow); }
 .app-workspace .reception-filter-button > svg { width:22px; height:22px; }
-.app-workspace .reception-categories button { border-radius:14px; }
+.app-workspace .reception-categories button { border-radius:6px; }
 .app-workspace .reception-categories button[aria-pressed="true"] { box-shadow:var(--control-shadow); }
 .app-workspace :is(.button,.icon-button) { border-radius:13px; }
 .app-workspace .button { min-height:42px; gap:9px; font-weight:550; padding-inline:17px; }
@@ -415,44 +429,39 @@
   .app-workspace :is(.reception-ambient i,.pet-aura,.lab-object svg *,.reception-motion-icon svg) { animation:none!important; will-change:auto; }
   .app-workspace :is(.button,.icon-button,.island-segment,.account-chevron,.floating-starter-chip,.assistant-message) { animation:none; transition:none; }
 }
-/* Landing / Login Page Liquid-Glass & Science Matrix Polish */
+/* Landing / Login Page Enterprise Lab Polish */
 .login-screen-split .login-panel {
   position:relative;
   isolation:isolate;
-  overflow:hidden;
+  background:var(--bg-app);
 }
 .login-screen-split .login-panel .science-matrix {
-  position:absolute;
-  inset:0;
-  z-index:0;
-  opacity:.09;
-  -webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 85%);
-  mask-image:radial-gradient(ellipse at 50% 50%,#000 30%,transparent 85%);
+  display:none!important;
 }
 .login-screen-split .login-panel .login-card {
   position:relative;
   z-index:1;
-  border-radius:26px;
-  border:1px solid rgba(255,255,255,.78);
-  background:rgba(250,253,254,.92);
-  box-shadow:0 18px 48px rgba(24,58,72,.08),inset 0 1px 0 rgba(255,255,255,.9);
-  backdrop-filter:blur(24px) saturate(1.18);
-  -webkit-backdrop-filter:blur(24px) saturate(1.18);
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--bg-surface);
+  box-shadow:0 4px 20px rgba(0,0,0,.06);
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
 }
 :root[data-theme="dark"] .login-screen-split .login-panel .login-card {
-  border-color:rgba(229,240,224,.18);
-  background:rgba(42,48,44,.92);
-  box-shadow:0 20px 54px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.08);
+  border-color:var(--border);
+  background:var(--bg-surface);
+  box-shadow:0 4px 24px rgba(0,0,0,.32);
 }
 .login-screen-split .login-google-button {
-  border-radius:999px;
-  transition:transform 160ms cubic-bezier(.16,1,.3,1),box-shadow 160ms ease;
+  border-radius:6px;
+  transition:transform 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
 }
 .login-screen-split .login-google-button:hover {
   transform:translateY(-1px);
 }
 .login-screen-split .login-google-button:active {
-  transform:scale(.98);
+  transform:scale(.99);
 }
 @supports not (backdrop-filter:blur(1px)) {
   .app-workspace .route-stage :is(.panel,.assistant-shell,.settings-content,.shared-resource-list),

@@ -1,5 +1,5 @@
 import {useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent} from 'react';
-import {init, use, graphic, color, type EChartsType, type ComposeOption} from 'echarts/core';
+import {init, use, type EChartsType, type ComposeOption} from 'echarts/core';
 import {BarChart, type BarSeriesOption} from 'echarts/charts';
 import {GridComponent, type GridComponentOption} from 'echarts/components';
 import {CanvasRenderer} from 'echarts/renderers';
@@ -9,31 +9,17 @@ import {isConstrainedDevice} from './motion';
 
 use([BarChart, GridComponent, CanvasRenderer]);
 
-const gradientCache = new Map<string, any>();
-const getCategoryGradient = (c: string) => {
-  let g = gradientCache.get(c);
-  if (!g) {
-    g = new graphic.LinearGradient(0, 0, 1, 1, [
-      {offset: 0, color: color.lift(c, .2)}, {offset: 1, color: c},
-    ]);
-    gradientCache.set(c, g);
-  }
-  return g;
-};
-
-// EvilCharts Peak Week's rounded stacks and transparent spacer series, adapted
-// for daily receipts. Source: https://evilcharts.com/r/echarts-bar-chart.json
 export const RECEPTION_CATEGORIES = [
-  {id: 'SFG', label: 'SFG', color: '#244b9e'},
-  {id: 'FG', label: 'FG', color: '#ed8b35'},
-  {id: 'ST', label: 'STAB', color: '#e74c58'},
-  {id: 'MIS', label: 'MISC', color: '#a17ae0'},
-  {id: 'WS', label: 'WATER', color: '#51c5e7'},
-  {id: 'RM', label: 'RM', color: '#b59a6b'},
-  {id: 'EM', label: 'EM', color: '#27b581'},
+  {id: 'SFG', label: 'SFG', color: '#FF2070'},
+  {id: 'FG', label: 'FG', color: '#2B3024'},
+  {id: 'ST', label: 'STAB', color: '#D4B200'},
+  {id: 'MIS', label: 'MISC', color: '#6E7565'},
+  {id: 'WS', label: 'WATER', color: '#2563EB'},
+  {id: 'RM', label: 'RM', color: '#B81B58'},
+  {id: 'EM', label: 'EM', color: '#65A30D'},
 ];
 export const receptionCategoryColor = (id: string) =>
-  RECEPTION_CATEGORIES.find(item => item.id === id)?.color || '#9aa9a5';
+  RECEPTION_CATEGORIES.find(item => item.id === id)?.color || '#6E7565';
 const labelDate = (date: string, month = false) => new Intl.DateTimeFormat('en-GB', {
   day: '2-digit', ...(month ? {month: 'short'} : {}), timeZone: 'UTC',
 }).format(new Date(`${date}T12:00:00Z`));
@@ -104,14 +90,14 @@ export function ReceptionChart({days, month, today, selectedDate, category, them
     if (!instance || !size.width || !size.height) return;
     const reveal = animate && (revealState.current.month !== month || !revealState.current.animate);
     revealState.current = {month, animate};
-    const foreground = theme === 'dark' ? '#c3cbc4' : '#506079';
-    const axisLine = theme === 'dark' ? 'rgba(221,237,218,.2)' : 'rgba(64,109,126,.12)';
+    const foreground = theme === 'dark' ? '#b8bca9' : '#4a4e44';
+    const axisLine = theme === 'dark' ? 'rgba(246,247,242,.18)' : 'rgba(12,14,9,.14)';
     const series: BarSeriesOption[] = [];
     categories.forEach((item, position) => {
       series.push({
         id: item.id, name: item.label, type: 'bar', stack: 'received', barWidth: '71%',
         silent: true, emphasis: {disabled: true}, animationDuration: animate ? (lowPerformance ? 360 : 680) : 0,
-        animationDelay: index => index * (lowPerformance ? 6 : 14), animationDurationUpdate: 0,
+        animationDelay: index => index * (lowPerformance ? 6 : 14), animationDurationUpdate: animate ? 240 : 0,
         data: days.map((day, index) => {
           const highlighted = day.date === selectedDate || day.date === peak?.date || index === days.length - 1;
           const previous = !day.date.startsWith(month);
@@ -120,11 +106,7 @@ export function ReceptionChart({days, month, today, selectedDate, category, them
           const opacity = !value ? 0 : dimmed ? .16 : highlighted ? 1 : previous ? .22 : .57;
           return {value: day.counts[item.id] || 0, itemStyle: {
             borderRadius: 4, opacity,
-            color: getCategoryGradient(item.color),
-            borderColor: value && highlighted && !dimmed ? (theme === 'dark' ? '#ffffff66' : '#ffffffbb') : 'transparent',
-            borderWidth: value && highlighted && !dimmed ? .8 : 0,
-            shadowColor: value && highlighted && !dimmed ? `${item.color}77` : 'transparent',
-            shadowBlur: value && highlighted && !dimmed ? 6 : 0,
+            color: item.color,
           }};
         }),
       });
@@ -151,7 +133,7 @@ export function ReceptionChart({days, month, today, selectedDate, category, them
             const text = labelDate(date, index === 0 || isLast || index === boundary);
             return date === today ? `${text}\n{today|Today}` : text;
           },
-          rich: {today: {fontSize: 11, fontWeight: 600, color: theme === 'dark' ? '#d8f5ae' : '#087d61', lineHeight: 17}},
+          rich: {today: {fontSize: 11, fontWeight: 700, color: theme === 'dark' ? '#fcff1a' : '#ff2070', lineHeight: 17}},
         },
       },
       yAxis: {type: 'value', min: 0, max: maxValue, show: false},

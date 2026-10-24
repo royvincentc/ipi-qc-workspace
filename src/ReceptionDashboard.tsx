@@ -1,11 +1,10 @@
 import {Fragment, useEffect, useMemo, useState, type CSSProperties} from 'react';
 import {Link} from 'react-router-dom';
-import {ArrowRight, CalendarDays, ChevronLeft, ChevronRight, FileText, FlaskConical, FolderOpen, Plus, RefreshCw, Search, SlidersHorizontal, X} from './components/LabIcons';
+import {ArrowRight, CalendarDays, ChevronLeft, ChevronRight, FileText, FlaskConical, Plus, RefreshCw, Search, SlidersHorizontal, X} from './components/LabIcons';
 import {api} from './api';
 import {useConfiguration} from './configuration';
 import {ErrorBox, useCanEdit} from './ui';
-import {LabGraphic} from './LabGraphic';
-import {isConstrainedDevice} from './motion';
+import {useWorkspaceMotion} from './motion';
 import {ReceptionChart, RECEPTION_CATEGORIES, receptionCategoryColor} from './ReceptionChart';
 import {LabIconPlus, LabIconDossier, LabIconArchive, LabIconArrow, LabSpecimenBadge} from './components/LabIcons';
 import type {ReceptionOverview} from '../shared/reception';
@@ -37,36 +36,26 @@ export function ReceptionDashboard() {
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [version, setVersion] = useState(0);
+  const [motionReplay, setMotionReplay] = useState(0);
   const [data, setData] = useState<ReceptionOverview>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState('');
-  const [motion, setMotion] = useState(() => {
-    try { return localStorage.getItem('ipi.reception.motion') !== 'off' && !isConstrainedDevice(); }
-    catch { return !isConstrainedDevice(); }
-  });
-  const [reducedMotion, setReducedMotion] = useState(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const [visible, setVisible] = useState(() => !document.hidden);
-  const animate = motion && !reducedMotion;
+  const {enabled:motion,setMotion,reduced:reducedMotion,visible,animate}=useWorkspaceMotion();
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setSearch(query.trim()); setPage(1); }, 250);
     return () => window.clearTimeout(timer);
   }, [query]);
   useEffect(() => {
-    const media = matchMedia('(prefers-reduced-motion: reduce)');
-    const preference = () => setReducedMotion(media.matches);
     const visibility = () => {
-      setVisible(!document.hidden);
       if (!document.hidden) setToday(laboratoryDate(config.value.general.timezone));
     };
     const refresh = () => setVersion(value => value + 1);
     const timer = window.setInterval(() => setToday(laboratoryDate(config.value.general.timezone)), 60_000);
-    media.addEventListener('change', preference);
     document.addEventListener('visibilitychange', visibility);
     window.addEventListener('ipi:sync-complete', refresh);
     return () => {
       window.clearInterval(timer);
-      media.removeEventListener('change', preference);
       document.removeEventListener('visibilitychange', visibility);
       window.removeEventListener('ipi:sync-complete', refresh);
     };
@@ -87,16 +76,13 @@ export function ReceptionDashboard() {
     return () => { active = false; };
   }, [month, category, search, status, selectedDate, page, version, today]);
   useEffect(() => {
-    try { localStorage.setItem('ipi.reception.motion', motion ? 'on' : 'off'); } catch { /* The control still works without storage. */ }
-  }, [motion]);
-  useEffect(() => {
     const workspace = document.querySelector('.app-workspace');
     if (!workspace) return;
     workspace.classList.toggle('reception-motion', animate);
     workspace.classList.toggle('motion-off', !animate);
   }, [animate]);
 
-  const overview = data?.month === month ? data : undefined;
+  const overview = !error && data?.month === month ? data : undefined;
   const categoryOptions = useMemo(() => {
     const defaults = RECEPTION_CATEGORIES.map(item => ({
       ...item, name: config.value.sampleTypes.find(type => type.id === item.id)?.name || item.label,
@@ -126,67 +112,81 @@ export function ReceptionDashboard() {
   const changeMonth = (value: string) => { setChosenMonth(value); setSelectedDate(''); setPage(1); };
   const clearFilters = () => { setCategory(''); setQuery(''); setStatus(''); setSelectedDate(''); setPage(1); };
   const pages = Math.max(1, Math.ceil((overview?.tableTotal || 0) / (overview?.pageSize || 30)));
+  const todayCount = overview?.days.find(day => day.date === today)?.total;
+  const activeCategories = categoryOptions.filter(item => (overview?.totals[item.id] || 0) > 0);
+  const recordedDays = overview?.days.filter(day => day.date.startsWith(month) && day.total > 0).length;
 
   return (
     <div className={`reception-home ${animate ? 'reception-motion' : 'motion-off'} ${visible ? '' : 'motion-paused'}`}>
       <header className="reception-heading">
-        <div>
-          <h1>Microbiology workspace</h1>
-          <div className="reception-motion-control">
-            {/* Pill and dotted arrow adapted from Uiverse.io by vinodjangid07. */}
-            <button type="button" className="reception-motion-button"
-              aria-label={`Motion preview: ${motion && !reducedMotion ? 'Pause motion' : 'Preview motion'}`}
-              aria-pressed={motion && !reducedMotion} disabled={reducedMotion}
-              title={motion ? 'Pause ambient motion and chart animations' : 'Replay the chart entrance and resume ambient motion'}
-              onClick={() => setMotion(value => !value)}>
-              <span>{motion && !reducedMotion ? 'Pause motion' : 'Preview motion'}</span>
-              <span className="reception-motion-icon" aria-hidden="true">
-                <svg width="16" height="19" viewBox="0 0 16 19" fill="currentColor">
-                  <circle cx="1.613" cy="1.613" r="1.5"/><circle cx="5.736" cy="1.613" r="1.5"/>
-                  <circle cx="5.736" cy="5.557" r="1.5"/><circle cx="9.859" cy="5.557" r="1.5"/>
-                  <circle cx="9.859" cy="9.5" r="1.5"/><circle cx="13.981" cy="9.5" r="1.5"/>
-                  <circle cx="5.736" cy="13.443" r="1.5"/><circle cx="9.859" cy="13.443" r="1.5"/>
-                  <circle cx="1.613" cy="17.387" r="1.5"/><circle cx="5.736" cy="17.387" r="1.5"/>
-                </svg>
-              </span>
-            </button>
-            <small className="reception-motion-status" aria-live="polite">
-              {reducedMotion ? 'Reduced motion is on' : motion ? 'Live' : 'Paused'}
-            </small>
+        <div className="reception-heading-content">
+          <h1>Laboratory overview</h1>
+          <div className="reception-meta-strip">
+            <span className="reception-shift-badge">Sample reception</span>
+            <span className="reception-meta-item"><time dateTime={today}>{dateLabel(today, {weekday: 'long', day: 'numeric', month: 'long'})}</time></span>
+            <span className="reception-meta-item">Timezone: {config.value.general.timezone}</span>
           </div>
         </div>
         <nav className="reception-actions" aria-label="Workspace shortcuts">
-          {canEdit ? <Link to="/new" aria-label="Log a sample" title="Log a sample"><LabIconPlus size={22}/></Link> : null}
-          <Link to="/reports" aria-label="Open results and reports" title="Results and reports"><LabIconDossier size={22}/></Link>
-          <Link to="/library" aria-label="Open file library" title="File library"><LabIconArchive size={22}/></Link>
+          {canEdit ? <Link to="/new" className="reception-action-btn reception-action-primary" aria-label="Log a sample" title="Log a sample"><LabIconPlus size={18}/><span>Log sample</span></Link> : null}
+          <Link to="/reports" className="reception-action-btn" aria-label="Open results and reports" title="Results and reports"><LabIconDossier size={18}/><span>Reports</span></Link>
+          <Link to="/library" className="reception-action-btn" aria-label="Open file library" title="File library"><LabIconArchive size={18}/><span>Library</span></Link>
         </nav>
       </header>
 
+      <section className="operations-summary" aria-label="Receipt summary">
+        <article className="operations-stat operations-stat-dark"><span>Monthly receipts <FlaskConical size={17}/></span><strong>{overview ? overview.total.toLocaleString() : '\u2014'}</strong><small>{monthLabel(month)} · all sample types</small></article>
+        <article className="operations-stat operations-stat-neon"><span>{month === today.slice(0, 7) ? 'Received today' : 'Days with receipts'} <CalendarDays size={17}/></span><strong>{overview ? (month === today.slice(0, 7) ? todayCount || 0 : recordedDays || 0).toLocaleString() : '\u2014'}</strong><small>{month === today.slice(0, 7) ? dateLabel(today, {day: 'numeric', month: 'long'}) : monthLabel(month)}</small></article>
+        <article className="operations-stat operations-stat-sun"><span>Busiest recorded day <ArrowRight size={17}/></span><strong>{overview ? (peak?.total || 0).toLocaleString() : '\u2014'}</strong><small>{error ? 'Receipts unavailable' : !overview ? 'Loading receipts\u2026' : peak?.total ? `${dateLabel(peak.date)} · samples received` : 'No dated receipts this month'}</small></article>
+        <article className="operations-stat operations-stat-action"><span>Continue your work <FileText size={17}/></span><Link to="/reports">Results &amp; reports <ArrowRight size={22}/></Link><small>Open drafts and prepare documents</small></article>
+      </section>
+
+      <div className="operations-overview">
       <section className="reception-chart-panel reception-glass" aria-label="Daily sample receipts">
-        <nav className="reception-month" aria-label="Chart month">
-          <button type="button" aria-label="Previous month" onClick={() => changeMonth(moveMonth(month, -1))}><ChevronLeft size={19}/></button>
-          <span aria-live="polite">{monthLabel(month)}</span>
-          <button type="button" aria-label="Next month" disabled={month >= today.slice(0, 7)}
-            onClick={() => changeMonth(moveMonth(month, 1))}><ChevronRight size={19}/></button>
-        </nav>
-        <div className="reception-chart-heading">
+        <div className="reception-chart-header-row">
           <div className="reception-total">
-            <h2>Samples received</h2>
-            <div><strong>{overview ? overview.total.toLocaleString() : '\u2014'}</strong><span>this month</span></div>
-            <p>{peak?.total ? <>Peak day <span aria-hidden="true">&middot;</span> {dateLabel(peak.date)} <span aria-hidden="true">&middot;</span> {peak.total} samples</> : busy ? 'Loading recorded receipts\u2026' : 'No dated receipts this month'}</p>
+            <h2>A clear view of your laboratory.</h2>
+            <p>Follow incoming samples, explore the logbook, and pick up your next task.</p>
+            <div className="reception-total-number"><strong>{overview ? overview.total.toLocaleString() : '\u2014'}</strong><span>receipts in {monthLabel(month)}</span></div>
           </div>
+          <nav className="reception-month" aria-label="Chart month">
+            <button type="button" aria-label="Previous month" onClick={() => changeMonth(moveMonth(month, -1))}><ChevronLeft size={16}/></button>
+            <span aria-live="polite">{monthLabel(month)}</span>
+            <button type="button" aria-label="Next month" disabled={month >= today.slice(0, 7)}
+              onClick={() => changeMonth(moveMonth(month, 1))}><ChevronRight size={16}/></button>
+          </nav>
+        </div>
+        <div className="operations-motion-toolbar">
+          <span>{reducedMotion ? 'System reduced motion is on' : 'Dashboard motion'}</span>
+          <div>
+            <button type="button" disabled={reducedMotion}
+              onClick={() => setMotion(!motion)}>{animate ? 'Pause animations' : 'Play animations'}</button>
+            <button type="button" disabled={!animate} onClick={() => setMotionReplay(value => value + 1)}>
+              <RefreshCw size={14} aria-hidden="true"/> Replay
+            </button>
+          </div>
+        </div>
+        <div className="operations-workflow" key={`flow-${motionReplay}`} role="group" aria-label="Illustrated workflow guide, not live sample status">
+          <svg className="operations-flow-track" viewBox="0 0 600 48" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 24H600" className="operations-flow-line"/>
+            <path d="M0 24H600" className="operations-flow-trace"/>
+          </svg>
+          <Link to={canEdit ? '/new' : '/samples'}><span className="operations-flow-node"><FlaskConical size={21} aria-hidden="true"/></span><strong>Receive</strong><small>Log samples</small></Link>
+          <Link to="/samples"><span className="operations-flow-node"><Search size={21} aria-hidden="true"/></span><strong>Review</strong><small>Browse records</small></Link>
+          <Link to="/reports"><span className="operations-flow-node"><FileText size={21} aria-hidden="true"/></span><strong>Prepare</strong><small>Draft reports</small></Link>
+        </div>
+        <div className="reception-chart-heading">
           <div className="reception-legend" role="group" aria-label="Filter samples by category">
             {categoryOptions.map(item => <button type="button" key={item.id}
               className={category === item.id ? 'is-selected' : ''} aria-pressed={category === item.id}
               title={`Filter ${item.name}`} onClick={() => { setCategory(current => current === item.id ? '' : item.id); setPage(1); }}>
-              <i style={{'--category-color': item.color} as CSSProperties}/><span>{item.label}</span><b>{(overview?.totals[item.id] || 0).toLocaleString()}</b>
+              <i style={{'--category-color': item.color} as CSSProperties}/><span>{item.label}</span><b>{overview ? (overview.totals[item.id] || 0).toLocaleString() : '\u2014'}</b>
             </button>)}
           </div>
-          <div className="reception-specimen"><LabGraphic kind="dish"/></div>
-        </div>
+                  </div>
         {error ? <div className="reception-chart-error"><ErrorBox message={error}/><button type="button" className="button secondary" onClick={() => setVersion(value => value + 1)}><RefreshCw size={16}/>Retry receipts</button></div> :
-          overview ? <ReceptionChart days={overview.days} month={month} today={overview.today} selectedDate={selectedDate}
-            category={category} theme={theme} animate={animate} onSelectDate={chooseDate}/> :
+          overview ? <ReceptionChart key={`chart-${motionReplay}`} days={overview.days} month={month} today={overview.today} selectedDate={selectedDate}
+            category={category} theme={theme} animate={animate && visible} onSelectDate={chooseDate}/> :
             <div className="reception-chart-placeholder" role="status">Loading daily receipts<span/></div>}
         <div className="reception-chart-help">
           <span>{selectedDate ? `Showing receipts for ${dateLabel(selectedDate, {day: 'numeric', month: 'short', year: 'numeric'})}` : 'Select a day to explore its samples'}</span>
@@ -194,6 +194,16 @@ export function ReceptionDashboard() {
           {month < today.slice(0, 7) ? <button type="button" onClick={() => changeMonth(today.slice(0, 7))}>Return to current month</button> : null}
         </div>
       </section>
+      <aside className="operations-breakdown" aria-labelledby="sample-mix-heading">
+        <div className="operations-panel-heading"><h2 id="sample-mix-heading">Sample mix</h2><span>{monthLabel(month)}</span></div>
+        <div className="operations-mix-total"><strong>{overview ? activeCategories.length : '\u2014'}</strong><span>sample types recorded</span></div>
+        <div className="operations-mix-bars" key={`mix-${month}-${motionReplay}`} aria-hidden="true">{activeCategories.map((item, index) => <i key={item.id} style={{background: item.color, flex: overview?.totals[item.id], '--mix-delay': `${index * 65}ms`} as CSSProperties}/>)}</div>
+        <div className="operations-mix-list">{categoryOptions.map(item => <button key={item.id} type="button" aria-pressed={category === item.id} onClick={() => {setCategory(current => current === item.id ? '' : item.id); setPage(1);}}>
+          <i style={{background: item.color}}/><span>{item.name}</span><strong>{overview ? (overview.totals[item.id] || 0).toLocaleString() : '\u2014'}</strong><ArrowRight size={14}/>
+        </button>)}</div>
+        <Link className="operations-text-link" to="/samples">Explore all samples <ArrowRight size={16}/></Link>
+      </aside>
+      </div>
 
       <section id="reception-log" className={`reception-log reception-glass ${selectedDate ? 'has-selected-day' : ''} ${busy ? 'is-updating' : ''}`} aria-labelledby="reception-log-heading">
         <div className="reception-log-progress" aria-hidden="true"><span/></div>

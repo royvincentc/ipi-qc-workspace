@@ -1,0 +1,107 @@
+/* The login pairs a laboratory study with a quiet, unboxed sign-in surface. */
+.login-screen.login-refined {
+  min-height:100dvh; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(380px,1fr);
+  padding:0; gap:0; background:#f5f5ef; color:#0c0e09; font-family:var(--font-sans);
+}
+.login-refined .login-story {
+  position:relative; isolation:isolate; overflow:hidden; display:flex; flex-direction:column;
+  min-height:100dvh; padding:36px 52px 26px; border:0; border-radius:0; background:#0c0e09; color:#f6f7f2;
+}
+.login-refined .login-story::before,.login-refined .login-story::after { display:none; }
+.login-refined .login-story-brand {
+  position:relative; z-index:2; display:flex; align-items:center; gap:20px;
+  font-family:var(--font-sans); color:#f6f7f2; letter-spacing:0; text-transform:none;
+}
+.login-refined .login-wordmark { font-size:38px; font-weight:750; line-height:1; letter-spacing:-.04em; }
+.login-refined .login-wordmark b { color:#ff2070; }
+.login-refined .login-brand-division { border-left:1px solid #444a38; padding-left:20px; font-size:13px; color:#c3c8b5; }
+.login-refined .login-story-showcase { position:relative; z-index:2; margin:52px 0 0; }
+.login-refined .login-story-showcase h2 {
+  margin:0; font-size:clamp(42px,4.6vw,68px); font-weight:500; line-height:1.02;
+  letter-spacing:-.035em; color:#f6f7f2; text-wrap:balance;
+}
+.login-refined .login-story-showcase p { margin:18px 0 0; max-width:300px; font-size:15px; line-height:1.5; color:#b7bda7; }
+.login-refined .login-film {
+  position:relative; inset:auto; z-index:1; width:100%; max-width:580px; margin:auto;
+  overflow:visible; background:transparent; pointer-events:auto;
+}
+.login-refined .login-film::after,.login-connecting .login-film::after { display:none; }
+.login-refined .login-film-stage { width:100%; aspect-ratio:680 / 540; max-height:440px; overflow:hidden; }
+.login-refined .login-story-footer {
+  position:relative; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  width:100%; margin:20px 0 0; padding-top:18px; border-top:1px solid #303626; color:#aeb59d; font-size:11px; letter-spacing:0;
+}
+:is(.login-refined,.login-connecting) .login-film-control { position:static; display:flex; justify-content:flex-end; margin-top:4px; z-index:3; color:#d8dccb; font-size:12px; max-width:none; }
+:is(.login-refined,.login-connecting) .login-film-control button {
+  display:inline-flex; align-items:center; gap:8px; min-height:44px; padding:8px 12px;
+  border:1px solid #444b36; border-radius:6px; background:#13170e; color:#d9ddce;
+  font:inherit; font-size:12px; cursor:pointer;
+}
+:is(.login-refined,.login-connecting) .login-film-control button:hover { background:#23281d; border-color:#fcff1a; color:#fcff1a; }
+:root .login-connecting { background:#0c0e09; color:#f6f7f2; display:flex; flex-direction:column; justify-content:center; gap:20px; padding:28px; }
+.login-connecting .login-film { position:relative; inset:auto; width:min(100%,500px); background:transparent; }
+.login-connecting .login-film-stage { aspect-ratio:680 / 540; }
+:root .login-connecting>p { margin:0; padding:0; background:none; color:#d9ddce; font-size:15px; }
+.login-screen.login-refined .login-panel { display:flex; align-items:center; justify-content:center; padding:64px 52px; background:#f5f5ef; }
+:root .login-screen.login-refined .login-panel .login-card {
+  width:100%; max-width:360px; padding:0; border:0; border-radius:0; background:none;
+  box-shadow:none; color:#0c0e09; text-align:left; align-items:stretch; backdrop-filter:none; animation:none;
+}
+.login-refined .login-card h1 {
+  margin:0 0 18px; color:#0c0e09; font-family:var(--font-sans); font-size:48px;
+  font-weight:600; line-height:1.08; letter-spacing:-.035em; text-wrap:balance;
+}
+.login-refined .login-kicker { margin:0 0 36px; color:#535a47; font-size:16px; line-height:1.6; letter-spacing:0; text-transform:none; }
+.login-screen.login-refined :is(.login-google-button,.login-enter-button) {
+  display:flex; align-items:center; justify-content:center; gap:12px; width:100%; min-height:54px;
+  margin:0; padding:14px 18px; border:1px solid #0c0e09; border-radius:8px;
+  background:#0c0e09; color:#fff; box-shadow:none; font-family:inherit; font-size:15px; font-weight:600;
+  text-decoration:none; transition:background 150ms ease,border-color 150ms ease;
+}
+.login-screen.login-refined :is(.login-google-button,.login-enter-button):hover { background:#303722; border-color:#303722; color:#fff; }
+.login-refined .google-mark { width:20px; height:20px; flex:none; background:#fff; border-radius:50%; padding:2px; }
+.login-refined .login-button-arrow { margin-left:auto; color:#fcff1a; opacity:1; }
+.login-refined .login-google-button>span { flex:1; }
+.login-refined .login-access-note { display:block; margin:16px 0 0; padding:0; border:0; border-radius:0; background:none; }
+.login-refined .login-access-indicator { display:none; }
+.login-refined .login-access-note p { margin:0; color:#535a47; font-size:13px; line-height:1.5; }
+.login-refined .login-card-footer { display:block; margin:42px 0 0; padding:20px 0 0; border:0; border-top:1px solid #d7dace; color:#626954; font-size:12px; line-height:1.5; letter-spacing:0; }
+.login-refined .login-authenticated-badge { margin:0; padding:0; border:0; border-radius:0; background:none; text-align:left; }
+.login-refined .login-authenticated-status { margin:0 0 10px; color:#535a47; font-size:12px; }
+.login-refined .login-authenticated-user { display:flex; flex-direction:column; gap:2px; margin-bottom:24px; min-width:0; }
+.login-refined .login-user-name { color:#0c0e09; font-size:17px; font-weight:650; overflow-wrap:anywhere; }
+.login-refined .login-user-email { color:#535a47; font-size:14px; overflow-wrap:anywhere; }
+.login-refined .login-error-state { margin:0; }
+.login-refined .login-error-actions { margin-top:16px; }
+.login-screen.login-refined :is(a,button):focus-visible,.login-connecting button:focus-visible { outline:2px solid #ff2070; outline-offset:4px; }
+.login-refined ::selection { background:#fcff1a; color:#0c0e09; }
+:root .login-arrival .login-arrival-scene { background:transparent; overflow:hidden; animation:none; }
+:root .login-arrival>button { background:#0c0e09; color:#fcff1a; border-color:#5e6543; border-radius:8px; font-weight:600; }
+@media(max-width:1000px) and (min-width:641px) {
+  .login-screen.login-refined { grid-template-columns:minmax(0,1fr) minmax(320px,1fr); }
+  .login-refined .login-story { padding:30px 28px; }
+  .login-refined .login-story-showcase { margin-top:60px; }
+  .login-screen.login-refined .login-panel { padding:40px 28px; }
+  .login-refined .login-card h1 { font-size:40px; }
+}
+@media(max-width:640px) {
+  .login-screen.login-refined { grid-template-columns:1fr; grid-template-rows:auto 1fr; }
+  .login-refined .login-story { min-height:auto; padding:24px; display:grid; grid-template-columns:1fr 1fr; gap:16px 0; }
+  .login-refined .login-story-brand { grid-column:1 / -1; gap:16px; }
+  .login-refined .login-wordmark { font-size:30px; }
+  .login-refined .login-brand-division { font-size:12px; padding-left:16px; }
+  .login-refined .login-story-showcase { margin:16px 0 0; align-self:center; }
+  .login-refined .login-story-showcase h2 { font-size:36px; }
+  .login-refined .login-story-showcase p { margin-top:12px; font-size:12px; }
+  .login-refined .login-film { margin:0; align-self:center; }
+  .login-refined .login-film-stage { width:calc(100% + 18px); margin-left:-9px; aspect-ratio:1; max-height:none; }
+  .login-refined .login-film-control { margin-top:0; justify-content:center; }
+  .login-refined .login-story-footer { grid-column:1 / -1; margin:0; padding-top:14px; font-size:10px; }
+  .login-refined .login-story-footer span:last-child { display:none; }
+  .login-screen.login-refined .login-panel { padding:36px 28px; align-items:flex-start; }
+  :root .login-screen.login-refined .login-panel .login-card { max-width:400px; }
+  .login-refined .login-card h1 { font-size:36px; margin-bottom:14px; }
+  .login-refined .login-kicker { font-size:14px; margin-bottom:24px; }
+  .login-refined .login-card-footer { margin-top:26px; padding-top:16px; }
+}
+@media(prefers-reduced-motion:reduce) { .login-refined * { animation:none!important; transition:none!important; } }

@@ -2,15 +2,16 @@ import {ConfigurationProvider,useConfiguration} from './configuration';
 import {Dashboard,SampleSearch,Intake} from './workspace';
 import {useState,lazy,Suspense,useEffect,useRef} from 'react';
 import {Link,NavLink,Route,Routes,useLocation} from 'react-router-dom';
-import {Home,Sparkles,FlaskConical,Plus,Search,FileText,FolderOpen,Settings,ArrowRight,ShieldCheck,LogOut,Menu,X,Bot,PanelLeftClose,PanelLeftOpen,RefreshCw,Sun,Moon,Table2,ChevronDown,Columns3} from './components/LabIcons';
+import {Sparkles,FlaskConical,Plus,Search,ArrowRight,ShieldCheck,LogOut,Menu,X,Sun,Moon,ChevronDown,Columns3,RefreshCw} from './components/LabIcons';
 import {api} from './api';
 import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
 import {RouteExperience,SelectionMotion} from './Experience';
-import {ScienceMatrix} from './ScienceMatrix';
+import {WorkflowFilm} from './WorkflowFilm';
 import {LabIconHome,LabIconIntake,LabIconSearch,LabIconWorksheet,LabIconReports,LabIconLibrary,LabIconShared,LabIconAssistant,LabIconSync,LabIconSettings} from './components/LabIcons';
 import Dialog from './dialog';
 import {isConstrainedDevice} from './motion';
+import {LoginFilm,LoginConnecting,WorkspaceArrival,hasLoginHandoff,rememberLoginHandoff} from './LoginFilm';
 const AdminCenter=lazy(()=>import('./admin'));
 const SampleDetailRoute=lazy(()=>import('./pages').then(module=>({default:module.SampleDetail})));
 const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Reports})));
@@ -102,7 +103,6 @@ function CommandPalette({open, onClose}: {open: boolean, onClose: () => void}) {
 function Workspace({data}:{data:any}){
   const {config,theme,setTheme}=useConfiguration();
   const [notice,setNotice]=useState<{text:string;error:boolean}|null>(null);
-  const [collapsed, setCollapsed] = useState(true);
   const [mobileNav,setMobileNav]=useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [accountOpen,setAccountOpen]=useState(false);
@@ -174,12 +174,10 @@ function Workspace({data}:{data:any}){
     <Session.Provider value={data}>
       <Notice.Provider value={notify}>
         <div className={`app app-workspace reception-motion ${lowPerformanceMode?'app-low-performance':''} ${location.pathname==='/'?'app-dashboard':''}`}>
-          <div className="reception-ambient" aria-hidden="true"><i/><i/><i/></div>
-          <ScienceMatrix/>
-          <RouteExperience/>
+                    <RouteExperience/>
           <SelectionMotion/>
           <a className="skip-to-content" href="#workspace-main">Skip to workspace</a>
-          <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''} ${mobileNav?'mobile-open':''}`} aria-label="Workspace navigation">
+          <aside className={`sidebar sidebar-collapsed ${mobileNav?'mobile-open':''}`} aria-label="Workspace navigation">
             <Link to="/" className="brand" title={config.value.general.appName}>
               <div className="brand-icon"><Sparkles size={24}/></div>
               <div className="brand-text">
@@ -187,9 +185,13 @@ function Workspace({data}:{data:any}){
                 <span>{config.value.general.department}</span>
               </div>
             </Link>
-            <button className="icon-button collapse-btn" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed} onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
-              {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
-            </button>
+            <button className="icon-button mobile-rail-close" aria-label="Close navigation" onClick={()=>setMobileNav(false)}><X size={20}/></button>
+            <nav className="utility-nav" aria-label="Workspace utilities">
+              <button type="button" title={`Find a sample · ${searchShortcut}`} aria-label={`Open global sample search (${searchShortcut})`} onClick={()=>{setMobileNav(false);setCmdOpen(true);}}><Search size={19}/><span>Search</span></button>
+              {data.user.role !== 'viewer' ? <Link to="/new" title="Log a sample" onClick={()=>setMobileNav(false)}><Plus size={20}/><span>Log a sample</span></Link> : null}
+              <button type="button" aria-label={`Switch to ${theme==='light'?'dark':'light'} theme`} title="Change theme" onClick={()=>setTheme(theme==='light'?'dark':'light')}>{theme==='light'?<Moon size={19}/>:<Sun size={19}/>}<span>Change theme</span></button>
+              <NavLink to="/shared" title="Shared tools" onClick={()=>setMobileNav(false)}><Columns3 size={19}/><span>Shared tools</span></NavLink>
+            </nav>
             
             <div className="nav-label">WORK</div>
             <nav className="main-nav" aria-label="Workspaces">
@@ -226,11 +228,11 @@ function Workspace({data}:{data:any}){
 
           </aside>
 
-          <div className={`main-wrapper ${collapsed ? 'collapsed' : ''}`}>
+          <div className="main-wrapper collapsed">
             <header className="topbar">
               <button className="icon-button mobile-menu-button" aria-label="Open navigation" onClick={()=>setMobileNav(true)}><Menu size={20}/></button>
-              <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>IPI</b><span>QC MICROBIOLOGY</span></Link>
-              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Workspace'],['/new','Log Sample'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','File Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
+              <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>ipi<span>.</span></b><span>Microbiology</span></Link>
+              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Overview'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
                 {syncing ? (
                   <div className="sync-progress-inline" role="status" aria-live="polite">
@@ -273,12 +275,13 @@ function Workspace({data}:{data:any}){
 
             {data.demo && (
               <div className="demo-banner" style={{background: 'var(--color-warning-bg)', color: 'var(--color-warning)', padding: '8px 24px', fontSize: '11px', textAlign: 'center'}}>
-                LOCAL DEMO — May include imported logbook snapshots. Google writes are disabled.
+                Local preview <span aria-hidden="true">&middot;</span> Imported logbook snapshots may be included. Google writes are disabled.
               </div>
             )}
 
             <div className="workspace-content">
               <main id="workspace-main" tabIndex={-1} className="route-stage" key={location.pathname}>
+                <WorkflowFilm/>
                 <Suspense fallback={<Loading/>}><Routes>
                   <Route path="/" element={<Dashboard/>}/>
                   <Route path="/new" element={<Intake/>}/>
@@ -317,80 +320,68 @@ function Workspace({data}:{data:any}){
 }
 
 export default function App(){
+  const location = useLocation();
   const {data,error,reload}=useLoad(()=>api('/me'));
-  if(!data){
-    if(!error) return <Loading/>;
-    const signIn=error==='Sign in to access the workspace'||error.includes('session expired');
+  const forceLogin = location.pathname === '/login' || new URLSearchParams(location.search).get('view') === 'login';
+  if(!data || forceLogin){
+    if(!error && !data && !forceLogin) return hasLoginHandoff()?<LoginConnecting/>:<Loading/>;
+    const signIn=(!error&&forceLogin) || error==='Sign in to access the workspace'||error.includes('session expired');
     return (
-      <div className="login-screen login-screen-split">
-        <aside className="login-story" aria-labelledby="login-story-heading" onPointerMove={event=>{
-          if(isConstrainedDevice()||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
-          if(event.pointerType!=='mouse'&&event.pointerType!=='pen')return;
-          const bounds=event.currentTarget.getBoundingClientRect();
-          event.currentTarget.style.setProperty('--petri-pointer-x',`${((event.clientX-bounds.left)/bounds.width-.5)*15}px`);
-          event.currentTarget.style.setProperty('--petri-pointer-y',`${((event.clientY-bounds.top)/bounds.height-.5)*10}px`);
-        }} onPointerLeave={event=>{
-          event.currentTarget.style.setProperty('--petri-pointer-x','0px');
-          event.currentTarget.style.setProperty('--petri-pointer-y','0px');
-        }}>
+      <div className="login-screen login-refined">
+        <aside className="login-story" aria-label="IPI QC Microbiology">
           <div className="login-story-brand">
-            <span className="login-story-mark" aria-hidden="true"><FlaskConical size={20} strokeWidth={1.7}/></span>
-            <span>IPI <b>MICROBIOLOGY</b></span>
+            <span className="login-wordmark">ipi<b>.</b></span>
+            <span className="login-brand-division">QC Microbiology</span>
           </div>
-          <div className="login-story-copy">
-            <h2 id="login-story-heading">A workspace for microbiology QC.</h2>
-            <p>Sample intake, review, and report preparation in one traceable workspace.</p>
+          <div className="login-story-showcase">
+            <h2>Care in every<br/>detail.</h2>
+            <p>One workspace for the work behind every sample.</p>
           </div>
-          <svg className="login-petri-visual" viewBox="0 0 600 410" aria-hidden="true" focusable="false">
-            <ellipse className="petri-shadow" cx="302" cy="219" rx="215" ry="122"/>
-            <ellipse className="petri-rim petri-rim-back" cx="302" cy="197" rx="215" ry="122"/>
-            <path className="petri-wall" d="M87 197v25c0 67 96 122 215 122s215-55 215-122v-25"/>
-            <ellipse className="petri-rim" cx="302" cy="197" rx="215" ry="122"/>
-            <ellipse className="petri-inner" cx="302" cy="197" rx="194" ry="103"/>
-            <ellipse className="petri-scan-ring" cx="302" cy="197" rx="215" ry="122"/>
-            <path className="petri-axis" d="M76 197h452M302 58v280"/>
-            <path className="petri-orbit" d="M105 111c51-66 144-91 224-76m134 39c44 26 75 67 91 113M156 332c-41-22-72-55-91-94m432 61c-41 55-105 89-175 98"/>
-            <circle className="petri-colony colony-one" cx="205" cy="174" r="12"/><circle className="petri-colony-core" cx="205" cy="174" r="4"/>
-            <circle className="petri-colony colony-two" cx="333" cy="227" r="18"/><circle className="petri-colony-core" cx="333" cy="227" r="6"/>
-            <circle className="petri-colony colony-three" cx="389" cy="162" r="9"/><circle className="petri-colony-core" cx="389" cy="162" r="3"/>
-            <circle className="petri-colony colony-four" cx="257" cy="252" r="7"/><circle className="petri-colony-core" cx="257" cy="252" r="2.5"/>
-            <circle className="petri-colony colony-five" cx="279" cy="143" r="5"/>
-            <circle className="petri-node" cx="85" cy="197" r="3"/><circle className="petri-node" cx="519" cy="197" r="3"/>
-            <circle className="petri-node" cx="302" cy="75" r="3"/><circle className="petri-node" cx="302" cy="319" r="3"/>
-            <circle className="petri-signal" cx="302" cy="197" r="3"/>
-          </svg>
-          <p className="login-story-footer">INTERNATIONAL PHARMACEUTICALS, INC.</p>
+          <LoginFilm controls/>
+          <div className="login-story-footer">
+            <span>International Pharmaceuticals, Inc.</span>
+            <span>Quality Control Division</span>
+          </div>
         </aside>
         <section className="login-panel" aria-label="Sign in to IPI Micro-QC">
-          <ScienceMatrix/>
           <main className="login-card" aria-labelledby="login-heading">
-            <div className="login-brand-mark" aria-hidden="true"><FlaskConical size={23} strokeWidth={1.8}/></div>
-            <h1 id="login-heading">IPI Micro-QC</h1>
-            {signIn ? (
+            <h1 id="login-heading">{data?.user?'Welcome back.':'Sign in.'}</h1>
+            <p className="login-kicker">Your laboratory, in focus.<br/>Continue to sample intake, worksheets, and report preparation.</p>
+            {data?.user ? (
+              <div className="login-authenticated-badge">
+                <p className="login-authenticated-status">Active session</p>
+                <div className="login-authenticated-user">
+                  <span className="login-user-name">{data.user.name || data.user.email}</span>
+                  <span className="login-user-email">{data.user.email}</span>
+                </div>
+                <Link to="/" onClick={rememberLoginHandoff} className="button primary login-enter-button">Enter laboratory workspace <ArrowRight size={18} aria-hidden="true"/></Link>
+              </div>
+            ) : signIn ? (
               <>
-                <p className="login-description">Sign in with your Google account to continue.</p>
-                <a className="login-google-button" href="/api/auth/login">
+                <a className="login-google-button" href="/api/auth/login" onClick={rememberLoginHandoff}>
                   <svg className="google-mark" viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.6-5.1c-1.8 1.2-4.1 2-6.9 2-5.3 0-9.8-3.6-11.4-8.4H5.8V33A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.6 27.7a12 12 0 0 1 0-7.4V15H5.8a20 20 0 0 0 0 17.9l6.8-5.2Z"/><path fill="#EA4335" d="M24 11.9c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.8 29.5 4 24 4A20 20 0 0 0 5.8 15l6.8 5.3c1.6-4.8 6.1-8.4 11.4-8.4Z"/></svg>
-                  <span>Continue with Google</span>
+                  <span>Sign in with Google</span>
                   <ArrowRight className="login-button-arrow" size={15} aria-hidden="true" />
                 </a>
                 <div className="login-access-note">
                   <span className="login-access-indicator" aria-hidden="true" />
-                  <p>New accounts start with viewer access. An administrator can grant additional permissions.</p>
+                  <p>Use your authorized Google account.</p>
                 </div>
               </>
             ) : (
               <div className="login-error-state">
-                <ErrorBox message={error}/>
-                <button className="button primary" onClick={reload}>Try again</button>
+                <ErrorBox message={error || 'Unable to connect to laboratory API'}/>
+                <div className="login-error-actions">
+                  <button type="button" className="button primary" onClick={reload}>Retry connection</button>
+                </div>
               </div>
             )}
-            <div className="login-card-footer"><span>AUTHORIZED ACCESS</span><span>GOOGLE SIGN-IN</span></div>
+            <div className="login-card-footer">Access managed by your administrator.</div>
           </main>
         </section>
       </div>
     );
   }
-  return <ConfigurationProvider><Workspace data={data}/></ConfigurationProvider>;
+  return <ConfigurationProvider loading={hasLoginHandoff()?<LoginConnecting/>:undefined}><WorkspaceArrival><Workspace data={data}/></WorkspaceArrival></ConfigurationProvider>;
 }
 

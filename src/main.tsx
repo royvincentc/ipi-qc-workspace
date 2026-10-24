@@ -15,6 +15,9 @@ import './route-redesign.css';
 import './laboratory.css';
 import './reception.css';
 import './workspace-theme.css';
+import './operations.css';
+import './login-refined.css';
+import './operations-routes.css';
 
 // Production builds can reopen previously visited shared boards without a network.
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
