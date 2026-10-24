@@ -490,3 +490,52 @@
   .app-workspace .route-stage > :not(.reception-home) :is(.sticky-actions, .save-bar, .saved-reports-panel),
   .app-workspace .route-stage > .save-bar { position: static; box-shadow: none; }
 }
+
+/* Search uses one field surface and the shared culture study for pending results. */
+dialog.workspace-dialog.sample-search-dialog { width:min(640px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:0; border-radius:18px; }
+.workspace-dialog.sample-search-dialog > .section-heading { margin:0; padding:20px 24px 16px; border:0; background:transparent; }
+.sample-search-dialog > .section-heading h2 { font-size:21px; font-weight:600; letter-spacing:-.02em; }
+.sample-search-dialog > .section-heading .button { min-height:44px; }
+.workspace-dialog.sample-search-dialog > .cmd-palette { margin:0; padding:0 24px 16px; max-width:none; }
+.sample-search-dialog .cmd-input-row { gap:12px; padding:4px 6px 4px 16px; border:1px solid var(--border-strong); border-radius:12px; background:var(--bg-app); color:var(--text-secondary); box-shadow:none; }
+.sample-search-dialog .cmd-input-row:focus-within { border-color:var(--accent); outline:1px solid var(--accent); outline-offset:0; box-shadow:none; }
+.sample-search-dialog .cmd-input-row .cmd-input:focus-visible { outline:none!important; }
+.sample-search-dialog .cmd-input-row .cmd-input { min-height:52px; padding:10px 0; border:0; border-radius:0; background:transparent; box-shadow:none; outline:0; font-size:16px; color:var(--text-primary); }
+.sample-search-dialog .cmd-input::placeholder { color:var(--text-secondary); opacity:1; }
+.sample-search-dialog .cmd-input-row > svg { flex-shrink:0; }
+.sample-search-dialog .cmd-input-row .icon-button { flex:0 0 44px; width:44px; height:44px; border:0; background:transparent; }
+.cmd-search-meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 16px; margin-top:12px; color:var(--text-secondary); font-size:12px; }
+.sample-search-dialog .cmd-results { padding:0; max-height:min(420px,50dvh); }
+.sample-search-dialog .cmd-results:not(:empty) { margin-top:16px; padding-top:12px; border-top:1px solid var(--border); }
+.sample-search-dialog .cmd-results > a { padding:12px; border-radius:8px; overflow-wrap:anywhere; }
+.sample-search-dialog .cmd-results > a:focus-visible { outline:2px solid var(--accent); outline-offset:-2px; }
+.sample-search-dialog .cmd-results > a strong { font-size:13px; color:var(--text-secondary); }
+.sample-search-dialog .cmd-results > a span { font-size:16px; color:var(--text-primary); }
+.sample-search-dialog .cmd-results > a small { font-size:12px; }
+.sample-search-dialog .cmd-results .cmd-all-results { color:var(--text-primary); }
+.culture-loading { min-height:240px; padding:24px; gap:12px; color:var(--text-primary); }
+.culture-loading > .login-film { position:relative; inset:auto; width:min(100%,280px); background:transparent; pointer-events:none; }
+.culture-loading .login-film-stage { aspect-ratio:680 / 540; }
+.culture-loading > span { color:var(--text-secondary); font-size:14px; line-height:1.5; }
+.culture-loading.is-compact { display:flex; justify-content:flex-start; align-items:center; min-height:64px; padding:8px 0; gap:12px; text-align:left; }
+.culture-loading.is-compact > .login-film { flex:0 0 64px; width:64px; }
+#root > .culture-loading,.login-connecting .culture-loading { min-height:100dvh; width:100%; background:#0c0e09; color:#f6f7f2; }
+#root > .culture-loading > .login-film,.login-connecting .culture-loading > .login-film { width:min(100%,500px); }
+#root > .culture-loading > span,.login-connecting .culture-loading > span { color:#d9ddce; font-size:15px; }
+:root .login-connecting { padding:0; gap:0; }
+@media(max-width:480px) {
+  .workspace-dialog.sample-search-dialog > .section-heading { padding:16px; }
+  .workspace-dialog.sample-search-dialog > .cmd-palette { padding:0 16px 16px; }
+  .sample-search-dialog .cmd-input-row { gap:8px; padding-left:10px; }
+  .sample-search-dialog .cmd-input-row .cmd-input { font-size:16px; }
+}
+
+.reception-chart-placeholder .culture-loading > span { display:block; width:auto; height:auto; background:none; }
+.nav-sync-button > .login-film { position:relative; inset:auto; flex:0 0 44px; width:44px; background:transparent; }
+.nav-sync-button .login-film-stage { aspect-ratio:680 / 540; }
+.topbar-right > .culture-loading.is-compact { min-height:44px; padding:0; gap:4px; }
+.topbar-right > .culture-loading.is-compact > .login-film { width:44px; flex-basis:44px; }
+@media(max-width:760px) { .topbar-right > .culture-loading.is-compact > span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); } }
+
+.sidebar nav .nav-sync-button .login-film svg { flex:none; width:100%; height:100%; }
+.topbar-right > .culture-loading.is-compact { display:flex!important; }

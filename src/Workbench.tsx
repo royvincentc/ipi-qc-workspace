@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {Link} from 'react-router-dom';
 import {ArrowRight,Beaker,ChevronDown,FileText,FlaskConical,FolderOpen,MapPin,MessageSquare,Plus,Search,Thermometer} from './components/LabIcons';
 import {LabGraphic} from './LabGraphic';
-import {Badge,ErrorBox,useLoad} from './ui';
+import {Badge,ErrorBox,Loading,useLoad} from './ui';
 import {api} from './api';
 import {resultDisplayValue,resultKey,type Sample} from '../shared/model';
 
@@ -175,7 +175,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
             <small>Received: {item.received||'Not recorded'} · Analyzed: {item.analysisDate||'Not recorded'}</small>
             <small>Analyzed by: {item.analyzedBy||'Not recorded'}</small>
           </button>)}
-        </div>{searching?<p role="status">Searching samples…</p>:!matches.length&&!searchError?<p role="status">No matching samples. Try another ML or control number.</p>:matches.length?<p role="status">Showing {matches.length} of {totalMatches} matches · Newest received first</p>:null}
+        </div>{searching?<Loading compact label="Searching samples…"/>:!matches.length&&!searchError?<p role="status">No matching samples. Try another ML or control number.</p>:matches.length?<p role="status">Showing {matches.length} of {totalMatches} matches · Newest received first</p>:null}
         {searchError?<p role="alert">Search unavailable. Please try again. {searchError}</p>:null}
         {matches.length<totalMatches?<button className="workflow-search-more" type="button" disabled={loadingMore} onClick={loadMoreMatches}>{loadingMore?'Loading more samples…':searchError?'Retry loading more':'Load more matches'}</button>:null}</div>:null}
       </div>

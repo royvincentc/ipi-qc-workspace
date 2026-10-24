@@ -68,7 +68,7 @@ function ArrivalComposition(){
 export function LoginFilm({controls=false}:{controls?:boolean}){
   const player=useRef<PlayerRef>(null);
   const [reduced,setReduced]=useState(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
-  const [paused,setPaused]=useState(()=>{try{return sessionStorage.getItem('ipi.login.film')==='paused';}catch{return false;}});
+  const [paused,setPaused]=useState(()=>{try{return controls&&sessionStorage.getItem('ipi.login.film')==='paused';}catch{return false;}});
   useEffect(()=>{
     const media=matchMedia('(prefers-reduced-motion: reduce)');
     const update=()=>setReduced(media.matches);
@@ -121,8 +121,12 @@ export function LoginFilm({controls=false}:{controls?:boolean}){
   </div>;
 }
 
+export function Loading({label='Preparing your workspace',compact=false}:{label?:string;compact?:boolean}){
+  return <div className={`loading-state culture-loading${compact?' is-compact':''}`} role="status" aria-live="polite"><LoginFilm/><span>{label}</span></div>;
+}
+
 export function LoginConnecting(){
-  return <div className="login-connecting"><LoginFilm controls/><p role="status">Connecting to your workspace…</p></div>;
+  return <div className="login-connecting"><Loading label="Connecting to your workspace…"/></div>;
 }
 
 export function WorkspaceArrival({children}:{children:ReactNode}){

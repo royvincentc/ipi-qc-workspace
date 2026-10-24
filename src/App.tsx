@@ -78,21 +78,25 @@ function CommandPalette({open, onClose}: {open: boolean, onClose: () => void}) {
   const [items,setItems]=useState<any[]>([]);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
+  const input=useRef<HTMLInputElement>(null);
   useEffect(()=>{
-    if(!open||query.trim().length<2){setItems([]);setBusy(false);return;}
-    let active=true;setBusy(true);setError('');
+    if(!open||query.trim().length<2){setItems([]);setBusy(false);setError('');return;}
+    let active=true;setBusy(true);setItems([]);setError('');
     const timer=setTimeout(()=>api(`/search?q=${encodeURIComponent(query)}&limit=6`).then(result=>{if(active)setItems(result.items);}).catch(e=>{if(active){setItems([]);setError(e.message||'Search could not load. Try again.');}}).finally(()=>{if(active)setBusy(false);}),250);
     return()=>{active=false;clearTimeout(timer);};
   },[open,query]);
   useEffect(()=>{if(!open)setQuery('');},[open]);
+  useEffect(()=>{if(open)input.current?.focus();},[open]);
   if (!open) return null;
   return (
-    <Dialog title="Find a sample" onClose={onClose}>
-      <div className="cmd-palette" onKeyDown={event=>{if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;const links=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('.cmd-results a'));if(!links.length)return;event.preventDefault();const index=links.indexOf(document.activeElement as HTMLElement);links[(index+(event.key==='ArrowDown'?1:-1)+links.length)%links.length]?.focus();}}>
-        <div className="cmd-input-row"><Search size={19}/><input autoFocus className="cmd-input" aria-label="Find a sample anywhere" placeholder="ML number, sample, product or batch…" value={query} onChange={event=>setQuery(event.target.value)}/><button className="icon-button" onClick={onClose} aria-label="Close search"><X size={18}/></button></div>
+    <Dialog title="Find a sample" onClose={onClose} className="sample-search-dialog">
+      <div className="cmd-palette" onKeyDown={event=>{if(event.key!=='ArrowDown'&&event.key!=='ArrowUp')return;const links=Array.from(event.currentTarget.querySelectorAll<HTMLElement>('.cmd-results a'));if(!links.length)return;event.preventDefault();const index=links.indexOf(document.activeElement as HTMLElement);const next=index<0?(event.key==='ArrowDown'?0:links.length-1):(index+(event.key==='ArrowDown'?1:-1)+links.length)%links.length;links[next]?.focus();}}>
+        <div className="cmd-input-row"><Search size={21} aria-hidden="true"/><input ref={input} autoFocus className="cmd-input" aria-label="Find a sample anywhere" aria-describedby="sample-search-hint" placeholder="ML number, sample, product or batch…" value={query} onChange={event=>setQuery(event.target.value)}/>{query?<button type="button" className="icon-button" onClick={()=>{setQuery('');input.current?.focus();}} aria-label="Clear search"><X size={18}/></button>:null}</div>
+        <div className="cmd-search-meta" id="sample-search-hint"><span>Search across all months</span><span>2 characters minimum</span></div>
         <div className="cmd-results">
           {error?<ErrorBox message={error}/>:null}
-          {query.trim().length<2?<p>Enter at least two characters to search all months.</p>:busy?<p>Searching…</p>:items.length?items.map(sample=><Link key={sample.id} to={`/samples/${sample.id}`} onClick={onClose}><strong>{sample.ml}</strong><span>{sample.name||'Incomplete record'}</span><small>{sample.categoryLabel||sample.category}{sample.batch?` · Batch ${sample.batch}`:''}</small></Link>):<p>No matching samples.</p>}
+          {!busy&&!error&&query.trim().length>=2&&items.length>0?<span className="sr-only" role="status">{items.length} sample matches shown</span>:null}
+          {query.trim().length<2?null:busy?<Loading compact label="Searching samples…"/>:error?null:items.length?items.map(sample=><Link key={sample.id} to={`/samples/${sample.id}`} onClick={onClose}><strong>{sample.ml}</strong><span>{sample.name||'Incomplete record'}</span><small>{sample.categoryLabel||sample.category}{sample.batch?` · Batch ${sample.batch}`:''}</small></Link>):<p role="status">No matching samples. Try another ML number, product or batch.</p>}
           {query.trim().length>=2?<Link className="cmd-all-results" to={`/samples?q=${encodeURIComponent(query)}`} onClick={onClose}>View all search results <ArrowRight size={15}/></Link>:null}
         </div>
       </div>
@@ -215,7 +219,7 @@ function Workspace({data}:{data:any}){
             <div className="nav-label">SYSTEM</div>
             <nav aria-label="System navigation">
               <button type="button" className="nav-sync-button" title="Sync with Database" aria-label="Sync with Database" disabled={syncing} onClick={()=>void syncWithDatabase()}>
-                <LabIconSync size={18} className={syncing?'syncing-icon':''}/>
+                {syncing?<LoginFilm/>:<LabIconSync size={18}/>}
                 <span>{syncing?'Syncing…':'Sync with Database'}</span>
               </button>
               {data.user.role==='administrator' && (
@@ -235,11 +239,7 @@ function Workspace({data}:{data:any}){
               <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Overview'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
                 {syncing ? (
-                  <div className="sync-progress-inline" role="status" aria-live="polite">
-                    <span>Syncing sources</span>
-                    <div className="sync-progress-track" role="progressbar" aria-label="Database synchronization progress" aria-valuetext="A reliable percentage is not available yet"><span/></div>
-                    <span className="sr-only">Synchronization is in progress. Percentage is unavailable until completion.</span>
-                  </div>
+                  <Loading compact label="Syncing sources"/>
                 ) : null}
                 <div className="apple-glass-island" role="toolbar" aria-label="Quick actions and profile">
                   <div className="island-segment island-status" title={data.demo ? 'Local workspace. External writes are disabled.' : 'Authenticated live workspace'}>

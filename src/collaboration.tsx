@@ -26,6 +26,7 @@ import {
   ErrorBox,
   Field,
   Notice,
+  Loading,
   PageTitle,
   Session,
   useCanEdit,
@@ -250,7 +251,7 @@ export default function SharedTools() {
       </p>
       <ErrorBox message={error || failure} />
       {!data ? (
-        <p role="status">Loading shared tools…</p>
+        error?null:<Loading compact label="Loading shared tools…"/>
       ) : items.length ? (
         <div className="shared-resource-list">
           {items.map((item) => (
@@ -455,7 +456,7 @@ function ResourceEditor({ id }: { id: string }) {
           Shared tools
         </Link>
         <ErrorBox message={room.error} />
-        <p role="status">Opening shared workspace…</p>
+        {room.error?null:<Loading compact label="Opening shared workspace…"/>}
       </>
     );
   return (
@@ -601,7 +602,7 @@ function ResourceEditor({ id }: { id: string }) {
       {resource.kind === "kanban" ? (
         <Kanban resource={resource} canEdit={canEdit} mutate={room.mutate} />
       ) : (
-        <Suspense fallback={<p role="status">Loading drawing tools…</p>}>
+        <Suspense fallback={<Loading compact label="Loading drawing tools…"/>}>
           <Drawing
             resource={resource}
             canEdit={canEdit}

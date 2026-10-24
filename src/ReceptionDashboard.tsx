@@ -3,7 +3,7 @@ import {Link} from 'react-router-dom';
 import {ArrowRight, CalendarDays, ChevronLeft, ChevronRight, FileText, FlaskConical, Plus, RefreshCw, Search, SlidersHorizontal, X} from './components/LabIcons';
 import {api} from './api';
 import {useConfiguration} from './configuration';
-import {ErrorBox, useCanEdit} from './ui';
+import {ErrorBox, Loading, useCanEdit} from './ui';
 import {useWorkspaceMotion} from './motion';
 import {ReceptionChart, RECEPTION_CATEGORIES, receptionCategoryColor} from './ReceptionChart';
 import {LabIconPlus, LabIconDossier, LabIconArchive, LabIconArrow, LabSpecimenBadge} from './components/LabIcons';
@@ -187,7 +187,7 @@ export function ReceptionDashboard() {
         {error ? <div className="reception-chart-error"><ErrorBox message={error}/><button type="button" className="button secondary" onClick={() => setVersion(value => value + 1)}><RefreshCw size={16}/>Retry receipts</button></div> :
           overview ? <ReceptionChart key={`chart-${motionReplay}`} days={overview.days} month={month} today={overview.today} selectedDate={selectedDate}
             category={category} theme={theme} animate={animate && visible} onSelectDate={chooseDate}/> :
-            <div className="reception-chart-placeholder" role="status">Loading daily receipts<span/></div>}
+            <div className="reception-chart-placeholder"><Loading compact label="Loading daily receipts"/></div>}
         <div className="reception-chart-help">
           <span>{selectedDate ? `Showing receipts for ${dateLabel(selectedDate, {day: 'numeric', month: 'short', year: 'numeric'})}` : 'Select a day to explore its samples'}</span>
           {selectedDate ? <button type="button" onClick={() => { setSelectedDate(''); setPage(1); }}>Clear day <X size={13}/></button> : null}
@@ -206,7 +206,6 @@ export function ReceptionDashboard() {
       </div>
 
       <section id="reception-log" className={`reception-log reception-glass ${selectedDate ? 'has-selected-day' : ''} ${busy ? 'is-updating' : ''}`} aria-labelledby="reception-log-heading">
-        <div className="reception-log-progress" aria-hidden="true"><span/></div>
         <div className="reception-log-heading">
           <div className="reception-log-title">
             <h2 id="reception-log-heading">Sample log</h2>
@@ -240,7 +239,7 @@ export function ReceptionDashboard() {
           {hasFilters ? <button type="button" className="reception-clear" onClick={clearFilters}>Clear filters <X size={14}/></button> : null}
         </div> : null}
         <div className="reception-results-meta" aria-live="polite" role="status">
-          {busy ? 'Updating sample log\u2026' : error ? 'Receipts unavailable. Use Retry receipts above.' :
+          {busy ? <Loading compact label="Updating sample log…"/> : error ? 'Receipts unavailable. Use Retry receipts above.' :
             `${overview?.tableTotal.toLocaleString() || 0} matching samples${selectedDate ? ` \u00b7 ${dateLabel(selectedDate, {day: 'numeric', month: 'short', year: 'numeric'})}` : ''}`}
           {!filtersOpen && hasFilters ? <button type="button" onClick={clearFilters}>Clear filters <X size={13}/></button> : null}
         </div>
@@ -279,7 +278,6 @@ export function ReceptionDashboard() {
           {!busy && !error && !overview?.items.length ? <div className="reception-empty"><FlaskConical size={27}/><strong>{hasFilters ? 'No samples match these filters' : 'No receipts recorded for this month'}</strong>
             <p>{hasFilters ? 'Try another day or search, or clear your filters.' : 'Choose another month or log a sample to begin.'}</p>
             {hasFilters ? <button type="button" className="button secondary" onClick={clearFilters}>Clear filters</button> : canEdit ? <Link className="button secondary" to="/new">Log a sample <Plus size={16}/></Link> : null}</div> : null}
-          {busy && !overview ? <p className="reception-table-loading">Loading sample log\u2026</p> : null}
         </div>
         <footer className="reception-log-footer">
           <span>Newest receipt first within each sample type{overview?.undated ? ` \u00b7 ${overview.undated.toLocaleString()} records without a valid receipt date excluded` : ''}</span>

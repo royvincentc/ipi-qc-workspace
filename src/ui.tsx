@@ -16,7 +16,7 @@ export function PageTitle({eyebrow,title,description,action}:{eyebrow?:string;ti
 }
 export function Empty({title,children}:{title:string;children?:ReactNode}){return <div className="empty"><FlaskConical size={32}/><h3>{title}</h3><p>{children}</p></div>;}
 export function ErrorBox({message}:{message:string}){return message?<div className="error" role="alert">{message}</div>:null;}
-export function Loading(){return <div className="loading-state" role="status" aria-live="polite"><div className="loading-orbit" aria-hidden="true"><FlaskConical/><i/><i/><i/></div><strong>Preparing your workspace</strong><span className="typing-status">Checking samples and records</span></div>;}
+export {Loading} from './LoginFilm';
 export function Badge({children,tone='neutral'}:{children:ReactNode;tone?:string}){return <span className={`badge ${tone}`}>{children}</span>;}
 const analystNames=[
   {fullName:'Roy Vincent Codiñera',aliases:['Roy']},

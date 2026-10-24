@@ -4,6 +4,7 @@ import { api } from './api';
 import { MissMinutesAvatar } from './MissMinutesAvatar';
 import { AssistantMarkdown } from './AssistantMarkdown';
 import Dialog from './dialog';
+import {Loading} from './ui';
 
 
 const STARTER_PROMPTS = [
@@ -127,10 +128,7 @@ export function FloatingAssistant() {
           )}
 
           {loading && (
-            <div className="floating-thinking" role="status" aria-label="Reviewing records">
-              <Sparkles size={14} className="thinking-sparkle" /> <span>Reviewing records&hellip;</span>
-              <span className="thinking-dots" aria-hidden="true"><i/><i/><i/></span>
-            </div>
+            <div className="floating-thinking"><Loading compact label="Reviewing records…"/></div>
           )}
           <div ref={messagesEndRef} />
         </div>
