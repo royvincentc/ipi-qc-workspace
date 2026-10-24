@@ -29,26 +29,31 @@ export function microbiologyResultLimit(test:Criterion){return 'Nmt 10 '+(test.u
 export function suggestedAnalystRemark(test:Criterion,r:Result):string{
  if(r.state!=='entered')return '';
  if(test.type==='finding')return ['Positive','Negative'].includes(r.value)&&['positive','negative'].includes(test.criterion.trim().toLowerCase())?(r.value.toLowerCase()===test.criterion.trim().toLowerCase()?'Passed':'Failed'):'';
- const limit=test.criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+(\d+(?:\.\d+)?)/i);
+ const limit=test.criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=\s|$)/i);
  if(!limit)return '';
- if(r.qualifier==='Nmt')return 10<=Number(limit[1])?'Passed':'Failed';
+ const maximum=Number(limit[1].replace(/,/g,''));
+ if(r.qualifier==='Nmt')return 10<=maximum?'Passed':'Failed';
  if(r.qualifier!==''&&r.qualifier!=='=')return '';
  if(!/^\d+(?:\.\d+)?$/.test(r.value.trim()))return '';
  // Actual results at the standard's boundary fail in the requested workflow.
- return Number(r.value)<Number(limit[1])?'Passed':'Failed';
+ return Number(r.value)<maximum?'Passed':'Failed';
 }
 /** Source text is evidence: normalize recognized values only for the existing evaluator. */
 export function automaticAnalystRemark(test:Criterion,r:Result):string{
- if(r.sourceValue===undefined||r.value!==r.sourceValue)return suggestedAnalystRemark(test,r);
- if(r.state!=='entered'||r.qualifier!=='')return '';
- if(test.type==='finding'){
-  const finding=r.value.trim().toLowerCase();
-  return finding==='positive'||finding==='negative'?suggestedAnalystRemark(test,{...r,value:finding==='positive'?'Positive':'Negative'}):'';
+ if(r.state!=='entered'||(!r.value.trim()&&r.qualifier!=='Nmt'))return '';
+ let normalized=r;
+ if(r.sourceValue!==undefined&&r.value===r.sourceValue&&r.qualifier===''){
+  if(test.type==='finding'){
+   const finding=r.value.trim().toLowerCase();
+   if(finding==='positive'||finding==='negative')normalized={...r,value:finding==='positive'?'Positive':'Negative'};
+  }else{
+   const value=r.value.trim().match(/^((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*(.*)$/);
+   const unit=(text:string)=>text.toLowerCase().replace(/\s+/g,'');
+   if(value&&(!value[2]||unit(value[2])===unit(test.unit)))normalized={...r,value:value[1].replace(/,/g,'')};
+  }
  }
- const value=r.value.trim().match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
- const unit=(text:string)=>text.toLowerCase().replace(/\s+/g,'');
- if(!value||value[2]&&unit(value[2])!==unit(test.unit))return '';
- return suggestedAnalystRemark(test,{...r,value:value[1]});
+ // Owner-requested fallback applies only to entered results the evaluator cannot interpret.
+ return suggestedAnalystRemark(test,normalized)||'Passed';
 }
 export function updateResultRemark(test:Criterion,original:Result,patch:Partial<Result>):Result{
  const next={...original,...patch};

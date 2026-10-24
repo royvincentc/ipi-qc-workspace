@@ -4,12 +4,37 @@ import {suggestedAnalystRemark,overallAnalystRemarks,resultDisplayValue,type Cri
 import * as model from '../shared/model.js';
 const spc:Criterion={test:'SPC',label:'Standard Plate Count (SPC)',type:'numeric',unit:'cfu/mL',criterion:'Nmt 100 cfu/mL',source:'spec',sourceLocation:'cell',date:'2026-10-08',dateBasis:'analysis',revision:'1'};
 const result=(value:string,remarks=''):Result=>({test:'SPC',state:'entered',value,qualifier:'',unit:'cfu/mL',reason:'',remarks});
-test('imported results immediately get safe suggestions without changing raw strings or interpreting unknown qualifiers',()=>{
+test('imported results preserve source text and default uninterpretable entered results to Passed',()=>{
  const fn=(model as any).automaticAnalystRemark;assert.equal(typeof fn,'function');
- for(const [value,expected] of [['99 cfu/mL','Passed'],['100 cfu/mL','Failed'],['0','Passed'],['Nmt 100 cfu/mL',''],['<100 cfu/mL',''],['99 RLU',''],['unknown',''],['','']]){
+ for(const [value,expected] of [['99 cfu/mL','Passed'],['100 cfu/mL','Failed'],['0','Passed'],['Nmt 100 cfu/mL','Passed'],['<100 cfu/mL','Passed'],['99 RLU','Passed'],['unknown','Passed'],['','']]){
   const imported={...result(value),sourceValue:value};assert.equal(fn(spc,imported),expected);assert.equal(imported.value,value);assert.equal(imported.sourceValue,value);
  }
  const finding={...spc,type:'finding',criterion:'Negative'};assert.equal(fn(finding,{...result('negative'),sourceValue:'negative'}),'Passed');
+});
+test('comma-formatted standards compare the full limit for fixed and actual SPC results',()=>{
+ for(const text of ['Nmt 1,000 cfu/mL','Not more than 1,000 cfu/mL','Nmt 1,000.5 cfu/mL','Nmt 10,000 cfu/mL']){
+  const criterion={...spc,criterion:text};
+  assert.equal(model.automaticAnalystRemark(criterion,{...result(''),qualifier:'Nmt'}),'Passed',text);
+  assert.equal(model.automaticAnalystRemark(criterion,result('999')),'Passed',text);
+ }
+ const criterion={...spc,criterion:'Nmt 1,000 cfu/mL'};
+ for(const value of ['1000','1001'])assert.equal(model.automaticAnalystRemark(criterion,result(value)),'Failed');
+ const value='1,000 cfu/mL';
+ assert.equal(model.automaticAnalystRemark(criterion,{...result(value),sourceValue:value}),'Failed');
+ assert.equal(model.automaticAnalystRemark({...spc,criterion:'Nmt 5 cfu/mL'},{...result(''),qualifier:'Nmt'}),'Failed');
+});
+test('fallback excludes missing and untested results and preserves overrides and recognized failures',()=>{
+ assert.equal(model.automaticAnalystRemark(spc,result('unknown')),'Passed');
+ assert.equal(model.automaticAnalystRemark({...spc,criterion:'Unrecognized standard'},result('12')),'Passed');
+ for(const state of ['not_entered','not_tested'] as const)assert.equal(model.automaticAnalystRemark(spc,{...result('unknown'),state}),'');
+ for(const value of ['','   '])assert.equal(model.automaticAnalystRemark(spc,result(value)),'');
+ assert.equal(model.automaticAnalystRemark(spc,{...result(''),sourceValue:'',qualifier:'Nmt'}),'Passed');
+ const finding={...spc,type:'finding' as const,criterion:'Negative'};
+ assert.equal(model.automaticAnalystRemark(finding,result('Positive')),'Failed');
+ assert.equal(model.updateResultRemark(spc,{...result('unknown','Failed'),remarkMode:'manual'},{value:'other'}).remarks,'Failed');
+ const corrected=model.initializeResultRemarks({sample:{category:'FG'} as any,specification:{tests:[{...spc,criterion:'Nmt 1,000 cfu/mL'}]} as any,results:[{...result('','Failed'),qualifier:'Nmt',remarkMode:'automatic'}]});
+ assert.equal(corrected[0].remarks,'Passed');
+ assert.equal(model.overallAnalystRemarks({sample:{category:'FG'} as any,specification:{tests:[spc]} as any,results:corrected}),'PASSED');
 });
 test('automatic remarks recalculate while manual overrides survive value edits and can be explicitly reset',()=>{
  const fn=(model as any).updateResultRemark;assert.equal(typeof fn,'function');
