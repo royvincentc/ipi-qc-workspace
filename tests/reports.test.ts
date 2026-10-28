@@ -73,3 +73,12 @@ test('Cotton Balls equivalence preserves sheet boundaries, ambiguity and uncheck
   const unchecked = { ...cottonRows[0], tests: [] };
   assert.deepEqual(resolveApplicabilityMatches([unchecked], product, 'RM/FP/AS'), [unchecked]);
 });
+
+test('Cotton Buds historical limits survive curly apostrophes and product punctuation', () => {
+  for (const product of ["Mama's Love Cotton Buds", 'Mama’s Love Cotton Buds', 'MAMA’S LOVE COTTON BUDS (100 tips)']) {
+    const criteria = historicalCriteria(product, 'FG', 'Routine', ['SPC', 'MY'], []);
+    assert.deepEqual(criteria.map(row => [row.test, row.criterion, row.unit]), [
+      ['SPC', 'Nmt 50 cfu/g', 'cfu/g'], ['MY', 'Nmt 10 cfu/g', 'cfu/g'],
+    ], product);
+  }
+});

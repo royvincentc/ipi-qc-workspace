@@ -21,7 +21,7 @@ test('server composes immutable paired drafts from validated quantities and appr
  await db.query('INSERT INTO files(id,data) VALUES($1,$2)',['quantity-evidence',JSON.stringify({kind:'reference'})]);
  await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',[template.id,JSON.stringify(template)]);
  await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
- await publishEnvironmentalProfile({name:'Fixture quantities',productId:'equipment-product',product:sample.name,facility:'PF1',area:'Filling',context:'Regular',equipmentSet:'Historical nozzle 4',effectiveFrom:'2026-10-01',evidenceIds:['quantity-evidence'],outputs:[
+ const pattern=await publishEnvironmentalProfile({name:'Fixture quantities',productId:'equipment-product',product:sample.name,facility:'PF1',area:'Filling',context:'Regular',equipmentSet:'Historical nozzle 4',effectiveFrom:'2026-10-01',evidenceIds:['quantity-evidence'],outputs:[
   {id:'accupoint',name:'Accupoint',method:'accupoint',mode:'surface',templateId:template.id,templateRevision:template.revision,instances:[{...row,test:'ACCUPOINT',label:'Accupoint',unit:'RLU',criterion:'Not more than 100 RLU'}]},
   {id:'spcmy',name:'SPCMY',method:'spc-my',mode:'surface',templateId:template.id,templateRevision:template.revision,instances:[row,{...row,test:'MY',label:'MY',criterion:'Not more than 30 cfu/mL'}]},
  ]},actor.email);
@@ -43,4 +43,13 @@ test('server composes immutable paired drafts from validated quantities and appr
  await assert.rejects(createAutomaticDraft(sample.id,actor,{...selection,equipmentRevision:'stale'}),/changed/);
  await assert.rejects(createAutomaticDraft(sample.id,actor,{...selection,equipment:[{id:'nozzle',quantity:151}]}),/300-row/);
  assert.equal(Number((await db.query('SELECT count(*) AS count FROM drafts')).rows[0].count),count);
+ await publishEnvironmentalProfile({...pattern,name:'Additional approved equipment',equipmentSet:'Spatula',outputs:pattern.outputs.map(output=>({...output,instances:output.instances.map(instance=>({...instance,location:'Spatula'}))}))},actor.email);
+ const expanded=await resolveReportSetup(sample.id,{profileId:pattern.id},true);
+ assert.equal(expanded.environmental!.equipment!.items.find(item=>item.id==='spatula')!.defaultQuantity,0);
+ const manualSelection={profileId:pattern.id,equipmentRevision:expanded.environmental!.equipment!.revision,equipment:[{id:'nozzle',quantity:1},{id:'spatula',quantity:1}]};
+ const added=await createAutomaticDraft(sample.id,actor,manualSelection);
+ const paired=await Promise.all(added.environmentalSession!.members.map(member=>getDraft(member.draftId)));
+ assert.deepEqual(paired.map(d=>d.results.length),[2,4]);
+ assert.ok(paired.every(d=>d.results.some(result=>result.location==='Spatula 1')));
+ assert.ok(paired.every(d=>d.environmentalSnapshot?.equipment?.selection.some(item=>item.id==='spatula'&&item.quantity===1)));
 });

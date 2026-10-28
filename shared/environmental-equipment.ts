@@ -54,7 +54,12 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  }
  for(const [id,points] of profileQuantities)definitions.get(id)!.defaultQuantity=Math.max(definitions.get(id)!.defaultQuantity,points.size);
  }
- // A scanned method may live in a separate pattern; fill only missing methods for the selected equipment types.
+ // Historical patterns are defaults, not an exhaustive equipment inventory.
+ if(selectedProfile)for(const profile of applicable.filter(p=>environmentalKey(p.areaType||'')===environmentalKey(selectedProfile.areaType||'')))for(const output of profile.outputs.filter(o=>o.mode==='surface'))for(const row of output.instances){
+  const name=equipmentName(row.location),id=environmentalKey(name);
+  if(!definitions.has(id))definitions.set(id,{name,defaultQuantity:0,byMethod:new Map()});
+ }
+ // A scanned method may live in a separate pattern; fill missing approved definitions without changing defaults.
  if(selectedProfile)for(const [id,entry] of definitions)for(const method of methods){
   if(entry.byMethod.get(method)?.length)continue;
   const choices:Definition[]=[];
@@ -88,7 +93,8 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  const parsed=equipmentSelectionSchema.safeParse(selection);
  if(!parsed.success)return fail('conflict','Use whole-number equipment quantities from 0 to 300 and nonblank equipment labels.');
  const selectedQuantities=parsed.data.equipment?.filter(q=>q.quantity>0)||[];
- const usePatternDefaults=!selectedQuantities.length&&Boolean(selection.profileId)&&items.length>0&&items.every(item=>!item.issue);
+ const patternItems=items.filter(item=>item.defaultQuantity>0);
+ const usePatternDefaults=!selectedQuantities.length&&Boolean(selection.profileId)&&patternItems.length>0&&patternItems.every(item=>!item.issue);
  const quantities:NonNullable<typeof parsed.data.equipment>=usePatternDefaults?items.filter(item=>item.defaultQuantity>0).map(item=>({id:item.id,quantity:item.defaultQuantity,...(item.defaultLabels?{labels:item.defaultLabels}:{})})):selectedQuantities;
  if(!quantities.length)return base;
  if(!usePatternDefaults&&selection.equipmentRevision!==revision)return fail('conflict','Approved equipment definitions or the source activity changed. Reload the equipment list before creating the session.');
