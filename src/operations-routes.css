@@ -141,7 +141,7 @@
 .app-workspace .route-stage > :not(.reception-home) :is(.form-footer, .report-setup-footer) { border-top: 1px solid var(--border); padding-top: 20px; }
 .app-workspace .route-stage > :not(.reception-home) :is(.form-footer > span, .form-footer > small) { color: var(--text-secondary); line-height: 1.5; }
 .app-workspace .route-stage > :is(.tabs, .intake-mode),
-.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .swab-method-switcher, .worksheet-types) {
+.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .worksheet-types) {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -154,7 +154,7 @@
 }
 .app-workspace .route-stage > .tabs { margin-bottom: 24px; }
 .app-workspace .route-stage > :is(.tabs, .intake-mode) > button,
-.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .swab-method-switcher, .worksheet-types) > button {
+.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .worksheet-types) > button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -172,10 +172,20 @@
   font-weight: 600;
 }
 .app-workspace .route-stage > :is(.tabs, .intake-mode) > button:is(.active, .selected, [aria-selected="true"], [aria-pressed="true"]),
-.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .swab-method-switcher, .worksheet-types) > button:is(.active, .selected, [aria-selected="true"], [aria-pressed="true"]) {
+.app-workspace .route-stage > :not(.reception-home) :is(.tabs, .intake-mode, .worksheet-types) > button:is(.active, .selected, [aria-selected="true"], [aria-pressed="true"]) {
   background: var(--accent-action);
   color: var(--accent-ink);
   box-shadow: none;
+}
+
+/* Method controls contain names, descriptions and status, so they grow with their content. */
+.app-workspace .route-stage .swab-method-switcher .button.swab-method {
+  height: auto;
+  min-height: 118px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
 
 /* Registers preserve semantic tables and scroll within their own region. */
@@ -462,7 +472,10 @@
 .workflow-film-controls button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 .workflow-film-controls button:disabled { opacity:.55; cursor:default; }
 .app.app-workspace .route-stage { animation:workflow-route-arrive 320ms cubic-bezier(.22,1,.36,1) both; }
-.workspace-motion-paused .app-workspace :is(*,*::before,*::after) { animation-play-state:paused!important; }
+.workspace-motion-paused .app-workspace *,
+.workspace-motion-paused .app-workspace ::before,
+.workspace-motion-paused .app-workspace ::after,
+.workspace-motion-paused .app-workspace ::backdrop { animation:none!important; }
 .workspace-motion-paused .app-workspace .route-stage { animation:none!important; }
 .workspace-motion-paused .app-workspace .selection-layer { transition:none!important; }
 @keyframes workflow-route-arrive { from { opacity:.72; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
