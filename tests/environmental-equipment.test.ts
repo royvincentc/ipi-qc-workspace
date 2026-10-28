@@ -25,14 +25,34 @@ test('quantities compose an unseen equipment combination with the same points an
  assert.ok(accu.instances.every((i:any)=>i.unit==='RLU'&&i.criterion==='Not more than 100 RLU'));assert.equal(spcmy.instances.find((i:any)=>i.test==='MY').criterion,'Not more than 30 cfu/mL');
  assert.deepEqual(result.snapshot.equipment.sources.map((s:any)=>s.id),['a','b']);assert.equal(result.snapshot.profile.approvedBy,'owner');assert.equal(profiles[0].outputs[0].instances[0].location,'Stainless Drum 1');
 });
-test('selecting a pattern narrows equipment and counts its numbered locations',()=>{
+test('selecting a pattern preserves its defaults and exposes other approved equipment for manual selection',()=>{
  const competing=profile('competing',['Mixing Tank 1']);competing.outputs[1].instances[0].criterion='Not more than 200 cfu/mL';
  const input=[profile('selected',['Mixing Tank','Stainless Pail 1','Stainless Pail 2','Spatula 1','Spatula 2']),competing,...profiles];
  const setup=resolve({profileId:'selected'},input);
- assert.equal(setup.equipment.profileId,'selected');assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Spatula',2],['Stainless Pail',2]]);
+ assert.equal(setup.equipment.profileId,'selected');assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Inlet Hose',0],['Mixing Tank',1],['Spatula',2],['Stainless Drum',0],['Stainless Pail',2]]);
  const selection={profileId:'selected',equipmentRevision:setup.equipment.revision,equipment:[{id:'mixing tank',quantity:1}]};
  assert.equal(resolve(selection,input).resolution.status,'ready');assert.equal(resolve({...selection,profileId:undefined},input).resolution.status,'conflict');
  assert.equal(resolve({profileId:'missing'}).resolution.status,'selection');
+});
+
+test('a tank-only historical pattern can add approved Spatula points to both swab methods',()=>{
+ const selected=profile('tank-only',['Mixing Tank']);
+ const companion=profile('tank-and-spatula',['Mixing Tank','Spatula 1','Spatula 2']);
+ const unrelated={...profile('other-area',['Scoop']),areaType:'Unrelated area'};
+ const input=[selected,companion,unrelated];
+ const setup=resolve({profileId:selected.id},input);
+ assert.equal(setup.resolution.status,'ready');
+ assert.deepEqual(setup.snapshot.equipment.selection.map((q:any)=>[q.id,q.quantity]),[['mixing tank',1]]);
+ assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Spatula',0]]);
+ const selection={profileId:selected.id,equipmentRevision:setup.equipment.revision,equipment:[{id:'mixing tank',quantity:1},{id:'spatula',quantity:2}]};
+ const manual=resolve(selection,input);
+ assert.equal(manual.resolution.status,'ready');
+ assert.deepEqual(manual.pairedOutputs.map((o:any)=>[o.method,o.instances.length]),[['accupoint',3],['spc-my',6]]);
+ assert.deepEqual(manual.pairedOutputs[0].instances.map((r:any)=>r.location),['Mixing Tank 1','Spatula 1','Spatula 2']);
+ assert.equal(resolve({...selection,equipment:[{id:'unapproved',quantity:1}]},input).resolution.status,'conflict');
+ const conflict=profile('conflicting-spatula',['Spatula']);conflict.outputs[1].instances[0].criterion='Nmt 50 cfu/mL';
+ assert.equal(resolve({profileId:selected.id},[...input,conflict]).resolution.status,'ready','unused optional equipment must not block the pattern defaults');
+ assert.equal(resolve(selection,[...input,conflict]).resolution.status,'conflict');
 });
 test('a selected single-method pattern cannot silently drop the required Accupoint report',()=>{
  const selected=profile('single-method',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 1','Stainless Drum 2','Stainless Drum 3','Stainless Drum 4','Stainless Pail 1','Stainless Pail 2','Stainless Pail 3']);

@@ -4,7 +4,7 @@ import type {EquipmentCatalog,EquipmentQuantity} from '../shared/environmental';
 import {SearchInput} from './ui';
 
 export function EnvironmentalEquipment({catalog,value,disabled,onChange}:{catalog:EquipmentCatalog;value:EquipmentQuantity[];disabled:boolean;onChange:(value:EquipmentQuantity[])=>void}){
- const id=useId(),[query,setQuery]=useState(''),[quantityText,setQuantityText]=useState<Record<string,string>>({});
+ const id=useId(),[query,setQuery]=useState(''),[quantityText,setQuantityText]=useState<Record<string,string>>({}),[manualId,setManualId]=useState(''),[manualQuantity,setManualQuantity]=useState('1');
  const selected=value.filter(q=>q.quantity>0),total=selected.reduce((n,q)=>n+q.quantity,0);
  const change=(equipmentId:string,quantity:number)=>{
   setQuantityText(text=>{const next={...text};delete next[equipmentId];return next;});
@@ -12,7 +12,9 @@ export function EnvironmentalEquipment({catalog,value,disabled,onChange}:{catalo
   const labels=current?.labels&&Number.isInteger(quantity)&&quantity>0&&quantity<=300?Array.from({length:quantity},(_,index)=>current.labels?.[index]||`${item.name} ${index+1}`):undefined;
   onChange([...value.filter(q=>q.id!==equipmentId),...(quantity!==0?[{id:equipmentId,quantity,...(labels?{labels}:{})}]:[])]);
  };
- const visible=catalog.items.filter(item=>value.some(q=>q.id===item.id)||item.name.toLowerCase().includes(query.toLowerCase()));
+ const available=catalog.items.filter(item=>!value.some(q=>q.id===item.id&&q.quantity>0));
+ const visible=catalog.items.filter(item=>(item.defaultQuantity>0||value.some(q=>q.id===item.id))&&(value.some(q=>q.id===item.id)||item.name.toLowerCase().includes(query.toLowerCase())));
+ const manualItem=available.find(item=>item.id===manualId),quantity=Number(manualQuantity);
  return <section className="equipment-picker" aria-labelledby={id+'-title'}>
   <header className="equipment-picker-head"><div><h2 id={id+'-title'}>Equipment sampled</h2><p>Select each equipment type, then enter how many were sampled.</p></div><Layers size={24} aria-hidden="true"/></header>
   {catalog.items.length>6?<SearchInput value={query} onChange={setQuery} placeholder="Find equipment…"/>:null}
@@ -24,6 +26,11 @@ export function EnvironmentalEquipment({catalog,value,disabled,onChange}:{catalo
    </div>;})}
    {!visible.length?<p className="muted">No equipment matches this search.</p>:null}
   </div>
+  <details className="equipment-manual"><summary>Add equipment manually</summary><p className="muted">If the pattern missed an item, add an approved equipment type and its sampled quantity. Both method tables use its approved parameters.</p><div className="form-grid">
+   <label className="field"><span>Equipment to add</span><select value={manualId} disabled={disabled} onChange={e=>setManualId(e.target.value)}><option value="">Choose approved equipment…</option>{available.map(item=><option key={item.id} value={item.id} disabled={Boolean(item.issue)}>{item.name}{item.issue?' · Definition needs review':''}</option>)}</select></label>
+   <label className="field"><span>Quantity to add</span><input type="number" inputMode="numeric" min={1} max={300} step={1} value={manualQuantity} disabled={disabled} onChange={e=>setManualQuantity(e.target.value)}/></label>
+   <button type="button" className="button secondary" disabled={disabled||!manualItem||Boolean(manualItem.issue)||!Number.isInteger(quantity)||quantity<1||quantity>300} onClick={()=>{change(manualId,quantity);setManualId('');setManualQuantity('1');}}>Add equipment <Plus size={16}/></button>
+  </div><p className="muted">Equipment without approved definitions must be configured in Settings before it can be used. Point labels can be edited below.</p></details>
   <div className="equipment-count" role="status" aria-live="polite"><Check size={17} aria-hidden="true"/><span>{selected.length?`${selected.length} equipment types · ${total} sampling points`:'Select equipment to start'}<small>The same points appear in both method tables; measurements stay separate.</small></span></div>
   {selected.length?<details className="equipment-labels"><summary>Edit equipment point labels <span>Optional</span></summary><p className="muted">Numbers are labels within this session. Enter the observed equipment identifiers here when they differ.</p>{selected.filter(q=>Number.isInteger(q.quantity)&&q.quantity<=300).map(q=>{const item=catalog.items.find(i=>i.id===q.id)!;return <fieldset key={q.id}><legend>{item.name}</legend><div className="equipment-label-grid">{Array.from({length:q.quantity},(_,index)=><label key={index}><span>Point {index+1}</span><input disabled={disabled} maxLength={200} value={q.labels?.[index]??`${item.name} ${index+1}`} onChange={e=>{const labels=Array.from({length:q.quantity},(_,i)=>q.labels?.[i]??`${item.name} ${i+1}`);labels[index]=e.target.value;onChange(value.map(item=>item.id===q.id?{...item,labels}:item));}}/></label>)}</div></fieldset>;})}</details>:null}
  </section>;

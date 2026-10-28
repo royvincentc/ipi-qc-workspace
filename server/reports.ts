@@ -294,7 +294,7 @@ const HISTORICAL_LIMITS:Record<string,Record<string,string>>={
 };
 const HISTORICAL_SOURCE='Owner-confirmed baseline from historical report review (james.zip), confirmed 2026-09-30';
 export function historicalCriteria(product:string,category:Sample['category'],context:string,tests:string[],managedTests:{id:string;name:string;reportLabel?:string;shortName?:string;unit?:string;inputType?:string}[]):import('../shared/model.js').Criterion[]{
- const productKey=normalized(product);const historicalNames=Object.keys(HISTORICAL_LIMITS).sort((a,b)=>b.length-a.length);const key=isCottonBalls(product)?"Mama's Love Cotton":historicalNames.find(name=>productKey===normalized(name))||historicalNames.find(name=>productKey.includes(normalized(name)));
+ const productKey=tokenize(product).join(' ');const historicalNames=Object.keys(HISTORICAL_LIMITS).sort((a,b)=>b.length-a.length);const key=isCottonBalls(product)?"Mama's Love Cotton":historicalNames.find(name=>productKey===tokenize(name).join(' '))||historicalNames.find(name=>productKey.includes(tokenize(name).join(' ')));
  const productLimits=key?HISTORICAL_LIMITS[key]:{};
  const aliases:Record<string,string[]>={SPC:['SPC','Standard Plate Count (SPC)'],MY:['MY','Molds and Yeast'],PA:['PA','P.aeruginosa','P. aeruginosa'],SA:['SA','S.aureus','S. aureus'],CA:['CA','C.albicans','C. albicans'],EC:['EC','E.coli','E. coli'],SAL:['SAL','Salmonella'],ENT:['ENT','Enterobacteriaceae'],COL:['COL','Coliform']};
  const revision=hash({product:key||product,limits:productLimits,defaults:{SPC:'Nmt 100 cfu/mL',MY:'Nmt 10 cfu/mL',finding:'Negative'}}).slice(0,16);

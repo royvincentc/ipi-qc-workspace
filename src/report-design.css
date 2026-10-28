@@ -126,13 +126,13 @@
 .equipment-quantity input::-webkit-inner-spin-button,.equipment-quantity input::-webkit-outer-spin-button { -webkit-appearance:none;margin:0; }
 .reports-workbench .equipment-quantity button { min-height:38px;min-width:36px;border-radius:9px; }
 .equipment-standards { grid-column:1/-1;margin-left:30px;color:var(--text-secondary);font-size:12px; }
-.equipment-standards summary,.equipment-labels summary,.sampling-point-preview summary { min-height:32px;cursor:pointer; }
+.equipment-standards summary,.equipment-labels summary,.equipment-manual summary,.sampling-point-preview summary { min-height:32px;cursor:pointer; }
 .equipment-standards p { display:flex;flex-wrap:wrap;gap:5px 16px;margin:6px 0; }
 .equipment-standards p strong { font-weight:500; }
 .equipment-count { display:flex;align-items:flex-start;gap:10px;margin:16px 0;color:var(--text-primary);font-size:13px; }
 .equipment-count > svg { flex-shrink:0;color:var(--accent);margin-top:2px; }
 .equipment-count small { display:block;margin-top:4px;color:var(--text-secondary);font-size:12px;line-height:1.5; }
-.equipment-labels { margin:12px 0 20px;color:var(--text-secondary);font-size:13px; }
+.equipment-labels,.equipment-manual { margin:12px 0 20px;color:var(--text-secondary);font-size:13px; }
 .equipment-labels summary span { margin-left:8px;color:var(--text-tertiary);font-size:12px; }
 .equipment-labels fieldset { min-width:0;margin:16px 0;padding:0;border:0; }
 .equipment-labels legend { font-weight:600;color:var(--text-primary);margin-bottom:8px; }
