@@ -5,6 +5,7 @@ import './login-refined.css';
 
 const intentKey='ipi.login.handoff';
 const ease={easing:Easing.bezier(.22,1,.36,1),extrapolateLeft:'clamp',extrapolateRight:'clamp'} as const;
+const quadrantStreak='M210 174 Q236 149 269 143 Q306 138 321 149 Q282 152 237 179 Q214 193 223 204 Q260 173 314 167 Q330 168 324 179 Q270 187 240 213 Q230 223 242 231 Q283 202 322 195 Q331 195 327 207 Q284 218 260 239 Q253 247 265 253 Q294 232 326 226';
 
 export function hasLoginHandoff(){
   try{
@@ -27,9 +28,17 @@ function CultureComposition(){
       <circle cx="340" cy="270" r="222" fill="#1b2112" stroke="#69704a" strokeWidth="1"/>
       <circle cx="340" cy="270" r="207" fill="none" stroke="#333d23" strokeWidth="1"/>
       <g transform={`rotate(${Math.sin(cycle)*3} 340 270)`}>
-        <path d="M220 150 Q465 105 448 174 Q210 151 228 217 Q470 188 447 251 Q215 226 233 291 Q455 264 435 326 Q250 312 263 365 Q413 350 395 397"
-          fill="none" stroke="#fcff1a" strokeWidth="2" strokeLinecap="round" opacity=".5"
-          pathLength="1" strokeDasharray=".72 .28" strokeDashoffset={-frame/240}/>
+        {[0,1,2,3].map(quadrant=>{
+          const start=quadrant*60;
+          const progress=interpolate(frame,[start,start+48],[0,1],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
+          const opacity=interpolate(frame,[start,start+6,start+48,start+60],[0,.8,.8,.5],ease)
+            *interpolate(frame,[228,240],[1,0],ease);
+          return <g key={quadrant} transform={`rotate(${quadrant*90} 340 270)`}>
+            <path d={quadrantStreak} fill="none" stroke="#fcff1a" strokeWidth="2" strokeLinecap="round" opacity=".1"/>
+            <path d={quadrantStreak} fill="none" stroke="#fcff1a" strokeWidth="2" strokeLinecap="round" opacity={opacity}
+              pathLength="1" strokeDasharray="1" strokeDashoffset={1-progress}/>
+          </g>;
+        })}
         {Array.from({length:39},(_,i)=>{
           const angle=i*2.39996;
           const distance=30+Math.sqrt(i/39)*151;
