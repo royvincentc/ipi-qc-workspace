@@ -2,6 +2,7 @@ import {Link} from 'react-router-dom';
 import {useContext,useEffect,useState} from 'react';
 import {ArrowUpRight,CloudUpload,FileText,RefreshCw,FolderTree} from './components/LabIcons';
 import {api} from './api';
+import {ReportPreviewButton} from './report-feedback';
 import {PageTitle,useLoad,Notice,Session,SearchInput,ErrorBox,Loading,Empty,Badge} from './ui';
 
 const kindLabels:Record<string,string>={
@@ -41,7 +42,7 @@ export default function FileLibrary(){
       <div className="library-document"><strong title={f.name}>{f.name}</strong><small>{kindLabels[f.kind]||'Document'}{f.resultRevision?` · Result revision ${f.resultRevision}`:''}</small>{f.driveSyncError?<small className="library-sync-error">{f.driveSyncError}</small>:null}</div>
       <div className="library-record-state">{f.driveSyncError?<Badge tone="amber">Drive sync needs attention</Badge>:f.externalReviewRequired?<Badge tone="amber">External review required</Badge>:f.driveSyncedAt?<Badge tone="green">Synced to Drive</Badge>:<span className="library-state-quiet">Available</span>}</div>
       <div className="library-actions">
-       {f.hasPreview?<a className="button secondary small" aria-label={`Preview PDF for ${f.name}`} href={`/api/files/${f.id}/preview`} target="_blank" rel="noopener noreferrer">Preview PDF</a>:null}
+       {f.hasPreview?(f.kind==='report'?<ReportPreviewButton file={f} small/>:<a className="button secondary small" aria-label={`Preview PDF for ${f.name}`} href={`/api/files/${f.id}/preview`} target="_blank" rel="noopener noreferrer">Preview PDF</a>):null}
        {f.kind==='report'&&f.draftId&&f.driveSyncError?<Link className="button secondary small" to={`/reports/${f.draftId}`} aria-label={`Open saved draft for ${f.name}`}>Open saved draft</Link>:null}
        {f.sourceUrl?<a className="button secondary small" aria-label={`Open ${f.name} in Drive`} href={f.sourceUrl} target="_blank" rel="noreferrer">Open in Drive <ArrowUpRight size={14}/></a>:null}
        {f.kind==='report'||!f.sourceUrl?<a className="button secondary small" aria-label={`Download ${f.name}`} href={`/api/files/${f.id}/download`}>{f.kind==='report'?'Download DOCX':'Download'}</a>:null}

@@ -219,3 +219,15 @@
 @media (prefers-reduced-motion:reduce) { .reports-workbench button,.reports-workbench .button,.reports-workbench .draft-method-open,.equipment-choice { transition:none; }.reports-workbench button:active:not(:disabled),.reports-workbench .button:active { transform:none; }.equipment-preview-ready .report-preview-heading .lab-object { animation:none; } }
 .motion-off .reports-workbench button,.app-low-performance .reports-workbench button { transition:none; }
 .motion-off .equipment-preview-ready .lab-object,.app-low-performance .equipment-preview-ready .lab-object { animation:none; }
+.report-progress { margin:20px 0;padding:20px;background:var(--bg-surface-elevated);border-radius:12px; }
+.report-progress .loading { margin:0; }
+.report-progress-label { display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:16px 0 8px;font-size:14px;font-variant-numeric:tabular-nums; }
+.report-progress-label span,.report-progress p,.report-progress small { color:var(--text-secondary); }
+.report-progress p { max-width:65ch;line-height:1.6;font-size:14px;margin:12px 0; }
+.report-progress small { display:block;max-width:75ch;line-height:1.6; }
+.report-progress progress { display:block;width:100%;height:8px;border:0;border-radius:4px;overflow:hidden;appearance:none;background:var(--bg-surface);accent-color:var(--accent); }
+.report-progress progress::-webkit-progress-bar { background:var(--bg-surface); }
+.report-progress progress::-webkit-progress-value { background:var(--accent); }
+.report-progress progress::-moz-progress-bar { background:var(--accent); }
+.report-preview-name { overflow-wrap:anywhere; }
+.report-preview-frame { display:block;width:100%;height:60vh;min-height:240px;border:1px solid var(--border-subtle);margin:16px 0; }
