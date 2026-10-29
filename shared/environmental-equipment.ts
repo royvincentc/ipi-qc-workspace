@@ -24,7 +24,7 @@ function equipmentDefinition(profile:EnvironmentalProfile,output:EnvironmentalOu
  const rows=[...parameters.values()];return {profile,output,rows,signature:signature(output,rows),conflict};
 }
 
-export function resolveEnvironmentalEquipment(sample:Sample,productId:string,profiles:EnvironmentalProfile[],templates:Template[],selection:EnvironmentalSelection={}):EnvironmentalSetup{
+export function resolveEnvironmentalEquipment(sample:Sample,productId:string,profiles:EnvironmentalProfile[],templates:Template[],selection:EnvironmentalSelection={},scannedLocations:string[]=[]):EnvironmentalSetup{
  const activityDate=environmentalActivityDate(sample);
  const contextMatches=(p:EnvironmentalProfile)=>!p.context||environmentalKey(p.context)===environmentalKey(sample.context);
  const applicable=profiles.filter(p=>p.active&&p.productId===productId&&p.category===sample.category&&environmentalKey(p.facility)===environmentalKey(sample.fields.facility||'')&&processArea(p.area)===processArea(sample.fields.area||'')&&(p.outputs.some(o=>o.mode==='surface')||contextMatches(p))&&activityDate&&p.effectiveFrom<=activityDate&&(!p.effectiveTo||p.effectiveTo>=activityDate)).sort((a,b)=>a.id.localeCompare(b.id));
@@ -54,9 +54,10 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
  }
  for(const [id,points] of profileQuantities)definitions.get(id)!.defaultQuantity=Math.max(definitions.get(id)!.defaultQuantity,points.size);
  }
- // Historical patterns are defaults, not an exhaustive equipment inventory.
- if(selectedProfile)for(const profile of applicable.filter(p=>environmentalKey(p.areaType||'')===environmentalKey(selectedProfile.areaType||'')))for(const output of profile.outputs.filter(o=>o.mode==='surface'))for(const row of output.instances){
-  const name=equipmentName(row.location),id=environmentalKey(name);
+ // Discovery spans the archive; only applicable approved patterns supply parameters.
+ const inventory=[...scannedLocations,...profiles.filter(p=>p.active&&p.category===sample.category).flatMap(p=>p.outputs.filter(o=>o.mode==='surface').flatMap(o=>o.instances.map(row=>row.location)))];
+ for(const location of inventory){
+  const name=equipmentName(location),id=environmentalKey(name);
   if(!definitions.has(id))definitions.set(id,{name,defaultQuantity:0,byMethod:new Map()});
  }
  // A scanned method may live in a separate pattern; fill missing approved definitions without changing defaults.

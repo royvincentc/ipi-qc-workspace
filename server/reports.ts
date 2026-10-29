@@ -13,7 +13,7 @@ import {defaultConnections,fallbackSpecifications} from './samples.js';
 import {readApplicability,readResultsRow,readMicAnalystDetails,rangeValues,ensureDriveFolder,uploadDriveFile,moveArchivedDriveReport} from './google.js';
 import {categories,overallAnalystRemarks,initializeResultRemarks,updateResultRemark,reportIssues,resultKey,type Draft,type Sample,type Template,type Specification,type Result,type User,type ReportSetup} from '../shared/model.js';
 import {reportRows} from './template.js';
-import {environmentalProfiles,resolveEnvironmentalLayout} from './environmental.js';
+import {environmentalProfiles,scannedEnvironmentalEquipment,resolveEnvironmentalLayout} from './environmental.js';
 import {resolveEnvironmentalEquipment,environmentalCriteria,environmentalSourceIssue,type EnvironmentalSelection,type EnvironmentalSnapshot} from '../shared/environmental.js';
 import {environmentalAreaType} from '../shared/environmental-routing.js';
 export const storage=path.resolve(process.env.PRIVATE_STORAGE||'private');
@@ -356,7 +356,7 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
  if(type.register==='environmental'){
   const templates=(await db.query('SELECT data FROM templates')).rows.map(r=>r.data as Template);
   const profiles=await environmentalProfiles();
-  const environmental=resolveEnvironmentalEquipment(sample,product.id,profiles,templates,selection);
+  const environmental=resolveEnvironmentalEquipment(sample,product.id,profiles,templates,selection,await scannedEnvironmentalEquipment());
   const legacy=specifications.filter(s=>s.product===product.name&&s.category===sample.category&&normalized(s.context)===normalized(sample.context));
   const snapshot=environmental.snapshot;
   const tests=snapshot?environmentalCriteria(snapshot.profile,snapshot.output):legacy.length?latestCriteria(legacy,product.name,sample.category,sample.context,[...new Set(legacy.flatMap(s=>s.tests.map(t=>t.test)))]):[];

@@ -5,7 +5,7 @@ import path from 'node:path';
 process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=await mkdtemp(path.resolve('.data/equipment-test-'));
 const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration}=await import('../server/configuration.js');
-const {publishEnvironmentalProfile}=await import('../server/environmental.js');
+const {publishEnvironmentalProfile,scannedEnvironmentalEquipment}=await import('../server/environmental.js');
 const {resolveReportSetup,createAutomaticDraft,getDraft,saveDraft,reportTemplateFields}=await import('../server/reports.js');
 await migrate();after(close);
 const actor={email:'fixture@example.test',name:'Fixture Analyst',role:'administrator' as const};
@@ -52,4 +52,14 @@ test('server composes immutable paired drafts from validated quantities and appr
  assert.deepEqual(paired.map(d=>d.results.length),[2,4]);
  assert.ok(paired.every(d=>d.results.some(result=>result.location==='Spatula 1')));
  assert.ok(paired.every(d=>d.environmentalSnapshot?.equipment?.selection.some(item=>item.id==='spatula'&&item.quantity===1)));
+ await db.query('INSERT INTO files(id,data) VALUES($1,$2)',['scanned-inventory',JSON.stringify({kind:'environmental-import',status:'ready',candidates:[
+  {mode:'surface',rows:[{location:'Scoop 1'},{location:' Scoop 1 '},{location:'Scoop 2'},{location:123},{location:''},null]},
+  {mode:'open-plate',rows:[{location:'Room air'}]},null,
+ ]})]);
+ await db.query('INSERT INTO files(id,data) VALUES($1,$2)',['unfinished-scan',JSON.stringify({kind:'environmental-import',status:'scanning',candidates:[{mode:'surface',rows:[{location:'Unfinished'}]}]})]);
+ assert.deepEqual(await scannedEnvironmentalEquipment(),['Scoop 1','Scoop 2']);
+ const discovered=await resolveReportSetup(sample.id,{profileId:pattern.id},true),scoop=discovered.environmental!.equipment!.items.find(item=>item.id==='scoop')!;
+ assert.equal(scoop.defaultQuantity,0);assert.match(scoop.issue!,/no approved definition/);
+ assert.equal(discovered.layoutResolution?.status,'ready','unapproved scanned inventory must not prevent an approved pattern from resolving');
+ await assert.rejects(createAutomaticDraft(sample.id,actor,{profileId:pattern.id,equipmentRevision:discovered.environmental!.equipment!.revision,equipment:[{id:'scoop',quantity:1}]}),/no approved definition/);
 });

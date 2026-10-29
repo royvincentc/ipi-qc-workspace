@@ -26,6 +26,9 @@ try{
   await page.getByRole('checkbox',{name:/Mixing Tank/}).waitFor();
   assert.equal(await page.getByRole('checkbox',{name:/Spatula/}).count(),0);
   await page.getByText('Add equipment manually',{exact:true}).click();
+  await page.getByLabel('Equipment to add').selectOption('unapproved');
+  await page.getByRole('status').filter({hasText:'Missing approved Accupoint definition'}).waitFor();
+  assert.ok(await page.getByRole('button',{name:'Add equipment',exact:true}).isDisabled());
   await page.getByLabel('Equipment to add').selectOption('spatula');
   const quantity=page.getByLabel('Quantity to add');
   await quantity.fill('1.5');assert.ok(await page.getByRole('button',{name:'Add equipment',exact:true}).isDisabled());
@@ -36,7 +39,7 @@ try{
   const selection=JSON.parse(await page.locator('#selection').textContent());
   assert.deepEqual(selection,[{id:'mixing tank',quantity:1},{id:'spatula',quantity:1}]);
   assert.equal(await page.getByLabel('Equipment to add').locator('option[value="spatula"]').count(),0);
-  assert.ok(await page.getByLabel('Equipment to add').locator('option[value="unapproved"]').evaluate(option=>option.disabled));
+  assert.equal(await page.getByLabel('Equipment to add').locator('option[value="unapproved"]').evaluate(option=>option.disabled),false,'discovered equipment remains selectable so its approval issue can be read');
   await page.getByRole('button',{name:'Increase Spatula quantity',exact:true}).click();
   assert.equal(await page.getByLabel('Spatula quantity',{exact:true}).inputValue(),'2');
   await page.getByRole('button',{name:'Reduce Spatula quantity',exact:true}).click();

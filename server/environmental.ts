@@ -6,6 +6,22 @@ import {environmentalProfileSchema,environmentalKey,processArea,environmentalTem
 import type {Sample,Template,Criterion} from '../shared/model.js';
 
 export async function environmentalProfiles():Promise<EnvironmentalProfile[]>{return (await db.query('SELECT data FROM environmental_profiles ORDER BY created_at DESC')).rows.map(r=>r.data);}
+export async function scannedEnvironmentalEquipment():Promise<string[]>{
+ const batches=(await db.query("SELECT data->'candidates' AS candidates FROM files WHERE data->>'kind'='environmental-import' AND data->>'status'='ready'")).rows;
+ const locations=new Set<string>();
+ for(const batch of batches){
+  if(!Array.isArray(batch.candidates))continue;
+  for(const candidate of batch.candidates){
+   if(candidate?.mode!=='surface'||!Array.isArray(candidate.rows))continue;
+   for(const row of candidate.rows){
+    if(typeof row?.location!=='string')continue;
+    const location=row.location.replace(/\s+/g,' ').trim();
+    if(location&&location.length<=200)locations.add(location);
+   }
+  }
+ }
+ return [...locations].sort();
+}
 export async function publishEnvironmentalProfile(input:unknown,actor:string,previousId?:string,expectedRevision?:string){
  const profile=environmentalProfileSchema.parse(input),config=(await getConfiguration()).value;
  if(!config.sampleTypes.some(t=>t.id===profile.category&&t.active&&t.register==='environmental'))throw new Fault(400,'Choose an active environmental sample type.');

@@ -43,7 +43,8 @@ test('a tank-only historical pattern can add approved Spatula points to both swa
  const setup=resolve({profileId:selected.id},input);
  assert.equal(setup.resolution.status,'ready');
  assert.deepEqual(setup.snapshot.equipment.selection.map((q:any)=>[q.id,q.quantity]),[['mixing tank',1]]);
- assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Spatula',0]]);
+ assert.deepEqual(setup.equipment.items.map((item:any)=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Scoop',0],['Spatula',0]]);
+ assert.match(setup.equipment.items.find((item:any)=>item.id==='scoop').issue,/no approved definition/);
  const selection={profileId:selected.id,equipmentRevision:setup.equipment.revision,equipment:[{id:'mixing tank',quantity:1},{id:'spatula',quantity:2}]};
  const manual=resolve(selection,input);
  assert.equal(manual.resolution.status,'ready');
@@ -53,6 +54,19 @@ test('a tank-only historical pattern can add approved Spatula points to both swa
  const conflict=profile('conflicting-spatula',['Spatula']);conflict.outputs[1].instances[0].criterion='Nmt 50 cfu/mL';
  assert.equal(resolve({profileId:selected.id},[...input,conflict]).resolution.status,'ready','unused optional equipment must not block the pattern defaults');
  assert.equal(resolve(selection,[...input,conflict]).resolution.status,'conflict');
+});
+test('the scanned inventory is deduplicated without borrowing standards or historical quantities',()=>{
+ const selected=profile('tank-only',['Mixing Tank']);
+ const foreign={...profile('other-product',['Stirrer']),productId:'other-product'};
+ const setup=environmental.resolveEnvironmentalEquipment(sample,'product',[selected,foreign],[template],{profileId:selected.id},['Spatula 1','Spatula 2','Mixing Tank 3']);
+ assert.deepEqual(setup.equipment!.items.map(item=>[item.name,item.defaultQuantity]),[['Mixing Tank',1],['Spatula',0],['Stirrer',0]]);
+ assert.equal(setup.resolution.status,'ready');
+ for(const id of ['spatula','stirrer']){
+  assert.match(setup.equipment!.items.find(item=>item.id===id)!.issue!,/no approved definition/);
+  const result=environmental.resolveEnvironmentalEquipment(sample,'product',[selected,foreign],[template],{profileId:selected.id,equipmentRevision:setup.equipment!.revision,equipment:[{id,quantity:1}]},['Spatula 1']);
+  assert.equal(result.resolution.status,'conflict');
+ }
+ assert.deepEqual(setup.snapshot!.equipment!.selection.map(item=>item.id),['mixing tank']);
 });
 test('a selected single-method pattern cannot silently drop the required Accupoint report',()=>{
  const selected=profile('single-method',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 1','Stainless Drum 2','Stainless Drum 3','Stainless Drum 4','Stainless Pail 1','Stainless Pail 2','Stainless Pail 3']);

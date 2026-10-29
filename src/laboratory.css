@@ -62,7 +62,7 @@ input,select,textarea { caret-color:var(--accent); }
 .topbar-right .avatar { width:46px; height:46px; background:var(--bg-surface-elevated); color:var(--text-primary); font-size:14px; }
 .topbar-theme { width:48px; height:48px; border-radius:18px; background:var(--bg-surface); }
 .app .workspace-content { padding:8px 24px 28px; max-width:1800px; margin:auto; }
-.app .route-stage { padding:0; max-width:none; outline:none; }
+.app .route-stage { padding:0; max-width:none; outline:none!important; }
 .dashboard-layout.dashboard-redesign { padding:0; gap:16px; }
 .app .page-heading,.dashboard-heading { display:flex; flex-direction:row; align-items:center; gap:22px; padding:4px 0 12px; margin-bottom:12px; border:0; }
 .app .page-heading .page-heading-copy { flex:1; min-width:0; }
