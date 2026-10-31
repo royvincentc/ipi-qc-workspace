@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {environmentalActivityDate,environmentalKey,processArea,environmentalSourceIssue,environmentalTemplateIssue,resolveEnvironmentalProfile,type EnvironmentalProfile,type EnvironmentalOutput,type EnvironmentalSelection,type EnvironmentalSetup,type EquipmentCatalog} from './environmental.js';
+import {environmentalActivityDate,environmentalKey,environmentalCriterionKey,environmentalStageKey,processArea,environmentalSourceIssue,environmentalTemplateIssue,resolveEnvironmentalProfile,type EnvironmentalProfile,type EnvironmentalOutput,type EnvironmentalSelection,type EnvironmentalSetup,type EquipmentCatalog} from './environmental.js';
 import type {Sample,Template} from './model.js';
 
 export const equipmentSelectionSchema=z.object({
@@ -14,9 +14,9 @@ const methods=['accupoint','spc-my'] as const;
 function equipmentName(location:string){
  return location.trim().replace(/(\b(?:drum|pail|nozzle|hose|tank|spatula|pipe|barrel|bucket|vessel|beaker|flask|tray|container|tub|bottle|bin|funnel|scoop|mixer|utensil|pump|filter))\s*(?:no\.?\s*)?#?\d+$/i,'$1');
 }
-const rowIdentity=(r:EnvironmentalOutput['instances'][number])=>JSON.stringify([r.test,r.stage,r.replicate,r.block,r.channel||'']);
+const rowIdentity=(r:EnvironmentalOutput['instances'][number])=>JSON.stringify([r.test,environmentalStageKey(r),r.replicate,r.block,r.channel||'']);
 function signature(output:EnvironmentalOutput,rows:EnvironmentalOutput['instances']){
- return JSON.stringify([output.templateId,output.templateRevision,rows.map(r=>[rowIdentity(r),r.type,environmentalKey(r.unit).replace(/\s/g,''),environmentalKey(r.criterion).replace(/^not more than\s+/,'nmt ')]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))]);
+ return JSON.stringify([output.templateId,output.templateRevision,rows.map(r=>[rowIdentity(r),r.type,environmentalKey(r.unit).replace(/\s/g,''),environmentalCriterionKey(r.criterion)]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))]);
 }
 function equipmentDefinition(profile:EnvironmentalProfile,output:EnvironmentalOutput,instances:EnvironmentalOutput['instances']):Definition{
  const parameters=new Map<string,typeof instances[number]>();let conflict=false;

@@ -44,6 +44,36 @@ test('an exact document product takes precedence over its broader archive folder
  const source={...candidate,evidence:[{...candidate.evidence[0],product:'Boost-Pro'}]};
  const [matched]=prepareEnvironmentalBatch([source],variants,[template],[],rules);assert.equal(matched.profile.productId,'boost-pro');assert.deepEqual(matched.issues,[]);
 });
+test('creating products keeps header variants separate from valid base-product equipment',()=>{
+ const variants=['Boost','Boost - Bouquet','Boost - Florabelle'].map((product,index)=>({...candidate,id:'variant-'+index,referenceId:'variant-ref-'+index,evidence:[{...candidate.evidence[0],product}]}));
+ const prepared=prepareEnvironmentalBatch(variants,config,[template],[],{...rules,createProducts:true});
+ assert.equal(prepared.length,3);
+ assert.deepEqual(prepared.map(p=>p.profile.product),['Boost','Boost - Bouquet','Boost - Florabelle']);
+ assert.ok(prepared.every(p=>!p.issues.length));
+ assert.equal(new Set(prepared.map(p=>p.profile.productId)).size,3);
+});
+test('new header variants reuse one canonical product across cosmetic spellings and independently selected patterns',()=>{
+ const sources=["Cheers Baby Oil - Bouquet","Cheer's Baby Oil - Bouquet"].map((product,index)=>({...candidate,id:'cosmetic-'+index,referenceId:'cosmetic-ref-'+index,productHint:'Cheers Baby Oil',evidence:[{...candidate.evidence[0],product}],rows:candidate.rows.map(row=>({...row,location:index?'Spatula':'Mixing Tank'}))}));
+ const prepared=prepareEnvironmentalBatch(sources,config,[template],[],{...rules,createProducts:true});
+ assert.equal(prepared.length,2);
+ assert.ok(prepared.every(p=>!p.issues.length&&p.newProduct));
+ assert.equal(new Set(prepared.map(p=>p.profile.productId)).size,1);
+ assert.equal(new Set(prepared.map(p=>p.profile.product)).size,1);
+});
+test('standard incubation headings and equivalent criterion wording do not block the same swab panel',()=>{
+ const repeated={...candidate,id:'repeated',referenceId:'repeated-ref',rows:[{...candidate.rows[0],stage:'After 48 hours of incubation period:',criterion:'Not more than100 cfu/mL'}]};
+ const [prepared]=prepareEnvironmentalBatch([candidate,repeated],config,[template],[],rules);
+ assert.deepEqual(prepared.issues,[]);
+ assert.equal(prepared.profile.outputs.length,1);
+ assert.deepEqual(prepared.profile.evidenceIds,['ref','repeated-ref']);
+ for(const stage of ['After 48 hrs. of incubation:','After 48 hours ofincubation period:']){
+  assert.deepEqual(prepareEnvironmentalBatch([candidate,{...repeated,rows:[{...repeated.rows[0],stage}]}],config,[template],[],rules)[0].issues,[]);
+ }
+ for(const row of [{...repeated.rows[0],stage:'After 24 hours of incubation period:'},{...repeated.rows[0],criterion:'Not more than 200 cfu/mL'}]){
+  assert.match(prepareEnvironmentalBatch([candidate,{...repeated,rows:[row]}],config,[template],[],rules)[0].issues.join(' '),/Different historical row\/criterion variants/);
+ }
+ assert.match(prepareEnvironmentalBatch([{...candidate,mode:'open-plate'},{...repeated,mode:'open-plate'}],config,[template],[],rules)[0].issues.join(' '),/Different historical row\/criterion variants/);
+});
 test('a matching process area disambiguates managed product names with area suffixes',()=>{
  const scoped={...config,products:[
   {id:'boost-compounding',name:'Boost - Compounding',category:'EM',active:true,aliases:[],code:''},

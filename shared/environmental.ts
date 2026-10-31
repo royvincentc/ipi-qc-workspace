@@ -37,6 +37,12 @@ export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutpu
  return accupoint.length===1&&spcmy.length===1?[accupoint[0],spcmy[0]]:[];
 }
 export const environmentalKey=(value:string)=>value.normalize('NFKC').toLowerCase().replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim();
+export const environmentalCriterionKey=(value:string)=>environmentalKey(value).replace(/^not more than\s*/,'nmt').replace(/\s+/g,'');
+export function environmentalStageKey(row:{test:string;stage?:string}){
+ const stage=environmentalKey(row.stage||'');
+ // Conventional surface-method incubation headings are layout text; other stages retain their identity.
+ return row.test==='SPC'&&/^after 48 (?:hours|hrs\.?) of\s*incubation(?: period)?:?$/.test(stage)||row.test==='MY'&&/^after 5\s*-\s*7 days of\s*incubation(?: period)?:?$/.test(stage)?'':stage;
+}
 export const processArea=(value:string)=>environmentalKey(value).replace(/^for\s+/,'').replace(/\s+area$/,'');
 export function environmentalActivityDate(sample:Sample){
  const raw=sample.received.match(/(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/)?.[0];

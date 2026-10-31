@@ -24,6 +24,29 @@ class BatchTests(unittest.TestCase):
             folder=Path(tmp);archive=folder/'source.zip'
             with zipfile.ZipFile(archive,'w') as z:z.writestr('PF/2026/Boost/report.docx',self.report(folder,'Goods-in-Process','4'))
             result=scan(archive,folder/'prepared');self.assertEqual(result['candidates'],[]);self.assertIn('do not reclassify',result['exceptions'][0]['reason'])
+    def test_spanning_specification_header_keeps_equipment_and_excludes_results(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder=Path(tmp);file=folder/'report.docx'
+            self.report(folder,'Environmental Monitoring','98765321')
+            d=Document(file);d._element.body.remove(d.tables[0]._element)
+            t=d.add_table(rows=2,cols=6)
+            for c,v in zip(t.rows[0].cells,['ANALYSIS DESIRED:','Area','Standard Specifications','','Results','Remarks']):c.text=v
+            t.cell(0,2).merge(t.cell(0,3))
+            for c,v in zip(t.rows[1].cells,['Neogen Accupoint (Rapid Testing)','Stainless Drum 1 (A)','','Not more than 100 RLU','98765321','Passed']):c.text=v
+            t.cell(1,1).merge(t.cell(1,2));d.save(file)
+            archive=folder/'source.zip'
+            with zipfile.ZipFile(archive,'w') as z:z.writestr('PF/2026/Boost/report.docx',file.read_bytes())
+            result=scan(archive,folder/'prepared');self.assertEqual(result['exceptions'],[])
+            row=result['candidates'][0]['rows'][0]
+            self.assertEqual(row['location'],'Stainless Drum 1 (A)')
+            self.assertEqual(row['criterion'],'Not more than 100 RLU')
+            self.assertEqual(row['test'],'ACCUPOINT')
+            self.assertNotIn('98765321',json.dumps(result));self.assertNotIn('Passed',json.dumps(result))
+            d=Document(file);d.tables[0].add_row().cells[2].text='Different independent standard';d.save(file)
+            with zipfile.ZipFile(archive,'w') as z:z.writestr('PF/2026/Boost/report.docx',file.read_bytes())
+            ambiguous=scan(archive,folder/'ambiguous')
+            self.assertEqual(ambiguous['candidates'],[])
+            self.assertEqual(ambiguous['exceptions'][0]['reason'],'Unsupported environmental layout')
     def test_flat_archive_uses_header_product_and_process_area(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder=Path(tmp);archive=folder/'source.zip'

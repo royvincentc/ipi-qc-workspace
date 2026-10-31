@@ -10,7 +10,7 @@ const bundle=await build({write:false,bundle:true,format:'iife',jsx:'automatic',
  import {createRoot} from 'react-dom/client';
  import {EnvironmentalEquipment} from './src/environmental-equipment';
  const parameters=[{method:'accupoint',test:'ACCUPOINT',label:'Accupoint',criterion:'Nmt 100 RLU',unit:'RLU'},{method:'spc-my',test:'SPC',label:'SPC',criterion:'Nmt 100 cfu/mL',unit:'cfu/mL'},{method:'spc-my',test:'MY',label:'MY',criterion:'Nmt 30 cfu/mL',unit:'cfu/mL'}];
- const catalog={revision:'fixture',profileId:'tank-only',items:[{id:'mixing tank',name:'Mixing Tank',defaultQuantity:1,parameters},{id:'spatula',name:'Spatula',defaultQuantity:0,parameters},{id:'unapproved',name:'Incomplete definition',defaultQuantity:0,parameters:[],issue:'Missing approved Accupoint definition'}]};
+ const catalog={revision:'fixture',profileId:'tank-only',items:[{id:'mixing tank',name:'Mixing Tank',defaultQuantity:1,parameters},{id:'spatula',name:'Spatula',defaultQuantity:0,parameters},{id:'unapproved',name:'Incomplete definition',defaultQuantity:0,parameters:[],issue:'Missing approved Accupoint definition'},...['Scoop','Pipe','Hose','Stirrer'].map(name=>({id:name.toLowerCase(),name,defaultQuantity:0,parameters}))]};
  function Fixture(){const [value,setValue]=useState([{id:'mixing tank',quantity:1}]);return <div className="app app-workspace"><div className="main-wrapper"><div className="workspace-content"><main className="route-stage"><div className="reports-workbench"><section className="panel padded"><EnvironmentalEquipment catalog={catalog} value={value} disabled={false} onChange={setValue}/><output id="selection" hidden>{JSON.stringify(value)}</output></section></div></main></div></div></div>;}
  createRoot(document.getElementById('root')).render(<Fixture/>);
  `}});
@@ -24,8 +24,16 @@ try{
   for(const css of styles)await page.addStyleTag({content:css});
   await page.addScriptTag({content:bundle.outputFiles[0].text});
   await page.getByRole('checkbox',{name:/Mixing Tank/}).waitFor();
-  assert.equal(await page.getByRole('checkbox',{name:/Spatula/}).count(),0);
+  const spatula=page.getByRole('checkbox',{name:/Spatula/});
+  assert.equal(await spatula.count(),1);assert.equal(await spatula.isChecked(),false);
+  assert.equal(await page.getByRole('checkbox',{name:/Incomplete definition/}).count(),0);
+  await page.getByPlaceholder('Find equipment…').fill('Spatula');
+  assert.ok(await spatula.isVisible());assert.equal(await page.getByRole('checkbox',{name:/Scoop/}).count(),0);
+  await spatula.check();assert.equal(await page.getByLabel('Spatula quantity',{exact:true}).inputValue(),'1');
+  await spatula.uncheck();await page.getByPlaceholder('Find equipment…').fill('');
   await page.getByText('Add equipment manually',{exact:true}).click();
+  assert.doesNotMatch(await page.locator('.equipment-manual').innerText(),/Definition needs review/);
+  assert.equal(await page.getByLabel('Equipment to add').locator('option[value="unapproved"]').textContent(),'Incomplete definition');
   await page.getByLabel('Equipment to add').selectOption('unapproved');
   await page.getByRole('status').filter({hasText:'Missing approved Accupoint definition'}).waitFor();
   assert.ok(await page.getByRole('button',{name:'Add equipment',exact:true}).isDisabled());

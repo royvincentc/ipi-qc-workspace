@@ -68,6 +68,34 @@ test('the scanned inventory is deduplicated without borrowing standards or histo
  }
  assert.deepEqual(setup.snapshot!.equipment!.selection.map(item=>item.id),['mixing tank']);
 });
+test('PF2 compounding can add Spatula despite cosmetic historical incubation and limit wording',()=>{
+ const activity={...sample,fields:{facility:'PF2',area:'Compounding'}};
+ const selected={...profile('tank-only',['Mixing Tank']),facility:'PF2'};
+ const plain={...profile('plain',['Spatula 1','Spatula 2']),facility:'PF2'};
+ const headed=structuredClone(plain);headed.id='headed';headed.revision='headed-1';
+ for(const output of headed.outputs)for(const row of output.instances){
+  row.criterion=row.criterion.replace('than ','than');
+  if(row.test==='SPC')row.stage='After 48 hours of incubation period:';
+  if(row.test==='MY')row.stage='After 5 - 7 days of incubation period:';
+ }
+ const input=[selected,plain,headed];
+ const setup=resolve({profileId:selected.id},input,[template],activity);
+ assert.equal(setup.equipment.items.find((item:any)=>item.id==='spatula').issue,undefined);
+ const selection={profileId:selected.id,equipmentRevision:setup.equipment.revision,equipment:[{id:'mixing tank',quantity:1},{id:'spatula',quantity:2}]};
+ const result=resolve(selection,input,[template],activity);
+ assert.equal(result.resolution.status,'ready');
+ assert.deepEqual(result.pairedOutputs.map((o:any)=>o.instances.length),[3,6]);
+ assert.ok(result.pairedOutputs.every((o:any)=>o.instances.some((r:any)=>r.location==='Spatula 2')));
+ for(const [spc,my] of [['After 48 hrs. of incubation:','After 5-7 days of incubation:'],['After 48 hours ofincubation period:','After 5 - 7 days ofincubation period:']]){
+  const historical=structuredClone(headed);
+  for(const row of historical.outputs[1].instances)row.stage=row.test==='SPC'?spc:my;
+  assert.equal(resolve(selection,[selected,plain,historical],[template],activity).resolution.status,'ready');
+ }
+ for(const altered of [{stage:'After 24 hours of incubation period:'},{criterion:'Not more than 200 cfu/mL'}]){
+  const conflicting=structuredClone(headed);Object.assign(conflicting.outputs[1].instances[0],altered);
+  assert.equal(resolve(selection,[selected,plain,conflicting],[template],activity).resolution.status,'conflict');
+ }
+});
 test('a selected single-method pattern cannot silently drop the required Accupoint report',()=>{
  const selected=profile('single-method',['Mixing Tank','Spatula 1','Spatula 2','Stainless Drum 1','Stainless Drum 2','Stainless Drum 3','Stainless Drum 4','Stainless Pail 1','Stainless Pail 2','Stainless Pail 3']);
  selected.outputs=selected.outputs.filter(output=>output.method==='spc-my');

@@ -11,13 +11,18 @@ def tables(root, family=None):
     for index, table in enumerate(root.xpath('.//w:body/w:tbl',namespaces=w.NS)):
         rows=table.findall(w.W+'tr')
         for hi,row in enumerate(rows[:3]):
-            labels={c:re.sub(r'[^a-z]','',w.text(cell).lower()) for c,cell in w.logical_cells(row).items()}
+            header_cells=w.logical_cells(row)
+            labels={c:re.sub(r'[^a-z]','',w.text(cell).lower()) for c,cell in header_cells.items()}
             columns={}
             aliases={'test':['analysisdesired'], 'location':['area','location','arealocation'],
                      'criterion':['standardspecifications','standardspecification'],
                      'value':['results','actualresults'], 'remarks':['remarks'], 'phase':['phase']}
             for role,names in aliases.items():
                 hits=[c for c,label in labels.items() if label in names]
+                # Some merged headers overlap the equipment column in every body row.
+                if role=='criterion' and len(hits)>1 and 'location' in columns and all(header_cells[c] is header_cells[hits[0]] for c in hits):
+                    body_cells=[w.logical_cells(body) for body in rows[hi+1:]]
+                    if body_cells and all(all(cells.get(c) is cells.get(columns['location']) for c in hits[:-1]) for cells in body_cells):hits=[hits[-1]]
                 if len(hits)==1:columns[role]=hits[0]
             if {'test','phase','location','criterion','remarks'}<=columns.keys() and hi+1<len(rows):
                 sub={c:re.sub(r'[^a-z]','',w.text(cell).lower()) for c,cell in w.logical_cells(rows[hi+1]).items()}

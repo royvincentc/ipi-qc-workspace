@@ -10,11 +10,21 @@ import type {Sample,Template} from '../shared/model.js';
 import {environmentalProfileSchema} from '../shared/environmental.js';
 import {environmentalProductKey,environmentalVariant} from '../shared/environmental-routing.js';
 
+// Bump when extraction changes so previously uploaded ZIPs are rescanned.
+const scanRevision='environmental-equipment-20261031';
+async function refreshScan(batch:any){
+ if(batch.status==='ready'&&batch.path&&batch.scanRevision!==scanRevision){
+  Object.assign(batch,{status:'scanning',error:undefined});
+  await db.query('UPDATE files SET data=$1 WHERE id=$2',[JSON.stringify(batch),batch.id]);
+ }
+ if(batch.status==='scanning')startScan(batch);
+ return batch;
+}
 export async function scanEnvironmentalBatch(blob:Buffer,name:string,actor:string){
  const sha256=createHash('sha256').update(blob).digest('hex');
  return locked('environmental-import',async()=>{
   const cached=(await db.query("SELECT data FROM files WHERE data->>'kind'='environmental-import' AND data->>'sha256'=$1",[sha256])).rows[0]?.data;
-  if(cached)return batchSummary(cached);
+  if(cached)return batchSummary(await refreshScan(cached));
   const id=randomUUID(),folder=`environmental-imports/${id}`;
   await mkdir(privatePath(folder),{recursive:true});await writeFile(privatePath(folder+'/source.zip'),blob);
   const batch={id,kind:'environmental-import',name,sha256,path:folder+'/source.zip',createdAt:new Date().toISOString(),status:'scanning',actor,documents:0,exceptions:[],candidates:[],publications:[]};
@@ -38,7 +48,7 @@ function startScan(batch:any){
     await db.query('INSERT INTO files(id,data) VALUES($1,$2) ON CONFLICT (id) DO NOTHING',[referenceId,JSON.stringify(reference)]);
     candidates.push({...candidate,referenceId});
    }
-   Object.assign(batch,{status:'ready',documents:result.documents,lockFiles:result.lockFiles,exceptions:result.exceptions,candidates});
+   Object.assign(batch,{status:'ready',scanRevision,documents:result.documents,lockFiles:result.lockFiles,exceptions:result.exceptions,candidates});
    await audit(batch.actor,'environmental_archive_prepared',batch.id,{documents:result.documents,candidates:candidates.length,exceptions:result.exceptions.length});
   }catch(error:any){Object.assign(batch,{status:'failed',error:error.message});}
   finally{await db.query('UPDATE files SET data=$1 WHERE id=$2',[JSON.stringify(batch),batch.id]);jobs.delete(batch.id);}
@@ -55,9 +65,9 @@ function normalizedRules(rules:BatchRules,timezone:string):BatchRules{
 }
 function fingerprint(profile:any,rules:BatchRules){const normalized=environmentalProfileSchema.safeParse(profile),value=normalized.success?normalized.data:profile;return hash(rules.unchanged?{...value,outputs:value.outputs.map((o:any)=>({...o,instances:o.instances.map((r:any)=>({...r,date:'unchanged'}))}))}:value);}
 export async function previewEnvironmentalBatch(id:string,rules:BatchRules){
- const batch=await load(id),config=await getConfiguration();
+ const batch=await refreshScan(await load(id)),config=await getConfiguration();
  if(batch.status==='scanning'){
-  startScan(batch);let progress={};try{progress=JSON.parse(await readFile(privatePath(batch.path.replace(/source\.zip$/,'progress.json')),'utf-8'));}catch{}
+  let progress={};try{progress=JSON.parse(await readFile(privatePath(batch.path.replace(/source\.zip$/,'progress.json')),'utf-8'));}catch{}
   return {...batchSummary(batch),progress,configurationRevision:config.revision,proposals:[]};
  }
  if(batch.status==='failed')throw new Fault(422,batch.error||'Archive processing failed');

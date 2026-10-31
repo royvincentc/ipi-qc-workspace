@@ -44,6 +44,7 @@ test('server composes immutable paired drafts from validated quantities and appr
  await assert.rejects(createAutomaticDraft(sample.id,actor,{...selection,equipment:[{id:'nozzle',quantity:151}]}),/300-row/);
  assert.equal(Number((await db.query('SELECT count(*) AS count FROM drafts')).rows[0].count),count);
  await publishEnvironmentalProfile({...pattern,name:'Additional approved equipment',equipmentSet:'Spatula',outputs:pattern.outputs.map(output=>({...output,instances:output.instances.map(instance=>({...instance,location:'Spatula'}))}))},actor.email);
+ await publishEnvironmentalProfile({...pattern,name:'Historical Spatula headings',equipmentSet:'Spatula with incubation headings',outputs:pattern.outputs.map(output=>({...output,instances:output.instances.map(instance=>({...instance,location:'Spatula',criterion:instance.criterion.replace('than ','than'),stage:instance.test==='SPC'?'After 48 hours of incubation period:':instance.test==='MY'?'After 5 - 7 days of incubation period:':''}))}))},actor.email);
  const expanded=await resolveReportSetup(sample.id,{profileId:pattern.id},true);
  assert.equal(expanded.environmental!.equipment!.items.find(item=>item.id==='spatula')!.defaultQuantity,0);
  const manualSelection={profileId:pattern.id,equipmentRevision:expanded.environmental!.equipment!.revision,equipment:[{id:'nozzle',quantity:1},{id:'spatula',quantity:1}]};

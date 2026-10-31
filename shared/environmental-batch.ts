@@ -1,6 +1,6 @@
 import type {Configuration} from './configuration';
 import type {Sample,Template} from './model';
-import {environmentalKey,processArea,environmentalProfileSchema,environmentalTemplateIssue} from './environmental';
+import {environmentalKey,environmentalCriterionKey,environmentalStageKey,processArea,environmentalProfileSchema,environmentalTemplateIssue} from './environmental';
 import {environmentalProductKey,environmentalProductName,environmentalVariant,documentFacility,documentContext,environmentalAreaType} from './environmental-routing';
 
 export interface BatchEvidence {path:string;sha256:string;product?:string;category?:string;area?:string;batch?:string;ml?:string}
@@ -10,7 +10,7 @@ export interface BatchProposal {key:string;candidateIds:string[];profile:any;iss
 const same=(a:string,b:string)=>environmentalKey(a)===environmentalKey(b);
 const matches=(name:string,selector:string)=>environmentalVariant(name)===environmentalVariant(selector)&&(environmentalProductKey(name)===environmentalProductKey(selector)||environmentalKey(name).startsWith(environmentalKey(selector)+' ')||environmentalKey(name).startsWith(environmentalKey(selector)+'('));
 const variant=environmentalVariant;
-export const outputMeaning=(output:any)=>JSON.stringify(output.instances.map((r:any)=>[r.test,environmentalKey(r.location||''),environmentalKey(r.stage||''),r.channel||'',r.replicate||'',r.block,environmentalKey(r.criterion).replace(/\s+/g,''),environmentalKey(r.unit||'').replace(/\s+/g,''),r.type]).sort((a:any,b:any)=>JSON.stringify(a).localeCompare(JSON.stringify(b))));
+export const outputMeaning=(output:any)=>JSON.stringify(output.instances.map((r:any)=>[r.test,environmentalKey(r.location||''),output.mode==='surface'?environmentalStageKey(r):environmentalKey(r.stage||''),r.channel||'',r.replicate||'',r.block,environmentalCriterionKey(r.criterion),environmentalKey(r.unit||'').replace(/\s+/g,''),r.type]).sort((a:any,b:any)=>JSON.stringify(a).localeCompare(JSON.stringify(b))));
 const importedProductId=(name:string)=>{
  const key=environmentalKey(name);let hash=2166136261;
  for(let i=0;i<key.length;i++)hash=Math.imul(hash^key.charCodeAt(i),16777619);
@@ -20,11 +20,11 @@ const importedProductId=(name:string)=>{
 /** Document Area supplies explicit facility; corroborated logbook scope supplies context. */
 export function prepareEnvironmentalBatch(candidates:BatchCandidate[],config:Configuration,templates:Template[],samples:Sample[],rules:BatchRules):BatchProposal[]{
  const category=config.sampleTypes.find(t=>t.active&&t.register==='environmental')?.id||'EM';
- const products=config.products.filter(p=>p.active&&p.category===category),groups=new Map<string,BatchProposal>();
+ const products=config.products.filter(p=>p.active&&p.category===category),created=new Set<string>(),groups=new Map<string,BatchProposal>();
  for(const c of candidates){
   const issues:string[]=[];
-  const names=[c.productHint,...c.evidence.map(e=>e.product||'')].filter(Boolean);
   const headerNames=c.evidence.map(e=>e.product||'').filter(Boolean);
+  const names=rules.createProducts&&headerNames.length?headerNames:[c.productHint,...headerNames].filter(Boolean);
   const exactHeaders=products.filter(p=>headerNames.some(name=>[p.name,...p.aliases].some(alias=>environmentalProductKey(name)===environmentalProductKey(alias))));
   const areaKey=environmentalKey(c.areaHint).replace(/[^a-z0-9]/g,''),areaScoped=exactHeaders.filter(p=>environmentalKey(p.name).replace(/[^a-z0-9]/g,'').slice(environmentalProductKey(p.name).length).startsWith(areaKey));
   const exact=areaScoped.length===1?areaScoped:exactHeaders.length?exactHeaders:products.filter(p=>[p.name,...p.aliases].some(alias=>environmentalProductKey(c.productHint)===environmentalProductKey(alias))&&headerNames.every(name=>variant(name)===variant(p.name)));
@@ -36,9 +36,10 @@ export function prepareEnvironmentalBatch(candidates:BatchCandidate[],config:Con
   if(!product&&!matchedProducts.length){
    if(!rules.createProducts&&headerNames.some(name=>products.some(p=>environmentalKey(name).startsWith(environmentalKey(p.name))&&variant(name)!==variant(p.name))))issues.push('Product variant differs (Pro, Old Specs or New Specs); confirm a distinct managed variant.');
    const name=environmentalProductName(headerNames[0]||c.productHint);
-   if(name&&!config.products.some(p=>p.category===category&&same(p.name,name))&&rules.createProducts){newProduct={id:importedProductId(name),name,category,active:true,code:'',aliases:[]};product=newProduct;}
+   if(name&&!config.products.some(p=>p.category===category&&same(p.name,name))&&rules.createProducts){newProduct={id:importedProductId(name),name,category,active:true,code:'',aliases:[]};product=newProduct;products.push(product);created.add(product.id);}
    else issues.push('Confirm or add the canonical environmental product.');
   }
+  if(product&&created.has(product.id))newProduct=product;
   if(product&&c.evidence.some(e=>e.product&&![product!.name,...product!.aliases].some(alias=>matches(e.product!,alias))))issues.push('A header product disagrees with the folder/managed product; confirm an alias.');
   if(product&&c.evidence.some(e=>e.product&&variant(e.product)!==variant(product!.name)))issues.push('Product variant differs (Pro, Old Specs or New Specs); confirm a distinct managed variant.');
   if(product&&c.productHint){const folderKey=environmentalProductKey(c.productHint.replace(/\s+20\d{2}$/,'')),productKey=environmentalProductKey(product.name);if(folderKey&&!folderKey.startsWith(productKey)&&!productKey.startsWith(folderKey))issues.push('Archive folder and document header identify different product names; review before linking.');}
