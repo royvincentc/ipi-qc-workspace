@@ -168,9 +168,15 @@
 .draft-method-open:hover { background:var(--bg-surface-hover); }
 .report-pagination { display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:16px;font-size:12px;color:var(--text-secondary); }
 .report-pagination .button { padding:8px 12px;min-height:40px;font-size:12px; }
-.report-confirmation { padding:8px; }
-.report-confirmation > p { max-width:65ch;line-height:1.6; }
-.report-confirmation .form-footer { margin-top:20px;justify-content:flex-end;gap:12px; }
+dialog.workspace-dialog.report-confirmation-dialog[open] { display:flex;flex-direction:column;max-height:min(720px,calc(100dvh - 32px)); }
+.report-confirmation-dialog > .section-heading { flex-shrink:0;gap:16px; }
+.report-confirmation-dialog > .section-heading .button { flex-shrink:0; }
+dialog.workspace-dialog.report-confirmation-dialog :is(.section-heading,.form-footer) .button { min-height:44px; }
+dialog.workspace-dialog > .report-confirmation { display:flex;flex-direction:column;min-height:0;margin:0; }
+.report-confirmation-body { min-height:0;overflow:auto;padding:8px 28px 24px; }
+.report-confirmation-body > p { max-width:65ch;line-height:1.6;overflow-wrap:anywhere; }
+.report-confirmation .table-scroll { max-height:none; }
+dialog.workspace-dialog.report-confirmation-dialog .report-confirmation .form-footer { flex-shrink:0;margin:0;padding:20px 28px;justify-content:flex-end;gap:12px; }
 .reports-editor .sample-confirm { grid-template-columns:1fr auto; }
 .reports-editor .sample-confirm > div:first-child { flex-wrap:wrap; }
 .reports-editor .sample-confirm > div:first-child > strong { white-space:normal;overflow-wrap:anywhere; }
@@ -214,6 +220,8 @@
  .reports-editor .criterion { padding:0; }.reports-editor .result-grid { gap:12px; }.reports-editor .result-grid input { min-height:44px;font-size:16px; }
  .result-entry-toolbar { align-items:flex-start;flex-wrap:wrap; }.reports-editor .sticky-actions { flex-wrap:wrap;gap:10px; }.reports-editor .sticky-actions > div { display:flex;gap:8px;flex:1; }.reports-editor .sticky-actions .button { flex:1; }
  .report-confirmation .form-footer { flex-wrap:wrap; }.report-confirmation .form-footer .button { flex:1; }
+ .report-confirmation-body { padding:8px 20px 20px; }
+ dialog.workspace-dialog.report-confirmation-dialog .report-confirmation .form-footer { padding:16px 20px; }
 }
 @media (max-width:380px) { .equipment-choice { grid-template-columns:minmax(0,1fr); }.equipment-quantity { justify-self:start;margin-left:28px; }.reports-editor .result-grid { grid-template-columns:minmax(0,1fr); } }
 @media (prefers-reduced-motion:reduce) { .reports-workbench button,.reports-workbench .button,.reports-workbench .draft-method-open,.equipment-choice { transition:none; }.reports-workbench button:active:not(:disabled),.reports-workbench .button:active { transform:none; }.equipment-preview-ready .report-preview-heading .lab-object { animation:none; } }
