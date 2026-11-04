@@ -46,6 +46,7 @@ async function autoCreateProducts(actor:string){
   }
   return added;
  } catch (e) {
+  console.error('Managed product registration failed:',e instanceof Error?e.message:'Unknown error');
   return 0;
  }
 }
@@ -108,7 +109,11 @@ async function syncSourcesOnce(actor:string){
 }
 export async function syncSourcesIfDue(){
  if(demo)return;
- if(!cachedSyncStatus){try{cachedSyncStatus=await setting('sync',{});}catch{return;}}
+ if(!cachedSyncStatus){
+  // Repair cached products on startup even when the four-hour Sheets sync is not due.
+  await autoCreateProducts('system');
+  try{cachedSyncStatus=await setting('sync',{});}catch{return;}
+ }
  if(!sourceSyncDue(cachedSyncStatus))return;
  try{await syncSources('system');}
  catch(error){

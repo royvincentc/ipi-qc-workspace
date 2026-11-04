@@ -144,7 +144,7 @@ if(!process.execArgv.includes('--experimental-test-module-mocks')){
   GoogleAuth:class{async getClient(){return {request:googleRequest};}}
  }});
  const {readWorkbook}=await import('../server/google.js');
- const {syncSources,pushSourceSheet}=await import('../server/samples.js');
+ const {syncSources,syncSourcesIfDue,pushSourceSheet}=await import('../server/samples.js');
  beforeEach(()=>{
   state=fixture();
   mock.timers.enable({apis:['Date'],now:at('08:00:00')});
@@ -154,6 +154,16 @@ if(!process.execArgv.includes('--experimental-test-module-mocks')){
   assert.equal(state.locks.size,0,'Release locks even after a rejected import');
  });
  after(()=>mock.restoreAll());
+
+ test('startup repairs cached Omega products even when Google synchronization is not due',async()=>{
+  const base='Omega Pain Killer Liniment',name=`${base}-Local (Old Specs)`;
+  state.managed.value.products=[{id:'omega',name:base,category:'FG',code:'',aliases:[],active:true}];
+  state.samples.set('cached-omega',{id:'cached-omega',name,category:'FG'} as Sample);
+  state.settings.set('sync',{lastSuccess:new Date().toISOString()});
+  await syncSourcesIfDue();
+  assert.equal(state.reads,0,'Repair cached products without contacting Google Sheets');
+  assert.ok(state.managed.value.products.some(product=>product.name===name));
+ });
 
  test('the real reader rejects no monthly tabs by default and returns an empty list only by opt-in',async()=>{
   state.book.sheets=[];
