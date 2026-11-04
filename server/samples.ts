@@ -1,4 +1,5 @@
 import {getConfiguration,saveConfiguration,sourceTypes} from './configuration.js';
+import {tokenize,sameSpecificationVariant} from '../shared/product-matching.js';
 import {type SampleType,type ConfigurationRevision,formatNumber,validateIntake} from '../shared/configuration.js';
 import {randomUUID} from 'node:crypto';
 import {db,locked,setting,setSetting,audit,demo,tryLocked} from './db.js';
@@ -21,8 +22,8 @@ async function autoCreateProducts(actor:string){
   let added=0;
   for(const {name,category} of allSamples){
    if(!name?.trim()||!category)continue;
-   const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
     const matchScore = (sampleName:string, productName:string) => {
+      if(!sameSpecificationVariant(sampleName,productName))return 0;
       const sampleTokens = tokenize(sampleName);
       const productTokens = tokenize(productName);
       for (const t of productTokens) {
@@ -96,7 +97,7 @@ async function syncSourcesOnce(actor:string){
   if(fingerprint!==lastApplicabilityFingerprint){await setSetting('applicability',applicability);lastApplicabilityFingerprint=fingerprint;}
  }catch(error){errors.push(`Specifications: ${error instanceof Error?error.message:'Read failed'}`);}
  // Auto-create managed products for any sample names without a matching product entry
- const added=count?await autoCreateProducts(actor):0;
+ const added=await autoCreateProducts(actor);
  if(conflicts.length)errors.push(`${conflicts.length} source record(s) require reconciliation. ${conflicts[0].message}`);
  const previous=await setting<any>('sync',{});
  const nextSync={...previous,lastSuccess:errors.length?previous.lastSuccess||null:new Date().toISOString(),lastAttempt:attemptedAt,count,error:errors.join('; ')||null,errors,conflicts};

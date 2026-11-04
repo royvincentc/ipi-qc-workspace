@@ -208,6 +208,26 @@ test('connection validation survives appearance edits and is invalidated by rout
  assert.equal((await db.query("SELECT value FROM settings WHERE key='connections'")).rows[0].value.writesEnabled,false);assert.equal((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.incoming,undefined);assert.ok((await db.query("SELECT value FROM settings WHERE key='connectionTests'")).rows[0].value.specifications);
 });
 
+test('Local Old Specs stability intake resolves its own sheet row and report setup',async()=>{
+ const current=await getConfiguration(),value=structuredClone(current.value);
+ const name='Omega Pain Killer Liniment-Local (Old Specs)';
+ const type=value.sampleTypes.find(t=>t.id==='ST')!;type.applicability='spreadsheet';type.applicabilitySheet='RM/FP/AS';
+ value.products.push({id:'omega-base-regression',name:'Omega Pain Killer Liniment',category:'ST',code:'',aliases:[],active:true});
+ await saveConfiguration(value,current.revision,'admin@example.test');
+ const {setSetting}=await import('../server/db.js');
+ await setSetting('applicability',[
+  {sheet:'RM/FP/AS',row:37,product:'Omega Pain Killer Liniment-Local',tests:['SPC','MY','PA','SA','CA']},
+  {sheet:'RM/FP/AS',row:38,product:name,tests:['SPC','MY','COL']}
+ ]);
+ const {randomUUID}=await import('node:crypto');
+ const sample=await submitSample('admin@example.test',{submissionId:randomUUID(),category:'ST',fields:{name,batch:'EXD71',received:'2026-11-04T09:00',context:'Actual Stability'}});
+ await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',['omega-st',JSON.stringify({id:'omega-st',name:'STAB',category:'ST',family:'routine',revision:'1',path:'fixture.docx',verified:true,manifest:{requiredFields:[]}})]);
+ const setup=await resolveReportSetup(sample.id,{},true);
+ assert.equal(setup.specification.product,name);
+ assert.deepEqual(setup.specification.tests.map(test=>test.test),['SPC','MY','COL']);
+ assert.equal(setup.template?.id,'omega-st');
+});
+
 test('Cotton Balls workflow resolves checked sheet tests for a Miscellaneous sample',async()=>{
  const current=await getConfiguration();const value=structuredClone(current.value);
  const type=value.sampleTypes.find(t=>t.id==='MIS')!;type.applicability='spreadsheet';type.applicabilitySheet='RM/FP/AS';

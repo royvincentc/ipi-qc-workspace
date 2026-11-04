@@ -55,6 +55,19 @@ const cottonRows = [
   { sheet: 'RM/FP/AS', row: 12, product: 'Mama’s Love Cotton Buds', tests: ['SPC', 'MY'] },
 ];
 
+test('Omega Local Old Specs keeps its checklist and controlled product identity',()=>{
+ const sample='Omega Pain Killer Liniment-Local (Old Specs)';
+ const checklist=[
+  {sheet:'RM/FP/AS',row:34,product:'Omega Pain Killer Liniment',tests:['SPC','MY','PA','SA','CA']},
+  {sheet:'RM/FP/AS',row:37,product:'Omega Pain Killer Liniment-Local',tests:['SPC','MY','PA','SA','CA']},
+  {sheet:'RM/FP/AS',row:38,product:sample,tests:['SPC','MY','COL']},
+  {sheet:'RM/FP/AS',row:40,product:'Omega Pain Killer Liniment-Pro (Old Specs)',tests:['SPC','MY','COL']},
+ ];
+ assert.deepEqual(resolveApplicabilityMatches(checklist,{name:sample,aliases:[]},'RM/FP/AS',sample),[checklist[2]]);
+ assert.equal(reports.matchScore(sample,'Omega Pain Killer Liniment'),0);
+ assert.equal(reports.matchScore('Omega Pain Killer Liniment-Local','Omega Pain Killer Liniment'),0);
+});
+
 test('miscellaneous Cotton Balls resolves the branded checklist row and cotton criteria', () => {
   const matches = resolveApplicabilityMatches(cottonRows, { name: 'Cotton Balls', aliases: [] }, 'RM/FP/AS', 'Cotton Balls');
   assert.deepEqual(matches, [cottonRows[0]]);

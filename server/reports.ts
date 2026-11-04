@@ -1,5 +1,6 @@
 import {sessionDetailGroups,sharedSessionDetails,editedSessionDetails} from '../shared/environmental-session.js';
 import {reportPurpose} from '../shared/report-purpose.js';
+import {tokenize,sameSpecificationVariant} from '../shared/product-matching.js';
 import {reportArchiveAnalyst,reportArchiveSegments} from '../shared/report-archive.js';
 import {reportArtifact,retainReportArtifact} from './report-artifacts.js';
 import {getConfiguration} from './configuration.js';
@@ -114,27 +115,7 @@ export const normalizeSampleName = (name: string): string => {
   // Standalone "Old Specs" that remains is intentional — do not remove it
   return n.trim().replace(/\s{2,}/g, ' ');
  };
-export const tokenize = (s:string): string[] => (s.toLowerCase().match(/[a-z]+|[0-9]+/g) || []);
-/**
- * These words distinguish otherwise similarly named Omega specifications.
- * Package volume is deliberately not a qualifier: 15 mL through 120 mL use
- * the same row unless one of these controlled product variants is present.
- */
-export function sameSpecificationVariant(sampleName:string,productName:string){
- const qualifiers=(value:string)=>{
-  const words=new Set(tokenize(value));
-  return {
-   export:words.has('export'),
-   pro:words.has('pro'),
-   // Old Specs is a controlled Omega variant. Other products (for example
-   // Herbycin Syrup) may carry that historical note without having a separate
-   // applicability row, so it must not block their base-product match.
-   oldSpecs:words.has('omega')&&/\bold\s+specs\b/i.test(value)
-  };
- };
- const sample=qualifiers(sampleName),product=qualifiers(productName);
- return sample.export===product.export&&sample.pro===product.pro&&sample.oldSpecs===product.oldSpecs;
-}
+export {tokenize,sameSpecificationVariant} from '../shared/product-matching.js';
 function isHerbycinCoolingMouthSprayPair(first:string,second:string){
  const identity=(value:string)=>tokenize(value).filter(token=>token!=='cooling').join(' ');
  const firstTokens=tokenize(first),secondTokens=tokenize(second);
@@ -316,8 +297,8 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
  if(!type)throw new Fault(409,'This sample type is not active in Settings. Ask an administrator to review it.');
  // Normalise sample names before product matching.
  // Patterns like '(5th withdrawal - New Specs)', '(3rd withdrawal) New Specs', '(2nd withdrawal)'
- // and standalone 'New Specs' / 'Old Specs' are cosmetic qualifiers that do not represent
- // a distinct managed product — strip them so the matcher resolves to the base product.
+ // and standalone 'New Specs' are cosmetic qualifiers. Keep 'Old Specs' so
+ // controlled Omega variants resolve to their own managed product and checklist.
  const normalizedName = normalizeSampleName(sample.name);
  const searchCategory = ['ST', 'SFG'].includes(sample.category) ? 'FG' : sample.category;
  const candidates = managed.value.products.filter(p=>p.active&&(p.category===sample.category || p.category===searchCategory));

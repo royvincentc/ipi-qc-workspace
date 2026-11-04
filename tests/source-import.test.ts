@@ -287,6 +287,22 @@ if(!process.execArgv.includes('--experimental-test-module-mocks')){
   }
  );
 
+ test('sync registers controlled Omega variants even when a base product exists',async()=>{
+  const base='Omega Pain Killer Liniment';
+  state.managed.value.products=[{id:'omega',name:base,category:'FG',code:'',aliases:[],active:true}];
+  state.book.sheets=[sheet(10,'October 2026',`${base}-Local (Old Specs)`)];
+  state.failProductSaveOnce=true;
+  const first=await syncSources('reviewer');
+  assert.deepEqual(first.errors,[]);
+  assert.equal(state.productSaves,1);
+  // Existing installations must repair skipped products on an unchanged pull.
+  state.managed.value.products=state.managed.value.products.filter(product=>product.id==='omega');
+  mock.timers.setTime(at('08:01:00'));
+  const retry=await syncSources('reviewer');
+  assert.equal(retry.count,0);
+  assert.ok(state.managed.value.products.some(product=>product.name===`${base}-Local (Old Specs)`));
+ });
+
  test('an unchanged fresh push recovers interrupted product creation',async()=>{
   state.managed.value.products=[];
   state.failProductSaveOnce=true;
