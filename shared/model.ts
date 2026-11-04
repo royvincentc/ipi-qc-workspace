@@ -16,7 +16,7 @@ export interface Draft {environmentalSession?:{id:string;members:{draftId:string
 export interface EnvironmentalSessionReview {id:string;members:{draftId:string;name:string;method:string;revision:number;issues:string[]}[]}
 export interface TemplateManifest extends Record<string,unknown>{appliesToProducts?:string[];defaultForCategory?:boolean;rowGrouping?:{mergeColumns:number[]};blocks?:Record<string,{mergeColumns:number[]}>}
 export interface Template {id:string;name:string;family:string;category:Category;revision:string;path:string;manifest:TemplateManifest;verified:boolean;demo?:boolean;active?:boolean}
-export interface ReportSetup {sample:Sample;specification:Specification;template?:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>;layoutResolution?:import('./environmental.js').LayoutResolution;environmental?:import('./environmental.js').EnvironmentalSetup}
+export interface ReportSetup {sample:Sample;specification:Specification;template?:Omit<Template,'path'>;applicableTests:string[];prefilledFields:Record<string,string>;productOptions?:{id:string;name:string}[];layoutResolution?:import('./environmental.js').LayoutResolution;environmental?:import('./environmental.js').EnvironmentalSetup}
 export const testLabels:Record<string,string>={SPC:'Standard Plate Count (SPC)',MY:'Molds and Yeast',PA:'P.aeruginosa',SA:'S.aureus',CA:'C.albicans',EC:'E. coli',SAL:'Salmonella',ENT:'Enterobacteriaceae',COL:'Coliform'};
 /** The workbook uses short IDs; reports show the organism names. */
 export function reportTestLabel(test:string,fallback=''){

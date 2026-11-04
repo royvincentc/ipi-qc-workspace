@@ -350,7 +350,18 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
   products = [...byName.values()];
  }
 
- if(products.length!==1)throw new Fault(409,products.length?`More than one managed product matches this sample name (${products.map(p=>p.name).join(', ')}). Remove the duplicate alias in Settings.`:'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
+ const productOptions=products.length>1?products.map(({id,name})=>({id,name})):undefined;
+ if(selection.productId){
+  const selected=products.find(p=>p.id===selection.productId);
+  if(!selected)throw new Fault(409,'The selected product no longer matches this sample. Reload report setup and choose a matching active product.');
+  products=[selected];
+ }
+ if(products.length>1){
+  const message='Select the matching managed product and package size to load its approved standards.';
+  if(!preview)throw new Fault(409,message);
+  return {sample,productOptions,specification:{id:'',product:'',category:sample.category,context:sample.context,revision:'',tests:[],issues:[],source:''},applicableTests:[],prefilledFields:{},layoutResolution:{status:'selection',message}};
+ }
+ if(!products.length)throw new Fault(409,'No active managed product matches the sample name from the incoming logger. Add the product or a matching prefix alias in Settings.');
  const product=products[0];
  const specifications=(await db.query('SELECT data FROM specifications')).rows.map(row=>row.data as Specification).filter(s=>s.active!==false);
  if(type.register==='environmental'){
@@ -368,7 +379,7 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
   }
   if(!preview&&(!template||resolution.status!=='ready'))throw new Fault(409,resolution.message);
   const safe=template?(({path:_path,...rest})=>rest)(template):undefined;
-  return {sample,specification,template:safe,applicableTests:tests.map(t=>t.label),prefilledFields:template?reportFieldDefaults(sample,template):{},layoutResolution:resolution,environmental:{...environmental,resolution}};
+  return {sample,productOptions,specification,template:safe,applicableTests:tests.map(t=>t.label),prefilledFields:template?reportFieldDefaults(sample,template):{},layoutResolution:resolution,environmental:{...environmental,resolution}};
  }
  let safeContext = sample.context?.trim();
  const productSpecs = specifications.filter(s => s.product === product.name && (s.category === sample.category || (['ST', 'SFG'].includes(sample.category) && s.category === 'FG')));
@@ -399,7 +410,7 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
  const repeating=templates.filter(t=>!((t.manifest.resultBindings||[]) as unknown[]).length);const choices=repeating.length?repeating:templates;
  if(choices.length!==1)throw new Fault(409,'More than one registered report layout matches this sample. Keep one active repeating-row layout for this category or configure a unique layout.');
  const template=choices[0];const candidate=exact.length?[...exact].sort((a,b)=>Math.max(...b.tests.map((t: any)=>Date.parse(t.date)||0))-Math.max(...a.tests.map((t: any)=>Date.parse(t.date)||0)))[0]:{id:`historical-${hash(tests).slice(0,16)}`,product:product.name,category:sample.category,context:safeContext||'Routine',revision:hash(tests),tests,issues:[],source:HISTORICAL_SOURCE};const {path:_privatePath,...safeTemplate}=template;
- return {sample,specification:{...candidate,product:product.name,context:candidate.context,tests,revision:hash(tests)},template:safeTemplate,applicableTests:tests.map((t: any)=>t.label),prefilledFields:reportFieldDefaults(sample,template)};
+ return {sample,productOptions,specification:{...candidate,product:product.name,context:candidate.context,tests,revision:hash(tests)},template:safeTemplate,applicableTests:tests.map((t: any)=>t.label),prefilledFields:reportFieldDefaults(sample,template)};
 }
 
 /** Read-only workflow preview; never creates a report draft or writes results. */

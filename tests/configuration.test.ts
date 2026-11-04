@@ -7,6 +7,7 @@ process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=folder;
 const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration,connectionFingerprint,migrateConfigurationColumns}=await import('../server/configuration.js');
 const {validateIntake,configSchema}=await import('../shared/configuration.js');
+const {equipmentSelectionSchema}=await import('../shared/environmental.js');
 const {allocate,normalizeHeader,resolveHeaderMap}=await import('../server/domain.js');
 const {reportTestLabel,reportIssues,resultDisplayValue}=await import('../shared/model.js');
 const {mapResultHeaders}=await import('../server/google.js');
@@ -226,6 +227,46 @@ test('Cotton Balls workflow resolves checked sheet tests for a Miscellaneous sam
  await assert.rejects(resolveReportSetup(sample.id,{},true),/every test is unchecked/);
  await setSetting('applicability',[...rows,{...rows[0]}]);
  await assert.rejects(resolveReportSetup(sample.id,{},true),/one applicable-test row/);
+});
+
+test('ambiguous report products can be explicitly selected without changing the logged sample',async()=>{
+ const current=await getConfiguration(),value=structuredClone(current.value);
+ value.sampleTypes.find(t=>t.id==='FG')!.applicability='managed';
+ const products=[
+  {id:'bouquet-50',name:'Cheers Baby Oil-Bouquet (50 mL)',category:'FG',code:'',aliases:['Cheers Baby Oil-Bouquet'],active:true},
+  {id:'bouquet-25',name:'Cheers Baby Oil - Bouquet (25mL)',category:'FG',code:'',aliases:['Cheers Baby Oil-Bouquet'],active:true},
+ ];
+ value.products.push(...products);
+ await saveConfiguration(value,current.revision,'admin@example.test');
+ const original=(await db.query('SELECT data FROM samples LIMIT 1')).rows[0].data;
+ const sample={...original,id:'bouquet-regression',ml:'ML-FG-26-0541',name:'Cheers Baby Oil-Bouquet',category:'FG',categoryLabel:'Finished Goods',context:'Routine',fields:{fillVolume:'25 mL'}};
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
+ for(const [index,product] of products.entries()){
+  const criterion={test:'SPC',label:'Standard Plate Count',type:'numeric',unit:'cfu/mL',criterion:index?'Nmt 100 cfu/mL':'Nmt 500 cfu/mL',source:'fixture',sourceLocation:'Table 1',date:'2026-09-01',dateBasis:'release',revision:'1'};
+  const spec={id:product.id,product:product.name,category:'FG',context:'Routine',revision:'1',tests:[criterion],issues:[],source:'fixture'};
+  await db.query('INSERT INTO specifications(id,data) VALUES($1,$2)',[spec.id,JSON.stringify(spec)]);
+ }
+ const preview=await resolveReportSetup(sample.id,{},true);
+ assert.deepEqual(preview.productOptions,products.map(({id,name})=>({id,name})));
+ assert.equal(preview.template,undefined);
+ await assert.rejects(createAutomaticDraft(sample.id,{email:'admin@example.test',name:'Analyst',role:'administrator'}),/Select the matching managed product/);
+ for(const product of products){
+  const selection=equipmentSelectionSchema.parse({productId:product.id});
+  const setup=await resolveReportSetup(sample.id,selection,true);
+  assert.equal(setup.specification.product,product.name);
+  assert.equal(setup.specification.tests[0].criterion,product.id==='bouquet-25'?'Nmt 100 cfu/mL':'Nmt 500 cfu/mL');
+  assert.equal(setup.sample.name,sample.name);
+  const draft=await createAutomaticDraft(sample.id,{email:'admin@example.test',name:'Analyst',role:'administrator'},selection);
+  assert.equal(draft.specification.product,product.name);
+  assert.equal(draft.sample.name,sample.name);
+ }
+ await assert.rejects(resolveReportSetup(sample.id,{productId:'example-product'},true),/selected product no longer matches/);
+ await assert.rejects(resolveReportSetup(sample.id,{productId:'missing-product'},true),/selected product no longer matches/);
+ const changed=await getConfiguration(),inactive=structuredClone(changed.value);
+ inactive.products.find(p=>p.id==='bouquet-25')!.active=false;
+ await saveConfiguration(inactive,changed.revision,'admin@example.test');
+ await assert.rejects(createAutomaticDraft(sample.id,{email:'admin@example.test',name:'Analyst',role:'administrator'},{productId:'bouquet-25'}),/selected product no longer matches/);
+ assert.equal(equipmentSelectionSchema.safeParse({productId:''}).success,false);
 });
 
 test('Type headers populate Purpose without replacing the source routing context',async()=>{

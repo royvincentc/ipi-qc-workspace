@@ -3,6 +3,7 @@ import {environmentalActivityDate,environmentalKey,environmentalCriterionKey,env
 import type {Sample,Template} from './model.js';
 
 export const equipmentSelectionSchema=z.object({
+ productId:z.string().trim().min(1).max(200).optional(),
  profileId:z.string().max(200).optional(),outputId:z.string().max(200).optional(),
  equipmentRevision:z.string().max(20000).optional(),
  includeOpenPlate:z.boolean().optional(),

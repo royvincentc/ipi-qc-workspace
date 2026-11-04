@@ -25,7 +25,7 @@ export type EnvironmentalProfile=z.infer<typeof environmentalProfileSchema>&{id:
 export interface EquipmentQuantity {id:string;quantity:number;labels?:string[]}
 export interface EquipmentCatalog {revision:string;profileId?:string;items:{id:string;name:string;defaultQuantity:number;defaultLabels?:string[];issue?:string;parameters:{method:string;test:string;label:string;criterion:string;unit:string}[]}[]}
 export interface EquipmentSnapshot {selection:EquipmentQuantity[];sources:{id:string;revision:string;evidenceIds:string[]}[];revision:string}
-export interface EnvironmentalSelection {profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string;includeOpenPlate?:boolean}
+export interface EnvironmentalSelection {productId?:string;profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string;includeOpenPlate?:boolean}
 export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string;equipment?:EquipmentSnapshot}
 export interface LayoutResolution {status:'ready'|'missing'|'selection'|'conflict';message:string;choices?:{id:string;name:string}[]}
 export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[];equipment?:EquipmentCatalog;openPlate?:{included:boolean;issue?:string};otherOutputs?:{profileId:string;outputId:string;name:string;mode:string}[]}
