@@ -31,6 +31,7 @@ export function suggestedAnalystRemark(test:Criterion,r:Result):string{
  if(test.type==='finding')return ['Positive','Negative'].includes(r.value)&&['positive','negative'].includes(test.criterion.trim().toLowerCase())?(r.value.toLowerCase()===test.criterion.trim().toLowerCase()?'Passed':'Failed'):'';
  const limit=test.criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=\s|$)/i);
  if(!limit)return '';
+ if(/^\s*(?:TNTC|too\s+numerous\s+to\s+count)\b/i.test(r.value))return 'Failed';
  const maximum=Number(limit[1].replace(/,/g,''));
  if(r.qualifier==='Nmt')return 10<=maximum?'Passed':'Failed';
  if(r.qualifier!==''&&r.qualifier!=='=')return '';

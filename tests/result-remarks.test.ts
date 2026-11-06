@@ -23,6 +23,27 @@ test('comma-formatted standards compare the full limit for fixed and actual SPC 
  assert.equal(model.automaticAnalystRemark(criterion,{...result(value),sourceValue:value}),'Failed');
  assert.equal(model.automaticAnalystRemark({...spc,criterion:'Nmt 5 cfu/mL'},{...result(''),qualifier:'Nmt'}),'Failed');
 });
+test('TNTC count results fail instead of reaching the uninterpretable-result pass fallback',()=>{
+ for(const test of ['SPC','MY']){
+  const criterion={...spc,test,criterion:`Nmt ${test==='MY'?10:100} cfu/mL`};
+  for(const value of ['TNTC',' tntc ','TNTC cfu/mL','Too numerous to count','too NUMEROUS to COUNT (TNTC)']){
+   const entered={...result(value),test};
+   assert.equal(suggestedAnalystRemark(criterion,entered),'Failed');
+   for(const row of [entered,{...entered,sourceValue:value}]){
+    assert.equal(model.automaticAnalystRemark(criterion,row),'Failed');
+    assert.equal(model.automaticAnalystRemark(criterion,{...row,qualifier:'Nmt'}),'Failed');
+    assert.equal(resultDisplayValue(criterion,{...row,sourceValue:value},'FG'),value);
+    for(const state of ['not_entered','not_tested'] as const)assert.equal(model.automaticAnalystRemark(criterion,{...row,state}),'');
+   }
+  }
+  const row={...result('TNTC','Passed'),test,sourceValue:'TNTC',remarkMode:'automatic' as const};
+  const draft={sample:{category:'FG'} as any,specification:{tests:[criterion]} as any,results:[row]};
+  const corrected=model.initializeResultRemarks(draft);
+  assert.equal(corrected[0].remarks,'Failed');
+  assert.equal(model.overallAnalystRemarks({...draft,results:corrected}),`Failed in ${criterion.label}`);
+  assert.equal(model.updateResultRemark(criterion,{...row,remarkMode:'manual'},{value:'tntc'}).remarks,'Passed');
+ }
+});
 test('fallback excludes missing and untested results and preserves overrides and recognized failures',()=>{
  assert.equal(model.automaticAnalystRemark(spc,result('unknown')),'Passed');
  assert.equal(model.automaticAnalystRemark({...spc,criterion:'Unrecognized standard'},result('12')),'Passed');
