@@ -26,10 +26,14 @@ export function reportTestLabel(test:string,fallback=''){
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'|'instanceId'>){return r.instanceId||[r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return (/^\s*Nmt\b/i.test(criterion)||(['SPC','MY'].includes(test)&&/^\s*Not\s+more\s+than\s*\d/i.test(criterion)))?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function microbiologyResultLimit(test:Criterion){return 'Nmt 10 '+(test.unit||'cfu/mL');}
+const numericAcceptanceLimit=(criterion:string)=>criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=\s|$)/i);
+export function hasAutomaticAnalystRemark(test:Criterion){
+ return test.type==='finding'?/^(positive|negative)$/i.test(test.criterion.trim()):Boolean(numericAcceptanceLimit(test.criterion));
+}
 export function suggestedAnalystRemark(test:Criterion,r:Result):string{
  if(r.state!=='entered')return '';
  if(test.type==='finding')return ['Positive','Negative'].includes(r.value)&&['positive','negative'].includes(test.criterion.trim().toLowerCase())?(r.value.toLowerCase()===test.criterion.trim().toLowerCase()?'Passed':'Failed'):'';
- const limit=test.criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=\s|$)/i);
+ const limit=numericAcceptanceLimit(test.criterion);
  if(!limit)return '';
  if(/^\s*(?:TNTC|too\s+numerous\s+to\s+count)\b/i.test(r.value))return 'Failed';
  const maximum=Number(limit[1].replace(/,/g,''));
@@ -41,6 +45,7 @@ export function suggestedAnalystRemark(test:Criterion,r:Result):string{
 }
 /** Source text is evidence: normalize recognized values only for the existing evaluator. */
 export function automaticAnalystRemark(test:Criterion,r:Result):string{
+ if(!hasAutomaticAnalystRemark(test))return '';
  if(r.state!=='entered'||(!r.value.trim()&&r.qualifier!=='Nmt'))return '';
  let normalized=r;
  if(r.sourceValue!==undefined&&r.value===r.sourceValue&&r.qualifier===''){
@@ -96,6 +101,7 @@ export function resultIssues(d:Draft):string[]{
  for(const t of d.specification.tests){const r=d.results.find(x=>resultKey(x)===resultKey(t));const label=[t.label,t.location,t.stage].filter(Boolean).join(' · ');
   if(!t.criterion||!t.source||!t.date) issues.push(`${label}: unresolved criterion source`);
   if(!r||r.state!=='entered') {issues.push(`${label}: result required`);continue;}
+  if(!hasAutomaticAnalystRemark(t)&&!['passed','failed'].includes(r.remarks.trim().toLowerCase()))issues.push(`${label}: select Passed or Failed manually; no acceptance limit is available.`);
   if(d.sample.category==='SFG'&&!['passed','failed'].includes(r.remarks.trim().toLocaleLowerCase()))issues.push(`${label}: select Passed or Failed so the Semi-Finished Goods report format can be chosen.`);
   const unchangedSourceValue=r.sourceValue!==undefined&&r.value===r.sourceValue;
   if(!unchangedSourceValue){

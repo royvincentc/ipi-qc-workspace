@@ -31,6 +31,7 @@ import {defaultWorksheetLayout,worksheetLayoutSchema} from '../shared/worksheet-
 import {equipmentSelectionSchema} from '../shared/environmental.js';
 import {seed} from './seed.js';
 import {seedBundledReportFormats} from './report-formats.js';
+import {seedHerbycinSamplingPatterns} from './herbycin-sampling-seed.js';
 import {aiRouter} from './ai.js';
 import fs from 'node:fs';
 const deploymentBuildId=process.env.RENDER_GIT_COMMIT||process.env.GIT_COMMIT||process.env.COMMIT_SHA||'';
@@ -51,6 +52,7 @@ if(configured.value.sampleTypes.some(type=>type.id==='RM'&&type.applicabilityShe
  await saveConfiguration({...configured.value,sampleTypes:configured.value.sampleTypes.map(type=>type.id==='RM'&&type.applicabilitySheet==='Raw Materials'?{...type,applicabilitySheet:'RAW'}:type)},configured.revision,'system');
 }
 const savedConnections=await setting<any>('connections',defaultConnections);
+try{console.log('Herbycin sampling deployment verification',JSON.stringify(await seedHerbycinSamplingPatterns()));}catch(error){console.error('Herbycin sampling registration held:',(error as Error).message);}
 if(/\/spreadsheets\/d\/1JsvC5LIjxu1Hf5Yh7f1bi2XLqfxKTfSAM1taBQlMgr0(?:\/|$)/.test(String(savedConnections.specifications||''))){
  const updatedConnections={...savedConnections,specifications:defaultConnections.specifications,...(savedConnections.reportFolder===undefined?{reportFolder:defaultConnections.reportFolder}:{})};
  await setSetting('connections',updatedConnections);
