@@ -2,6 +2,7 @@ import {test,after} from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp} from 'node:fs/promises';
 import path from 'node:path';
+import {resultIssues} from '../shared/model.js';
 process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=await mkdtemp(path.resolve('.data/equipment-test-'));
 const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration}=await import('../server/configuration.js');
@@ -63,4 +64,16 @@ test('server composes immutable paired drafts from validated quantities and appr
  assert.equal(scoop.defaultQuantity,0);assert.match(scoop.issue!,/no approved definition/);
  assert.equal(discovered.layoutResolution?.status,'ready','unapproved scanned inventory must not prevent an approved pattern from resolving');
  await assert.rejects(createAutomaticDraft(sample.id,actor,{profileId:pattern.id,equipmentRevision:discovered.environmental!.equipment!.revision,equipment:[{id:'scoop',quantity:1}]}),/no approved definition/);
+ const evaluation=await publishEnvironmentalProfile({...pattern,name:'Fixture evaluation only',equipmentSet:'Evaluation only',outputs:pattern.outputs.map(output=>({...output,instances:output.instances.map(instance=>({...instance,criterion:'FOR EVALUATION'}))}))},actor.email);
+ const evaluationDraft=await createAutomaticDraft(sample.id,actor,{profileId:evaluation.id});
+ for(const member of evaluationDraft.environmentalSession!.members){
+  const draft=await getDraft(member.draftId);
+  const automatic=await saveDraft(draft.id,draft.revision,draft.results.map(r=>({...r,state:'entered' as const,value:'12',remarks:'Passed',remarkMode:'automatic' as const})),draft.fields,actor.email);
+  assert.ok(automatic.results.every(r=>r.remarks===''),'evaluation-only measurements must never receive an automatic pass');
+  assert.ok(resultIssues(automatic).some(issue=>issue.includes('select Passed or Failed manually')));
+  const manual=await saveDraft(draft.id,automatic.revision,automatic.results.map((r,i)=>({...r,remarks:i%2?'Failed':'Passed',remarkMode:'manual' as const})),automatic.fields,actor.email);
+  const edited=await saveDraft(draft.id,manual.revision,manual.results.map(r=>({...r,value:'999'})),manual.fields,actor.email);
+  assert.deepEqual(edited.results.map(r=>r.remarks),manual.results.map(r=>r.remarks));
+  assert.deepEqual(resultIssues(edited),[]);
+ }
 });

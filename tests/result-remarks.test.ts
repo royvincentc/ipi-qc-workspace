@@ -46,7 +46,7 @@ test('TNTC count results fail instead of reaching the uninterpretable-result pas
 });
 test('fallback excludes missing and untested results and preserves overrides and recognized failures',()=>{
  assert.equal(model.automaticAnalystRemark(spc,result('unknown')),'Passed');
- assert.equal(model.automaticAnalystRemark({...spc,criterion:'Unrecognized standard'},result('12')),'Passed');
+ assert.equal(model.automaticAnalystRemark({...spc,criterion:'Unrecognized standard'},result('12')),'');
  for(const state of ['not_entered','not_tested'] as const)assert.equal(model.automaticAnalystRemark(spc,{...result('unknown'),state}),'');
  for(const value of ['','   '])assert.equal(model.automaticAnalystRemark(spc,result(value)),'');
  assert.equal(model.automaticAnalystRemark(spc,{...result(''),sourceValue:'',qualifier:'Nmt'}),'Passed');
@@ -57,6 +57,28 @@ test('fallback excludes missing and untested results and preserves overrides and
  assert.equal(corrected[0].remarks,'Passed');
  assert.equal(model.overallAnalystRemarks({sample:{category:'FG'} as any,specification:{tests:[spc]} as any,results:corrected}),'PASSED');
 });
+test('missing acceptance limits require manual remarks and clear old automatic passes',()=>{
+ for(const test of ['ACCUPOINT','SPC','MY'])for(const criterion of ['FOR EVALUATION','------','','Unrecognized standard']){
+  const standard={...spc,test,criterion};
+  assert.equal(model.hasAutomaticAnalystRemark(standard),false);
+  const entered={...result('12'),test};
+  assert.equal(model.automaticAnalystRemark(standard,entered),'');
+  assert.equal(model.updateResultRemark(standard,{...entered,remarks:'Passed',remarkMode:'automatic'},{value:'15'}).remarks,'');
+  for(const remarks of ['Passed','Failed']){
+   const manual=model.updateResultRemark(standard,entered,{remarks});
+   assert.equal(manual.remarkMode,'manual');
+   assert.equal(model.updateResultRemark(standard,manual,{value:'999'}).remarks,remarks);
+  }
+  const draft={sample:{category:'EM'} as any,specification:{tests:[standard]} as any,results:[{...entered,remarks:'Passed',remarkMode:'automatic' as const}],environmentalSnapshot:{output:{mode:'surface',method:test==='ACCUPOINT'?'accupoint':'spc-my'}} as any};
+  const corrected=model.initializeResultRemarks(draft);
+  assert.equal(corrected[0].remarks,'');
+  assert.equal(model.overallAnalystRemarks({...draft,results:corrected}),'');
+ }
+ assert.equal(model.hasAutomaticAnalystRemark(spc),true);
+ assert.equal(model.hasAutomaticAnalystRemark({...spc,type:'finding',criterion:'Negative'}),true);
+ assert.equal(model.hasAutomaticAnalystRemark({...spc,type:'finding',criterion:'FOR EVALUATION'}),false);
+});
+
 test('automatic remarks recalculate while manual overrides survive value edits and can be explicitly reset',()=>{
  const fn=(model as any).updateResultRemark;assert.equal(typeof fn,'function');
  const auto=fn(spc,result('99'),{remarkMode:'automatic'});assert.equal(auto.remarks,'Passed');
