@@ -249,6 +249,32 @@ test('Cotton Balls workflow resolves checked sheet tests for a Miscellaneous sam
  await assert.rejects(resolveReportSetup(sample.id,{},true),/one applicable-test row/);
 });
 
+test('Miscellaneous flushing oil uses the raw-material checklist through draft creation',async()=>{
+ const current=await getConfiguration(),value=structuredClone(current.value);
+ const name='Light Mineral Oil (LMO)- Flushing';
+ value.products.push({id:'flushing-oil-regression',name,category:'MIS',code:'',aliases:[],active:true});
+ await saveConfiguration(value,current.revision,'admin@example.test');
+ const {setSetting}=await import('../server/db.js');
+ const row={sheet:'RAW',row:35,product:name+'\r\n',tests:['SPC','MY','PA','SA','CA']};
+ await setSetting('applicability',[row]);
+ const original=(await db.query('SELECT data FROM samples LIMIT 1')).rows[0].data;
+ const sample={...original,id:'flushing-oil-regression',ml:'ML-MIS-26-0071',name,category:'MIS',categoryLabel:'Miscellaneous',context:'',fields:{}};
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
+ const setup=await resolveReportSetup(sample.id,{},true);
+ assert.equal(setup.template?.name,'MISC');
+ assert.deepEqual(setup.specification.tests.map(t=>t.test),row.tests);
+ const draft=await createAutomaticDraft(sample.id,{email:'admin@example.test',name:'Analyst',role:'administrator'});
+ assert.deepEqual(draft.results.map(r=>r.test),row.tests);
+ assert.equal(draft.sample.category,'MIS');
+ assert.equal(draft.sample.name,name);
+ for(const rows of [[{...row,tests:[]}],[row,{...row}],[row,{...row,sheet:'RM/FP/AS',tests:[]}]]){
+  await setSetting('applicability',rows);
+  await assert.rejects(resolveReportSetup(sample.id,{},true),/one applicable-test row/);
+ }
+ await setSetting('applicability',[row,{...row,sheet:'RM/FP/AS',tests:['SPC']}]);
+ assert.deepEqual((await resolveReportSetup(sample.id,{},true)).specification.tests.map(t=>t.test),['SPC']);
+});
+
 test('ambiguous report products can be explicitly selected without changing the logged sample',async()=>{
  const current=await getConfiguration(),value=structuredClone(current.value);
  value.sampleTypes.find(t=>t.id==='FG')!.applicability='managed';
