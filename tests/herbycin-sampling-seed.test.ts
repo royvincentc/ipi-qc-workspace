@@ -23,9 +23,9 @@ test('owner-authorized Herbycin patterns publish once, restore evidence, respect
  await saveConfiguration(config,initial.revision,actor.email);
  const template={id:'herbycin-layout',name:'Approved grouped fixture',category:'EM',family:'environmental-grouped-5c',verified:true,active:true,revision:'1',path:'unused.docx',manifest:{tokens:['tests','test','location','criterion','value','remarks'],requiredFields:['analysisDate'],adaptiveBlocks:true}};
  await db.query('INSERT INTO templates(id,data) VALUES($1,$2)',[template.id,JSON.stringify(template)]);
- const first=await seedHerbycinSamplingPatterns();assert.equal(first.published.length,5);assert.deepEqual(first.held,[]);
- let profiles=await environmentalProfiles();assert.equal(profiles.length,5);assert.ok(profiles.every(p=>p.productId!=='herbycin-pro'));
- assert.deepEqual(profiles.filter(p=>p.productId==='herbycin-tanks').map(p=>p.equipmentSet),['Tanks']);
+ const first=await seedHerbycinSamplingPatterns();assert.equal(first.published.length,7);assert.deepEqual(first.held,[]);
+ let profiles=await environmentalProfiles();assert.equal(profiles.length,7);assert.ok(profiles.every(p=>p.productId!=='herbycin-pro'));
+ assert.deepEqual(profiles.filter(p=>p.productId==='herbycin-tanks').map(p=>p.equipmentSet).sort(),['Compounding Utensils','Tanks','Weighing Utensils']);
  assert.deepEqual(profiles.filter(p=>p.productId==='herbycin').map(p=>p.outputs.map(o=>o.instances.length)).sort((a,b)=>a[0]-b[0]),[[2,4],[7,14],[9,18],[11,22]]);
  assert.ok(profiles.every(p=>p.effectiveFrom==='0001-01-01'&&p.facility==='PF1'&&p.outputs.every(o=>o.instances.every(r=>r.criterion==='FOR EVALUATION'&&!hasAutomaticAnalystRemark(r)))));
  const reference=(await db.query('SELECT data FROM files WHERE id=$1',[herbycinSamplingReferenceId])).rows[0].data;
@@ -33,17 +33,24 @@ test('owner-authorized Herbycin patterns publish once, restore evidence, respect
  assert.ok((await readFile(privatePath(reference.path))).length>1000);
  const auditCount=Number((await db.query('SELECT count(*) AS count FROM audit')).rows[0].count);
  assert.deepEqual(await seedHerbycinSamplingPatterns(),{published:[],held:[],retired:[]});
- assert.equal((await environmentalProfiles()).length,5);assert.equal(Number((await db.query('SELECT count(*) AS count FROM audit')).rows[0].count),auditCount);
+ assert.equal((await environmentalProfiles()).length,7);assert.equal(Number((await db.query('SELECT count(*) AS count FROM audit')).rows[0].count),auditCount);
  await unlink(privatePath(reference.path));
  await seedHerbycinSamplingPatterns();assert.ok((await readFile(privatePath(reference.path))).length>1000);
  const tanks=profiles.find(p=>p.productId==='herbycin'&&p.equipmentSet==='Tanks')!;
  await retireEnvironmentalProfile(tanks.id,tanks.revision,actor.email);await seedHerbycinSamplingPatterns();
- profiles=await environmentalProfiles();assert.equal(profiles.length,5);assert.equal(profiles.find(p=>p.id===tanks.id)!.active,false);
+ profiles=await environmentalProfiles();assert.equal(profiles.length,7);assert.equal(profiles.find(p=>p.id===tanks.id)!.active,false);
+ const autoRetired=profiles.find(p=>p.productId==='herbycin-tanks'&&p.equipmentSet==='Compounding Utensils')!;
+ await retireEnvironmentalProfile(autoRetired.id,autoRetired.revision,'system:owner-authorized-herbycin-sampling');
+ const restored=await seedHerbycinSamplingPatterns();assert.deepEqual(restored.published,[autoRetired.name]);assert.deepEqual(restored.held,[]);
+ profiles=await environmentalProfiles();assert.equal(profiles.find(p=>p.id===autoRetired.id)!.active,false);
+ const replacement=profiles.find(p=>p.active&&p.productId===autoRetired.productId&&p.equipmentSet===autoRetired.equipmentSet)!;
+ assert.notEqual(replacement.id,autoRetired.id);assert.deepEqual(replacement.evidenceIds,autoRetired.evidenceIds);
+ assert.deepEqual(await seedHerbycinSamplingPatterns(),{published:[],held:[],retired:[]});
  const current=await getConfiguration(),scoped=structuredClone(current.value);
- scoped.products.push({id:'herbycin-compounding',name:'Herbycin Syrup (Compounding)',category:'EM',code:'',active:true,aliases:[]},{id:'herbycin-filling',name:'Herbycin Syrup (Filling)',category:'EM',code:'',active:true,aliases:[]});
+ scoped.products.push({id:'herbycin-compounding',name:'Herbycin Syrup (Compounding)',category:'EM',code:'',active:true,aliases:[]},{id:'herbycin-filling',name:'Herbycin Syrup (Filling)',category:'EM',code:'',active:true,aliases:[]},{id:'herbycin-utensils',name:'Herbycin Syrup (Compounding Utensils)',category:'EM',code:'',active:true,aliases:[]});
  await saveConfiguration(scoped,current.revision,actor.email);
- const scopedSeed=await seedHerbycinSamplingPatterns();assert.equal(scopedSeed.published.length,4);assert.deepEqual(scopedSeed.held,[]);
- profiles=await environmentalProfiles();assert.equal(profiles.filter(p=>p.productId==='herbycin-compounding').length,3);assert.equal(profiles.filter(p=>p.productId==='herbycin-filling').length,1);
+ const scopedSeed=await seedHerbycinSamplingPatterns();assert.equal(scopedSeed.published.length,7);assert.deepEqual(scopedSeed.held,[]);
+ profiles=await environmentalProfiles();assert.equal(profiles.filter(p=>p.productId==='herbycin-compounding').length,3);assert.equal(profiles.filter(p=>p.productId==='herbycin-filling').length,1);assert.equal(profiles.filter(p=>p.productId==='herbycin-utensils').length,3);
  const sample={id:'herbycin-scoped-sample',ml:'ML-EM-26-9001',name:'Herbycin Syrup (Compounding)',batch:'FIXTURE',category:'EM',context:'Demo',received:'2026-11-15',status:'',remarks:'',fields:{facility:'PF1',area:'Compounding'},source:{fingerprint:'fixture',observedAt:'2026-11-15',raw:[]}};
  await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[sample.id,JSON.stringify(sample)]);
  const selected=profiles.find(p=>p.productId==='herbycin-compounding'&&p.equipmentSet==='Tanks')!;
@@ -51,6 +58,15 @@ test('owner-authorized Herbycin patterns publish once, restore evidence, respect
  const draft=await createAutomaticDraft(sample.id,actor,{profileId:selected.id});
  const members=await Promise.all(draft.environmentalSession!.members.map(m=>getDraft(m.draftId)));
  assert.deepEqual(members.map(d=>d.results.length),[7,14]);assert.ok(members.every(d=>d.results.every(r=>r.value===''&&r.remarks===''&&r.state==='not_entered')));
+ const tanksSample={...sample,id:'herbycin-tanks-sample',ml:'ML-EM-26-9002',name:'Herbycin Syrup (Tanks)'};
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[tanksSample.id,JSON.stringify(tanksSample)]);
+ const choices=await resolveReportSetup(tanksSample.id,{},true);
+ assert.deepEqual(choices.environmental!.profiles.map(p=>p.equipmentSet).sort(),['Compounding Utensils','Tanks','Weighing Utensils']);
+ for(const pattern of profiles.filter(p=>p.active&&p.productId==='herbycin-tanks')){
+  const resolved=await resolveReportSetup(tanksSample.id,{profileId:pattern.id},true);
+  assert.equal(resolved.layoutResolution?.status,'ready');assert.equal(resolved.environmental!.snapshot!.profile.areaType,pattern.equipmentSet);
+  assert.deepEqual(resolved.environmental!.pairedOutputs!.map(o=>o.instances.length),pattern.outputs.map(o=>o.instances.length));
+ }
  await db.query('DELETE FROM environmental_profiles');
  await db.query('INSERT INTO files(id,data) VALUES($1,$2)',['existing-herbycin-evidence',JSON.stringify({kind:'reference'})]);
  const existing=await publishEnvironmentalProfile({...tanks,name:'Existing quantitative tank standard',equipmentSet:'Existing quantitative equipment',evidenceIds:['existing-herbycin-evidence'],outputs:tanks.outputs.map(o=>({...o,instances:o.instances.map(r=>({...r,source:'existing-herbycin-evidence',criterion:r.test==='ACCUPOINT'?'Nmt 100 RLU':'Nmt 100 cfu/mL'}))}))},actor.email);

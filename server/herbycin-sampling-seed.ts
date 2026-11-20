@@ -31,17 +31,18 @@ export async function seedHerbycinSamplingPatterns(){
  const inserted=(await db.query('INSERT INTO files(id,data) VALUES($1,$2) ON CONFLICT(id) DO NOTHING RETURNING id',[reference.id,JSON.stringify(reference)])).rows.length;
  if(inserted||restored)await audit(actor,inserted?'herbycin_sampling_evidence_registered':'template_file_restored',reference.id,{sourceArchiveSha256:HERBYCIN_ARCHIVE_SHA256,authorization:'Owner requested constant sampling-pattern approval and GitHub integration on 2026-11-15; Passed/Failed remains manual.'});
  const templates=(await db.query('SELECT data FROM templates')).rows.map(r=>r.data as Template),profiles=await environmentalProfiles();
+ const autoRetired=new Set((await db.query("SELECT entity FROM audit WHERE action='environmental_pattern_retired' GROUP BY entity HAVING bool_and(actor=$1)",[actor])).rows.map(r=>r.entity));
  for(const product of products){
   const productArea=product.name.match(/\b(compounding|filling|weighing)\b/i)?.[0]?.toLowerCase();
   if(productArea==='weighing'){result.held.push(`${product.name}: source documents describe Compounding; confirm the process area before registering a Weighing product.`);continue;}
-  const equipment=product.name.match(/\b(tanks|utensils|utesils)\b/i)?.[0]?.toLowerCase();
-  const equipmentSet=equipment==='tanks'?'Tanks':equipment?'Compounding Utensils':undefined;
-  const sets=HERBYCIN_PATTERN_SETS.filter(set=>equipmentSet?set.equipmentSet===equipmentSet:!productArea||productArea===set.area.toLowerCase());
+  const activityArea=productArea||(/\b(tanks|utensils|utesils)\b/i.test(product.name)?'compounding':'');
+  const sets=HERBYCIN_PATTERN_SETS.filter(set=>!activityArea||activityArea===set.area.toLowerCase());
   for(const previous of profiles.filter(p=>p.active&&p.productId===product.id&&p.approvedBy===actor&&!p.previousId&&p.evidenceIds.includes(reference.id)&&!sets.some(set=>set.equipmentSet===p.equipmentSet))){
    await retireEnvironmentalProfile(previous.id,previous.revision,actor);previous.active=false;result.retired.push(previous.name);
   }
   for(const set of sets){
-  if(profiles.some(p=>p.productId===product.id&&p.equipmentSet===set.equipmentSet&&p.evidenceIds.includes(reference.id)))continue;
+  // Replace only patterns retired by the old automatic scope; preserve manual retirement and revisions.
+  if(profiles.some(p=>p.productId===product.id&&p.equipmentSet===set.equipmentSet&&p.evidenceIds.includes(reference.id)&&(p.active||p.approvedBy!==actor||p.previousId||!autoRetired.has(p.id))))continue;
   const layouts=templates.filter(t=>t.category===product.category&&t.family==='environmental-grouped-5c'&&t.active!==false&&t.verified);
   const name=`${product.name} · ${set.equipmentSet}`;
   if(layouts.length!==1){result.held.push(`${name}: one active approved grouped layout is required.`);continue;}
