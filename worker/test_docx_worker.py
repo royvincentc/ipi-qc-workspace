@@ -3,6 +3,52 @@ from pathlib import Path
 from docx_worker import demo_template,render,inventory,validate_template,prepare_template,package,roots,text,NS,W,upgrade_environmental_layout
 
 class DocumentTests(unittest.TestCase):
+    def test_form_control_textbox_does_not_displace_centered_header(self):
+        from docx import Document
+        from lxml import etree as E
+        drawing='http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing'
+        vml='urn:schemas-microsoft-com:vml'
+        word_vml='urn:schemas-microsoft-com:office:word'
+        d=Document(self.template)
+        heading=d.sections[0].header.add_paragraph('INTERNATIONAL PHARMACEUTICALS, INC.')
+        heading.alignment=1
+        shape_xml=f'''<w:r xmlns:w="{NS['w']}" xmlns:wp="{drawing}" xmlns:v="{vml}" xmlns:w10="{word_vml}">
+          <w:drawing><wp:anchor behindDoc="0"><wp:positionH relativeFrom="margin"><wp:align>left</wp:align></wp:positionH>
+          <wp:extent cx="1504315" cy="600075"/><wp:wrapSquare wrapText="bothSides"/>
+          <w:txbxContent><w:p><w:r><w:t>Form No.: F-QCL-04 Revision No.: 01</w:t></w:r></w:p></w:txbxContent>
+          </wp:anchor></w:drawing>
+          <w:pict><v:shape style="position:absolute;width:118.45pt;height:47.25pt;z-index:251659264;">
+          <v:textbox><w:txbxContent><w:p><w:r><w:t>Form No.: F-QCL-04 Revision No.: 01</w:t></w:r></w:p></w:txbxContent></v:textbox>
+          <w10:wrap type="square" anchorx="margin"/></v:shape></w:pict></w:r>'''
+        heading._p.append(E.fromstring(shape_xml.encode()))
+        unrelated=E.fromstring(shape_xml.replace('Form No.: F-QCL-04 Revision No.: 01','Unrelated logo').encode())
+        heading._p.append(unrelated)
+        source=self.folder/'wrapped-header.docx';d.save(source)
+        original=source.read_bytes()
+        fields={token:'Example' for token in validate_template(original)['tokens']}
+        payload={'fields':fields,'rows':[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':''}]}
+        outputs=[self.folder/name for name in ['rendered.docx','prepared.docx','upgraded.docx']]
+        render(source,payload,outputs[0])
+        prepare_template(original,outputs[1])
+        upgrade_environmental_layout(original,outputs[2])
+        for output in outputs:
+            with self.subTest(output=output.name):
+                header=roots(package(output.read_bytes()))['word/header1.xml']
+                anchors=header.findall('.//{'+drawing+'}anchor')
+                self.assertEqual(anchors[0].get('behindDoc'),'1')
+                self.assertIsNotNone(anchors[0].find('{'+drawing+'}wrapNone'))
+                self.assertIsNone(anchors[0].find('{'+drawing+'}wrapSquare'))
+                self.assertEqual(anchors[0].find('{'+drawing+'}extent').get('cx'),'1504315')
+                self.assertEqual(anchors[1].get('behindDoc'),'0')
+                shapes=header.findall('.//{'+vml+'}shape')
+                self.assertIn('z-index:-251659264',shapes[0].get('style'))
+                self.assertIn('width:118.45pt;height:47.25pt',shapes[0].get('style'))
+                self.assertEqual(shapes[0].find('{'+word_vml+'}wrap').get('type'),'none')
+                self.assertEqual(shapes[0].find('{'+word_vml+'}wrap').get('anchorx'),'margin')
+                self.assertEqual(shapes[1].find('{'+word_vml+'}wrap').get('type'),'square')
+                self.assertEqual(header.xpath('.//w:pPr/w:jc/@w:val',namespaces=NS),['center'])
+        self.assertEqual(source.read_bytes(),original)
+
     def test_product_type_is_editable_as_purpose_and_blank_parentheses_are_removed(self):
         from docx import Document
         from docx_worker import report_details

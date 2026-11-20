@@ -3,7 +3,9 @@ import argparse, copy, hashlib, io, json, re, zipfile
 from pathlib import Path
 from lxml import etree as E
 
-NS={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+NS={'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+    'wp':'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing',
+    'v':'urn:schemas-microsoft-com:vml','w10':'urn:schemas-microsoft-com:office:word'}
 W='{'+NS['w']+'}'
 XML=E.XMLParser(resolve_entities=False, no_network=True)
 
@@ -43,6 +45,27 @@ def set_bold(paragraph):
         weight=props.find(W+tag)
         if weight is None:weight=E.SubElement(props,W+tag)
         weight.set(W+'val','1')
+
+def fix_form_control_wrapping(docs):
+    for root in docs.values():
+        for shape in root.xpath('.//wp:anchor|.//v:shape',namespaces=NS):
+            content=text(shape)
+            if not (re.search(r'Form\s+No\b',content,re.I) and re.search(r'Revision\s+No\b',content,re.I)):continue
+            if shape.tag=='{'+NS['wp']+'}anchor':
+                shape.set('behindDoc','1')
+                wraps=shape.xpath('./wp:wrapNone|./wp:wrapSquare|./wp:wrapTight|./wp:wrapThrough|./wp:wrapTopAndBottom',namespaces=NS)
+                position=shape.index(wraps[0]) if wraps else next((i for i,child in enumerate(shape) if child.tag=='{'+NS['wp']+'}docPr'),len(shape))
+                for wrap in wraps:shape.remove(wrap)
+                shape.insert(position,E.Element('{'+NS['wp']+'}wrapNone'))
+            else:
+                style=shape.get('style','')
+                if re.search(r'(^|;)\s*z-index\s*:',style):
+                    style=re.sub(r'(^|;)\s*z-index\s*:[^;]*',r'\1z-index:-251659264',style)
+                else:style=style.rstrip(';')+';z-index:-251659264;'
+                shape.set('style',style)
+                wrap=shape.find('{'+NS['w10']+'}wrap')
+                if wrap is None:wrap=E.SubElement(shape,'{'+NS['w10']+'}wrap')
+                wrap.set('type','none')
 
 def trim_empty_paragraphs_after_last_table(root):
     """Remove empty body paragraphs after the last table without stripping breaks."""
@@ -139,6 +162,7 @@ def ensure_page_fields(parts,docs):
 def prepare_template(data,output,family=None):
     """Prepare recognized IPI layouts, never declare them verified automatically."""
     parts=package(data);docs=roots(parts);issues=[];required=[];mapped=[];instances=[]
+    fix_form_control_wrapping(docs)
     pattern=environmental_pattern(docs,family);block_options={}
     if pattern:family=pattern['family']
     labels={'Category':'sample.category','Date&Time Received':'sample.received','Name of Sample':'sample.name','Date&Time Released':'releaseDate','Date Mfd.':'manufactureDate','Batch/Lot No.':'sample.batch','Fill Vol./Wt.':'fillVolume','Expiry Date':'expiryDate','Batch/Lot Size':'batchSize','Requested by':'requestedBy','Purpose':'purpose','Logbook':'logbookReference'}
@@ -438,6 +462,7 @@ def merge_result_groups(rows, rendered_rows, merge_columns):
 def upgrade_environmental_layout(data,output):
     """Update only Area metadata in a retained, already sanitized layout."""
     parts=package(data);docs=roots(parts);updated=any('{{facility}} {{area}} Area ({{type}})' in text(root) for root in docs.values())
+    fix_form_control_wrapping(docs)
     for name,root in docs.items():
         paragraphs=[p for p in root.xpath('.//w:p',namespaces=NS) if not p.xpath('.//w:p',namespaces=NS)]
         for paragraph in paragraphs:
@@ -485,6 +510,7 @@ def upgrade_environmental_layout(data,output):
 
 def render(template,payload,output):
     parts=package(Path(template).read_bytes()); docs=roots(parts)
+    fix_form_control_wrapping(docs)
     fields=payload['fields']; observations=payload.get('rows',[])
     row_grouping=payload.get('renderOptions',{}).get('rowGrouping')
     if payload.get('renderOptions',{}).get('adaptiveBlocks') and payload.get('blocks') and set(payload['blocks'])!={'tests'}:
