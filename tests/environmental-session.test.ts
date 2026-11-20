@@ -6,7 +6,7 @@ process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=await mkdtemp(path.resolve
 const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration}=await import('../server/configuration.js');
 const {publishEnvironmentalProfile}=await import('../server/environmental.js');
-const {getDraft,resolveReportSetup,createAutomaticDraft,saveDraft,environmentalSessionReview,generateEnvironmentalSession}=await import('../server/reports.js');
+const {getDraft,resolveReportSetup,createAutomaticDraft,saveDraft,saveEnvironmentalSession,environmentalSessionReview,generateEnvironmentalSession}=await import('../server/reports.js');
 await migrate();after(close);
 const actor={email:'owner@example.test',name:'Fixture Analyst',role:'administrator' as const};
 const row={test:'SPC',label:'SPC',type:'numeric',location:'Drum 1',stage:'',replicate:'',block:'tests',unit:'cfu/mL',criterion:'Not more than 100 cfu/mL',source:'session-reference',sourceLocation:'Table 1 row 2',date:'2026-10-01',dateBasis:'owner-confirmed',revision:'criterion-v1'};
@@ -51,6 +51,34 @@ test('one source activity creates a paired session with independent result revis
  await db.query('UPDATE drafts SET data=$1 WHERE id=$2',[JSON.stringify({...cleared,fields:{...cleared.fields,fillVolume:'30 mL'}}),cleared.id]);
  assert.equal((await getDraft(shared.id)).fields['fill.vol'],'30 mL');
  assert.equal((await db.query('SELECT data FROM drafts WHERE id=$1',[shared.id])).rows[0].data.fields['fill.vol'],undefined);
+ assert.equal(typeof saveEnvironmentalSession,'function','a session needs one atomic save for all method results and details');
+ const loaded=await Promise.all(primary.environmentalSession!.members.map(member=>getDraft(member.draftId)));
+ const changes=loaded.map((draft,i)=>({id:draft.id,revision:draft.revision,results:draft.results.map(result=>({...result,state:'entered' as const,value:String(i+20),remarks:'Passed'})),fields:{...draft.fields,temperature:'25',mic:`MIC-${i+1}`}}));
+ const snapshot=async()=>JSON.stringify({drafts:(await db.query('SELECT data FROM drafts ORDER BY id')).rows,history:(await db.query('SELECT id,revision,data FROM draft_revisions ORDER BY id,revision')).rows,audits:(await db.query("SELECT id FROM audit WHERE action='draft_saved' ORDER BY id")).rows});
+ const beforeBatch=await snapshot();
+ await assert.rejects(saveEnvironmentalSession(primary.id,changes.map((change,i)=>i?{...change,revision:change.revision-1}:change),actor.email),/changed in another session/);
+ assert.equal(await snapshot(),beforeBatch,'a stale companion revision must prevent every write');
+ await assert.rejects(saveEnvironmentalSession(primary.id,changes.map((change,i)=>i?{...change,results:change.results.map(result=>({...result,location:'Replaced point'}))}:change),actor.email),/cannot be replaced|cannot be changed/);
+ assert.equal(await snapshot(),beforeBatch,'invalid companion results must leave all members and audit records unchanged');
+ await assert.rejects(saveEnvironmentalSession(primary.id,changes.map((change,i)=>i?{...change,fields:{...change.fields,temperature:'26'}}:change),actor.email),/conflicting shared/);
+ assert.equal(await snapshot(),beforeBatch);
+ await assert.rejects(saveEnvironmentalSession(primary.id,changes.slice(0,1),actor.email),/every.*member|all.*member/i);
+ assert.equal(await snapshot(),beforeBatch);
+ const collision=loaded[1];
+ await db.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[collision.id,collision.revision+1,JSON.stringify(collision)]);
+ const beforeRollback=await snapshot();
+ await assert.rejects(saveEnvironmentalSession(primary.id,changes,actor.email),/duplicate key|unique constraint/i);
+ assert.equal(await snapshot(),beforeRollback,'a failure writing a later member must roll back earlier draft, history and audit writes');
+ await db.query('DELETE FROM draft_revisions WHERE id=$1 AND revision=$2',[collision.id,collision.revision+1]);
+ const batchSaved=await saveEnvironmentalSession(primary.id,[...changes].reverse(),actor.email);
+ assert.deepEqual(batchSaved.map(draft=>draft.id),loaded.map(draft=>draft.id),'return members in canonical session order');
+ for(const [i,draft] of batchSaved.entries()){
+  assert.equal(draft.revision,loaded[i].revision+1);assert.ok(draft.results.every(result=>result.value===String(i+20)));
+  assert.equal(draft.fields.mic,`MIC-${i+1}`);assert.equal(draft.fields.temperature,'25');assert.equal(draft.fields.fillVolume,'30 mL');assert.equal(draft.fields['fill.vol'],'30 mL');
+  assert.deepEqual((await db.query('SELECT data FROM drafts WHERE id=$1',[draft.id])).rows[0].data,JSON.parse(JSON.stringify(draft)));
+  assert.equal((await db.query('SELECT revision FROM draft_revisions WHERE id=$1 AND revision=$2',[draft.id,draft.revision])).rows.length,1);
+ }
+ const afterBatch=await snapshot();await assert.rejects(saveEnvironmentalSession(primary.id,changes,actor.email),/changed in another session/);assert.equal(await snapshot(),afterBatch);
  const beforeCount=Number((await db.query('SELECT count(*) AS count FROM drafts')).rows[0].count);
  const enabled=await getConfiguration(),disabled=structuredClone(enabled.value);disabled.tests.find(t=>t.id==='MY')!.active=false;
  const changed=await saveConfiguration(disabled,enabled.revision,actor.email);
