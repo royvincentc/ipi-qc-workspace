@@ -22,7 +22,7 @@ import {readWorkbook,readApplicability,google,driveFolder} from './google.js';
 import {defaultConnections,prepareSample,commitPreparedBatch,cancelPreparedBatch,syncSources,syncSourcesIfDue,reconcileSubmission} from './samples.js';
 import {syncDriveLibrary,isDriveFileInLinkedFolder} from './library.js';
 import {syncPendingReports} from './report-drive-sync.js';
-import {getDraft,inspectReportDetails,createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,generate,environmentalSessionReview,generateEnvironmentalSession,worker,privatePath,storage,retryReportDriveSync,organizeReportDriveFolders} from './reports.js';
+import {getDraft,inspectReportDetails,createAutomaticDraft,resolveReportSetup,resolveSampleWorkflow,saveDraft,saveEnvironmentalSession,generate,environmentalSessionReview,generateEnvironmentalSession,worker,privatePath,storage,retryReportDriveSync,organizeReportDriveFolders} from './reports.js';
 import {validateBindings,validatePreparedReplacement} from './template.js';
 import {environmentalProfiles,publishEnvironmentalProfile,retireEnvironmentalProfile} from './environmental.js';
 import {scanEnvironmentalBatch,previewEnvironmentalBatch,publishEnvironmentalBatch} from './environmental-batch.js';
@@ -238,14 +238,19 @@ app.post('/api/report-setup/:sampleId',async(req,res)=>res.json(await resolveRep
 app.post('/api/drafts',requireRole('administrator','analyst'),async(req,res)=>{const b=equipmentSelectionSchema.extend({sampleId:z.string()}).parse(req.body);res.status(201).json(await createAutomaticDraft(b.sampleId,req.user,b));});
 app.get('/api/drafts/:id',async(req,res)=>{res.json(await getDraft(String(req.params.id)));});
 const resultSchema=z.object({test:z.string(),location:z.string().optional(),stage:z.string().optional(),replicate:z.string().optional(),channel:z.enum(['active-air','passive-air']).optional(),instanceId:z.string().optional(),block:z.string().optional(),state:z.enum(['not_entered','not_tested','entered']),value:z.string().max(100),qualifier:z.enum(['','=','<','<=','Nmt']),unit:z.string().max(60),reason:z.string().max(1000),remarks:z.string().max(1000),remarkMode:z.enum(['automatic','manual']).optional()});
+const draftSaveSchema=z.object({revision:z.number().int().positive(),results:z.array(resultSchema).max(300),fields:z.record(z.string().max(2000))});
 app.get('/api/drafts/:id/session',async(req,res)=>res.json(await environmentalSessionReview(String(req.params.id))));
+app.put('/api/drafts/:id/session',requireRole('administrator','analyst'),async(req,res)=>{
+ const body=z.object({changes:z.array(draftSaveSchema.extend({id:z.string().min(1).max(200)})).min(2).max(3)}).parse(req.body);
+ res.json(await saveEnvironmentalSession(String(req.params.id),body.changes,req.user.email));
+});
 app.post('/api/drafts/:id/generate-session',requireRole('administrator','analyst'),async(req,res)=>{
  const b=z.object({revisions:z.record(z.number().int().positive())}).parse(req.body);
  const result=await generateEnvironmentalSession(String(req.params.id),b.revisions,req.user.email);
  res.json({...result,files:result.files.map(({path,pdf,...file}:any)=>({...file,hasPreview:!!(pdf||path)}))});
 });
 app.get('/api/drafts/:id/report-details',async(req,res)=>res.json(await inspectReportDetails(String(req.params.id))));
-app.put('/api/drafts/:id',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive(),results:z.array(resultSchema).max(300),fields:z.record(z.string().max(2000))}).parse(req.body);res.json(await saveDraft(String(req.params.id),b.revision,b.results,b.fields,req.user.email));});
+app.put('/api/drafts/:id',requireRole('administrator','analyst'),async(req,res)=>{const b=draftSaveSchema.parse(req.body);res.json(await saveDraft(String(req.params.id),b.revision,b.results,b.fields,req.user.email));});
 app.get('/api/drafts/:id/history',async(req,res)=>res.json((await db.query('SELECT revision,data FROM draft_revisions WHERE id=$1 ORDER BY revision DESC',[req.params.id])).rows));
 app.post('/api/drafts/:id/generate',requireRole('administrator','analyst'),async(req,res)=>{const b=z.object({revision:z.number().int().positive()}).parse(req.body);const f=await generate(String(req.params.id),b.revision,req.user.email);const {path,pdf,...safe}=f;res.json({...safe,hasPreview:!!(pdf||path)});});
 app.get('/api/files',async(req,res)=>{const q=String(req.query.q||'').trim();const where=q?"WHERE concat_ws(' ',data->>'name',data->>'ml',data->>'kind') ILIKE $1":'';const args=q?[`%${q.replace(/[\\%_]/g,'\\$&')}%`]:[];const list=(await db.query(`SELECT (data-'path'-'pdf') || jsonb_build_object('hasPreview',(COALESCE(data->>'pdf','')<>'' OR (data->>'kind'='report' AND COALESCE(data->>'path','')<>''))) AS data FROM files ${where}`,args)).rows.map(r=>r.data);list.sort((a,b)=>String(a.ml||a.name).localeCompare(String(b.ml||b.name),undefined,{numeric:true}));res.json(list);});

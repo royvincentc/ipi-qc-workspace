@@ -465,16 +465,94 @@ export async function createDraft(sampleId:string,specId:string,templateId:strin
 }
 export async function saveDraft(id:string,expected:number,results:Result[],fields:Record<string,string>,actor:string){
  const initial=await getDraft(id),ids=(initial.environmentalSession?.members.map(m=>m.draftId)||[id]).sort();
- return locked('draft:'+ids[0],async(tx)=>{
+ return locked('draft:'+ids[0],async tx=>{
   if(!demo)for(const companionId of ids.slice(1))await tx.query('SELECT pg_advisory_lock(hashtext($1))',['draft:'+companionId]);
-  try{const companions=initial.environmentalSession?await environmentalSessionDrafts(id,false):[];
-const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;if(!old)throw new Fault(404,'Draft not found');if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');const keys=old.results.map(resultKey);if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');const preservedResults=results.map(r=>{const original=old.results.find(x=>resultKey(x)===resultKey(r));if(original&&['test','location','stage','replicate','channel','block'].some(k=>(r as any)[k]!== (original as any)[k]))throw new Fault(400,'Result sampling locations and test identities cannot be changed');const preserved={...r,sourceValue:original?.sourceValue,sourceHeader:original?.sourceHeader};const test=old.specification.tests.find(t=>resultKey(t)===resultKey(r));return test&&overallAnalystRemarks(old)!==undefined?updateResultRemark(test,original||preserved,{...preserved,remarkMode:r.remarkMode||(r.remarks?'manual':'automatic')}):preserved;});const shared=companions.length?editedSessionDetails(sharedSessionDetails(companions),fields):editedSessionDetails(sharedSessionDetails([old]),fields);const nextFields={...fields,...shared};const overall=overallAnalystRemarks({...old,results:preservedResults});if(overall!==undefined){nextFields.overallRemarks=overall;nextFields['overall.remarks']=overall;}const analystInput=firstText(old.sample.fields.analyzedBy,old.sample.fields.analyst,old.resultSource?.analyst,nextFields.analyst,nextFields.micAnalyst);if(analystInput){const connections=await setting('connections',defaultConnections);const details=await resolveAnalystDetails(connections.specifications||defaultConnections.specifications,analystInput);nextFields.analyst=firstText(details.analyst,analystInput);nextFields.mic=firstText(details.mic,nextFields.mic);nextFields.micAnalyst=nextFields.analyst;}const d={...old,results:preservedResults,fields:nextFields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};const templates=(await tx.query('SELECT data FROM templates')).rows.map(row=>row.data as Template);const isEnvironmental=d.configurationSnapshot?.sampleTypes.some(t=>t.id===d.sample.category&&t.register==='environmental');const routed=isEnvironmental?undefined:await routedTemplate(d.sample,d.results,templates);if(routed){d.templateId=routed.id;d.templateRevision=routed.revision;d.templateSnapshot=structuredClone(routed);}await tx.query('BEGIN');try{await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[d.revision,JSON.stringify(d),id]);await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[id,d.revision,JSON.stringify(d)]);for(const companion of companions.filter(c=>c.id!==id)){
- const companionFields={...companion.fields,...shared};
- if(JSON.stringify(companionFields)===JSON.stringify(companion.fields))continue;
- const next={...companion,fields:companionFields,revision:companion.revision+1,analyst:actor,updatedAt:d.updatedAt};
- await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[next.revision,JSON.stringify(next),next.id]);
- await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[next.id,next.revision,JSON.stringify(next)]);
- }await tx.query('COMMIT');}catch(e){await tx.query('ROLLBACK');throw e;}await audit(actor,'draft_saved',id,{revision:d.revision,templateId:d.templateId,templateRevision:d.templateRevision});return d;}finally{if(!demo)for(const companionId of ids.slice(1).reverse())await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+companionId]);}});}
+  try{
+   const companions=initial.environmentalSession?await environmentalSessionDrafts(id,false):[];
+   const old=(await tx.query('SELECT data FROM drafts WHERE id=$1',[id])).rows[0]?.data as Draft;
+   if(!old)throw new Fault(404,'Draft not found');
+   const shared=editedSessionDetails(sharedSessionDetails(companions.length?companions:[old]),fields);
+   const draft=await prepareDraftUpdate(tx,old,expected,results,fields,actor,shared);
+   await tx.query('BEGIN');
+   try{
+    await writeDraftRevision(tx,draft);
+    for(const companion of companions.filter(c=>c.id!==id)){
+     const companionFields={...companion.fields,...shared};
+     if(JSON.stringify(companionFields)===JSON.stringify(companion.fields))continue;
+     await writeDraftRevision(tx,{...companion,fields:companionFields,revision:companion.revision+1,analyst:actor,updatedAt:draft.updatedAt});
+    }
+    await tx.query('COMMIT');
+   }catch(error){await tx.query('ROLLBACK');throw error;}
+   await audit(actor,'draft_saved',id,{revision:draft.revision,templateId:draft.templateId,templateRevision:draft.templateRevision});
+   return draft;
+  }finally{if(!demo)for(const companionId of ids.slice(1).reverse())await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+companionId]);}
+ });
+}
+type DraftChange=Pick<Draft,'id'|'revision'|'results'|'fields'>;
+export async function saveEnvironmentalSession(id:string,changes:DraftChange[],actor:string):Promise<Draft[]>{
+ const initial=await environmentalSessionDrafts(id,false),ids=initial.map(d=>d.id).sort();
+ return locked('draft:'+ids[0],async tx=>{
+  if(!demo)for(const companionId of ids.slice(1))await tx.query('SELECT pg_advisory_lock(hashtext($1))',['draft:'+companionId]);
+  try{
+   const companions=await environmentalSessionDrafts(id,false);
+   if(companions.length!==ids.length||companions.some(d=>!ids.includes(d.id)))throw new Fault(409,'The session changed. Reload all members before saving.');
+   if(changes.length!==companions.length||new Set(changes.map(c=>c.id)).size!==companions.length||changes.some(c=>!ids.includes(c.id)))throw new Fault(400,'Include every session member exactly once when saving.');
+   for(const draft of companions)if(changes.find(c=>c.id===draft.id)!.revision!==draft.revision)throw new Fault(409,'This draft changed in another session. Reload before saving.');
+   const baseline=sharedSessionDetails(companions);
+   const sharedEdits=changes.map(change=>{
+    for(const group of sessionDetailGroups)if(new Set(group.filter(key=>key in change.fields).map(key=>change.fields[key])).size>1)throw new Fault(400,'The session contains conflicting shared report details.');
+    return editedSessionDetails(baseline,change.fields);
+   });
+   for(const group of sessionDetailGroups)if(new Set(sharedEdits.map(fields=>fields[group[0]]||'')).size>1)throw new Fault(400,'The session contains conflicting shared report details.');
+   const drafts:Draft[]=[];
+   for(const old of companions){
+    const change=changes.find(c=>c.id===old.id)!;
+    drafts.push(await prepareDraftUpdate(tx,old,change.revision,change.results,change.fields,actor,sharedEdits[0]));
+   }
+   await tx.query('BEGIN');
+   try{
+    for(const draft of drafts){
+     await writeDraftRevision(tx,draft);
+     await tx.query('INSERT INTO audit(id,actor,action,entity,details) VALUES($1,$2,$3,$4,$5)',[randomUUID(),actor,'draft_saved',draft.id,JSON.stringify({revision:draft.revision,templateId:draft.templateId,templateRevision:draft.templateRevision})]);
+    }
+    await tx.query('COMMIT');
+   }catch(error){await tx.query('ROLLBACK');throw error;}
+   return drafts;
+  }finally{if(!demo)for(const companionId of ids.slice(1).reverse())await tx.query('SELECT pg_advisory_unlock(hashtext($1))',['draft:'+companionId]);}
+ });
+}
+async function prepareDraftUpdate(tx:import('./db.js').DB,old:Draft,expected:number,results:Result[],fields:Record<string,string>,actor:string,shared:Record<string,string>):Promise<Draft>{
+ if(old.revision!==expected)throw new Fault(409,'This draft changed in another session. Reload before saving.');
+ if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');
+ const keys=old.results.map(resultKey);
+ if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');
+ const preservedResults=results.map(r=>{
+  const original=old.results.find(x=>resultKey(x)===resultKey(r));
+  if(original&&['test','location','stage','replicate','channel','block'].some(k=>(r as any)[k]!== (original as any)[k]))throw new Fault(400,'Result sampling locations and test identities cannot be changed');
+  const preserved={...r,sourceValue:original?.sourceValue,sourceHeader:original?.sourceHeader};
+  const test=old.specification.tests.find(t=>resultKey(t)===resultKey(r));
+  return test&&overallAnalystRemarks(old)!==undefined?updateResultRemark(test,original||preserved,{...preserved,remarkMode:r.remarkMode||(r.remarks?'manual':'automatic')}):preserved;
+ });
+ const nextFields={...fields,...shared},overall=overallAnalystRemarks({...old,results:preservedResults});
+ if(overall!==undefined){nextFields.overallRemarks=overall;nextFields['overall.remarks']=overall;}
+ const analystInput=firstText(old.sample.fields.analyzedBy,old.sample.fields.analyst,old.resultSource?.analyst,nextFields.analyst,nextFields.micAnalyst);
+ if(analystInput){
+  const connections=await setting('connections',defaultConnections);
+  const details=await resolveAnalystDetails(connections.specifications||defaultConnections.specifications,analystInput);
+  nextFields.analyst=firstText(details.analyst,analystInput);nextFields.mic=firstText(details.mic,nextFields.mic);nextFields.micAnalyst=nextFields.analyst;
+ }
+ const draft={...old,results:preservedResults,fields:nextFields,revision:old.revision+1,analyst:actor,updatedAt:new Date().toISOString()};
+ const templates=(await tx.query('SELECT data FROM templates')).rows.map(row=>row.data as Template);
+ const isEnvironmental=draft.configurationSnapshot?.sampleTypes.some(t=>t.id===draft.sample.category&&t.register==='environmental');
+ const routed=isEnvironmental?undefined:await routedTemplate(draft.sample,draft.results,templates);
+ if(routed){draft.templateId=routed.id;draft.templateRevision=routed.revision;draft.templateSnapshot=structuredClone(routed);}
+ return draft;
+}
+async function writeDraftRevision(tx:import('./db.js').DB,draft:Draft){
+ await tx.query('UPDATE drafts SET revision=$1,data=$2 WHERE id=$3',[draft.revision,JSON.stringify(draft),draft.id]);
+ await tx.query('INSERT INTO draft_revisions(id,revision,data) VALUES($1,$2,$3)',[draft.id,draft.revision,JSON.stringify(draft)]);
+}
+
 function firstText(...values:unknown[]){return values.map(value=>String(value??'').trim()).find(Boolean)||'';}
 async function resolveAnalystDetails(spreadsheetUrl:string,analysts:string){return demo?{analyst:analysts,mic:''}:readMicAnalystDetails(spreadsheetUrl,analysts);}
 function formatReportDate(value:unknown,includeTime=false){

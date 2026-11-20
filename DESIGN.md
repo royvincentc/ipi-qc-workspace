@@ -10,6 +10,8 @@ The overview is a two-column receipts timeline and sample mix, a four-part summa
 
 Other routes share the same light surfaces, compact control hierarchy, local table scrolling, readable form groups, and subdued secondary panels. Existing scientific logic, report templates, revisions, permissions, and integrations remain authoritative.
 
+Every configured sample category uses the same result-entry layout: sample details on the left, SPC and MY first across the entry columns when present, followed by additional assays. Locations, stages, replicates, monitoring channels, and report blocks remain separate groups. Optional metadata stays collapsed, with saving and document generation available on the same page.
+
 ## Tokens
 
 Source: src/operations.css; route composition: src/operations-routes.css. Both load after the legacy sheets while older features still rely on their selectors.

@@ -552,3 +552,70 @@ dialog.workspace-dialog.sample-search-dialog { width:min(640px,calc(100vw - 32px
 
 .sidebar nav .nav-sync-button .login-film svg { flex:none; width:100%; height:100%; }
 .topbar-right > .culture-loading.is-compact { display:flex!important; }
+.app-workspace .route-stage .reports-streamlined .report-results-panel { padding:18px 22px; margin-bottom:18px; scroll-margin-top:20px; }
+.result-workspace-nav { display:flex; flex-wrap:wrap; gap:8px 20px; padding:6px 0 14px; border-bottom:1px solid var(--border); }
+.result-workspace-nav a { display:inline-flex; align-items:center; gap:8px; min-height:38px; color:var(--text-primary); font-size:14px; text-underline-offset:4px; }
+.result-workspace-nav a:hover { text-decoration:underline; }
+.result-workspace-nav a span { color:var(--text-secondary); font-size:12px; font-variant-numeric:tabular-nums; }
+.reports-streamlined .result-point { min-width:0; border-top:1px solid var(--border); padding-top:12px; }
+.reports-streamlined .result-point:first-child { border-top:0; }
+.reports-streamlined .sample-measurements .result-point { display:grid; grid-template-columns:minmax(150px,.6fr) minmax(0,2fr); align-items:start; gap:24px; }
+.reports-streamlined .result-point-details { min-width:0; overflow-wrap:anywhere; }
+.reports-streamlined .result-column-label { display:block; margin-bottom:10px; font-size:12px; color:var(--text-secondary); }
+.reports-streamlined .result-point-details p { margin:6px 0; font-size:12px; line-height:1.5; color:var(--text-secondary); }
+.reports-streamlined .result-point-details small { font-size:12px; color:var(--text-secondary); }
+.reports-streamlined .result-point-name { margin:4px 0 8px; font-size:17px; font-weight:700; overflow-wrap:anywhere; }
+.reports-streamlined .result-pair { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:24px; }
+.reports-streamlined .result-pair.result-single { grid-template-columns:minmax(0,1fr); }
+.app-workspace .route-stage .reports-streamlined .result-entry-row { grid-template-columns:minmax(140px,.7fr) minmax(0,2fr); gap:10px 18px; padding:12px 0; }
+.app-workspace .route-stage .reports-streamlined .result-pair .result-entry-row { display:block; border:0; margin:0; padding:0 0 14px; }
+.reports-streamlined .result-pair .test-title { display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.reports-streamlined .result-pair .criterion { padding:0; text-align:right; }
+.reports-streamlined .result-pair .criterion small { display:none; }
+.reports-streamlined .result-pair .result-source-status { display:block; font-size:11px; line-height:1.4; }
+.app-workspace .route-stage .reports-streamlined .result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 14px; }
+.reports-streamlined .result-grid .analyst-remarks-field { grid-column:1/-1; }
+.reports-streamlined .test-title p:empty { display:none; }
+.reports-streamlined .test-title h3 { margin:0; }
+.reports-streamlined .result-entry-row .evidence { margin-top:8px; }
+.reports-streamlined .evidence summary { min-height:28px; }
+.reports-streamlined .result-row-issues { margin:10px 0; }
+.reports-streamlined .report-details { margin-top:0; }
+.reports-streamlined #report-details { scroll-margin-top:20px; }
+.reports-streamlined .report-source-note { border:0; padding:0; }
+.reports-streamlined .report-detail-fallbacks { padding-top:12px; }
+.report-review-summary { margin:16px 0; color:var(--text-secondary); font-size:13px; }
+.report-review-summary > summary { cursor:pointer; min-height:44px; display:list-item; align-content:center; }
+.reports-streamlined .overall-analyst-remarks { margin:8px 0 0; padding:10px 0; }
+.app-workspace .route-stage .reports-streamlined .sticky-actions { position:sticky; bottom:12px; justify-content:space-between; padding:12px 16px; }
+.app-workspace .route-stage .reports-streamlined .section-heading { margin-bottom:10px; }
+.reports-streamlined .result-pair .result-grid .analyst-remarks-field { grid-column:1/-1; }
+.reports-streamlined .result-state-options,.reports-streamlined .method-report-details { font-size:12px; color:var(--text-secondary); }
+.reports-streamlined .result-state-options { grid-column:1/-1; }
+.reports-streamlined .result-state-options summary,.reports-streamlined .method-report-details > summary { cursor:pointer; min-height:32px; align-content:center; }
+.reports-streamlined .result-state-options .field { max-width:240px; margin:8px 0; }
+.reports-streamlined .method-report-details .report-detail-fallbacks { border:0; margin-top:0; }
+.reports-streamlined .method-report-details .report-detail-fallbacks h2 { display:none; }
+.reports-streamlined .report-optional-details { margin-top:10px; font-size:13px; color:var(--text-secondary); }
+.reports-streamlined .report-optional-details > summary { min-height:44px; cursor:pointer; align-content:center; }
+.reports-streamlined .report-optional-details .form-grid { padding-top:10px; }
+@media(max-width:767px) {
+ .app-workspace .route-stage .reports-streamlined .report-results-panel { padding:16px; }
+ .app-workspace .route-stage .reports-streamlined .result-entry-row { grid-template-columns:minmax(0,1fr); }
+ .reports-streamlined .sample-measurements .result-point { grid-template-columns:minmax(60px,.65fr) minmax(0,2fr); gap:10px; }
+ .reports-streamlined .result-point-name { font-size:14px; }
+ .reports-streamlined .result-point-details p,.reports-streamlined .result-point-details small { font-size:11px; }
+ .reports-streamlined .result-pair { gap:10px; }
+ .reports-streamlined .result-pair .test-title { display:block; }
+ .reports-streamlined .result-pair .criterion { text-align:left; padding-top:4px; }
+ .app-workspace .route-stage .reports-streamlined .result-pair .result-grid { grid-template-columns:minmax(0,1fr); }
+ .reports-streamlined .result-pair .result-toggle { flex-wrap:wrap; }
+ .reports-streamlined .result-pair .result-toggle-option { flex:1 1 100%; }
+ .reports-streamlined .result-pair .result-toggle-option span { white-space:normal; overflow-wrap:anywhere; }
+ .reports-streamlined .result-pair .analyst-outcome-option span { font-size:11px; padding-inline:2px; gap:3px; }
+ .reports-streamlined .result-pair .analyst-outcome-option svg { display:none; }
+ .reports-streamlined .result-pair .remark-origin small { overflow-wrap:anywhere; }
+ .reports-streamlined .result-pair .evidence summary { overflow-wrap:anywhere; }
+ .app-workspace .route-stage .reports-streamlined .sticky-actions { bottom:8px; gap:8px; }
+ .reports-streamlined .sticky-actions > span { font-size:12px; }
+}
