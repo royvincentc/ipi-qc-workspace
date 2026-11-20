@@ -584,6 +584,8 @@ dialog.workspace-dialog.sample-search-dialog { width:min(640px,calc(100vw - 32px
 .reports-streamlined #report-details { scroll-margin-top:20px; }
 .reports-streamlined .report-source-note { border:0; padding:0; }
 .reports-streamlined .report-detail-fallbacks { padding-top:12px; }
+.reports-streamlined .report-detail-row { grid-column:1/-1; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px 24px; min-width:0; }
+.reports-streamlined .report-detail-row > .field { min-width:0; }
 .report-review-summary { margin:16px 0; color:var(--text-secondary); font-size:13px; }
 .report-review-summary > summary { cursor:pointer; min-height:44px; display:list-item; align-content:center; }
 .reports-streamlined .overall-analyst-remarks { margin:8px 0 0; padding:10px 0; }

@@ -58,7 +58,7 @@ async function open(width,{role='analyst',single=false,height=1000,theme='light'
    const response=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json'}});
    if(path==='/configuration')return response(config);
    if(path==='/references?scope=templates')return response({templates:[],documents:[]});
-   if(path.endsWith('/report-details'))return response({optionalFields:[{key:'batchSize',label:'Batch size'},{key:'batch.size',label:'Batch size (legacy alias)'},{key:'requestedBy',label:'Requested by'}],incompleteCC:[]});
+   if(path.endsWith('/report-details'))return response({optionalFields:[{key:'batchSize',label:'Batch size'},{key:'batch.size',label:'Batch size (legacy alias)'},{key:'fillVolume',label:'Fill volume'},{key:'manufactureDate',label:'Date manufactured'},{key:'expiryDate',label:'Expiry date'},{key:'temperature',label:'Temperature'},{key:'relativeHumidity',label:'Relative humidity'},{key:'page',label:'Page number'},{key:'requestedBy',label:'Requested by'}],incompleteCC:[]});
    if(path.endsWith('/generate-session')||path.endsWith('/generate')){
     if(window.__failGeneration)return response({error:'Fixture generator unavailable'},503);
     const files=window.__drafts.map((draft,index)=>({id:'file-'+index,name:'fixture-'+index+'.docx',monitoringMethod:draft.environmentalSnapshot?.output.method,resultRevision:draft.revision}));
@@ -85,6 +85,50 @@ async function open(width,{role='analyst',single=false,height=1000,theme='light'
 }
 async function value(page,id,value){await page.locator('#'+id).locator('input[type="text"]').first().fill(value);}
 async function requests(page){return page.evaluate(()=>window.__requests.filter(request=>request.method!=='GET'));}
+async function checkEvaluationRemarks(width,name){
+ const fixture=drafts.map(draft=>({...draft,sample:{...draft.sample,name},specification:{...draft.specification,tests:draft.specification.tests.map(test=>({...test,criterion:'FOR EVALUATION'}))},results:draft.results.map(result=>({...result,remarks:'Failed',remarkMode:'manual'}))}));
+ const {page,errors}=await open(width,{fixtureDrafts:fixture});
+ assert.equal(await page.locator('.analyst-remarks-field input,.analyst-remarks-field button').count(),0,'evaluation remarks have no entry controls');
+ assert.equal(await page.getByText('Tests without a supported acceptance limit require a manual Passed or Failed remark.',{exact:true}).count(),0,'evaluation products do not ask for manual pass/fail remarks');
+ assert.deepEqual(await page.locator('.analyst-remarks-field output').allTextContents(),['————','————','————']);
+ assert.deepEqual(await page.locator('.overall-analyst-remarks strong').allTextContents(),['FOR EVALUATION','FOR EVALUATION']);
+ await value(page,'acc-fixture-result-row-0','125');
+ assert.equal(await page.locator('.analyst-remarks-field output').first().innerText(),'————','editing a measured value does not restore pass/fail remarks');
+ await page.getByRole('button',{name:'Generate all DOCX',exact:true}).click();
+ await page.waitForFunction(()=>window.__requests.some(request=>request.path.endsWith('/generate-session')));
+ const writes=(await requests(page)).filter(request=>request.method==='PUT');
+ assert.equal(writes.length,1);
+ for(const change of writes[0].body.changes){
+  assert.ok(change.results.every(result=>result.remarks==='————'));
+  assert.equal(change.fields.overallRemarks,'FOR EVALUATION');
+  assert.equal(change.fields['overall.remarks'],'FOR EVALUATION');
+ }
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'evaluation remarks do not overflow');
+ assert.deepEqual(errors,[]);
+ if(name==='Herbycin Syrup')await page.screenshot({path:`output/playwright/evaluation-remarks-${width}.png`,fullPage:true});
+ await page.close();console.log(`PASS evaluation remarks: ${name}, ${width}px, fixed row and overall remarks, measurements and generation retained`);
+}
+async function checkDetailPairs(width){
+ const {page,errors}=await open(width);
+ const details=page.locator('#report-details .report-details');
+ await details.locator('.report-optional-details > summary').click();
+ for(const [leftLabel,rightLabel] of [['Temperature','Relative humidity'],['Date manufactured','Expiry date'],['Batch size','Fill volume'],['Analysis date','Page number']]){
+  const field=(label)=>details.locator('label.field').filter({has:page.getByText(label,{exact:true})}).locator('input');
+  const left=field(leftLabel),right=field(rightLabel);
+  const leftBox=await left.boundingBox(),rightBox=await right.boundingBox();
+  assert.ok(leftBox&&rightBox&&leftBox.x<rightBox.x&&Math.abs(leftBox.y-rightBox.y)<3,`${leftLabel} and ${rightLabel} share a row at ${width}px`);
+  await left.fill(leftLabel==='Analysis date'?'11/20/2026':'12');
+  await right.fill('15');
+  assert.equal(await left.inputValue(),leftLabel==='Analysis date'?'11/20/2026':'12');
+  assert.equal(await right.inputValue(),'15');
+  await left.focus();await page.keyboard.press('Tab');
+  assert.ok(await right.evaluate(element=>element===document.activeElement),'Tab moves to the paired field on the right');
+ }
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'paired detail fields avoid overflow');
+ await page.screenshot({path:`output/playwright/report-detail-pairs-${width}.png`,fullPage:true});
+ assert.deepEqual(errors,[]);await page.close();
+ console.log(`PASS paired report details: ${width}px, editable fields, no overflow`);
+}
 async function checkNumberedSwabs(width){
  const fixture=numberedDrafts(),{page,errors}=await open(width,{fixtureDrafts:fixture});
  const ordered=['#12 Spatula','#13 Drum','Fixture control swab','#14 Drum','#1 Context reference','#15 Pail','#16 Pail','#17 Ladle','#2 Context probe','#18 Beaker','#19 Hook','#20 Rod'];
@@ -183,6 +227,8 @@ async function checkCategory(category,width){
  console.log(`PASS ${category} ${width}px: sample/SPC/MY columns, numeric/finding/custom assays, independent instances, manual remarks, optional aliases, save and direct generation`);
 }
 try{
+ for(const name of ['Herbycin Syrup','Herbycin Cooling Mouth Spray','Herbycin Mouth Spray','Dr. Wong’s Apple Drink','Dr. Wong’s Apple Fruit Juice'])for(const width of [1440,390])await checkEvaluationRemarks(width,name);
+ for(const width of [1440,390,320])await checkDetailPairs(width);
  for(const width of [1440,390]){
   const {page,errors}=await open(width);
   await page.screenshot({path:`output/playwright/result-entry-${width}.png`,fullPage:true});

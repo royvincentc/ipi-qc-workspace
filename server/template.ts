@@ -1,5 +1,5 @@
 import {Fault} from './domain.js';
-import {isSurfaceSpcMy,reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
+import {isSurfaceSpcMy,isEvaluationMonitoring,initializeResultRemarks,reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
 import {orderNumberedSamplingPoints} from '../shared/environmental.js';
 
 export interface ResultBinding {index:number;test:string;location?:string;stage?:string;replicate?:string}
@@ -26,6 +26,7 @@ export function validateBindings(tokens:string[], bindings:ResultBinding[]) {
 }
 
 export function reportRows(d:Draft,t:Template){
+ if(isEvaluationMonitoring(d))d={...d,results:initializeResultRemarks(d)};
  const bindings=(t.manifest.resultBindings||[]) as ResultBinding[];
  const grouped=Boolean(t.manifest.rowGrouping||t.manifest.blocks);
  const bindingKey=(x:ResultBinding|Draft['specification']['tests'][number])=>[x.test,x.location||'',x.stage||'',x.replicate||''].join('|');
