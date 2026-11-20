@@ -11,6 +11,21 @@ test('quantity-based surface exports keep merge groups contiguous and results at
  assert.deepEqual(rows.map(r=>[r.test,r.location,r.value]),[['Standard Plate Count (SPC)','Drum 1','1 cfu/mL'],['Standard Plate Count (SPC)','Drum 2','3 cfu/mL'],['Molds and Yeast','Drum 1','2 cfu/mL'],['Molds and Yeast','Drum 2','4 cfu/mL']]);
  assert.deepEqual(rows.map(r=>r.index),[0,1,2,3]);
 });
+
+test('swab reports order numbered points across equipment types within each assay and retain fixed bindings',()=>{
+ const locations=['Hook 19','Stainless Drum 14','Spatula 12','Stainless Drum 13'];
+ const tests=locations.flatMap(location=>['SPC','MY'].map(test=>({test,location,type:'numeric',unit:'cfu/mL',criterion:`Nmt ${test==='SPC'?100:30} cfu/mL`,revision:'approved',date:'2026-10-01'})));
+ const draft={sample:{category:'EM'},environmentalSnapshot:{equipment:{selection:[]},output:{method:'spc-my',mode:'surface'}},specification:{tests},results:tests.map((t,i)=>({...t,state:'entered',qualifier:'',value:String(i+1),remarks:`Original ${i}`}))} as unknown as Draft;
+ const before=JSON.stringify(draft);
+ const template={family:'environmental-grouped-5c',manifest:{rowGrouping:{mergeColumns:[0,2]}}} as unknown as Template;
+ const rows=reportRows(draft,template);
+ assert.deepEqual(rows.map(r=>r.location),['Spatula 12','Stainless Drum 13','Stainless Drum 14','Hook 19','Spatula 12','Stainless Drum 13','Stainless Drum 14','Hook 19']);
+ assert.deepEqual(rows.map(r=>[r.value,r.remarks]),[[5,'Original 4'],[7,'Original 6'],[3,'Original 2'],[1,'Original 0'],[6,'Original 5'],[8,'Original 7'],[4,'Original 3'],[2,'Original 1']].map(([value,remarks])=>[`${value} cfu/mL`,remarks]));
+ assert.equal(new Set(rows.slice(0,4).map(r=>r.groupKey)).size,1);assert.equal(new Set(rows.slice(4).map(r=>r.groupKey)).size,1);
+ const fixed={...template,manifest:{resultBindings:tests.map((test,index)=>({...test,index}))}} as unknown as Template;
+ assert.deepEqual(reportRows(draft,fixed).map(r=>r.location),tests.map(t=>t.location));
+ assert.equal(JSON.stringify(draft),before);
+});
 test('fixed report rows must each bind to one explicit test instance',()=>{
  assert.throws(()=>validateBindings(tokens,[{index:0,test:'SPC'}]),/every numbered result row/i);
  assert.throws(()=>validateBindings(tokens,[{index:0,test:'SPC'},{index:1,test:'SPC'}]),/same test instance/i);

@@ -1,5 +1,6 @@
 import {Fault} from './domain.js';
 import {isSurfaceSpcMy,reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
+import {orderNumberedSamplingPoints} from '../shared/environmental.js';
 
 export interface ResultBinding {index:number;test:string;location?:string;stage?:string;replicate?:string}
 
@@ -35,7 +36,8 @@ export function reportRows(d:Draft,t:Template){
  }):d.specification.tests;
  if(bindings.length&&ordered.length!==d.specification.tests.length)throw new Fault(422,'Template does not represent every applicable test instance');
  if(bindings.length&&new Set(ordered.map(resultKey)).size!==d.specification.tests.length)throw new Fault(422,'Template result rows do not match applicable tests');
- const rows=ordered.map((test,i)=>{
+ const reportOrder=d.environmentalSnapshot?.output.mode==='surface'&&!bindings.length?orderNumberedSamplingPoints(ordered,test=>test.location||'',test=>JSON.stringify([test.test,test.stage,test.replicate,test.channel,test.block,test.criterion,test.unit,test.revision,test.date])):ordered;
+ const rows=reportOrder.map((test,i)=>{
   const r=d.results.find(x=>resultKey(x)===resultKey(test));
   const label=({'SPC':'Standard Plate Count (SPC)','MY':'Molds and Yeast'}[test.test]||reportTestLabel(test.test,test.label));
   const location=[test.location||'',test.replicate?`Replicate ${test.replicate}`:''].filter(Boolean).join(' · ');

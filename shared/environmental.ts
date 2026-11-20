@@ -37,6 +37,20 @@ export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutpu
  return accupoint.length===1&&spcmy.length===1?[accupoint[0],spcmy[0]]:[];
 }
 export const environmentalKey=(value:string)=>value.normalize('NFKC').toLowerCase().replace(/[’‘]/g,"'").replace(/\s+/g,' ').trim();
+/** Reorder numbered point slots only; labels, unnumbered slots and sampling groups stay intact. */
+export function orderNumberedSamplingPoints<T>(items:T[],label:(item:T)=>string,group:(item:T)=>string=()=> ''):T[]{
+ const ordered=[...items],groups=new Map<string,{item:T;index:number;number:string}[]>();
+ items.forEach((item,index)=>{
+  const number=label(item).trim().match(/^(?:#(\d+)|(\d+)[.)-]?\s)|(?:\s|#)(\d+)$/)?.slice(1).find(Boolean);
+  if(number===undefined)return;
+  const key=group(item);groups.set(key,[...(groups.get(key)||[]),{item,index,number}]);
+ });
+ for(const points of groups.values()){
+  const sorted=[...points].sort((a,b)=>a.number.localeCompare(b.number,'en',{numeric:true}));
+  points.forEach(({index},i)=>{ordered[index]=sorted[i].item;});
+ }
+ return ordered;
+}
 export const environmentalCriterionKey=(value:string)=>environmentalKey(value).replace(/^not more than\s*/,'nmt').replace(/\s+/g,'');
 export function environmentalStageKey(row:{test:string;stage?:string}){
  const stage=environmentalKey(row.stage||'');
