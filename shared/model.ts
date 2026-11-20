@@ -1,4 +1,5 @@
 import {reportDateRange} from './report-dates.js';
+import {environmentalProductKey} from './environmental-routing.js';
 // Frozen migration defaults. Runtime catalogs are served by the configuration service.
 export const categories:Record<string,string> = {SFG:'Semi-Finished Goods',FG:'Finished Goods',WS:'Water',RM:'Raw Material',ST:'Product Stability',MIS:'Miscellaneous',EM:'Environmental Monitoring'} as const;
 export type Category = string;
@@ -66,7 +67,13 @@ export function updateResultRemark(test:Criterion,original:Result,patch:Partial<
  const mode=patch.remarkMode??('remarks' in patch?'manual':original.remarkMode||(original.remarks?'manual':'automatic'));
  return {...next,remarkMode:mode,remarks:mode==='automatic'?automaticAnalystRemark(test,next):next.remarks};
 }
+export const evaluationRemark='————';
+export function isEvaluationMonitoring(d:Pick<Draft,'sample'|'environmentalSnapshot'>){
+ if(d.sample?.category!=='EM'&&!d.environmentalSnapshot)return false;
+ return ['herbycinsyrup','herbycincoolingmouthspray','herbycinmouthspray','drwongsappledrink','drwongsapplefruitjuice'].includes(environmentalProductKey(d.environmentalSnapshot?.profile?.product||d.sample?.name||''));
+}
 export function initializeResultRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):Result[]{
+ if(isEvaluationMonitoring(d))return d.results.map(r=>({...r,remarks:evaluationRemark,remarkMode:'automatic'}));
  if(overallAnalystRemarks(d)===undefined)return d.results;
  return d.results.map(r=>{
   const test=d.specification.tests.find(t=>resultKey(t)===resultKey(r));
@@ -74,6 +81,7 @@ export function initializeResultRemarks(d:Pick<Draft,'sample'|'specification'|'r
  });
 }
 export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):string|undefined{
+ if(isEvaluationMonitoring(d))return 'FOR EVALUATION';
  const output=d.environmentalSnapshot?.output;
  if(output?.mode==='surface'&&['accupoint','spc-my'].includes(output.method)){
   const rows=d.specification.tests.map(t=>({test:t,result:d.results.find(r=>resultKey(r)===resultKey(t))}));
@@ -101,7 +109,7 @@ export function resultIssues(d:Draft):string[]{
  for(const t of d.specification.tests){const r=d.results.find(x=>resultKey(x)===resultKey(t));const label=[t.label,t.location,t.stage].filter(Boolean).join(' · ');
   if(!t.criterion||!t.source||!t.date) issues.push(`${label}: unresolved criterion source`);
   if(!r||r.state!=='entered') {issues.push(`${label}: result required`);continue;}
-  if(!hasAutomaticAnalystRemark(t)&&!['passed','failed'].includes(r.remarks.trim().toLowerCase()))issues.push(`${label}: select Passed or Failed manually; no acceptance limit is available.`);
+  if(!isEvaluationMonitoring(d)&&!hasAutomaticAnalystRemark(t)&&!['passed','failed'].includes(r.remarks.trim().toLowerCase()))issues.push(`${label}: select Passed or Failed manually; no acceptance limit is available.`);
   if(d.sample.category==='SFG'&&!['passed','failed'].includes(r.remarks.trim().toLocaleLowerCase()))issues.push(`${label}: select Passed or Failed so the Semi-Finished Goods report format can be chosen.`);
   const unchangedSourceValue=r.sourceValue!==undefined&&r.value===r.sourceValue;
   if(!unchangedSourceValue){

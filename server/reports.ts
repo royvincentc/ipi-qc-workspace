@@ -526,13 +526,13 @@ async function prepareDraftUpdate(tx:import('./db.js').DB,old:Draft,expected:num
  if(Object.keys(fields).some(k=>k.startsWith('sample.')||k.startsWith('result.')||k.startsWith('report.')||k==='releaseDate'))throw new Fault(400,'Source identifiers, report settings and approval dates cannot be edited in result fields');
  const keys=old.results.map(resultKey);
  if(results.length!==keys.length||new Set(results.map(resultKey)).size!==keys.length||results.some(r=>!keys.includes(resultKey(r))))throw new Fault(400,'Result test instances cannot be replaced');
- const preservedResults=results.map(r=>{
+ const preservedResults=initializeResultRemarks({...old,results:results.map(r=>{
   const original=old.results.find(x=>resultKey(x)===resultKey(r));
   if(original&&['test','location','stage','replicate','channel','block'].some(k=>(r as any)[k]!== (original as any)[k]))throw new Fault(400,'Result sampling locations and test identities cannot be changed');
   const preserved={...r,sourceValue:original?.sourceValue,sourceHeader:original?.sourceHeader};
   const test=old.specification.tests.find(t=>resultKey(t)===resultKey(r));
   return test&&overallAnalystRemarks(old)!==undefined?updateResultRemark(test,original||preserved,{...preserved,remarkMode:r.remarkMode||(r.remarks?'manual':'automatic')}):preserved;
- });
+ })});
  const nextFields={...fields,...shared},overall=overallAnalystRemarks({...old,results:preservedResults});
  if(overall!==undefined){nextFields.overallRemarks=overall;nextFields['overall.remarks']=overall;}
  const analystInput=firstText(old.sample.fields.analyzedBy,old.sample.fields.analyst,old.resultSource?.analyst,nextFields.analyst,nextFields.micAnalyst);
@@ -729,7 +729,7 @@ async function generateReport(id:string,revision:number,actor:string){
  const d=await getDraft(id);if(d.revision!==revision)throw new Fault(409,'Save and review the latest draft before generation');const t=d.templateSnapshot||(await db.query('SELECT data FROM templates WHERE id=$1',[d.templateId])).rows[0]?.data as Template;if(!t||t.revision!==d.templateRevision)throw new Fault(409,'Template revision changed; create a new draft with the current registered template');
  let sourceChanged=false;if(!demo){const source=d.sample.source;const live=await rangeValues(source.spreadsheetId,source.sheet,source.range);sourceChanged=hash(Array.from({length:source.raw.length},(_,i)=>live[i]??''))!==source.fingerprint;if(d.resultSource){const result=await optionalResultsRow(d.resultSource.url,d.sample.category,d.sample.ml);if(result&&result.fingerprint!==d.resultSource.fingerprint)throw new Fault(409,'The matching Results row changed; create a new draft to capture its current values');}}
  const analystInput=firstText(d.sample.fields.analyzedBy,d.sample.fields.analyst,d.resultSource?.analyst,d.fields.analyst,d.fields.micAnalyst);const connections=await setting('connections',defaultConnections);const analystDetails=analystInput?await resolveAnalystDetails(connections.specifications||defaultConnections.specifications,analystInput):{analyst:'',mic:''};const reportAnalyst=firstText(analystDetails.analyst,analystInput);const tokens=(t.manifest.tokens||[]) as string[],required=(t.manifest.requiredFields||[]) as string[];const needsMic=tokens.includes('mic')||required.includes('mic');const renderDraft={...d,fields:{...d.fields,analyst:reportAnalyst,mic:firstText(needsMic&&!demo?analystDetails.mic:'',d.fields.mic,d.sample.fields.mic)}};
- const sessionDetailsFingerprint=hash(d.environmentalSession?sharedSessionDetails([d]):{});
+ const sessionDetailsFingerprint=hash({...d.environmentalSession?sharedSessionDetails([d]):{},...(overallAnalystRemarks(d)==='FOR EVALUATION'?{evaluationRemarks:'————'}:{})});
  const existing=(await db.query("SELECT data FROM files WHERE data->>'renderContractRevision'='report-purpose-v5' AND data->>'sessionDetailsFingerprint'=$5 AND data->>'draftId'=$1 AND data->>'resultRevision'=$2 AND data->>'templateRevision'=$3 AND data->>'reportAnalyst'=$4 ORDER BY created_at DESC LIMIT 1",[id,String(revision),d.templateRevision,reportAnalyst,sessionDetailsFingerprint])).rows[0]?.data;if(existing){try{await reportArtifact(existing,'docx',privatePath(existing.path));let result=sourceChanged?{...existing,sourceChanged:true}:existing;if(!demo&&connections.reportFolder&&!result.driveId){try{result=await syncReportToDrive({...result,analystEmail:result.analystEmail||actor},actor);}catch(e:any){result={...result,driveSyncError:String(e.message||e)};await db.query('UPDATE files SET data=$1 WHERE id=$2',[JSON.stringify(result),result.id]);}}return result;}catch{await audit(actor,'report_artifact_unavailable',existing.id,{draftId:id});}}
  if(renderDraft.environmentalSnapshot&&!renderDraft.environmentalSnapshot.profile.areaType){
   const sources=[...new Set(renderDraft.environmentalSnapshot.output.instances.map(i=>i.source))];

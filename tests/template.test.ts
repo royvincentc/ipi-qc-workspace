@@ -4,6 +4,14 @@ import {reportRows,validateBindings} from '../server/template.js';
 import type {Draft,Template} from '../shared/model.js';
 
 const tokens=['result.0.criterion','result.0.value','result.0.remarks','result.1.criterion','result.1.value','result.1.remarks'];
+test('evaluation monitoring exports fixed row remarks even from an older saved draft',()=>{
+ const draft={sample:{category:'EM',name:'Herbycin Syrup'},specification:{tests:[{test:'SPC',type:'numeric',unit:'cfu/mL',criterion:'FOR EVALUATION'}]},results:[{test:'SPC',state:'entered',value:'5',qualifier:'',unit:'cfu/mL',remarks:'Failed',remarkMode:'manual'}]} as unknown as Draft;
+ const rows=reportRows(draft,{family:'standard',manifest:{}} as Template);
+ assert.equal(rows[0].remarks,'————');
+ assert.equal(rows[0].criterion,'FOR EVALUATION');
+ assert.equal(rows[0].value,'5 cfu/mL');
+ assert.equal(draft.results[0].remarks,'Failed');
+});
 test('quantity-based surface exports keep merge groups contiguous and results attached to their points',()=>{
  const tests=['Drum 1','Drum 2'].flatMap(location=>['SPC','MY'].map(test=>({test,location,type:'numeric',unit:'cfu/mL',criterion:`Nmt ${test==='SPC'?100:30} cfu/mL`,revision:'approved',date:'2026-10-01'})));
  const draft={sample:{category:'EM'},environmentalSnapshot:{equipment:{selection:[]},output:{method:'spc-my',mode:'surface'}},specification:{tests},results:tests.map((t,i)=>({...t,state:'entered',qualifier:'',value:String(i+1),remarks:'Passed'}))} as unknown as Draft;

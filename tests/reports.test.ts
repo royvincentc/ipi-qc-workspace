@@ -3,6 +3,19 @@ import assert from 'node:assert/strict';
 import { resolveApplicabilityMatches, historicalCriteria } from '../server/reports.js';
 import * as reports from '../server/reports.js';
 
+test('evaluation-only environmental drafts and report fields replace prior overall remarks',async()=>{
+ for(const name of ['Herbycin Syrup','Herbycin Cooling Mouth Spray','Herbycin Mouth Spray','Dr. Wong’s Apple Drink','Dr. Wong’s Apple Fruit Juice']){
+  const template={id:'evaluation',category:'EM',manifest:{tokens:['overallRemarks','overall.remarks']}};
+  const draft={sample:{category:'EM',name,fields:{remarks:'Passed'}},specification:{tests:[]},results:[],fields:{overallRemarks:'Passed','overall.remarks':'Passed'}} as any;
+  const initialized=await reports.initializeDraftReport(draft,[template] as any);
+  assert.equal(initialized.fields.overallRemarks,'FOR EVALUATION');
+  const fields=reports.reportTemplateFields(draft,template as any);
+  assert.equal(fields.overallRemarks,'FOR EVALUATION');
+  assert.equal(fields['overall.remarks'],'FOR EVALUATION');
+  assert.equal(draft.fields.overallRemarks,'Passed');
+ }
+});
+
 test('raw material drafts pin the stock or direct supplier template without changing source metadata',async()=>{
  const stock={id:'rm',name:'RM',category:'RM',revision:'stock-1',verified:true,manifest:{tokens:[]}};
  const direct={...stock,id:'rmqa',name:'RMQA',revision:'direct-1'};

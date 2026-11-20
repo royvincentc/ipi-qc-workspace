@@ -4,6 +4,26 @@ import {suggestedAnalystRemark,overallAnalystRemarks,resultDisplayValue,type Cri
 import * as model from '../shared/model.js';
 const spc:Criterion={test:'SPC',label:'Standard Plate Count (SPC)',type:'numeric',unit:'cfu/mL',criterion:'Nmt 100 cfu/mL',source:'spec',sourceLocation:'cell',date:'2026-10-08',dateBasis:'analysis',revision:'1'};
 const result=(value:string,remarks=''):Result=>({test:'SPC',state:'entered',value,qualifier:'',unit:'cfu/mL',reason:'',remarks});
+test('the five evaluation-only environmental products have fixed remarks without relaxing measurement checks',()=>{
+ for(const name of ['Herbycin Syrup','Herbycin Cooling Mouth Spray','Herbycin Mouth Spray','Dr. Wong’s Apple Drink',"Dr. Wong's Apple Fruit Juice",'Herbycin Syrup (Compounding Utensils)']){
+  const criterion={...spc,criterion:'FOR EVALUATION'};
+  const draft={sample:{category:'EM',name},specification:{tests:[criterion]},results:[{...result('5','Failed'),remarkMode:'manual'}]} as model.Draft;
+  const results=model.initializeResultRemarks(draft);
+  assert.equal(results[0].remarks,'————');
+  assert.equal(results[0].remarkMode,'automatic');
+  assert.equal(results[0].value,'5');
+  assert.equal(draft.results[0].remarks,'Failed','initialization does not mutate prior data');
+  assert.equal(model.overallAnalystRemarks(draft),'FOR EVALUATION');
+  assert.deepEqual(model.resultIssues({...draft,results}),[]);
+  assert.ok(model.resultIssues({...draft,results:[{...results[0],value:'invalid'}]}).some(issue=>issue.includes('non-negative number')));
+  assert.ok(model.resultIssues({...draft,results:[{...results[0],state:'not_entered'}]}).some(issue=>issue.includes('result required')));
+  assert.ok(model.resultIssues({...draft,results:[{...results[0],unit:'wrong'}]}).some(issue=>issue.includes('unit must be')));
+  assert.equal(model.isEvaluationMonitoring({...draft,sample:{...draft.sample,category:'FG'}}),false);
+ }
+ const other={sample:{category:'EM',name:'Herbycin Syrup Extra'},specification:{tests:[spc]},results:[result('5','Failed')]} as model.Draft;
+ assert.equal(model.isEvaluationMonitoring(other),false);
+ assert.equal(model.initializeResultRemarks(other)[0].remarks,'Failed');
+});
 test('imported results preserve source text and default uninterpretable entered results to Passed',()=>{
  const fn=(model as any).automaticAnalystRemark;assert.equal(typeof fn,'function');
  for(const [value,expected] of [['99 cfu/mL','Passed'],['100 cfu/mL','Failed'],['0','Passed'],['Nmt 100 cfu/mL','Passed'],['<100 cfu/mL','Passed'],['99 RLU','Passed'],['unknown','Passed'],['','']]){
