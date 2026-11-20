@@ -21,6 +21,13 @@ function categoryDraft(category){
  ].map((test,index)=>({...test,instanceId:'fixture-instance-'+index}));
  return {...drafts[0],sample:{...sample,category,name:'Fixture '+category+' sample',context:'Fixture context'},specification:{...drafts[0].specification,category,context:'Fixture context',tests},environmentalSnapshot:undefined,environmentalSession:undefined,templateSnapshot:{id:'category-fixture',manifest:{tokens:['analysisDate'],requiredFields:['analysisDate']}},results:tests.map(test=>({...test,state:'not_entered',value:'',qualifier:'',reason:'',remarks:'',remarkMode:'automatic'})),fields:{analysisDate:'11/20/2026'}};
 }
+function numberedDrafts(){
+ const points=[['#19 Hook'],['#17 Ladle'],['Fixture control swab'],['#12 Spatula'],['#2 Context probe','Before cleaning'],['#18 Beaker'],['#14 Drum'],['#13 Drum'],['#1 Context reference','Before cleaning'],['#16 Pail'],['#15 Pail'],['#20 Rod']];
+ return drafts.map(draft=>{
+  const tests=points.flatMap(([location,stage='After cleaning'],point)=>draft.specification.tests.map(test=>({...test,location,stage,replicate:'R1',block:'tests',instanceId:`${draft.id}-point-${point}-${test.test}`})));
+  return {...draft,specification:{...draft.specification,tests},results:tests.map((test,index)=>({...test,state:'entered',value:String(index+5),qualifier:'',reason:'',remarks:'Passed',remarkMode:'automatic'}))};
+ });
+}
 const bundle=await build({write:false,bundle:true,format:'iife',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"production"'},stdin:{resolveDir:process.cwd(),loader:'tsx',contents:`
  import React from 'react';
  import {createRoot} from 'react-dom/client';
@@ -33,7 +40,7 @@ const bundle=await build({write:false,bundle:true,format:'iife',jsx:'automatic',
  `}});
 const browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server']});
 await mkdir('output/playwright',{recursive:true});
-async function open(width,{role='analyst',single=false,height=1000,theme='light',missing=false,category}={}){
+async function open(width,{role='analyst',single=false,height=1000,theme='light',missing=false,category,fixtureDrafts}={}){
  const page=await browser.newPage({viewport:{width,height},reducedMotion:'reduce'}),errors=[];
  page.on('pageerror',error=>errors.push(error.message));
  page.on('dialog',async dialog=>{errors.push('Unexpected dialog: '+dialog.message());await dialog.dismiss();});
@@ -70,7 +77,7 @@ async function open(width,{role='analyst',single=false,height=1000,theme='light'
    const draft=window.__drafts.find(draft=>path==='/drafts/'+draft.id);
    return draft?response(draft):response({error:'Unexpected fixture endpoint: '+method+' '+path},404);
   };
- },{drafts:category?[categoryDraft(category)]:drafts,config,role,single,theme,missing});
+ },{drafts:fixtureDrafts||(category?[categoryDraft(category)]:drafts),config,role,single,theme,missing});
  for(const css of styles)await page.addStyleTag({content:css});
  await page.addScriptTag({content:bundle.outputFiles[0].text});
  await page.locator('.result-entry-row').first().waitFor();
@@ -78,6 +85,46 @@ async function open(width,{role='analyst',single=false,height=1000,theme='light'
 }
 async function value(page,id,value){await page.locator('#'+id).locator('input[type="text"]').first().fill(value);}
 async function requests(page){return page.evaluate(()=>window.__requests.filter(request=>request.method!=='GET'));}
+async function checkNumberedSwabs(width){
+ const fixture=numberedDrafts(),{page,errors}=await open(width,{fixtureDrafts:fixture});
+ const ordered=['#12 Spatula','#13 Drum','Fixture control swab','#14 Drum','#1 Context reference','#15 Pail','#16 Pail','#17 Ladle','#2 Context probe','#18 Beaker','#19 Hook','#20 Rod'];
+ for(const draft of fixture){
+  const method=page.locator('#method-'+draft.id);
+  assert.deepEqual(await method.locator('.result-point-name').allTextContents(),ordered,'surface point labels follow global numeric order while controls and context slots stay intact');
+  for(const point of await method.locator('.result-point').all()){
+   const rows=point.locator('.result-entry-row');
+   if(draft.id==='spc-fixture'){
+    assert.deepEqual(await rows.locator('h3').allTextContents(),['SPC','MY']);
+    const left=await rows.nth(0).boundingBox(),right=await rows.nth(1).boundingBox();
+    assert.ok(left.x<right.x&&Math.abs(left.y-right.y)<3,'SPC stays left of MY after sorting points');
+   }
+  }
+  const first=method.locator('.result-point').first();
+  assert.equal(await first.locator('.result-point-name').innerText(),'#12 Spatula');
+  for(const row of await first.locator('.result-entry-row').all()){
+   const test=await row.locator('h3').innerText();
+   await row.locator('input[type="text"]').fill(test==='ACCUPOINT'?'41':test==='SPC'?'42':'43');
+  }
+ }
+ await page.getByRole('button',{name:'Save session',exact:true}).click();
+ await page.waitForFunction(()=>window.__requests.some(request=>request.method==='PUT'));
+ const writes=await requests(page);assert.equal(writes.length,1);assert.equal(writes[0].path,'/drafts/acc-fixture/session');
+ for(const change of writes[0].body.changes){
+  const original=fixture.find(draft=>draft.id===change.id);
+  const identity=result=>[result.instanceId,result.test,result.location,result.stage,result.replicate,result.channel,result.block,result.unit];
+  assert.deepEqual(change.results.map(identity),original.results.map(identity),'saving uses original result-array identity and order rather than displayed point order');
+  for(const [index,result] of change.results.entries())assert.equal(result.value,result.location==='#12 Spatula'?result.test==='ACCUPOINT'?'41':result.test==='SPC'?'42':'43':original.results[index].value,'only the displayed Spatula measurements change');
+ }
+ assert.deepEqual(await page.locator('#method-spc-fixture .result-point-name').allTextContents(),ordered,'saving does not renumber point labels');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await page.screenshot({path:`output/playwright/numbered-swab-${width}.png`,fullPage:true});
+ assert.deepEqual(errors,[]);await page.close();
+ const ordinary=fixture.map(draft=>({...draft,environmentalSnapshot:undefined}));
+ const nonsurface=await open(width,{fixtureDrafts:ordinary});
+ for(const draft of ordinary)assert.deepEqual(await nonsurface.page.locator('#method-'+draft.id+' .result-point-name').allTextContents(),draft.specification.tests.filter((test,index,tests)=>tests.findIndex(item=>item.location===test.location&&item.stage===test.stage)===index).map(test=>test.location),'numbered non-surface sampling points keep their original order');
+ assert.deepEqual(nonsurface.errors,[]);await nonsurface.page.close();
+ console.log(`PASS numbered swabs ${width}px: global numeric labels, preserved control/context slots, SPC/MY pairing, correct edited identities, original saved arrays, non-surface order unchanged`);
+}
 async function checkCategory(category,width){
  const fixture=categoryDraft(category),{page,errors}=await open(width,{category});
  const points=page.locator('.result-point'),point=points.first();
@@ -241,5 +288,6 @@ try{
    console.log(`PASS ${width}x${height} ${theme}: untested result focus, footer clearance, no overflow`);
   }
   for(const category of ['WS','RM','SFG','FG','MIS','ST','EM','CUSTOM'])for(const width of [1440,390])await checkCategory(category,width);
+  for(const width of [1440,390])await checkNumberedSwabs(width);
  }
 }finally{await browser.close();}

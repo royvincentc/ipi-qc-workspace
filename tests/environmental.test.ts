@@ -1,11 +1,28 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {environmentalProfileSchema,environmentalCriteria,resolveEnvironmentalProfile,environmentalTemplateIssue} from '../shared/environmental.js';
+import {environmentalProfileSchema,environmentalCriteria,resolveEnvironmentalProfile,environmentalTemplateIssue,orderNumberedSamplingPoints} from '../shared/environmental.js';
 import {resultKey,type Sample,type Template} from '../shared/model.js';
 
 const sample={id:'sample',ml:'ML-EM-26-0001',batch:'TEST',status:'',remarks:'',category:'EM',name:'Fixture Product',context:'Regular',received:'2026-10-01',fields:{facility:'Plant 1',area:'Filling'},source:{fingerprint:'source-v1',spreadsheetId:'fixture',sheetId:1,sheet:'October 2026',section:'EM',row:5,range:'A5:S5',observedAt:'2026-10-01',url:'',mappingRevision:'1',raw:[]}} satisfies Sample;
 const template={id:'layout',name:'Fixture layout',path:'fixture.docx',category:'EM',family:'environmental-grouped-5c',verified:true,revision:'layout-v1',manifest:{tokens:['tests','test','location','criterion','value','remarks']}} satisfies Template;
 const row={test:'SPC',label:'Standard Plate Count',type:'numeric',location:'Filling nozzle 1',unit:'cfu',criterion:'Nmt 100 cfu',source:'reference',sourceLocation:'table1:row1',date:'2026-09-01',dateBasis:'owner-confirmed',revision:'criterion-v1'};
+
+test('swab point numbers ascend across equipment types without renumbering or moving unnumbered points',()=>{
+ const labels=['Hook 19','Unnumbered control','Stirring Rod 20','Spatula 12','Stainless Drum 14','Stainless Pail 16','Ladle 17','Stainless Beaker 18','Stainless Drum 13','Stainless Pail 15'];
+ const before=[...labels];
+ assert.deepEqual(orderNumberedSamplingPoints(labels,label=>label),['Spatula 12','Unnumbered control','Stainless Drum 13','Stainless Drum 14','Stainless Pail 15','Stainless Pail 16','Ladle 17','Stainless Beaker 18','Hook 19','Stirring Rod 20']);
+ assert.deepEqual(labels,before);
+ assert.deepEqual(orderNumberedSamplingPoints(['Spatula 12','Spatula 2','Spatula 10'],label=>label),['Spatula 2','Spatula 10','Spatula 12']);
+ assert.deepEqual(orderNumberedSamplingPoints(['#20 Rod','12. Spatula','#13Drum'],label=>label),['12. Spatula','#13Drum','#20 Rod']);
+ assert.deepEqual(orderNumberedSamplingPoints(['PF2 Compounding','Mixing Tank 1 Surface'],label=>label),['PF2 Compounding','Mixing Tank 1 Surface']);
+});
+
+test('numbered swab ordering preserves independent sampling contexts and attached result objects',()=>{
+ const rows=[{location:'Hook 19',stage:'Before',value:'19'},{location:'Hook 19',stage:'After',value:'119'},{location:'Spatula 12',stage:'Before',value:'12'},{location:'Spatula 12',stage:'After',value:'112'}];
+ const ordered=orderNumberedSamplingPoints(rows,row=>row.location,row=>row.stage);
+ assert.deepEqual(ordered.map(row=>[row.location,row.stage,row.value]),[['Spatula 12','Before','12'],['Spatula 12','After','112'],['Hook 19','Before','19'],['Hook 19','After','119']]);
+ assert.equal(ordered[0],rows[2]);assert.equal(ordered[3],rows[1]);
+});
 test('registered layouts alone cannot fabricate environmental locations or criteria',()=>{
  const result=resolveEnvironmentalProfile(sample,'product',[],[template]);
  assert.equal(result.resolution.status,'missing');assert.equal(result.snapshot,undefined);

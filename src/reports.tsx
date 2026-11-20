@@ -9,7 +9,7 @@ import {FileText,ArrowRight,Save,Download,CheckCircle2,History,ExternalLink, Tra
 import {api} from './api';
 import {ReportProgress,ReportPreviewButton} from './report-feedback';
 import {CultureShift} from './culture-shift';
-import {equipmentSelectionSchema,type EquipmentQuantity,type EquipmentCatalog} from '../shared/environmental';
+import {equipmentSelectionSchema,orderNumberedSamplingPoints,type EquipmentQuantity,type EquipmentCatalog} from '../shared/environmental';
 import {EnvironmentalEquipment} from './environmental-equipment';
 import {LabGraphic} from './LabGraphic';
 import {PageTitle,useLoad,Notice,Field,Badge,ErrorBox,Loading,Empty,SearchInput,useCanEdit, Session} from './ui';
@@ -218,7 +218,9 @@ function methodName(draft:Draft){return draft.environmentalSnapshot?.output.mode
 function MeasurementRows({draft,canEdit,busy,update,refs}:{draft:Draft;canEdit:boolean;busy:boolean;update:(i:number,patch:Partial<Result>)=>void;refs:any}){
  const groups=new Map<string,number[]>();
  draft.results.forEach((r,i)=>{const key=JSON.stringify([r.location,r.stage,r.replicate,r.channel,r.block]);groups.set(key,[...(groups.get(key)||[]),i]);});
- return <div className="sample-measurements">{[...groups.entries()].map(([key,indices])=>{
+ const points=[...groups.entries()];
+ const ordered=draft.environmentalSnapshot?.output.mode==='surface'?orderNumberedSamplingPoints(points,([,indices])=>draft.results[indices[0]].location||'',([,indices])=>{const r=draft.results[indices[0]];return JSON.stringify([r.stage,r.replicate,r.channel,r.block]);}):points;
+ return <div className="sample-measurements">{ordered.map(([key,indices])=>{
   const testOrder=(i:number)=>draft.results[i].test==='SPC'?0:draft.results[i].test==='MY'?1:2;
   indices.sort((a,b)=>testOrder(a)-testOrder(b));
   const point=draft.results[indices[0]];
