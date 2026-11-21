@@ -187,6 +187,11 @@ async function checkCategory(category,width){
    assert.ok(await row.getByRole('radio',{name:'Negative',exact:true}).isChecked());
   }else{
    assert.equal(await row.locator('input[type="text"]').count(),1,'numeric assay uses a value input');
+   if(category==='FG'&&index<2){
+    await row.locator('.result-toggle-option').filter({hasText:`Nmt 10 ${test.unit}`}).click();
+    assert.ok(await row.getByRole('radio',{name:'Passed',exact:true}).isChecked());
+    await row.locator('.result-toggle-option').filter({hasText:'Actual Result'}).click();
+   }
    await value(page,'acc-fixture-result-row-'+index,String(index+11));
   }
   if(test.test==='CUSTOM'){
@@ -213,6 +218,17 @@ async function checkCategory(category,width){
  assert.equal(saved.body.results[3].remarks,'Passed');assert.equal(saved.body.results[3].remarkMode,'manual');
  assert.equal(saved.body.fields.batchSize,'375');assert.equal(saved.body.fields['batch.size'],'375');
  await point.screenshot({path:`output/playwright/result-entry-${category}-${width}.png`});
+ const spc=page.locator('#acc-fixture-result-row-1');
+ const overall=page.locator('.overall-analyst-remarks strong');
+ assert.equal(await overall.innerText(),'PASSED');
+ await value(page,'acc-fixture-result-row-1','100');
+ assert.ok(await spc.getByRole('radio',{name:'Failed',exact:true}).isChecked());
+ assert.equal(await overall.innerText(),'Failed in SPC');
+ await spc.locator('.analyst-outcome-option').filter({hasText:'Passed'}).click();
+ await value(page,'acc-fixture-result-row-1','101');
+ assert.equal(await overall.innerText(),'PASSED');
+ await spc.getByRole('button',{name:'Use automatic remark'}).click();
+ assert.equal(await overall.innerText(),'Failed in SPC');
  await value(page,'acc-fixture-result-row-1','42');
  await page.evaluate(()=>{window.__requests=[];});
  await page.getByRole('button',{name:'Generate DOCX',exact:true}).click();

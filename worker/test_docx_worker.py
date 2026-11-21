@@ -120,6 +120,39 @@ class DocumentTests(unittest.TestCase):
         self.assertTrue(any('Page 1 of 1cc. File, QCL-1' in text(root) for root in docs.values()))
         self.assertTrue(any(root.xpath('.//w:instrText[text()=" PAGE "]',namespaces=NS) for root in docs.values()))
 
+    def test_finished_goods_footer_keeps_only_file_and_preserves_remarks_and_page_fields(self):
+        from docx import Document
+        from lxml import etree as E
+        d=Document(self.template);footer=d.sections[0].footer
+        footer.add_paragraph('REMARKS: {{overall.remarks}}')
+        p=footer.add_paragraph('Page 1 of 1')
+        E.SubElement(p.add_run()._r,W+'instrText').text=' PAGE '
+        for fragment in ['cc. ', 'Fi', 'le, ', '{{requested.by}}', ' ']:
+            p.add_run(fragment)
+        d.add_paragraph('cc. Body recipient')
+        source=self.folder/'finished-goods.docx';d.save(source)
+        fields=dict.fromkeys(validate_template(source.read_bytes())['tokens'],'')
+        rows=[{'test':'SPC','criterion':'Nmt 100','value':'0','remarks':'Passed'}]
+        for label,category,cc in [
+            ('FG',None,'cc. File'),
+            ('Finished Goods',None,'cc. File'),
+            ('Custom label','FG','cc. File'),
+            ('Semi-Finished Goods',None,'cc. File, QCL-1 '),
+            ('Finished Goods','SFG','cc. File, QCL-1 '),
+        ]:
+            with self.subTest(label=label,category=category):
+                values={**fields,'sample.category':label,'requested.by':'QCL-1','additionalCC':'Other',
+                    'overallRemarks':'PASSED','overall.remarks':'PASSED'}
+                if category is not None:values['sample.categoryCode']=category
+                output=self.folder/'footer-output.docx'
+                render(source,{'fields':values,'rows':rows},output)
+                docs=roots(package(output.read_bytes()))
+                footer=docs['word/footer1.xml']
+                self.assertIn('Page 1 of 1'+cc,[text(p) for p in footer.findall(W+'p')])
+                self.assertTrue(footer.xpath('.//w:instrText[text()=" PAGE "]',namespaces=NS))
+                self.assertIn('REMARKS: PASSED',text(footer))
+                self.assertIn('cc. Body recipient',text(docs['word/document.xml']))
+
     def test_complete_cc_and_intentional_signature_blanks_are_preserved(self):
         from docx import Document
         from docx_worker import report_details

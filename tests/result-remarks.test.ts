@@ -109,7 +109,24 @@ test('automatic remarks recalculate while manual overrides survive value edits a
  assert.equal(fn(spc,auto,{state:'not_entered',value:''}).remarks,'');
 });
 test('actual result boundary follows the requested strict threshold',()=>{for(const [value,expected] of [['0','Passed'],['99','Passed'],['99.9','Passed'],['100','Failed'],['101','Failed'],['',''],['abc',''],['-1','']])assert.equal(suggestedAnalystRemark(spc,result(value)),expected);});
-test('result reporting limit is independent of standard and environmental limits',()=>{const r={...result(''),qualifier:'Nmt' as const};assert.equal(resultDisplayValue(spc,r,'FG'),'Nmt 10 cfu/mL');assert.equal(spc.criterion,'Nmt 100 cfu/mL');assert.equal(resultDisplayValue(spc,r,'EM'),spc.criterion);assert.equal(suggestedAnalystRemark(spc,r),'Passed');});
+test('SPC and MY report manually entered and imported zero using the result reporting limit',()=>{
+ for(const id of ['SPC','MY']){
+  const criterion={...spc,test:id,criterion:'For evaluation'};
+  for(const row of [result('0'),{...result('0.00 cfu/mL'),sourceValue:'0.00 cfu/mL'},{...result(''),qualifier:'Nmt' as const}]){
+   assert.equal(resultDisplayValue(criterion,{...row,test:id},'FG'),'Nmt 10 cfu/mL');
+  }
+  assert.equal(resultDisplayValue(criterion,{...result('20 cfu/mL'),test:id,sourceValue:'20 cfu/mL'},'FG'),'20 cfu/mL');
+ }
+});
+test('reports outside the original product and surface categories initialize automatic and overall remarks',()=>{
+ for(const category of ['RM','WS','EM','Finished Goods']){
+  const draft={sample:{category},specification:{tests:[spc]},results:[result('100')]} as model.Draft;
+  const results=model.initializeResultRemarks(draft);
+  assert.equal(results[0].remarks,'Failed');
+  assert.equal(overallAnalystRemarks({...draft,results}),'Failed in Standard Plate Count (SPC)');
+ }
+});
+test('result reporting limit is independent of the standard',()=>{const r={...result(''),qualifier:'Nmt' as const};assert.equal(resultDisplayValue(spc,r,'FG'),'Nmt 10 cfu/mL');assert.equal(spc.criterion,'Nmt 100 cfu/mL');assert.equal(resultDisplayValue(spc,r,'EM'),'Nmt 10 cfu/mL');assert.equal(suggestedAnalystRemark(spc,r),'Passed');});
 test('overall remarks follow final analyst choices including overrides and incomplete rows',()=>{for(const category of ['SFG','FG','ST','MIS']){const d={sample:{category} as any,specification:{tests:[spc,{...spc,test:'MY',label:'Molds and Yeast'}]} as any,results:[result('100','Passed'),{...result('1','Passed'),test:'MY'}]};assert.equal(overallAnalystRemarks(d),'PASSED');d.results[1].remarks='Failed';assert.equal(overallAnalystRemarks(d),'Failed in Molds and Yeast');d.results[0].remarks='Failed';assert.equal(overallAnalystRemarks(d),'Failed in Standard Plate Count (SPC), Molds and Yeast');d.results.forEach(r=>r.remarks='');assert.equal(overallAnalystRemarks(d),'');d.results[0].remarks='Passed';d.results[1].state='not_entered';d.results[1].remarks='Passed';assert.equal(overallAnalystRemarks(d),'');}});
 test('surface SPCMY reports Nmt 10 independently of unchanged standards and uses each strict boundary',()=>{
  for(const [id,limit] of [['SPC',100],['MY',30]] as const){

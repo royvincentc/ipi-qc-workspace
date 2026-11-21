@@ -27,6 +27,11 @@ export function reportTestLabel(test:string,fallback=''){
 export function resultKey(r:Pick<Result,'test'|'location'|'stage'|'replicate'|'instanceId'>){return r.instanceId||[r.test,r.location||'',r.stage||'',r.replicate||''].join('|');}
 export function microbiologyLimit(test:string,criterion?:string){if(criterion!==undefined)return (/^\s*Nmt\b/i.test(criterion)||(['SPC','MY'].includes(test)&&/^\s*Not\s+more\s+than\s*\d/i.test(criterion)))?criterion.trim():undefined;return test==='SPC'?'Nmt 100 cfu/mL':test==='MY'||test==='ENT'?'Nmt 10 cfu/mL':undefined;}
 export function microbiologyResultLimit(test:Criterion){return 'Nmt 10 '+(test.unit||'cfu/mL');}
+export function fixedResultLimit(test:Criterion,category?:string,surfaceSpcMy=false){
+ if(test.test==='SPC'||test.test==='MY')return microbiologyResultLimit(test);
+ const limit=microbiologyLimit(test.test,test.criterion);
+ return limit&&(surfaceSpcMy||['SFG','FG','ST','MIS'].includes(category||'')?microbiologyResultLimit(test):limit);
+}
 const numericAcceptanceLimit=(criterion:string)=>criterion.match(/^\s*(?:Nmt|Not\s+more\s+than)\s+((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=\s|$)/i);
 export function hasAutomaticAnalystRemark(test:Criterion){
  return test.type==='finding'?/^(positive|negative)$/i.test(test.criterion.trim()):Boolean(numericAcceptanceLimit(test.criterion));
@@ -74,13 +79,12 @@ export function isEvaluationMonitoring(d:Pick<Draft,'sample'|'environmentalSnaps
 }
 export function initializeResultRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):Result[]{
  if(isEvaluationMonitoring(d))return d.results.map(r=>({...r,remarks:evaluationRemark,remarkMode:'automatic'}));
- if(overallAnalystRemarks(d)===undefined)return d.results;
  return d.results.map(r=>{
   const test=d.specification.tests.find(t=>resultKey(t)===resultKey(r));
   return test?updateResultRemark(test,r,{remarkMode:r.remarkMode||(r.remarks?'manual':'automatic')}):r;
  });
 }
-export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):string|undefined{
+export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'results'|'environmentalSnapshot'>):string{
  if(isEvaluationMonitoring(d))return 'FOR EVALUATION';
  const output=d.environmentalSnapshot?.output;
  if(output?.mode==='surface'&&['accupoint','spc-my'].includes(output.method)){
@@ -89,7 +93,6 @@ export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'res
   if(failed.length)return failed.length===1?failed[0]:failed.slice(0,-1).join(', ')+', and '+failed[failed.length-1];
   return rows.length&&rows.every(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='passed')?'Passed':'';
  }
- if(!['SFG','FG','ST','MIS'].includes(d.sample.category))return undefined;
  const rows=d.specification.tests.map(t=>({test:t,result:d.results.find(r=>resultKey(r)===resultKey(t))}));
  const failed=[...new Set(rows.filter(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='failed').map(({test:t})=>t.label))];
  if(failed.length)return 'Failed in '+failed.join(', ');
@@ -97,11 +100,16 @@ export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'res
 }
 export function isSurfaceSpcMy(d:Pick<Draft,'environmentalSnapshot'>){return d.environmentalSnapshot?.output.mode==='surface'&&d.environmentalSnapshot.output.method==='spc-my';}
 export function resultDisplayValue(test:Criterion,r:Result,category?:string,surfaceSpcMy=false){
- if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
- const limit=microbiologyLimit(test.test,test.criterion);
- if(limit&&r.qualifier==='Nmt')return surfaceSpcMy||category&&['SFG','FG','ST','MIS'].includes(category)?microbiologyResultLimit(test):limit;
  const value=r.value.trim();
- if(limit&&value)return test.unit&&value.toLocaleLowerCase().endsWith(test.unit.toLocaleLowerCase())?value:`${value} ${test.unit}`.trim();
+ if(test.test==='SPC'||test.test==='MY'){
+  const zero=value.match(/^0+(?:\.0+)?\s*(.*)$/);
+  const unit=(text:string)=>text.toLowerCase().replace(/\s+/g,'');
+  if((r.qualifier===''||r.qualifier==='=')&&zero&&(!zero[1]||unit(zero[1])===unit(test.unit)))return microbiologyResultLimit(test);
+ }
+ if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
+ const limit=fixedResultLimit(test,category,surfaceSpcMy);
+ if(limit&&r.qualifier==='Nmt')return limit;
+ if(limit&&value&&(r.qualifier===''||r.qualifier==='='))return test.unit&&value.toLocaleLowerCase().endsWith(test.unit.toLocaleLowerCase())?value:`${value} ${test.unit}`.trim();
  return [test.test==='ACCUPOINT'&&r.qualifier==='='?'':r.qualifier,r.value,r.unit].filter(Boolean).join(' ');
 }
 export function resultIssues(d:Draft):string[]{
@@ -114,7 +122,7 @@ export function resultIssues(d:Draft):string[]{
   const unchangedSourceValue=r.sourceValue!==undefined&&r.value===r.sourceValue;
   if(!unchangedSourceValue){
   if(r.unit!==t.unit) issues.push(`${label}: unit must be ${t.unit}`);
-  if(t.type==='numeric'&&microbiologyLimit(t.test,t.criterion)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&(!/^\d+(\.\d+)?$/.test(r.value.trim())||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);}
+  if(t.type==='numeric'&&fixedResultLimit(t)){if(r.qualifier==='Nmt'&&r.value.trim()) issues.push(`${label}: fixed limit results do not need a value`);else if(r.qualifier!=='Nmt'&&(!/^\d+(\.\d+)?$/.test(r.value.trim())||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);}
    else if(t.type==='numeric'&&(!/^\d+(\.\d+)?$/.test(r.value)||!Number.isFinite(Number(r.value)))) issues.push(`${label}: enter a non-negative number`);
    if(t.type==='finding'&&!['Positive','Negative'].includes(r.value)) issues.push(`${label}: choose Positive or Negative`);
   }

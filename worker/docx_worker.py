@@ -410,22 +410,39 @@ def report_details(data,fields,persistent=False,editable_type=False):
     if cc and (persistent or not str(fields.get('additionalCC','') or '').strip()):missing['additionalCC']={'key':'additionalCC','label':'Additional CC'}
     return {'optionalFields':list(missing.values()),'incompleteCC':cc}
 
-def fill_optional_report_details(docs,fields):
+def fill_optional_report_details(docs,fields,finished_goods=False):
     for key,cell in metadata_cells(docs):
         if not text(cell).strip() and str(fields.get(key,'') or '').strip():
             p=next(iter(cell.findall(W+'p')),None)
             if p is None:p=E.SubElement(cell,W+'p')
             set_text(p,str(fields[key]))
     additional=str(fields.get('additionalCC','') or '').strip().strip(',;').strip()
-    if additional:
-        for root in docs.values():
-            for p in root.xpath('.//w:p',namespaces=NS):
-                value=text(p).rstrip()
-                match=re.search(r'cc\s*[.:]\s*(.*)$',value,re.I)
-                if match and (not match.group(1).strip() or re.search(r'[,;]\s*$',match.group(1))):
-                    nodes=p.xpath('.//w:t',namespaces=NS)
-                    last=next((node for node in reversed(nodes) if (node.text or '').strip()),None)
-                    if last is not None:last.text=last.text.rstrip()+' '+additional;last.set('{http://www.w3.org/XML/1998/namespace}space','preserve')
+    for part,root in docs.items():
+        fixed_cc=finished_goods and part.startswith('word/footer')
+        if not (additional or fixed_cc):continue
+        for p in root.xpath('.//w:p',namespaces=NS):
+            if fixed_cc:
+                # The CC paragraph can also contain nested page-number textboxes.
+                nodes=[node for node in p.xpath('.//w:t',namespaces=NS) if next(node.iterancestors(W+'p')) is p]
+                value=''.join(node.text or '' for node in nodes)
+                match=re.match(r'^\s*(?:Page\s+\d+\s+of\s+\d+\s*)?(cc\s*[.:])',value,re.I)
+                if not match:continue
+                offset=match.start(1)
+                for i,node in enumerate(nodes):
+                    run_text=node.text or ''
+                    if offset>=len(run_text):
+                        offset-=len(run_text)
+                        continue
+                    node.text=run_text[:offset]+'cc. File'
+                    for remaining in nodes[i+1:]:remaining.text=''
+                    break
+                continue
+            value=text(p).rstrip()
+            match=re.search(r'cc\s*[.:]\s*(.*)$',value,re.I)
+            if match and (not match.group(1).strip() or re.search(r'[,;]\s*$',match.group(1))):
+                nodes=p.xpath('.//w:t',namespaces=NS)
+                last=next((node for node in reversed(nodes) if (node.text or '').strip()),None)
+                if last is not None:last.text=last.text.rstrip()+' '+additional;last.set('{http://www.w3.org/XML/1998/namespace}space','preserve')
 
 def set_vertical_merge(cell, mode):
     props=cell.find(W+'tcPr')
@@ -569,7 +586,8 @@ def render(template,payload,output):
             if options or payload.get('renderOptions',{}).get('environmental'):merge_result_groups(clones,selected,merge_columns)
         for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,fields)
         if '{{' in text(root):raise ValueError('Unresolved template tokens remain')
-    fill_optional_report_details(docs,fields)
+    category=fields.get('sample.categoryCode',fields.get('sample.category',''))
+    fill_optional_report_details(docs,fields,str(category).strip().casefold() in {'fg','finished goods'})
     document=docs.get('word/document.xml')
     if document is not None:trim_empty_paragraphs_after_last_table(document)
     if named and set(payload.get('blocks',{}))-seen_blocks:raise ValueError('Payload includes an unknown row block')

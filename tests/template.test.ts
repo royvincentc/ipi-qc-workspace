@@ -43,7 +43,7 @@ test('report results follow the document row order rather than specification ord
  const criteria=[{test:'SPC',label:'SPC',type:'numeric' as const,unit:'cfu/g',criterion:'Nmt 50 cfu/g',source:'fixture',sourceLocation:'row 1',date:'2026-09-01',dateBasis:'release' as const,revision:'1'},{test:'MY',label:'Molds and Yeast',type:'numeric' as const,unit:'cfu/g',criterion:'Nmt 10 cfu/g',source:'fixture',sourceLocation:'row 2',date:'2026-09-01',dateBasis:'release' as const,revision:'1'}];
  const draft={specification:{tests:criteria},results:[{test:'SPC',state:'entered',value:'0',qualifier:'',unit:'cfu/g',reason:'',remarks:''},{test:'MY',state:'entered',value:'4',qualifier:'',unit:'cfu/g',reason:'',remarks:''}]} as Draft;
  const template={manifest:{resultBindings:[{index:0,test:'MY'},{index:1,test:'SPC'}]}} as unknown as Template;
- assert.deepEqual(reportRows(draft,template).map(r=>r.value),['4 cfu/g','0 cfu/g']);
+ assert.deepEqual(reportRows(draft,template).map(r=>r.value),['4 cfu/g','Nmt 10 cfu/g']);
 });
 test('missing result fields remain blank in the generated report',()=>{
  const criteria=[{test:'SPC',label:'SPC',type:'numeric' as const,unit:'cfu/g',criterion:'Nmt 50 cfu/g',source:'fixture',sourceLocation:'row 1',date:'2026-09-01',dateBasis:'release' as const,revision:'1'}];
