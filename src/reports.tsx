@@ -13,7 +13,7 @@ import {equipmentSelectionSchema,orderNumberedSamplingPoints,type EquipmentQuant
 import {EnvironmentalEquipment} from './environmental-equipment';
 import {LabGraphic} from './LabGraphic';
 import {PageTitle,useLoad,Notice,Field,Badge,ErrorBox,Loading,Empty,SearchInput,useCanEdit, Session} from './ui';
-import {fixedResultLimit,hasAutomaticAnalystRemark,isEvaluationMonitoring,isSurfaceSpcMy,initializeResultRemarks,updateResultRemark,overallAnalystRemarks,reportIssues,resultIssues,resultKey,type Draft,type DraftSummary,type Result,type Sample,type ReportSetup} from '../shared/model';
+import {canMarkSwabNotApplicable,fixedResultLimit,hasAutomaticAnalystRemark,isEnvironmentalSample,isEvaluationMonitoring,isSurfaceSpcMy,isSwabNotApplicable,initializeResultRemarks,updateResultRemark,overallAnalystRemarks,reportIssues,resultIssues,resultKey,zeroCountResult,type Draft,type DraftSummary,type Result,type Sample,type ReportSetup} from '../shared/model';
 function downloadGeneratedDocx(file:any){const link=document.createElement('a');link.href=`/api/files/${file.id}/download`;link.download=file.name;document.body.append(link);link.click();link.remove();}
 export function Reports(){
  const [query,setQuery]=useState(''),[search,setSearch]=useState('');
@@ -23,6 +23,7 @@ export function Reports(){
  const [productId,setProductId]=useState(''),[profileId,setProfileId]=useState(''),[outputId,setOutputId]=useState('');
  const [equipment,setEquipment]=useState<EquipmentQuantity[]>([]),[equipmentRevision,setEquipmentRevision]=useState(''),[catalog,setCatalog]=useState<EquipmentCatalog>();
  const autoSelectProfile=useRef('');
+ const appliedSuggestion=useRef('');
  const [includeOpenPlate,setIncludeOpenPlate]=useState<boolean>();
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  const [draftQuery,setDraftQuery]=useState(''),[page,setPage]=useState(0);
@@ -32,8 +33,19 @@ export function Reports(){
  const equipmentKey=JSON.stringify(equipment);
  const {data:setup,error:setupError}=useLoad<ReportSetup|undefined>(()=>selected?api(`/report-setup/${selected}`,'POST',{productId:productId||undefined,profileId:profileId||undefined,outputId:outputId||undefined,equipment:equipment.length?equipment:undefined,equipmentRevision:equipmentRevision||undefined,includeOpenPlate}):Promise.resolve(undefined),[selected,productId,profileId,outputId,equipmentKey,equipmentRevision,includeOpenPlate]);
  useEffect(()=>{if(setup?.productOptions)setProductOptions(setup.productOptions);},[setup?.productOptions]);
- useEffect(()=>{const next=setup?.environmental?.equipment;if(!next||next.profileId!==(profileId||undefined))return;if(!profileId&&setup?.environmental?.profiles.length===1){const id=setup.environmental.profiles[0].id;autoSelectProfile.current=id;setProfileId(id);return;}setCatalog(next);if(autoSelectProfile.current&&autoSelectProfile.current===profileId){setEquipment(next.items.filter(item=>item.defaultQuantity>0).every(item=>!item.issue)?next.items.filter(item=>item.defaultQuantity>0).map(item=>({id:item.id,quantity:item.defaultQuantity,...(item.defaultLabels?{labels:item.defaultLabels}:{})})):[]);setEquipmentRevision(next.revision);autoSelectProfile.current='';}},[setup,profileId]);
- const chooseSample=(id:string)=>{setSelected(id);setProductId('');setProductOptions([]);setProfileId('');setOutputId('');setIncludeOpenPlate(undefined);setEquipment([]);setEquipmentRevision('');setCatalog(undefined);autoSelectProfile.current='';setError('');};
+ useEffect(()=>{
+  const environmental=setup?.environmental,next=environmental?.equipment;
+  if(!next||setup?.sample.id!==selected||next.profileId!==(profileId||undefined))return;
+  const suggested=environmental.profiles.length===1?environmental.profiles[0].id:environmental.suggestedProfileId;
+  if(!profileId&&suggested&&appliedSuggestion.current!==suggested){appliedSuggestion.current=suggested;autoSelectProfile.current=suggested;setProfileId(suggested);return;}
+  setCatalog(next);
+  if(autoSelectProfile.current&&autoSelectProfile.current===profileId){
+   const defaults=next.items.filter(item=>item.defaultQuantity>0);
+   setEquipment(defaults.every(item=>!item.issue)?defaults.map(item=>({id:item.id,quantity:item.defaultQuantity,...(item.defaultLabels?{labels:item.defaultLabels}:{})})):[]);
+   setEquipmentRevision(next.revision);autoSelectProfile.current='';
+  }
+ },[setup,profileId,selected]);
+ const chooseSample=(id:string)=>{setSelected(id);setProductId('');setProductOptions([]);setProfileId('');setOutputId('');setIncludeOpenPlate(undefined);setEquipment([]);setEquipmentRevision('');setCatalog(undefined);autoSelectProfile.current='';appliedSuggestion.current='';setError('');};
  const sample=setup?.sample||found?.items.find(s=>s.id===selected),profiles=setup?.environmental?.profiles||[],activeCatalog=catalog||setup?.environmental?.equipment,quantityMode=Boolean(activeCatalog&&!outputId&&(profiles.length<2||profileId));
  const changeEquipment=(value:EquipmentQuantity[])=>{setEquipment(value);setEquipmentRevision(activeCatalog?.revision||'');setError('');};
  const parsedSelection=equipmentSelectionSchema.safeParse({equipment});
@@ -136,7 +148,7 @@ function Editor({initial}:{initial:Draft[]}){
  const clearUnsaved=useUnsaved(dirty);
  useUnsaved(!!generationPhase);
  const issues=drafts.flatMap(d=>reportIssues(d).map(issue=>`${isSession?methodName(d)+': ':''}${issue}`));
- const total=drafts.reduce((n,d)=>n+d.results.length,0),entered=drafts.reduce((n,d)=>n+d.results.filter(r=>r.state==='entered').length,0);
+ const total=drafts.reduce((n,d)=>n+d.results.length,0),entered=drafts.reduce((n,d)=>n+d.results.filter(r=>r.state==='entered'||isSwabNotApplicable(d,r)).length,0);
  const templateKeys=[...new Set(drafts.flatMap(d=>{const t=d.templateSnapshot||refs?.templates.find((t:any)=>t.id===d.templateId);return [...(t?.manifest.requiredFields||[]),...(t?.manifest.tokens||[])] as string[];}))];
  const detailKeys=[...new Set(['analysisDate',...templateKeys.filter(key=>{
   if(key.startsWith('report.')||key.startsWith('sample.')||key.startsWith('result.')||key.startsWith('rows.'))return false;
@@ -193,7 +205,7 @@ function Editor({initial}:{initial:Draft[]}){
   finally{setBusy(false);setGenerationPhase('');}
  };
  const nextMissing=()=>{
-  for(const d of drafts){const i=d.results.findIndex(r=>r.state!=='entered');if(i<0)continue;
+  for(const d of drafts){const i=d.results.findIndex(r=>r.state!=='entered'&&!isSwabNotApplicable(d,r));if(i<0)continue;
    const row=document.getElementById(`${d.id}-result-row-${i}`);
    const input=(row?.querySelector('input:not([type=radio]):not(:disabled)')||row?.querySelector('input:not(:disabled),select:not(:disabled)')) as HTMLElement|null;
    input?.focus({preventScroll:true});(input||row)?.scrollIntoView({block:'center'});break;
@@ -208,7 +220,7 @@ function Editor({initial}:{initial:Draft[]}){
   <div id="report-action-error" tabIndex={-1}><ErrorBox message={error||reportDetailsError}/></div>
   {generationPhase?<ReportProgress phase={generationPhase} focus/>:null}
   <CultureShift generating={!!generationPhase} ready={!!files.length&&complete} onViewReport={()=>document.getElementById('document-preview-title')?.scrollIntoView({block:'start'})}/>
-  <div className="result-entry-toolbar"><span><strong>{entered} of {total}</strong> measurements entered{isSession?' · shared report details':''}</span><button className="button secondary" disabled={busy||!drafts.some(d=>d.results.some(r=>r.state!=='entered'))} onClick={nextMissing}>Next missing result <ArrowRight size={15}/></button></div>
+  <div className="result-entry-toolbar"><span><strong>{entered} of {total}</strong> {drafts.some(d=>d.results.some(r=>isSwabNotApplicable(d,r)))?'entries complete':'measurements entered'}{isSession?' · shared report details':''}</span><button className="button secondary" disabled={busy||entered===total} onClick={nextMissing}>Next missing result <ArrowRight size={15}/></button></div>
   {drafts.map(d=><section className="panel padded report-results-panel" id={`method-${d.id}`} key={d.id} aria-label={`${methodName(d)} measurements`}>
    <div className="section-heading"><h2>{methodName(d)}</h2><Badge>{d.specification.context}</Badge></div>
    {d.resultSource?<details className="result-import-evidence"><summary>IPI Results · {d.results.filter(r=>r.sourceValue!==undefined).length} imported measurements</summary><p><a href={d.resultSource.url} target="_blank" rel="noreferrer">{d.resultSource.sheet} · row {d.resultSource.row} <ExternalLink size={13}/></a><span>Matched {d.resultSource.ml} · checked {new Date(d.resultSource.observedAt).toLocaleString()}</span></p><small>Original source values are retained. Analyst overrides remain yours.</small></details>:null}
@@ -243,20 +255,25 @@ function MeasurementRows({draft,canEdit,busy,update,refs}:{draft:Draft;canEdit:b
     const t=draft.specification.tests.find(t=>resultKey(t)===resultKey(r))!;
     const rowIssues=r.state==='entered'?resultIssues({...draft,specification:{...draft.specification,tests:[t]},results:[r]}):[];
     const fixedLimit=fixedResultLimit(t,draft.sample.category,isSurfaceSpcMy(draft));
+    const environmentalCount=(isEnvironmentalSample(draft.sample)||isSurfaceSpcMy(draft))&&['SPC','MY'].includes(t.test);
+    const canSkipSwab=canMarkSwabNotApplicable(draft,r);
+    const notApplicable=isSwabNotApplicable(draft,r);
+    const zero=r.state==='entered'&&r.value==='0'&&r.qualifier==='';
+    const resultChoice=notApplicable?'na':r.state==='not_tested'?'untested':zero?'zero':r.qualifier==='Nmt'?'legacy':'exact';
     return <div className="test-card result-entry-row" id={`${draft.id}-result-row-${i}`} tabIndex={-1} key={resultKey(r)} aria-label={[t.location,t.label].filter(Boolean).join(' · ')}>
      <div className="test-title"><div><h3 title={t.label}>{['SPC','MY'].includes(t.test)?t.test:t.label}</h3>{r.sourceValue!==undefined?<small className="result-source-status result-provenance">{r.value===r.sourceValue?"From IPI Results":"Edited from IPI Results"}{r.sourceHeader?` · ${r.sourceHeader}`:``}</small>:r.state==='entered'&&r.value?<small className="result-source-status">Entered manually</small>:draft.environmentalSnapshot?<small className="result-source-status">Enter this point’s measured result</small>:draft.resultLookup==='matched'?<small className="result-source-status">No value in the matching IPI Results row · enter manually if available</small>:draft.resultLookup==='not_found'?<small className="result-source-status">No matching ML number in IPI Results · enter manually if available</small>:draft.resultLookup==='demo'?<small className="result-source-status">Demo mode · Results lookup is disabled</small>:null}</div><div className="criterion"><small>Standard specification</small><strong>{t.criterion}</strong></div></div>
-     <div className="result-grid">{r.state==='entered'||r.state==='not_entered'?<>
-      {t.type==='numeric'?<>{t.test==='ACCUPOINT'?<>
-       <ResultToggle label="Result choice" disabled={!canEdit||busy} value={r.value==='0'&&r.qualifier!=='='?'zero':'exact'} options={[{value:'zero',label:'0 RLU'},{value:'exact',label:'Exact value'}]} onChange={choice=>update(i,{state:choice==='zero'?'entered':'not_entered',qualifier:choice==='zero'?'':'=',value:choice==='zero'?'0':''})}/>
-       {!(r.value==='0'&&r.qualifier!=='=')?<Field label="Value"><div className="result-with-unit"><input disabled={!canEdit||busy} type="text" inputMode="decimal" value={r.value} onChange={e=>update(i,{state:e.target.value?'entered':'not_entered',value:e.target.value,qualifier:'='})} placeholder="Enter measured result"/><span aria-hidden="true">RLU</span></div></Field>:null}</>:fixedLimit?<>
+     <div className="result-grid">{r.state!=='not_tested'||canSkipSwab?<>
+      {t.type==='numeric'?<>{t.test==='ACCUPOINT'||environmentalCount?<>
+       <ResultToggle label="Result choice" disabled={!canEdit||busy} value={resultChoice} options={[{value:'zero',label:environmentalCount?zeroCountResult(t):'0 RLU'},{value:'exact',label:environmentalCount?'Actual Result':'Exact value'},...(canSkipSwab?[{value:'na',label:'N/A'}]:[])]} onChange={choice=>update(i,choice==='na'?{state:'not_tested',reason:'N/A',qualifier:'',value:'',remarks:'',remarkMode:'automatic'}:{state:choice==='zero'?'entered':'not_entered',reason:'',qualifier:choice==='zero'?'':'=',value:choice==='zero'?'0':''})}/>
+       {resultChoice==='legacy'?<small>Saved result · {fixedLimit}</small>:resultChoice==='exact'?<Field label="Value"><div className="result-with-unit"><input disabled={!canEdit||busy} type="text" inputMode="decimal" value={r.value} onChange={e=>update(i,{state:e.target.value?'entered':'not_entered',value:e.target.value,qualifier:'='})} placeholder="Enter measured result"/><span aria-hidden="true">{t.unit}</span></div></Field>:null}</>:fixedLimit?<>
        <ResultToggle label="Qualifier" disabled={!canEdit||busy} value={r.qualifier} options={[{value:'Nmt',label:fixedLimit},{value:'',label:'Actual Result'}]} onChange={qualifier=>update(i,{state:qualifier==='Nmt'?'entered':'not_entered',qualifier:qualifier as Result['qualifier'],value:''})}/>
        {r.qualifier===''?<Field label="value" hint={t.unit?`${t.unit} will be added to the report`:'The result unit will be added to the report'}><input disabled={!canEdit||busy} type="text" value={r.value} onChange={e=>update(i,{state:e.target.value?'entered':'not_entered',value:e.target.value})} placeholder="Enter value"/></Field>:null}</>:<>
        <ResultToggle label="Qualifier" disabled={!canEdit||busy} value={r.qualifier} options={[{value:'',label:'Exact value'},{value:'Nmt',label:'Nmt'},{value:'<',label:'Less than'},{value:'<=',label:'Less than or equal'}]} onChange={qualifier=>update(i,{qualifier:qualifier as Result['qualifier']})}/>
        <Field label="value" hint={t.unit?`${t.unit} will be added to the report`:undefined}><input disabled={!canEdit||busy} type="text" value={r.value} onChange={e=>update(i,{state:e.target.value?'entered':'not_entered',value:e.target.value})} placeholder="Enter measured result"/></Field></>}</>:<ResultToggle label="Actual finding" disabled={!canEdit||busy} value={r.value} options={[{value:'Positive',label:'Positive'},{value:'Negative',label:'Negative'}]} onChange={value=>update(i,{state:'entered',value})}/>}
-      <AnalystRemarks evaluation={isEvaluationMonitoring(draft)} disabled={!canEdit||busy||r.state!=='entered'} value={r.remarks} mode={r.remarkMode} manualRequired={!hasAutomaticAnalystRemark(t)} onAutomatic={hasAutomaticAnalystRemark(t)?()=>update(i,{remarkMode:'automatic'}):undefined} onChange={remarks=>update(i,{remarks,remarkMode:'manual'})}/>
-     </>:<Field label="Reason not tested"><input disabled={!canEdit||busy} value={r.reason} onChange={e=>update(i,{reason:e.target.value})}/></Field>}</div>
+     </>:null}
+      {r.state==='not_tested'?(notApplicable?<small>Swab not taken</small>:<Field label="Reason not tested"><input disabled={!canEdit||busy} value={r.reason} onChange={e=>update(i,{reason:e.target.value})}/></Field>):<AnalystRemarks evaluation={isEvaluationMonitoring(draft)} disabled={!canEdit||busy||r.state!=='entered'} value={r.remarks} mode={r.remarkMode} manualRequired={!hasAutomaticAnalystRemark(t)} onAutomatic={hasAutomaticAnalystRemark(t)?()=>update(i,{remarkMode:'automatic'}):undefined} onChange={remarks=>update(i,{remarks,remarkMode:'manual'})}/>}</div>
      {rowIssues.length?<ul className="result-row-issues">{rowIssues.map((issue,index)=><li key={index}>{issue}</li>)}</ul>:null}
-     <details className="result-state-options"><summary>Entry options</summary><Field label="Entry state"><select disabled={!canEdit||busy} value={r.state} onChange={e=>update(i,{state:e.target.value as Result['state'],value:'',qualifier:''})}><option value="not_entered">Not entered</option><option value="entered">Result entered</option><option value="not_tested">Not tested</option></select></Field></details>
+     <details className="result-state-options"><summary>Entry options</summary><Field label="Entry state"><select disabled={!canEdit||busy} value={r.state} onChange={e=>update(i,{state:e.target.value as Result['state'],value:'',qualifier:'',reason:''})}><option value="not_entered">Not entered</option><option value="entered">Result entered</option><option value="not_tested">Not tested</option></select></Field></details>
      <details className="evidence"><summary>Specification source · {t.date}</summary><p>{refs?.documents?.find((f:any)=>f.id===t.source)?.name||t.source}</p><small>{t.sourceLocation} · Date basis: {t.dateBasis}</small></details>
     </div>;
    })}</div>

@@ -10,7 +10,7 @@ const {getConfiguration,saveConfiguration}=await import('../server/configuration
 const {environmentalProfiles,publishEnvironmentalProfile,retireEnvironmentalProfile}=await import('../server/environmental.js');
 const {seedHerbycinSamplingPatterns,herbycinSamplingReferenceId}=await import('../server/herbycin-sampling-seed.js');
 const {resolveReportSetup,createAutomaticDraft,getDraft,privatePath}=await import('../server/reports.js');
-const {hasAutomaticAnalystRemark}=await import('../shared/model.js');
+const {evaluationRemark,hasAutomaticAnalystRemark}=await import('../shared/model.js');
 await migrate();after(close);
 const actor={email:'fixture@example.test',name:'Fixture Analyst',role:'administrator' as const};
 test('owner-authorized Herbycin patterns publish once, restore evidence, respect retirement and hold conflicts',async()=>{
@@ -57,11 +57,17 @@ test('owner-authorized Herbycin patterns publish once, restore evidence, respect
  const setup=await resolveReportSetup(sample.id,{profileId:selected.id},true);assert.equal(setup.layoutResolution?.status,'ready');assert.equal(setup.specification.product,sample.name);
  const draft=await createAutomaticDraft(sample.id,actor,{profileId:selected.id});
  const members=await Promise.all(draft.environmentalSession!.members.map(m=>getDraft(m.draftId)));
- assert.deepEqual(members.map(d=>d.results.length),[7,14]);assert.ok(members.every(d=>d.results.every(r=>r.value===''&&r.remarks===''&&r.state==='not_entered')));
+ assert.deepEqual(members.map(d=>d.results.length),[7,14]);assert.ok(members.every(d=>d.results.every(r=>r.value===''&&r.remarks===evaluationRemark&&r.state==='not_entered')));
  const tanksSample={...sample,id:'herbycin-tanks-sample',ml:'ML-EM-26-9002',name:'Herbycin Syrup (Tanks)'};
  await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[tanksSample.id,JSON.stringify(tanksSample)]);
  const choices=await resolveReportSetup(tanksSample.id,{},true);
  assert.deepEqual(choices.environmental!.profiles.map(p=>p.equipmentSet).sort(),['Compounding Utensils','Tanks','Weighing Utensils']);
+ assert.equal(choices.environmental!.suggestedProfileId,profiles.find(p=>p.active&&p.productId==='herbycin-tanks'&&p.equipmentSet==='Tanks')!.id);
+ const weighingSample={...sample,id:'herbycin-weighing-sample',ml:'ML-EM-26-9003',name:'Herbycin Syrup (Weighing)'};
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[weighingSample.id,JSON.stringify(weighingSample)]);
+ const weighingSetup=await resolveReportSetup(weighingSample.id,{},true);
+ const weighingProfile=weighingSetup.environmental!.profiles.find(p=>p.id===weighingSetup.environmental!.suggestedProfileId);
+ assert.equal(weighingProfile?.equipmentSet,'Weighing Utensils');
  for(const pattern of profiles.filter(p=>p.active&&p.productId==='herbycin-tanks')){
   const resolved=await resolveReportSetup(tanksSample.id,{profileId:pattern.id},true);
   assert.equal(resolved.layoutResolution?.status,'ready');assert.equal(resolved.environmental!.snapshot!.profile.areaType,pattern.equipmentSet);

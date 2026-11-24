@@ -1,6 +1,7 @@
 import {z} from 'zod';
 import {environmentalActivityDate,environmentalKey,environmentalCriterionKey,environmentalStageKey,processArea,environmentalSourceIssue,environmentalTemplateIssue,resolveEnvironmentalProfile,type EnvironmentalProfile,type EnvironmentalOutput,type EnvironmentalSelection,type EnvironmentalSetup,type EquipmentCatalog} from './environmental.js';
 import type {Sample,Template} from './model.js';
+import {environmentalActivityWords,environmentalNameActivity} from './environmental-routing.js';
 
 export const equipmentSelectionSchema=z.object({
  productId:z.string().trim().min(1).max(200).optional(),
@@ -25,10 +26,13 @@ function equipmentDefinition(profile:EnvironmentalProfile,output:EnvironmentalOu
  const rows=[...parameters.values()];return {profile,output,rows,signature:signature(output,rows),conflict};
 }
 
-export function resolveEnvironmentalEquipment(sample:Sample,productId:string,profiles:EnvironmentalProfile[],templates:Template[],selection:EnvironmentalSelection={},scannedLocations:string[]=[]):EnvironmentalSetup{
+export function resolveEnvironmentalEquipment(sample:Sample,productId:string,profiles:EnvironmentalProfile[],templates:Template[],selection:EnvironmentalSelection={},scannedLocations:string[]=[],relatedProductIds:string[]=[]):EnvironmentalSetup{
  const activityDate=environmentalActivityDate(sample);
  const contextMatches=(p:EnvironmentalProfile)=>!p.context||environmentalKey(p.context)===environmentalKey(sample.context);
- const applicable=profiles.filter(p=>p.active&&p.productId===productId&&p.category===sample.category&&environmentalKey(p.facility)===environmentalKey(sample.fields.facility||'')&&processArea(p.area)===processArea(sample.fields.area||'')&&(p.outputs.some(o=>o.mode==='surface')||contextMatches(p))&&activityDate&&p.effectiveFrom<=activityDate&&(!p.effectiveTo||p.effectiveTo>=activityDate)).sort((a,b)=>a.id.localeCompare(b.id));
+ const effective=profiles.filter(p=>p.active&&p.category===sample.category&&environmentalKey(p.facility)===environmentalKey(sample.fields.facility||'')&&processArea(p.area)===processArea(sample.fields.area||'')&&activityDate&&p.effectiveFrom<=activityDate&&(!p.effectiveTo||p.effectiveTo>=activityDate)&&(p.productId===productId?(p.outputs.some(o=>o.mode==='surface')||contextMatches(p)):relatedProductIds.includes(p.productId)&&p.outputs.some(o=>o.mode==='surface')&&contextMatches(p)));
+ const scopeKey=(p:EnvironmentalProfile)=>JSON.stringify([p.equipmentSet,p.areaType||'',p.context].map(environmentalKey));
+ const ownScopes=new Set(effective.filter(p=>p.productId===productId&&p.outputs.some(o=>o.mode==='surface')).map(scopeKey));
+ const applicable=effective.filter(p=>p.productId===productId||p.id===selection.profileId||!ownScopes.has(scopeKey(p))).sort((a,b)=>a.id.localeCompare(b.id));
  const selectedProfile=selection.profileId?applicable.find(p=>p.id===selection.profileId):undefined;
  const selectedOutput=selectedProfile?.outputs.find(o=>o.id===selection.outputId);
  const otherOutputs=applicable.filter(contextMatches).flatMap(p=>p.outputs.filter(o=>o.mode!=='surface').map(o=>({profileId:p.id,outputId:o.id,name:`${p.name} · ${o.name}`,mode:o.mode})));
@@ -36,7 +40,16 @@ export function resolveEnvironmentalEquipment(sample:Sample,productId:string,pro
   const legacy=resolveEnvironmentalProfile(sample,productId,profiles,templates,selection);
   return selection.equipment?.some(q=>q.quantity>0)?{profiles:legacy.profiles,outputs:legacy.outputs,otherOutputs,resolution:{status:'conflict',message:'Equipment quantities require approved surface-swab outputs for this activity. Reload the applicable monitoring output.'}}:{...legacy,otherOutputs};
  }
- const base:EnvironmentalSetup={profiles:applicable.filter(p=>p.outputs.some(o=>o.mode==='surface')).map(({id,name,equipmentSet,revision})=>({id,name,equipmentSet,revision})),outputs:[],otherOutputs:otherOutputs.filter(o=>o.mode!=='open-plate'),resolution:{status:'selection',message:'Select the equipment sampled and set its quantity to build both method tables.'}};
+ const surface=applicable.filter(p=>p.outputs.some(o=>o.mode==='surface'));
+ const hints=[...new Set([...environmentalNameActivity(sample.name),...environmentalActivityWords(sample.fields.area||'').filter(word=>word==='tanks'||word==='utensils')])];
+ const ranked=surface.filter(contextMatches).map(profile=>{
+  const activity=environmentalActivityWords(`${profile.equipmentSet} ${profile.areaType||''}`);
+  const words=new Set([...environmentalActivityWords(profile.area),...(activity.length?activity:environmentalNameActivity(profile.product))]);
+  const score=hints.reduce((total,word)=>total+(words.has(word)?word==='tanks'||word==='utensils'?2:1:0),0);
+  return {id:profile.id,score};
+ }).sort((first,second)=>second.score-first.score);
+ const suggestedProfileId=ranked[0]?.score>0&&ranked[0].score!==(ranked[1]?.score||0)?ranked[0].id:undefined;
+ const base:EnvironmentalSetup={profiles:surface.map(({id,name,equipmentSet,revision})=>({id,name,equipmentSet,revision})),suggestedProfileId,outputs:[],otherOutputs:otherOutputs.filter(o=>o.mode!=='open-plate'),resolution:{status:'selection',message:'Select the equipment sampled and set its quantity to build both method tables.'}};
  const fail=(status:EnvironmentalSetup['resolution']['status'],message:string):EnvironmentalSetup=>({...base,resolution:{status,message}});
  if(selection.profileId&&!applicable.some(p=>p.id===selection.profileId))return fail('selection','The selected sampling pattern is unavailable for this activity.');
  const definitionProfiles=selection.profileId?applicable.filter(p=>p.id===selection.profileId):applicable;

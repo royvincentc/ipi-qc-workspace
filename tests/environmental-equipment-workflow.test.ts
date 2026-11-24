@@ -4,10 +4,12 @@ import {mkdtemp} from 'node:fs/promises';
 import path from 'node:path';
 import {resultIssues} from '../shared/model.js';
 process.env.DEMO_MODE='true';process.env.DEMO_DB_PATH=await mkdtemp(path.resolve('.data/equipment-test-'));
+process.env.PRIVATE_STORAGE=await mkdtemp(path.resolve('tmp/equipment-storage-'));
 const {db,migrate,close}=await import('../server/db.js');
 const {getConfiguration,saveConfiguration}=await import('../server/configuration.js');
 const {publishEnvironmentalProfile,scannedEnvironmentalEquipment}=await import('../server/environmental.js');
 const {resolveReportSetup,createAutomaticDraft,getDraft,saveDraft,reportTemplateFields}=await import('../server/reports.js');
+const {seedBouquetSpatula}=await import('../server/bouquet-spatula-seed.js');
 await migrate();after(close);
 const actor={email:'fixture@example.test',name:'Fixture Analyst',role:'administrator' as const};
 test('server composes immutable paired drafts from validated quantities and approved source revisions',async()=>{
@@ -76,4 +78,41 @@ test('server composes immutable paired drafts from validated quantities and appr
   assert.deepEqual(edited.results.map(r=>r.remarks),manual.results.map(r=>r.remarks));
   assert.deepEqual(resultIssues(edited),[]);
  }
+ const bouquet={...sample,id:'bouquet-sample',ml:'ML-EM-26-0594',name:'Cheers Baby Oil - Bouquet',batch:'CYK64',received:'2026-11-16',fields:{facility:'PF2',area:'Compounding'}};
+ const currentConfig=await getConfiguration();
+ await saveConfiguration({...currentConfig.value,products:[...currentConfig.value.products,{id:'bouquet',name:bouquet.name,category:'EM',code:'',active:true,aliases:[]}]},currentConfig.revision,actor.email);
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[bouquet.id,JSON.stringify(bouquet)]);
+ const tank=await publishEnvironmentalProfile({...pattern,name:'Bouquet tank',productId:'bouquet',product:bouquet.name,facility:'PF2',area:'Compounding',areaType:undefined,equipmentSet:'Mixing Tank',outputs:pattern.outputs.map(output=>({...output,instances:output.instances.map(instance=>({...instance,location:'Mixing Tank'}))}))},actor.email);
+ const before=await resolveReportSetup(bouquet.id,{profileId:tank.id},true);
+ assert.match(before.environmental!.equipment!.items.find(item=>item.id==='spatula')!.issue!,/no approved definition/);
+ await seedBouquetSpatula();
+ await seedBouquetSpatula();
+ const bouquetSetup=await resolveReportSetup(bouquet.id,{profileId:tank.id},true);
+ assert.equal(bouquetSetup.environmental!.profiles.length,2);
+ const catalogue=bouquetSetup.environmental!.equipment!,spatula=catalogue.items.find(item=>item.id==='spatula')!;
+ assert.equal(spatula.issue,undefined);
+ assert.deepEqual(spatula.parameters.map(item=>[item.test,item.criterion,item.unit]),[['ACCUPOINT','NMT 100 RLU','RLU'],['SPC','NMT 100 cfu/mL','cfu/mL'],['MY','NMT 30 cfu/mL','cfu/mL']]);
+ const bouquetDraft=await createAutomaticDraft(bouquet.id,actor,{profileId:tank.id,equipmentRevision:catalogue.revision,equipment:[{id:'mixing tank',quantity:1},{id:'spatula',quantity:1}]});
+ const bouquetMembers=await Promise.all(bouquetDraft.environmentalSession!.members.map(member=>getDraft(member.draftId)));
+ assert.deepEqual(bouquetMembers.map(d=>d.results.filter(result=>result.location==='Spatula 1').map(result=>result.test)),[['ACCUPOINT'],['SPC','MY']]);
+ const counts=bouquetMembers[1];
+ const savedCounts=await saveDraft(counts.id,counts.revision,counts.results.map(result=>result.test==='SPC'&&result.location==='Spatula 1'
+  ?{...result,state:'not_tested' as const,reason:'N/A'}:{...result,state:'entered' as const,value:'0'}),counts.fields,actor.email);
+ assert.deepEqual(resultIssues(savedCounts),[]);
+ assert.deepEqual((await getDraft(counts.id)).results.filter(result=>result.location==='Spatula 1').map(({test,state,value,reason})=>[test,state,value,reason]),[['SPC','not_tested','','N/A'],['MY','entered','0','']]);
+
+ const opk={...sample,id:'opk-sample',ml:'ML-EM-26-0590',name:'OPK Export (Compounding Tanks)',fields:{facility:'PF1',area:'Compounding Area (Tanks)'}};
+ const opkTank={id:'opk-tanks',name:'OPK Export - Compounding Tanks',category:'EM',code:'',active:true,aliases:[]};
+ const opkUtensils={...opkTank,id:'opk-utensils',name:'Omega Pain Killer Liniment - Export (Compounding Utensils)'};
+ const opkConfig=await getConfiguration();
+ await saveConfiguration({...opkConfig.value,products:[...opkConfig.value.products,opkTank,opkUtensils]},opkConfig.revision,actor.email);
+ await db.query('INSERT INTO samples(id,data) VALUES($1,$2)',[opk.id,JSON.stringify(opk)]);
+ const tankPattern=await publishEnvironmentalProfile({...pattern,productId:opkTank.id,product:opkTank.name,name:opkTank.name,area:'Compounding',areaType:'Tanks',equipmentSet:'Compounding Tanks'},actor.email);
+ const utensilsPattern=await publishEnvironmentalProfile({...pattern,productId:opkUtensils.id,product:opkUtensils.name,name:opkUtensils.name,area:'Compounding',areaType:'Utensils',equipmentSet:'Compounding Utensils'},actor.email);
+ const opkSetup=await resolveReportSetup(opk.id,{},true);
+ assert.equal(opkSetup.environmental?.suggestedProfileId,tankPattern.id);
+ assert.deepEqual(new Set(opkSetup.environmental?.profiles.map(profile=>profile.id)),new Set([tankPattern.id,utensilsPattern.id]));
+ const override=await createAutomaticDraft(opk.id,actor,{profileId:utensilsPattern.id});
+ assert.equal(override.environmentalSnapshot?.profile.id,utensilsPattern.id);
+ assert.equal(override.sample.name,opk.name);
 });

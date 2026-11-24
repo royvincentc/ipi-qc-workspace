@@ -12,11 +12,11 @@ import {db,locked,setting,demo,audit} from './db.js';
 import {Fault,hash,latestCriteria,googleId} from './domain.js';
 import {defaultConnections,fallbackSpecifications} from './samples.js';
 import {readApplicability,readResultsRow,readMicAnalystDetails,rangeValues,ensureDriveFolder,uploadDriveFile,moveArchivedDriveReport} from './google.js';
-import {categories,overallAnalystRemarks,initializeResultRemarks,updateResultRemark,reportIssues,resultKey,type Draft,type Sample,type Template,type Specification,type Result,type User,type ReportSetup} from '../shared/model.js';
+import {categories,isEnvironmentalSample,isSurfaceSpcMy,overallAnalystRemarks,initializeResultRemarks,updateResultRemark,reportIssues,resultKey,type Draft,type Sample,type Template,type Specification,type Result,type User,type ReportSetup} from '../shared/model.js';
 import {reportRows} from './template.js';
 import {environmentalProfiles,scannedEnvironmentalEquipment,resolveEnvironmentalLayout} from './environmental.js';
 import {resolveEnvironmentalEquipment,environmentalCriteria,environmentalSourceIssue,type EnvironmentalSelection,type EnvironmentalSnapshot} from '../shared/environmental.js';
-import {environmentalAreaType} from '../shared/environmental-routing.js';
+import {documentContext,environmentalAreaType,environmentalNameActivity,environmentalProductKey} from '../shared/environmental-routing.js';
 export const storage=path.resolve(process.env.PRIVATE_STORAGE||'private');
 export function privatePath(file:string){const p=path.resolve(storage,file);if(!p.startsWith(storage+path.sep))throw new Fault(400,'Invalid private file path');return p;}
 export async function worker(args:string[]){return new Promise<any>((resolve,reject)=>{const proc=spawn(process.env.PYTHON_PATH||'python',[path.resolve('worker/docx_worker.py'),...args],{windowsHide:true,env:{...process.env,PYTHONIOENCODING:'utf-8'},stdio:['ignore','pipe','pipe']});let out='',err='';const timer=setTimeout(()=>{proc.kill();reject(new Fault(504,'Document processing timed out'));},args[0]==='environmental-batch'?900000:120000);proc.stdout.on('data',b=>{out+=b;if(out.length>20_000_000){proc.kill();reject(new Fault(413,'Document inventory is too large'));}});proc.stderr.on('data',b=>err+=b);proc.on('error',()=>{clearTimeout(timer);reject(new Fault(503,'Python document worker is unavailable; configure PYTHON_PATH'));});proc.on('close',code=>{clearTimeout(timer);if(code!==0)return reject(new Fault(422,`Document processing failed: ${err.split('\n').filter(Boolean).at(-1)||'invalid document'}`));try{resolve(JSON.parse(out));}catch{reject(new Fault(500,'Invalid document worker response'));}});});}
@@ -330,6 +330,12 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
    }
   }
  }
+ const familyKey=type.register==='environmental'?environmentalProductKey(sample.name):'';
+ const family=familyKey?candidates.filter(p=>p.category===sample.category&&[p.name,...p.aliases].some(name=>environmentalProductKey(name)===familyKey)&&(!documentContext(p.name)||normalized(documentContext(p.name))===normalized(sample.context))):[];
+ if(family.length){
+  const preferred=family.find(p=>normalized(p.name)===normalized(sample.name))||family.find(p=>!environmentalNameActivity(p.name).length)||family[0];
+  products=[preferred];
+ }
 
  // When SFG/ST aliases to FG, the same product name may be registered under both categories.
  // Deduplicate: if multiple matches share a name, keep the FG (canonical) entry only.
@@ -361,14 +367,15 @@ export async function resolveReportSetup(sampleId:string,selection:Environmental
  if(type.register==='environmental'){
   const templates=(await db.query('SELECT data FROM templates')).rows.map(r=>r.data as Template);
   const profiles=await environmentalProfiles();
-  const environmental=resolveEnvironmentalEquipment(sample,product.id,profiles,templates,selection,await scannedEnvironmentalEquipment());
+  const relatedProductIds=family.filter(p=>p.id!==product.id).map(p=>p.id);
+  const environmental=resolveEnvironmentalEquipment(sample,product.id,profiles,templates,selection,await scannedEnvironmentalEquipment(),relatedProductIds);
   const legacy=specifications.filter(s=>s.product===product.name&&s.category===sample.category&&normalized(s.context)===normalized(sample.context));
   const snapshot=environmental.snapshot;
   const tests=snapshot?environmentalCriteria(snapshot.profile,snapshot.output):legacy.length?latestCriteria(legacy,product.name,sample.category,sample.context,[...new Set(legacy.flatMap(s=>s.tests.map(t=>t.test)))]):[];
-  const specification:Specification={id:snapshot?snapshot.profile.id:legacy[0]?.id||'environmental-unresolved',product:product.name,category:sample.category,context:sample.context,revision:hash(tests),tests,issues:[],source:snapshot?(snapshot.equipment?[...new Set(snapshot.equipment.sources.flatMap(s=>s.evidenceIds))]:snapshot.profile.evidenceIds).join(', '):legacy[0]?.source||''};
+  const specification:Specification={id:snapshot?snapshot.profile.id:legacy[0]?.id||'environmental-unresolved',product:snapshot?.profile.product||product.name,category:sample.category,context:sample.context,revision:hash(tests),tests,issues:[],source:snapshot?(snapshot.equipment?[...new Set(snapshot.equipment.sources.flatMap(s=>s.evidenceIds))]:snapshot.profile.evidenceIds).join(', '):legacy[0]?.source||''};
   let template=snapshot&&environmental.resolution.status==='ready'?templates.find(t=>t.id===snapshot.output.templateId):undefined;
   let resolution=environmental.resolution;
-  if(!profiles.some(p=>p.active&&p.productId===product.id)&&tests.length&&!environmentalSourceIssue(sample)){
+  if(!profiles.some(p=>p.active&&(p.productId===product.id||relatedProductIds.includes(p.productId)))&&tests.length&&!environmentalSourceIssue(sample)){
    const routed=resolveEnvironmentalLayout(sample,templates,tests);template=routed.template;resolution=routed.resolution;
   }
   if(!preview&&(!template||resolution.status!=='ready'))throw new Fault(409,resolution.message);
@@ -730,7 +737,7 @@ async function generateReport(id:string,revision:number,actor:string){
  const d=await getDraft(id);if(d.revision!==revision)throw new Fault(409,'Save and review the latest draft before generation');const t=d.templateSnapshot||(await db.query('SELECT data FROM templates WHERE id=$1',[d.templateId])).rows[0]?.data as Template;if(!t||t.revision!==d.templateRevision)throw new Fault(409,'Template revision changed; create a new draft with the current registered template');
  let sourceChanged=false;if(!demo){const source=d.sample.source;const live=await rangeValues(source.spreadsheetId,source.sheet,source.range);sourceChanged=hash(Array.from({length:source.raw.length},(_,i)=>live[i]??''))!==source.fingerprint;if(d.resultSource){const result=await optionalResultsRow(d.resultSource.url,d.sample.category,d.sample.ml);if(result&&result.fingerprint!==d.resultSource.fingerprint)throw new Fault(409,'The matching Results row changed; create a new draft to capture its current values');}}
  const analystInput=firstText(d.sample.fields.analyzedBy,d.sample.fields.analyst,d.resultSource?.analyst,d.fields.analyst,d.fields.micAnalyst);const connections=await setting('connections',defaultConnections);const analystDetails=analystInput?await resolveAnalystDetails(connections.specifications||defaultConnections.specifications,analystInput):{analyst:'',mic:''};const reportAnalyst=firstText(analystDetails.analyst,analystInput);const tokens=(t.manifest.tokens||[]) as string[],required=(t.manifest.requiredFields||[]) as string[];const needsMic=tokens.includes('mic')||required.includes('mic');const renderDraft={...d,fields:{...d.fields,analyst:reportAnalyst,mic:firstText(needsMic&&!demo?analystDetails.mic:'',d.fields.mic,d.sample.fields.mic)}};
- const sessionDetailsFingerprint=hash({renderRevision:7,...d.environmentalSession?sharedSessionDetails([d]):{},...(overallAnalystRemarks(d)==='FOR EVALUATION'?{evaluationRemarks:'————'}:{})});
+ const sessionDetailsFingerprint=hash({renderRevision:isEnvironmentalSample(d.sample)||isSurfaceSpcMy(d)?8:7,...d.environmentalSession?sharedSessionDetails([d]):{},...(overallAnalystRemarks(d)==='FOR EVALUATION'?{evaluationRemarks:'————'}:{})});
  const existing=(await db.query("SELECT data FROM files WHERE data->>'renderContractRevision'='report-layout-v6' AND data->>'sessionDetailsFingerprint'=$5 AND data->>'draftId'=$1 AND data->>'resultRevision'=$2 AND data->>'templateRevision'=$3 AND data->>'reportAnalyst'=$4 ORDER BY created_at DESC LIMIT 1",[id,String(revision),d.templateRevision,reportAnalyst,sessionDetailsFingerprint])).rows[0]?.data;if(existing){try{await reportArtifact(existing,'docx',privatePath(existing.path));let result=sourceChanged?{...existing,sourceChanged:true}:existing;if(!demo&&connections.reportFolder&&!result.driveId){try{result=await syncReportToDrive({...result,analystEmail:result.analystEmail||actor},actor);}catch(e:any){result={...result,driveSyncError:String(e.message||e)};await db.query('UPDATE files SET data=$1 WHERE id=$2',[JSON.stringify(result),result.id]);}}return result;}catch{await audit(actor,'report_artifact_unavailable',existing.id,{draftId:id});}}
  if(renderDraft.environmentalSnapshot&&!renderDraft.environmentalSnapshot.profile.areaType){
   const sources=[...new Set(renderDraft.environmentalSnapshot.output.instances.map(i=>i.source))];

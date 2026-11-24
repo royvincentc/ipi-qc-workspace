@@ -4,7 +4,7 @@ import {ArrowRight,Beaker,ChevronDown,FileText,FlaskConical,FolderOpen,MapPin,Me
 import {LabGraphic} from './LabGraphic';
 import {Badge,ErrorBox,Loading,useLoad} from './ui';
 import {api} from './api';
-import {resultDisplayValue,resultKey,type Sample} from '../shared/model';
+import {isEnvironmentalSample,isSurfaceSpcMy,isSwabNotApplicable,resultDisplayValue,resultKey,type Sample} from '../shared/model';
 
 type Assay={id:string;name:string;shortName?:string;reportLabel?:string;active?:boolean;categories?:string[]};
 type PathName='source'|'tests'|'report'|'actions';
@@ -233,7 +233,7 @@ export function SampleWorkbench({samples,drafts,edit,categoryName,assays,selecte
             {(specification?.tests||[]).map((test:any)=>{
               const meta=availableAssays.find(assay=>assay.id===test.test);
               const result=results.find((item:any)=>resultKey(item)===resultKey(test));
-              const value=result?.state==='entered'?resultDisplayValue(test,result):result?.state==='not_tested'?`Not tested · ${result.reason||'Reason recorded in draft'}`:draft?(draftRecord?'Not entered':'Loading results…'):setup?.resultLookup==='not_found'?'No result recorded':'Not entered';
+              const value=result?.state==='entered'?resultDisplayValue(test,result,isEnvironmentalSample(sample)?'EM':undefined,draftRecord&&isSurfaceSpcMy(draftRecord)):result?.state==='not_tested'?draftRecord&&isSwabNotApplicable(draftRecord,result)?'N/A':`Not tested · ${result.reason||'Reason recorded in draft'}`:draft?(draftRecord?'Not entered':'Loading results…'):setup?.resultLookup==='not_found'?'No result recorded':'Not entered';
               return <div key={resultKey(test)}><Beaker size={19}/><span><strong>{meta?.shortName||test.test}</strong>{[test.location,test.stage,test.replicate].filter(Boolean).length?<small>{[test.location,test.stage,test.replicate].filter(Boolean).join(' · ')}</small>:null}<small className="parameter-value">{value}</small><small>{test.criterion||'Criteria not recorded'}</small></span></div>;
             })}
             {!specification?<p>{draftError||setupError?'Parameters unavailable':sample?'Loading product parameters…':'Select a sample to see its parameters'}</p>:!specification.tests?.length?<p>{setup?.environmental?.equipment?'Select equipment and quantities in Reports and Results to build both method tables.':setup?.environmental?'An approved sampling pattern is needed to supply locations and criteria.':'No parameters configured for this product.'}</p>:null}

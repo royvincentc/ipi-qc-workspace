@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import type {Criterion,Sample,Template} from './model.js';
+import {environmentalProductName} from './environmental-routing.js';
 
 const text=z.string().trim().min(1).max(200);
 const date=z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(value=>Number.isFinite(Date.parse(value))&&new Date(value).toISOString().slice(0,10)===value,'Use a valid date');
@@ -28,7 +29,7 @@ export interface EquipmentSnapshot {selection:EquipmentQuantity[];sources:{id:st
 export interface EnvironmentalSelection {productId?:string;profileId?:string;outputId?:string;equipment?:EquipmentQuantity[];equipmentRevision?:string;includeOpenPlate?:boolean}
 export interface EnvironmentalSnapshot {profile:EnvironmentalProfile;output:EnvironmentalOutput;sourceFingerprint:string;equipment?:EquipmentSnapshot}
 export interface LayoutResolution {status:'ready'|'missing'|'selection'|'conflict';message:string;choices?:{id:string;name:string}[]}
-export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[];equipment?:EquipmentCatalog;openPlate?:{included:boolean;issue?:string};otherOutputs?:{profileId:string;outputId:string;name:string;mode:string}[]}
+export interface EnvironmentalSetup {resolution:LayoutResolution;profiles:Pick<EnvironmentalProfile,'id'|'name'|'equipmentSet'|'revision'>[];suggestedProfileId?:string;outputs:Pick<EnvironmentalOutput,'id'|'name'|'method'|'mode'>[];snapshot?:EnvironmentalSnapshot;pairedOutputs?:EnvironmentalOutput[];equipment?:EquipmentCatalog;openPlate?:{included:boolean;issue?:string};otherOutputs?:{profileId:string;outputId:string;name:string;mode:string}[]}
 export {resolveEnvironmentalEquipment,equipmentSelectionSchema} from './environmental-equipment.js';
 /** Pair only surface methods in the same approved equipment pattern. */
 export function surfaceSwabPair(profile:EnvironmentalProfile):EnvironmentalOutput[]{
@@ -57,7 +58,7 @@ export function environmentalStageKey(row:{test:string;stage?:string}){
  // Conventional surface-method incubation headings are layout text; other stages retain their identity.
  return row.test==='SPC'&&/^after 48 (?:hours|hrs\.?) of\s*incubation(?: period)?:?$/.test(stage)||row.test==='MY'&&/^after 5\s*-\s*7 days of\s*incubation(?: period)?:?$/.test(stage)?'':stage;
 }
-export const processArea=(value:string)=>environmentalKey(value).replace(/^for\s+/,'').replace(/\s+area$/,'');
+export const processArea=(value:string)=>environmentalKey(value.replace(/\([^()]*\)/g,'')).replace(/^for\s+/,'').replace(/\s+area$/,'').replace(/^(compounding|filling|weighing)\s+(?:tanks|utensils|utesils)$/,'$1');
 export function environmentalActivityDate(sample:Sample){
  const raw=sample.received.match(/(?:\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})/)?.[0];
  const slash=raw?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
@@ -97,7 +98,7 @@ export function environmentalTemplateIssue(template:Template|undefined,tests:Cri
 
 export function environmentalSourceIssue(sample:Sample):string|undefined{
  const area=processArea(sample.fields.area||'');
- const named=sample.name.match(/\b(filling|compounding|weighing)\b/gi)?.map(processArea)||[];
+ const named=[...new Set(environmentalProductName(sample.name).match(/\b(filling|compounding|weighing)\b/gi)?.map(processArea)||[])];
  if(area&&named.length===1&&named[0]!==area)return `The sample name says ${named[0]}, but the source Area is ${sample.fields.area}. Reconcile the source activity before choosing its sampling pattern.`;
  if(!sample.fields.facility?.trim())return 'Facility is not recorded. Confirm the source facility before selecting a sampling pattern.';
  if(!area)return 'Area is not recorded. Confirm the source process area before selecting a sampling pattern.';
