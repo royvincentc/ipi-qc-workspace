@@ -85,6 +85,31 @@ async function open(width,{role='analyst',single=false,height=1000,theme='light'
 }
 async function value(page,id,value){await page.locator('#'+id).locator('input[type="text"]').first().fill(value);}
 async function requests(page){return page.evaluate(()=>window.__requests.filter(request=>request.method!=='GET'));}
+async function checkSkippedSwabs(width){
+ const {page,errors}=await open(width,{theme:'dark'});
+ for(const row of await page.locator('.result-entry-row').all()){
+  const zero=row.getByText(/^0 (RLU|cfu\/swab)$/);
+  await zero.click();
+  assert.equal(await row.locator('input[type="text"]').count(),0);
+  await row.getByText('N/A',{exact:true}).click();
+  assert.ok(await row.getByRole('radio',{name:'N/A',exact:true}).isChecked());
+  assert.equal(await row.locator('input[type="text"]').count(),0);
+ }
+ const my=page.locator('#spc-fixture-result-row-0');
+ await my.getByText('Actual Result',{exact:true}).click();
+ await my.locator('input[type="text"]').fill('0');
+ assert.ok(await page.getByRole('button',{name:'Next missing result'}).isDisabled());
+ await page.getByRole('button',{name:'Generate all DOCX',exact:true}).click();
+ await page.waitForFunction(()=>window.__requests.some(request=>request.path.endsWith('/generate-session')));
+ const [saved]=await requests(page);
+ assert.deepEqual(saved.body.changes.flatMap(change=>change.results.map(r=>[r.test,r.state,r.value,r.reason])),[
+  ['ACCUPOINT','not_tested','','N/A'],['MY','entered','0',''],['SPC','not_tested','','N/A']
+ ]);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ assert.deepEqual(errors,[]);
+ await page.close();
+ console.log(`PASS ${width}px: environmental zero, reversible N/A, and generation payload`);
+}
 async function checkEvaluationRemarks(width,name){
  const fixture=drafts.map(draft=>({...draft,sample:{...draft.sample,name},specification:{...draft.specification,tests:draft.specification.tests.map(test=>({...test,criterion:'FOR EVALUATION'}))},results:draft.results.map(result=>({...result,remarks:'Failed',remarkMode:'manual'}))}));
  const {page,errors}=await open(width,{fixtureDrafts:fixture});
@@ -351,5 +376,6 @@ try{
   }
   for(const category of ['WS','RM','SFG','FG','MIS','ST','EM','CUSTOM'])for(const width of [1440,390])await checkCategory(category,width);
   for(const width of [1440,390])await checkNumberedSwabs(width);
+  for(const width of [1440,390])await checkSkippedSwabs(width);
  }
 }finally{await browser.close();}

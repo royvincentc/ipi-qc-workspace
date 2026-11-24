@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {reportRows,validateBindings} from '../server/template.js';
-import type {Draft,Template} from '../shared/model.js';
+import {resultIssues,type Draft,type Template} from '../shared/model.js';
 
 const tokens=['result.0.criterion','result.0.value','result.0.remarks','result.1.criterion','result.1.value','result.1.remarks'];
 test('evaluation monitoring exports fixed row remarks even from an older saved draft',()=>{
@@ -64,4 +64,14 @@ test('SPCMY PDF rows keep standard specifications separate from the fixed report
  const rows=reportRows(draft,{manifest:{}} as Template);
  assert.deepEqual(rows.map(r=>r.value),['Nmt 10 cfu/mL','Nmt 10 cfu/mL']);
  assert.deepEqual(rows.map(r=>r.criterion),['Not more than 100 cfu/mL','Not more than 30 cfu/mL']);
+});
+test('environmental control numbers report measured zero and skipped swabs distinctly',()=>{
+ const tests=['ACCUPOINT','SPC','MY'].flatMap(test=>['Tank','Spatula'].map(location=>({
+  test,location,label:test,type:'numeric' as const,unit:test==='ACCUPOINT'?'RLU':'cfu/mL',criterion:test==='ACCUPOINT'?'Nmt 100 RLU':'Nmt 100 cfu/mL',source:'fixture',sourceLocation:'row 1',date:'2026-11-20',dateBasis:'owner-confirmed' as const,revision:'1'
+ })));
+ const draft={sample:{category:'MIS',ml:'ML-EM-26-0594'},specification:{tests},results:tests.map(t=>({...t,state:t.location==='Tank'?'entered':'not_tested',qualifier:'',value:t.location==='Tank'?'0':'',reason:t.location==='Tank'?'':'N/A',remarks:''}))} as unknown as Draft;
+ assert.deepEqual(resultIssues(draft),[]);
+ assert.deepEqual(reportRows(draft,{manifest:{}} as Template).map(row=>row.value),['0 RLU','————','0 cfu/mL','————','0 cfu/mL','————']);
+ assert.equal(resultIssues({...draft,sample:{...draft.sample,ml:'ML-MIS-26-0594'}}).length,3);
+ assert.equal(resultIssues({...draft,results:draft.results.map(r=>({...r,reason:''}))}).length,3);
 });

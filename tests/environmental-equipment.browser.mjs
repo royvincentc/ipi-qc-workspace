@@ -8,11 +8,15 @@ const styles=await Promise.all([...main.matchAll(/import '\.\/(.*?\.css)'/g)].ma
 const bundle=await build({write:false,bundle:true,format:'iife',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"production"'},stdin:{resolveDir:process.cwd(),loader:'tsx',contents:`
  import React,{useState} from 'react';
  import {createRoot} from 'react-dom/client';
+ import {MemoryRouter} from 'react-router-dom';
  import {EnvironmentalEquipment} from './src/environmental-equipment';
+ import {Reports} from './src/reports';
+ import {Session} from './src/ui';
  const parameters=[{method:'accupoint',test:'ACCUPOINT',label:'Accupoint',criterion:'Nmt 100 RLU',unit:'RLU'},{method:'spc-my',test:'SPC',label:'SPC',criterion:'Nmt 100 cfu/mL',unit:'cfu/mL'},{method:'spc-my',test:'MY',label:'MY',criterion:'Nmt 30 cfu/mL',unit:'cfu/mL'}];
  const catalog={revision:'fixture',profileId:'tank-only',items:[{id:'mixing tank',name:'Mixing Tank',defaultQuantity:1,parameters},{id:'spatula',name:'Spatula',defaultQuantity:0,parameters},{id:'unapproved',name:'Incomplete definition',defaultQuantity:0,parameters:[],issue:'Missing approved Accupoint definition'},...['Scoop','Pipe','Hose','Stirrer'].map(name=>({id:name.toLowerCase(),name,defaultQuantity:0,parameters}))]};
  function Fixture(){const [value,setValue]=useState([{id:'mixing tank',quantity:1}]);return <div className="app app-workspace"><div className="main-wrapper"><div className="workspace-content"><main className="route-stage"><div className="reports-workbench"><section className="panel padded"><EnvironmentalEquipment catalog={catalog} value={value} disabled={false} onChange={setValue}/><output id="selection" hidden>{JSON.stringify(value)}</output></section></div></main></div></div></div>;}
- createRoot(document.getElementById('root')).render(<Fixture/>);
+ const content=window.__patternFixture?<MemoryRouter initialEntries={['/reports?sample=opk']}><Session.Provider value={{user:{role:'analyst'},demo:true}}><div className="app app-workspace"><div className="main-wrapper"><div className="workspace-content"><main className="route-stage"><Reports/></main></div></div></div></Session.Provider></MemoryRouter>:<Fixture/>;
+ createRoot(document.getElementById('root')).render(content);
  `}});
 const browser=await chromium.launch({channel:'msedge',headless:true,args:['--no-proxy-server']});
 try{
@@ -58,6 +62,33 @@ try{
   assert.deepEqual(errors,[]);
   await mkdir('output/playwright',{recursive:true});
   await page.screenshot({path:`output/playwright/manual-equipment-${width}.png`,fullPage:true});
-  await page.close();console.log(`PASS ${width}px: manual addition, quantity validation, duplicate prevention, labels, no overflow`);
+  await page.setContent('<html data-theme="dark"><body><div id="root"></div></body></html>');
+  await page.evaluate(()=>{
+   window.__patternFixture=true;
+   const sample={id:'opk',category:'EM',ml:'ML-EM-26-0590',name:'OPK Export (Compounding Tanks)',batch:'EVK16',context:'Regular',fields:{facility:'PF1',area:'Compounding'}};
+   const profiles=[{id:'tank',name:'Compounding Tanks',equipmentSet:'Tanks'},{id:'utensils',name:'Compounding Utensils',equipmentSet:'Utensils'}];
+   window.fetch=async(input,init={})=>{
+    const url=String(input);
+    const selection=init.body?JSON.parse(init.body):{};
+    const name=selection.profileId==='utensils'?'Spatula':'Mixing Tank';
+    const equipment={revision:'fixture',profileId:selection.profileId,items:[{id:name.toLowerCase(),name,defaultQuantity:1,parameters:[]}]};
+    const data=url.includes('/search?')?{items:[sample]}:url.endsWith('/drafts')?[]:{sample,environmental:{profiles,outputs:[],suggestedProfileId:'tank',equipment},layoutResolution:{status:'selection'}};
+    return new Response(JSON.stringify(data),{headers:{'Content-Type':'application/json'}});
+   };
+  });
+  for(const css of styles)await page.addStyleTag({content:css});
+  await page.addScriptTag({content:bundle.outputFiles[0].text});
+  const pattern=page.getByLabel('Approved sampling pattern');
+  await page.getByRole('checkbox',{name:/Mixing Tank/}).waitFor({timeout:5000}).catch(async error=>{
+   throw new Error(`${error.message}\n${errors.join('\n')}\n${await page.locator('body').innerText()}`);
+  });
+  assert.equal(await pattern.inputValue(),'tank');
+  await pattern.selectOption('utensils');
+  await page.getByRole('checkbox',{name:/Spatula/}).waitFor();
+  assert.equal(await pattern.inputValue(),'utensils');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'pattern override has no horizontal overflow');
+  assert.deepEqual(errors,[]);
+  await page.screenshot({path:`output/playwright/environmental-pattern-override-${width}.png`,fullPage:true});
+  await page.close();console.log(`PASS ${width}px: manual equipment entry, automatic pattern suggestion, pattern override, no overflow`);
  }
 }finally{await browser.close();}

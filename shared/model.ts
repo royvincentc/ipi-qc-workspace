@@ -99,12 +99,22 @@ export function overallAnalystRemarks(d:Pick<Draft,'sample'|'specification'|'res
  return rows.length&&rows.every(({result:r})=>r?.state==='entered'&&r.remarks.trim().toLowerCase()==='passed')?'PASSED':'';
 }
 export function isSurfaceSpcMy(d:Pick<Draft,'environmentalSnapshot'>){return d.environmentalSnapshot?.output.mode==='surface'&&d.environmentalSnapshot.output.method==='spc-my';}
+export function isEnvironmentalSample(sample:Pick<Sample,'category'|'ml'>){
+ return sample.category==='EM'||/^ML-EM-\d{2}-\d{4}$/i.test(sample.ml?.trim());
+}
+export function canMarkSwabNotApplicable(d:Pick<Draft,'sample'|'environmentalSnapshot'>,r:Pick<Result,'test'|'location'|'channel'>){
+ return ['ACCUPOINT','SPC','MY'].includes(r.test)&&Boolean(r.location)&&!r.channel&&(d.environmentalSnapshot?d.environmentalSnapshot.output.mode==='surface':Boolean(d.sample&&isEnvironmentalSample(d.sample)));
+}
+export function isSwabNotApplicable(d:Pick<Draft,'sample'|'environmentalSnapshot'>,r:Result){
+ return r.state==='not_tested'&&r.reason==='N/A'&&canMarkSwabNotApplicable(d,r);
+}
+export function zeroCountResult(test:Criterion){return `0 ${test.unit||'cfu/mL'}`;}
 export function resultDisplayValue(test:Criterion,r:Result,category?:string,surfaceSpcMy=false){
  const value=r.value.trim();
  if(test.test==='SPC'||test.test==='MY'){
   const zero=value.match(/^0+(?:\.0+)?\s*(.*)$/);
   const unit=(text:string)=>text.toLowerCase().replace(/\s+/g,'');
-  if((r.qualifier===''||r.qualifier==='=')&&zero&&(!zero[1]||unit(zero[1])===unit(test.unit)))return microbiologyResultLimit(test);
+  if((r.qualifier===''||r.qualifier==='=')&&zero&&(!zero[1]||unit(zero[1])===unit(test.unit)))return category==='EM'||surfaceSpcMy?zeroCountResult(test):microbiologyResultLimit(test);
  }
  if(r.sourceValue!==undefined&&r.value===r.sourceValue)return r.sourceValue;
  const limit=fixedResultLimit(test,category,surfaceSpcMy);
@@ -116,6 +126,7 @@ export function resultIssues(d:Draft):string[]{
  const issues:string[]=[];
  for(const t of d.specification.tests){const r=d.results.find(x=>resultKey(x)===resultKey(t));const label=[t.label,t.location,t.stage].filter(Boolean).join(' · ');
   if(!t.criterion||!t.source||!t.date) issues.push(`${label}: unresolved criterion source`);
+  if(r&&isSwabNotApplicable(d,r))continue;
   if(!r||r.state!=='entered') {issues.push(`${label}: result required`);continue;}
   if(!isEvaluationMonitoring(d)&&!hasAutomaticAnalystRemark(t)&&!['passed','failed'].includes(r.remarks.trim().toLowerCase()))issues.push(`${label}: select Passed or Failed manually; no acceptance limit is available.`);
   if(d.sample.category==='SFG'&&!['passed','failed'].includes(r.remarks.trim().toLocaleLowerCase()))issues.push(`${label}: select Passed or Failed so the Semi-Finished Goods report format can be chosen.`);

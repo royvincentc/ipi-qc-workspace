@@ -1,5 +1,5 @@
 import {Fault} from './domain.js';
-import {isSurfaceSpcMy,isEvaluationMonitoring,initializeResultRemarks,reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
+import {isSurfaceSpcMy,isEnvironmentalSample,isSwabNotApplicable,evaluationRemark,isEvaluationMonitoring,initializeResultRemarks,reportTestLabel,resultDisplayValue,resultKey,type Draft,type Template} from '../shared/model.js';
 import {orderNumberedSamplingPoints} from '../shared/environmental.js';
 
 export interface ResultBinding {index:number;test:string;location?:string;stage?:string;replicate?:string}
@@ -38,13 +38,15 @@ export function reportRows(d:Draft,t:Template){
  if(bindings.length&&ordered.length!==d.specification.tests.length)throw new Fault(422,'Template does not represent every applicable test instance');
  if(bindings.length&&new Set(ordered.map(resultKey)).size!==d.specification.tests.length)throw new Fault(422,'Template result rows do not match applicable tests');
  const reportOrder=d.environmentalSnapshot?.output.mode==='surface'&&!bindings.length?orderNumberedSamplingPoints(ordered,test=>test.location||'',test=>JSON.stringify([test.test,test.stage,test.replicate,test.channel,test.block,test.criterion,test.unit,test.revision,test.date])):ordered;
+ const category=d.sample&&isEnvironmentalSample(d.sample)?'EM':d.sample?.category;
  const rows=reportOrder.map((test,i)=>{
   const r=d.results.find(x=>resultKey(x)===resultKey(test));
   const label=({'SPC':'Standard Plate Count (SPC)','MY':'Molds and Yeast'}[test.test]||reportTestLabel(test.test,test.label));
   const location=[test.location||'',test.replicate?`Replicate ${test.replicate}`:''].filter(Boolean).join(' · ');
   if(grouped&&!location.trim())throw new Fault(422,`${label}: approved sampling-plan location is missing`);
-  const value=r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r,d.sample?.category,isSurfaceSpcMy(d)):'';
-  return {index:i,block:test.block||'tests',channel:test.channel,phase:test.stage||'',groupKey:[test.block||'tests',test.test,test.stage||'',test.criterion,test.unit,test.revision,test.date].join('|'),test:grouped?[label,['environmental-warehouse-phase-air-7c','environmental-grouped-5c'].includes(t.family)?'':test.stage].filter(Boolean).join('\n'):[label,location,test.stage].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:r?.remarks||''};
+  const notApplicable=r&&isSwabNotApplicable(d,r);
+  const value=notApplicable?evaluationRemark:r?.state==='not_tested'?`Not tested${r.reason.trim()?`: ${r.reason.trim()}`:''}`:r?.state==='entered'&&(r.value.trim()||r.qualifier==='Nmt')?resultDisplayValue(test,r,category,isSurfaceSpcMy(d)):'';
+  return {index:i,block:test.block||'tests',channel:test.channel,phase:test.stage||'',groupKey:[test.block||'tests',test.test,test.stage||'',test.criterion,test.unit,test.revision,test.date].join('|'),test:grouped?[label,['environmental-warehouse-phase-air-7c','environmental-grouped-5c'].includes(t.family)?'':test.stage].filter(Boolean).join('\n'):[label,location,test.stage].filter(Boolean).join(' · '),location,criterion:test.criterion,value,remarks:notApplicable&&!isEvaluationMonitoring(d)?'':r?.remarks||''};
  });
  if(d.environmentalSnapshot?.equipment&&grouped&&!bindings.length){
   const groups=new Map<string,typeof rows>();
