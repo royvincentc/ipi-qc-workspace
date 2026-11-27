@@ -97,7 +97,7 @@
 .reports-workbench button,.reports-workbench .button,.reports-workbench .draft-method-open,.report-confirmation button { transition:transform 150ms cubic-bezier(.22,.8,.25,1),background-color 150ms cubic-bezier(.22,.8,.25,1),color 150ms cubic-bezier(.22,.8,.25,1),border-color 150ms cubic-bezier(.22,.8,.25,1); }
 .reports-workbench button:active:not(:disabled),.reports-workbench .button:active,.reports-workbench .draft-method-open:active { transform:scale(.98); }
 .reports-workbench button:disabled { cursor:not-allowed; }
-.reports-workbench button:focus-visible,.reports-workbench a:focus-visible,.reports-workbench input:focus-visible,.reports-workbench summary:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
+.reports-workbench button:focus-visible,.reports-workbench a:focus-visible,.reports-workbench input:focus-visible,.reports-workbench select:focus-visible,.reports-workbench summary:focus-visible { outline:2px solid var(--accent);outline-offset:3px; }
 .reports-workbench input { caret-color:var(--accent); }
 .reports-workbench ::selection { color:var(--text-primary);background:var(--accent-soft); }
 .reports-layout { display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,350px);gap:24px;align-items:start; }
@@ -156,6 +156,12 @@
 .report-setup-footer small { max-width:40ch;color:var(--text-secondary);line-height:1.5; }
 .report-setup-footer .button { flex-shrink:0; }
 .saved-reports-panel > p { margin:8px 0 16px;font-size:13px;color:var(--text-secondary); }
+.app-workspace .route-stage > .oos-maker .report-setup-panel .search-field { margin:12px 0; }
+.app-workspace .route-stage > .oos-maker .report-setup-panel > .field { margin-bottom:18px; }
+.oos-maker .form-grid + .section-heading { margin:24px 0 12px;padding-top:20px;border-top:1px solid var(--border-subtle); }
+.oos-files { list-style:none;margin:0 0 16px;padding:0; }
+.oos-files li { display:grid;gap:8px;padding:12px 0;border-top:1px solid var(--border-subtle);font-size:13px;line-height:1.45;overflow-wrap:anywhere; }
+.oos-files .button { justify-self:start; }
 .reports-workbench .draft-link { padding:16px 0;gap:10px; }
 .reports-workbench .draft-identity { grid-template-columns:1fr;gap:5px; }
 .reports-workbench .draft-identity .mono { white-space:normal;font-size:12px;color:var(--text-secondary); }

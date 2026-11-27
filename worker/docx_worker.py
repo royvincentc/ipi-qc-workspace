@@ -318,11 +318,11 @@ def inventory(data,name='',family_hint=None):
     if pattern:family=pattern['family']
     return {'name':name,'sha256':hashlib.sha256(data).hexdigest(),'family':family,'environmentalPattern':pattern,'paragraphs':paragraphs,'tables':tables,'candidateCriteria':criteria,'fieldEvidence':fields,'issues':['Product, context and explicit report date require confirmation from the evidence.'],'layout':{'sections':[E.tostring(s).decode() for root in docs.values() for s in root.xpath('.//w:sectPr',namespaces=NS)]}}
 
-def replace_tokens(paragraph,values):
+def replace_tokens(paragraph,values,pattern=r'\{\{\s*([\w.:-]+)\s*\}\}'):
     # Preserve each run's original style and replace across split Word runs.
     nodes=paragraph.xpath('.//w:t',namespaces=NS)
     source=''.join(n.text or '' for n in nodes)
-    for match in reversed(list(re.finditer(r'\{\{\s*([\w.:-]+)\s*\}\}',source))):
+    for match in reversed(list(re.finditer(pattern,source))):
         key=match.group(1)
         if key not in values: raise ValueError('Unresolved template token: '+key)
         start,end=match.span(); replacement=str(values[key] or '')
@@ -600,6 +600,16 @@ def render(template,payload,output):
         for n,b in parts.items():z.writestr(n,b)
     return {'docx':str(output)}
 
+def render_oos(data,values,output):
+    # OOS/MLIR forms use single-brace tokens and need no report-specific layout fixes.
+    parts=package(data);docs=roots(parts)
+    for root in docs.values():
+        for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,values,r'\{\s*([A-Za-z_]+)\s*\}')
+    for n,root in docs.items():parts[n]=E.tostring(root,xml_declaration=True,encoding='UTF-8',standalone=True)
+    with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
+        for n,b in parts.items():z.writestr(n,b)
+    return {'docx':str(output)}
+
 def validate_template(data):
     parts=package(data);docs=roots(parts);tokens=[]
     for root in docs.values():tokens+=re.findall(r'\{\{\s*([\w.:-]+)\s*\}\}',text(root))
@@ -632,7 +642,7 @@ def demo_template(output):
     d.save(output)
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout','report-details']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--family');args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inventory','generate','validate','demo','prepare','environmental-batch','environmental-layout','report-details','oos']);p.add_argument('--input');p.add_argument('--payload');p.add_argument('--output');p.add_argument('--family');args=p.parse_args()
     if args.action=='environmental-batch':
         from environmental_batch import scan
         result=scan(args.input,args.output)
@@ -650,6 +660,7 @@ def main():
     elif args.action=='report-details':
         payload=json.loads(Path(args.payload).read_text(encoding='utf8'));result=report_details(Path(args.input).read_bytes(),payload['fields'],payload.get('persistentDetails',False),payload.get('editableType',False))
     elif args.action=='generate':result=render(args.input,json.loads(Path(args.payload).read_text(encoding='utf8')),args.output)
+    elif args.action=='oos':result=render_oos(Path(args.input).read_bytes(),json.loads(Path(args.payload).read_text(encoding='utf8')),args.output)
     elif args.action=='validate':result=validate_template(Path(args.input).read_bytes())
     elif args.action=='prepare':result=prepare_template(Path(args.input).read_bytes(),args.output,args.family)
     else:demo_template(args.output);result={'path':args.output}
