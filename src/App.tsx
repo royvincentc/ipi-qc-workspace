@@ -8,7 +8,7 @@ import {Session,Notice,useLoad,Loading,ErrorBox,PageTitle} from './ui';
 import { FloatingAssistant } from './FloatingAssistant';
 import {RouteExperience,SelectionMotion} from './Experience';
 import {WorkflowFilm} from './WorkflowFilm';
-import {LabIconHome,LabIconIntake,LabIconSearch,LabIconWorksheet,LabIconReports,LabIconLibrary,LabIconShared,LabIconAssistant,LabIconSync,LabIconSettings} from './components/LabIcons';
+import {LabIconHome,LabIconIntake,LabIconSearch,LabIconWorksheet,LabIconReports,LabIconLibrary,LabIconDossier,LabIconShared,LabIconAssistant,LabIconSync,LabIconSettings} from './components/LabIcons';
 import Dialog from './dialog';
 import {isConstrainedDevice} from './motion';
 import {LoginFilm,LoginConnecting,WorkspaceArrival,hasLoginHandoff,rememberLoginHandoff} from './LoginFilm';
@@ -18,6 +18,7 @@ const ReportsRoute=lazy(()=>import('./reports').then(module=>({default:module.Re
 const ReportEditorRoute=lazy(()=>import('./reports').then(module=>({default:module.ReportEditor})));
 const AssistantRoute=lazy(()=>import('./AssistantPage').then(module=>({default:module.AssistantPage})));
 const FileLibraryRoute=lazy(()=>import('./library'));
+const OosRoute=lazy(()=>import('./oos'));
 const WorksheetRoute=lazy(()=>import('./worksheet'));
 const SharedToolsRoute=lazy(()=>import('./collaboration'));
 const SharedEditorRoute=lazy(()=>import('./collaboration').then(module=>({default:module.SharedEditor})));
@@ -28,6 +29,7 @@ const navigation=[
   ['/samples','Samples',LabIconSearch],
   ['/worksheet','Worksheet',LabIconWorksheet],
   ['/reports','Results & Reports',LabIconReports],
+  ['/oos','OOS Maker',LabIconDossier],
   ['/library','File Library',LabIconLibrary],
   ['/shared','Shared tools',LabIconShared],
   ['/assistant','Smart Assistant',LabIconAssistant]
@@ -291,6 +293,7 @@ function Workspace({data}:{data:any}){
                   <Route path="/reports" element={<ReportsRoute/>}/>
                   <Route path="/reports/:id" element={<ReportEditorRoute/>}/>
                   <Route path="/library" element={<FileLibraryRoute/>}/>
+                  <Route path="/oos" element={<OosRoute/>}/>
                   <Route path="/shared" element={<SharedToolsRoute/>}/>
                   <Route path="/shared/:id" element={<SharedEditorRoute/>}/>
                   <Route path="/assistant" element={<AssistantRoute/>}/>

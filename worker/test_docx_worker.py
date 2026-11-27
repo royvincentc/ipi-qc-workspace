@@ -49,6 +49,22 @@ class DocumentTests(unittest.TestCase):
                 self.assertEqual(header.xpath('.//w:pPr/w:jc/@w:val',namespaces=NS),['center'])
         self.assertEqual(source.read_bytes(),original)
 
+    def test_oos_single_brace_tokens_fill_split_runs_in_body_and_header(self):
+        from docx import Document
+        from docx_worker import render_oos
+        d=Document()
+        d.sections[0].header.paragraphs[0].text='MLIR/{type}-{year}-{number}'
+        p=d.add_paragraph('Lot No: ')
+        for fragment in ['{batch','No','} = ','{result}']:p.add_run(fragment).bold=fragment=='No'
+        source=self.folder/'oos.docx';d.save(source)
+        values={'type':'FG','year':'2026','number':'205','batchNo':'EYJ169','result':'TNTC'}
+        render_oos(source.read_bytes(),values,self.folder/'oos-out.docx')
+        out=Document(self.folder/'oos-out.docx')
+        self.assertEqual(out.paragraphs[-1].text,'Lot No: EYJ169 = TNTC')
+        self.assertEqual(out.sections[0].header.paragraphs[0].text,'MLIR/FG-2026-205')
+        with self.assertRaisesRegex(ValueError,'Unresolved template token: result'):
+            render_oos(source.read_bytes(),{k:v for k,v in values.items() if k!='result'},self.folder/'x.docx')
+
     def test_product_type_is_editable_as_purpose_and_blank_parentheses_are_removed(self):
         from docx import Document
         from docx_worker import report_details

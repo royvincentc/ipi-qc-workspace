@@ -7,6 +7,7 @@ import {PageTitle,useLoad,Notice,Session,SearchInput,ErrorBox,Loading,Empty,Badg
 
 const kindLabels:Record<string,string>={
  report:'Generated report',
+ oos:'OOS / MLIR form',
  reference:'Historical reference',
  'template-candidate':'Prepared template',
  library:'Authorized Drive file',
@@ -30,7 +31,7 @@ export default function FileLibrary(){
   <section className="panel library-panel" aria-label="Document library">
    <div className="library-toolbar">
     <SearchInput value={q} onChange={setQ} placeholder="Find a document or control number…"/>
-    <label className="library-filter"><span className="sr-only">Document type</span><select aria-label="Document type" value={kind} onChange={e=>{setKind(e.target.value);setPage(1);}}><option value="">All documents</option><option value="report">Generated reports</option><option value="reference">Historical references</option><option value="template-candidate">Prepared templates</option><option value="library">Drive library</option></select></label>
+    <label className="library-filter"><span className="sr-only">Document type</span><select aria-label="Document type" value={kind} onChange={e=>{setKind(e.target.value);setPage(1);}}><option value="">All documents</option><option value="report">Generated reports</option><option value="oos">OOS / MLIR forms</option><option value="reference">Historical references</option><option value="template-candidate">Prepared templates</option><option value="library">Drive library</option></select></label>
     <label className="library-filter library-sort"><span className="sr-only">Document order</span><select aria-label="Document order" value={sort} onChange={e=>{setSort(e.target.value);setPage(1);}}><option value="numeric">Identifier order ↑</option><option value="recent">Newest first</option></select></label>
    </div>
    <ErrorBox message={error}/>
