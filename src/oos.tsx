@@ -1,5 +1,5 @@
-import {useContext,useEffect,useState} from 'react';
-import {Download,FileText,ArrowRight} from './components/LabIcons';
+import {useContext,useEffect,useRef,useState} from 'react';
+import {Download,FileText,ArrowRight,X} from './components/LabIcons';
 import {api} from './api';
 import {PageTitle,Field,ErrorBox,Badge,SearchInput,Session,useLoad,useCanEdit} from './ui';
 import {addDays,analystAbbreviation,oosDocuments,oosFileName,oosParameter,oosParameters,oosTypes,productFill,shortProductName,type OosForm} from '../shared/oos';
@@ -34,6 +34,8 @@ export default function OosMaker(){
   update({product:s.name,batch:s.batch,...(oosTypes.includes(s.category as any)?{type:s.category}:{}),...(s.fields?.analyzedBy?{analyst:s.fields.analyzedBy}:{})});
   if(s.fields?.fillVolume)setForm(f=>({...f,fill:s.fields.fillVolume}));
  };
+ const products=form.includedProducts.split('\n'),focusRow=useRef(-1);
+ const setProducts=(rows:string[])=>update({includedProducts:rows.join('\n')});
  const missing=required.filter(k=>!form[k].trim());
  const valid=!missing.length&&/^\d{1,4}$/.test(form.number.trim())&&form.dateRetest>=form.dateObserved;
  const mlir=`MLIR/${form.type}-${form.dateObserved.slice(0,4)||'YYYY'}-${form.number.trim()?form.number.trim().padStart(3,'0'):'###'}`;
@@ -59,11 +61,19 @@ export default function OosMaker(){
      <Field label="Parameter" hint="SPC, M&Y and P. aeruginosa fill the usual specification and retest date.">{input('parameter',{list:'oos-parameters',autoComplete:'off'})}</Field>
      <Field label="Result">{input('result',{placeholder:'TNTC'})}</Field>
      <Field label="Specification">{input('specification')}</Field>
-     <Field label="Included products" hint="Leave blank for N/A.">{input('includedProducts')}</Field>
      <Field label="Date observed">{input('dateObserved',{type:'date'})}</Field>
      <Field label="Retest date" hint={form.dateRetest&&form.dateRetest<form.dateObserved?'Must be on or after the date observed.':undefined}>{input('dateRetest',{type:'date',min:form.dateObserved})}</Field>
      <Field label="MLIR initiated by">{input('analyst')}</Field>
      <Field label="Initials" hint="Shown in brackets in the file names.">{input('analystAbbrev',{maxLength:10})}</Field>
+     <fieldset className="field oos-products" disabled={!canEdit||busy}>
+      <legend>Included products</legend>
+      {products.map((product,i)=><div className="oos-product-row" key={i}>
+       <input value={product} aria-label={`Included product ${i+1}`} placeholder="Product name - batch no." ref={el=>{if(el&&focusRow.current===i){el.focus();focusRow.current=-1;}}} onChange={e=>setProducts(products.map((p,j)=>j===i?e.target.value:p))}/>
+       {products.length>1?<button type="button" className="icon-button" aria-label={`Remove included product ${i+1}`} onClick={()=>{focusRow.current=Math.max(0,i-1);setProducts(products.filter((_,j)=>j!==i));}}><X size={16} aria-hidden="true"/></button>:null}
+      </div>)}
+      <button type="button" className="button secondary" onClick={()=>{focusRow.current=products.length;setProducts([...products,'']);}}>Add product</button>
+      <small>Other products affected by the same deviation. Leave blank for N/A.</small>
+     </fieldset>
     </div>
     <datalist id="oos-parameters">{oosParameters.map(p=><option key={p.name} value={p.name}>{p.specification}</option>)}</datalist>
     <ErrorBox message={error}/>

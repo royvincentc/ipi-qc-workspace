@@ -23,9 +23,11 @@ const knownAbbreviations:Record<string,string>={'roy vincent codiñera':'ROY','a
 // Middle initials are dropped when a name has more than three parts: "James Bryle A. Goloran" -> JBG.
 export function analystAbbreviation(name:string){const known=knownAbbreviations[name.trim().toLowerCase()];if(known)return known;let parts=words(name);if(parts.length>3)parts=parts.filter(w=>!w.endsWith('.'));return parts.map(w=>w[0].toUpperCase()).join('');}
 
+// Included products are kept as one newline-separated string so the API stays a flat form.
+export const includedProducts=(text:string)=>text.split('\n').map(s=>s.trim()).filter(Boolean);
 export function oosValues(f:OosForm):Record<string,string>{
  const year=f.dateObserved.slice(0,4),number=f.number.trim().padStart(3,'0');
- return {SampleCompleteName:f.product.trim(),batchNo:f.batch.trim(),dateDeviation:usDate(f.dateObserved),includedProducts:f.includedProducts.trim()||'N/A',
+ return {SampleCompleteName:f.product.trim(),batchNo:f.batch.trim(),dateDeviation:usDate(f.dateObserved),includedProducts:includedProducts(f.includedProducts).join('\n')||'N/A',
   analyst:f.analyst.trim(),type:f.type,year,number,parameter:f.parameter.trim(),result:f.result.trim(),Specification_of_Parameter:f.specification.trim(),
   incBatchNo:f.batch.trim(),incStatus:'FAILED',incParameter:f.parameter.trim(),incResult:f.result.trim(),calculated_dateDeviation:usDate(f.dateRetest)};
 }

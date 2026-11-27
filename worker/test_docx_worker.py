@@ -62,6 +62,11 @@ class DocumentTests(unittest.TestCase):
         out=Document(self.folder/'oos-out.docx')
         self.assertEqual(out.paragraphs[-1].text,'Lot No: EYJ169 = TNTC')
         self.assertEqual(out.sections[0].header.paragraphs[0].text,'MLIR/FG-2026-205')
+        d.add_paragraph('{includedProducts}');d.save(source)
+        render_oos(source.read_bytes(),{**values,'includedProducts':'OPKL - EYJ170\nOPKL - EYJ171'},self.folder/'oos-out.docx')
+        last=Document(self.folder/'oos-out.docx').paragraphs[-1]
+        self.assertEqual(last.text,'OPKL - EYJ170\nOPKL - EYJ171')
+        self.assertEqual(len(last._p.xpath('.//w:br')),1)
         with self.assertRaisesRegex(ValueError,'Unresolved template token: result'):
             render_oos(source.read_bytes(),{k:v for k,v in values.items() if k!='result'},self.folder/'x.docx')
 

@@ -238,7 +238,7 @@ function Workspace({data}:{data:any}){
             <header className="topbar">
               <button className="icon-button mobile-menu-button" aria-label="Open navigation" onClick={()=>setMobileNav(true)}><Menu size={20}/></button>
               <Link className="workspace-wordmark" to="/" aria-label={config.value.general.appName}><b>ipi<span>.</span></b><span>Microbiology</span></Link>
-              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Overview'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','Library'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
+              <nav className="workspace-tabs" aria-label="Main destinations">{[['/','Overview'],['/samples','Samples'],['/worksheet','Worksheet'],['/reports','Reports'],['/library','Library'],['/oos','OOS'],['/assistant','Assistant']].map(([url,label])=><NavLink key={url} to={url} end={url==='/'}>{label}</NavLink>)}</nav>
               <div className="topbar-right">
                 {syncing ? (
                   <Loading compact label="Syncing sources"/>

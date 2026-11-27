@@ -605,6 +605,12 @@ def render_oos(data,values,output):
     parts=package(data);docs=roots(parts)
     for root in docs.values():
         for p in root.xpath('.//w:p',namespaces=NS):replace_tokens(p,values,r'\{\s*([A-Za-z_]+)\s*\}')
+        # Multi-line values (included products) print one per line inside the same cell.
+        for t in root.xpath('.//w:t',namespaces=NS):
+            first,*rest=(t.text or '').split('\n');t.text=first;at=t
+            for line in rest:
+                br=E.Element(W+'br');at.addnext(br)
+                at=E.Element(W+'t');at.text=line;at.set('{http://www.w3.org/XML/1998/namespace}space','preserve');br.addnext(at)
     for n,root in docs.items():parts[n]=E.tostring(root,xml_declaration=True,encoding='UTF-8',standalone=True)
     with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as z:
         for n,b in parts.items():z.writestr(n,b)
